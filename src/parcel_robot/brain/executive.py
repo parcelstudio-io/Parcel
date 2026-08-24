@@ -50,6 +50,20 @@ INTERRUPT_SOURCES = frozenset(
 #: that issues it, and the runtime branch that looks for tasks parked by it.
 CLOSED_INTENT_PAUSE_REASON = "closed_intent_pause"
 CLOSED_INTENT_RESUME_REASON = "closed_intent_resume"
+#: The reason a mid-task GOAL AMENDMENT suspends work under. It had no entry in
+#: the policy below, so it resolved to the ``default`` (``overlap``) and the
+#: executive answered an amendment with "carry on" — an executive-only task kept
+#: running while its own goal was being revised. The word is duplicated from
+#: ``voice.amendment.AMEND_SUSPEND_REASON`` (``brain`` must not import
+#: ``voice``); ``tests/test_a5_goal_amend.py`` asserts the two are one string.
+GOAL_AMEND_SUSPEND_REASON = "goal_amend"
+#: Decisions a goal amendment may NEVER take. Amendment revises the *current*
+#: goal, so ``cancel_now`` destroys the very thing being amended: it is excluded
+#: from the acceptable decision set whatever the table below says, and the
+#: exclusion is a refusal rather than a silent downgrade so the caller — which
+#: must fail closed and roll back — can see that nothing was suspended.
+GOAL_AMEND_FORBIDDEN_ACTIONS = frozenset({"cancel_now"})
+GOAL_AMEND_REFUSED_ACTION = "refused_goal_amend_cancel"
 # Declared voice interrupt policy (was a hardcoded no-op / overlap).
 # Keys are reason prefixes or exact reasons; default is overlap.
 VOICE_INTERRUPT_POLICY: dict[str, str] = {
@@ -58,6 +72,7 @@ VOICE_INTERRUPT_POLICY: dict[str, str] = {
     "summons": "suspend",
     "recall": "suspend",
     CLOSED_INTENT_PAUSE_REASON: "suspend",
+    GOAL_AMEND_SUSPEND_REASON: "suspend",
     "explicit_directive": "cancel_now",
 }
 
@@ -570,6 +585,12 @@ class TaskExecutive:
                 return InterruptDecision("cancel_now", affected, request.reason)
             if request.source == "voice":
                 policy = _voice_interrupt_action(request.reason)
+                if policy in GOAL_AMEND_FORBIDDEN_ACTIONS and _is_goal_amend_reason(
+                    request.reason
+                ):
+                    # Structural, not table-dependent: no edit to the policy
+                    # above can make an amendment destroy its own goal.
+                    return InterruptDecision(GOAL_AMEND_REFUSED_ACTION, (), request.reason)
                 if policy == "overlap":
                     return InterruptDecision("overlap", (), request.reason)
                 if policy == "suspend":
@@ -897,6 +918,12 @@ def _result_satisfies_success(result: ExecutionResult, step: ValidatedStep) -> b
 
 def _normalized(value: str) -> str:
     return "".join(character for character in value.lower() if character.isalnum())
+
+
+def _is_goal_amend_reason(reason: str) -> bool:
+    """True when ``reason`` names a mid-task goal amendment."""
+
+    return GOAL_AMEND_SUSPEND_REASON in reason.strip().lower()
 
 
 def _voice_interrupt_action(reason: str) -> str:

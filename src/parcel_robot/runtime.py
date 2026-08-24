@@ -423,6 +423,36 @@ _TRANSCRIPT_MEMORY_TURNS = 64
 #: owner summons or a goal amendment parked.
 CLOSED_INTENT_SUSPEND_DETAIL = f"suspended:{CLOSED_INTENT_PAUSE_REASON}"
 
+#: Executive task states a goal amendment may target for suspension. A
+#: ``suspended`` task is amendable *work* (it counts towards "is there anything
+#: to revise") but is never a suspension target — it is already parked.
+AMENDABLE_TASK_STATES = frozenset(
+    {
+        "running",
+        "waiting_checkpoint",
+        "waiting_resource",
+        "waiting_precondition",
+        "queued",
+    }
+)
+#: Which arbiter motion source a targeted task's current step can command from.
+#: The four names are channel names AND arbiter sources — they agree by
+#: construction (``runtime_channels`` sets ``arbiter_source`` to the channel's
+#: own name for all four). ``PAUSABLE_SKILL_CHANNELS`` covers the three that
+#: carry a ``ResumeIntent``; the spatial behaviours carry none and are stopped
+#: instead, which is why the amendment rollback re-queues their task for a fresh
+#: dispatch rather than re-binding it. A skill absent from this table authors no
+#: base velocity, so it contributes no source to the quiescence check.
+AMENDMENT_SKILL_SOURCES: dict[str, str] = {
+    **PAUSABLE_SKILL_CHANNELS,
+    "OrbitOwner": "spatial",
+    "MoveRelative": "spatial",
+}
+#: Motion sources the amendment tears down rather than pauses (no ResumeIntent).
+AMENDMENT_STOPPABLE_SOURCES = ("spatial",)
+#: The reason the amendment rollback restores work under.
+AMEND_ROLLBACK_REASON = "goal_amend_rollback"
+
 #: The note ``DirectiveNavigator._pose_lost_hold`` puts on its stop command
 #: while MAP localization is ``LOST`` (Lane B, B-3). It is a **hold**, not an
 #: outcome: the navigator leaves the mission running because the goal is still
@@ -2049,6 +2079,12 @@ class RobotRuntime:
         self._dialogue_last: dict[str, object] = {}
         self._dialogue_gaze_mode = "idle"
         self._amendment_pending = False
+        # A5 C8-FIX. The amendment window is a transaction, and these three are
+        # its whole state: the HOLD it publishes, the open transaction (targets
+        # + the rollback journal), and the journal of the last closed one.
+        self._amendment_hold: dict[str, object] = {"active": False}
+        self._amendment_txn: dict[str, object] | None = None
+        self._amendment_journal: list[dict[str, object]] = []
         self._reaction_bridge = SocialReactionBridge(rng_seed=11)
         self._reaction_last: dict[str, object] = {}
         self._behavior_generation = 0  # legacy aggregate; prefer _generation
@@ -3304,6 +3340,10 @@ class RobotRuntime:
         if self._amendment_pending:
             self._amendment_pending = False
             self.agent.last_brain_metrics["goal_amend_committed"] = True
+            # The replacement plan is in; the interrupt above has already
+            # cancelled or replaced the work the window parked. Close the
+            # transaction so the HOLD does not outlive the amendment it covered.
+            self._close_amendment_window("committed")
         with self._lock:
             self._last_brain_plan = {
                 "task_id": plan.task_id,
@@ -3906,6 +3946,13 @@ class RobotRuntime:
                         )
             return directive.reply
         if directive.resume:
+            # An OPEN amendment window is the thing this RESUME is about: the
+            # owner said "actually…", never named the new goal, and now wants
+            # the old one back. Abandoning the transaction restores exactly what
+            # it parked; reporting its own pause as "paused by something else"
+            # would strand the mission behind a window nobody can close.
+            if self._amendment_txn is not None:
+                return self._abandon_goal_amend("owner_resumed")
             # Fresh-scene resume is owned by channel ResumeIntent / K3 path.
             # Fail closed: do not claim success when nothing resumes.
             now_s = time.monotonic()
@@ -4053,75 +4100,449 @@ class RobotRuntime:
         return requeued
 
     def _apply_goal_amend(self, directive: CapDirective) -> str:
-        """Pause/snapshot active work for mid-task amendment (fail-closed)."""
+        """Mid-task goal amendment, as a TRANSACTION (card A5 C8-FIX / A8).
+
+        The retired body sent one ``interrupt_now`` per task, threw the returned
+        ``InterruptDecision`` away, and set ``_amendment_pending`` regardless —
+        so with no ``goal_amend`` entry in ``VOICE_INTERRUPT_POLICY`` the
+        executive answered ``overlap`` and an executive-only task carried on
+        driving the body while its own goal was being revised.
+
+        The contract now:
+
+        * **suspend only.** ``cancel_now`` destroys the goal being amended and
+          is not an acceptable decision; every returned decision is inspected.
+        * **atomic or rolled back.** Suspend all targeted tasks; on ANY failure
+          resume every already-suspended one from a journal whose every step is
+          written *before* it is taken, refuse the amendment, and stay in HOLD
+          until the rollback completes.
+        * **quiescence gates the flag.** ``_amendment_pending`` stays False
+          until no intent sourced from any targeted controller is active at the
+          arbiter, no targeted task holds a resource lease, and every targeted
+          task reads ``suspended``.
+        """
 
         now_s = time.monotonic()
-        active: list[str] = []
-        paused: list[str] = []
         with self._command_lock:
-            for channel_name in ("navigation", "follow", "search"):
-                channel = self._channels.get(channel_name)
-                if channel is not None and channel.active():
-                    active.append(channel_name)
-                elif self._resume_store.peek(channel_name, now_s=now_s) is not None:
-                    paused.append(channel_name)
-            # Executive tasks still count as amendable work.
-            for row in self.task_executive.snapshot().get("tasks", []):
-                if not isinstance(row, dict):
-                    continue
-                if row.get("state") in {
-                    "running",
-                    "waiting_checkpoint",
-                    "waiting_resource",
-                    "waiting_precondition",
-                    "queued",
-                    "suspended",
-                }:
-                    if "executive" not in active and "executive" not in paused:
-                        active.append("executive")
-                    break
-
+            active, paused, task_ids = self._amendable_work(now_s=now_s)
             gate = begin_goal_amend(active_channels=active, paused_channels=paused)
             self.agent.last_brain_metrics["goal_amend_ok"] = gate.ok
             self.agent.last_brain_metrics["goal_amend_reason"] = gate.reason
+            # Never carried over from a previous window: the flag is earned
+            # below, after quiescence, or it stays False.
+            self._amendment_pending = False
             if not gate.ok:
-                self._amendment_pending = False
                 return gate.reply
-
-            paused_now: list[str] = []
-            for channel_name in ("navigation", "follow", "search"):
-                channel = self._channels.get(channel_name)
-                if channel is not None and channel.active():
-                    self._pause_channel(channel_name, reason=AMEND_SUSPEND_REASON)
-                    paused_now.append(channel_name)
-            for row in self.task_executive.snapshot().get("tasks", []):
-                if not isinstance(row, dict):
-                    continue
-                if row.get("state") not in {
-                    "running",
-                    "waiting_checkpoint",
-                    "waiting_resource",
-                    "waiting_precondition",
-                    "queued",
-                }:
-                    continue
-                task_id = row.get("task_id")
-                if isinstance(task_id, str):
-                    self.task_executive.request_interrupt(
-                        InterruptRequest(
-                            source="voice",
-                            reason=AMEND_SUSPEND_REASON,
-                            requested="interrupt_now",
-                            target_task_id=task_id,
-                        )
-                    )
+            channels = tuple(
+                name for name in ("navigation", "follow", "search") if name in active
+            )
+            journal: list[dict[str, object]] = []
+            sources = self._amendment_motion_sources(channels, task_ids)
+            self._engage_amendment_hold(sources, journal, now_s=now_s)
+            failure = self._suspend_for_amendment(task_ids, journal)
+            parked = False
+            if failure is None:
+                self._quiesce_amendment_controllers(channels, sources, journal)
+                parked = True
+                failure = self._amendment_not_quiescent(
+                    channels, task_ids, sources, now_s=now_s
+                )
+            if failure is not None:
+                return self._refuse_amendment(
+                    failure, channels, task_ids, journal, controllers_parked=parked
+                )
+            self._amendment_txn = {
+                "channels": channels,
+                "tasks": tuple(task_ids),
+                "sources": tuple(sorted(sources)),
+                "journal": journal,
+                "opened_at_s": now_s,
+            }
             self._amendment_pending = True
             self._emit(
                 "voice",
-                f"goal amend snapshot: paused={paused_now or list(gate.paused_channels)}",
+                f"goal amend snapshot: paused={list(channels) or list(gate.paused_channels)}",
                 "info",
             )
             return directive.reply if directive.reply else gate.reply
+
+    def _amendable_work(
+        self, *, now_s: float
+    ) -> tuple[list[str], list[str], list[str]]:
+        """(active channels, paused channels, executive tasks to suspend)."""
+
+        active: list[str] = []
+        paused: list[str] = []
+        task_ids: list[str] = []
+        for channel_name in ("navigation", "follow", "search"):
+            channel = self._channels.get(channel_name)
+            if channel is not None and channel.active():
+                active.append(channel_name)
+            elif self._resume_store.peek(channel_name, now_s=now_s) is not None:
+                paused.append(channel_name)
+        for row in self.task_executive.snapshot().get("tasks", []):
+            if not isinstance(row, dict):
+                continue
+            state = row.get("state")
+            if state != "suspended" and state not in AMENDABLE_TASK_STATES:
+                continue
+            # Executive tasks still count as amendable work.
+            if "executive" not in active:
+                active.append("executive")
+            task_id = row.get("task_id")
+            if state in AMENDABLE_TASK_STATES and isinstance(task_id, str):
+                task_ids.append(task_id)
+        return active, paused, task_ids
+
+    def _amendment_motion_sources(
+        self, channels: tuple[str, ...], task_ids: list[str]
+    ) -> frozenset[str]:
+        """Every arbiter source the targeted work can command the body from."""
+
+        sources = set(channels)
+        for row in self.task_executive.snapshot().get("tasks", []):
+            if not isinstance(row, dict) or row.get("task_id") not in task_ids:
+                continue
+            skill = row.get("skill")
+            source = AMENDMENT_SKILL_SOURCES.get(skill) if isinstance(skill, str) else None
+            if source is not None:
+                sources.add(source)
+        return frozenset(sources)
+
+    def _journal_amendment(
+        self,
+        journal: list[dict[str, object]],
+        step: str,
+        target: str,
+        state: str,
+    ) -> None:
+        """Append one rollback-journal row.
+
+        Every step is journalled ``planned`` BEFORE it is taken and ``applied``
+        (or ``failed:<why>``) after, so a rollback reads what was actually done
+        rather than what the code believes it did.
+        """
+
+        journal.append(
+            {
+                "seq": len(journal) + 1,
+                "step": step,
+                "target": target,
+                "state": state,
+                "at_s": time.monotonic(),
+            }
+        )
+
+    def _engage_amendment_hold(
+        self,
+        sources: frozenset[str],
+        journal: list[dict[str, object]],
+        *,
+        now_s: float,
+    ) -> None:
+        """Open the amendment window with an explicit HOLD, before anything moves.
+
+        HOLD is a command here, not a flag: the arbiter lease every targeted
+        controller owns is cancelled, so ``_dispatch_active`` has no intent to
+        forward and nothing sourced from that work can reach
+        ``ControlManager.set_target`` while the window is open.
+        """
+
+        listed = ",".join(sorted(sources))
+        self._journal_amendment(journal, "hold_engage", listed, "planned")
+        for source in sorted(sources):
+            self.arbiter.cancel(source)
+        with self._lock:
+            self._amendment_hold = {
+                "active": True,
+                "reason": AMEND_SUSPEND_REASON,
+                "sources": sorted(sources),
+                "engaged_at_s": now_s,
+            }
+        self._journal_amendment(journal, "hold_engage", listed, "applied")
+        self._emit("voice", f"goal amend HOLD engaged over [{listed}]", "info")
+
+    def _release_amendment_hold(
+        self, journal: list[dict[str, object]], outcome: str
+    ) -> None:
+        """Drop the window's HOLD — only ever after the window is settled."""
+
+        self._journal_amendment(journal, "hold_release", outcome, "planned")
+        with self._lock:
+            self._amendment_hold = {
+                "active": False,
+                "reason": outcome,
+                "released_at_s": time.monotonic(),
+            }
+        self._journal_amendment(journal, "hold_release", outcome, "applied")
+        self._emit("voice", f"goal amend HOLD released: {outcome}", "info")
+
+    def _channel_is_parked(self, name: str) -> bool:
+        """True when a pausable channel cannot author its next command.
+
+        ``active()`` answers "does this channel hold work", not "is it driving"
+        — a paused navigator is still *enabled* — so the pause is read from the
+        state the channel publishes rather than from the enable flag.
+        """
+
+        channel = self._channels.get(name)
+        if channel is None or not channel.active():
+            return True
+        detail = channel.snapshot()
+        return bool(detail.get("paused")) or str(detail.get("state") or "") == "paused"
+
+    def _task_row(self, task_id: str) -> dict[str, object]:
+        """One executive task's snapshot row, or ``{}`` when it is gone."""
+
+        for row in self.task_executive.snapshot().get("tasks", []):
+            if isinstance(row, dict) and row.get("task_id") == task_id:
+                return row
+        return {}
+
+    def _task_state(self, task_id: str) -> str:
+        """The executive's own word for one task, or ``"absent"``."""
+
+        row = self._task_row(task_id)
+        if not row:
+            return "absent"
+        return str(row.get("state") or "unknown")
+
+    def _suspend_for_amendment(
+        self, task_ids: list[str], journal: list[dict[str, object]]
+    ) -> str | None:
+        """Suspend every targeted task. Returns the first failure, or ``None``.
+
+        Fail-closed on the RETURNED decision: anything but ``suspend`` naming
+        this task is a failure, and so is a record that does not actually read
+        ``suspended`` afterwards. ``cancel_now`` is excluded by contract — it
+        would destroy the goal the owner is amending.
+        """
+
+        for task_id in task_ids:
+            self._journal_amendment(journal, "suspend", task_id, "planned")
+            decision = self.task_executive.request_interrupt(
+                InterruptRequest(
+                    source="voice",
+                    reason=AMEND_SUSPEND_REASON,
+                    requested="interrupt_now",
+                    target_task_id=task_id,
+                )
+            )
+            if decision.action != "suspend" or task_id not in decision.affected_task_ids:
+                self._journal_amendment(
+                    journal, "suspend", task_id, f"failed:{decision.action}"
+                )
+                return f"{task_id}:{decision.action}"
+            state = self._task_state(task_id)
+            if state != "suspended":
+                self._journal_amendment(
+                    journal, "suspend", task_id, f"failed:state={state}"
+                )
+                return f"{task_id}:state={state}"
+            self._journal_amendment(journal, "suspend", task_id, "applied")
+        return None
+
+    def _quiesce_amendment_controllers(
+        self,
+        channels: tuple[str, ...],
+        sources: frozenset[str],
+        journal: list[dict[str, object]],
+    ) -> None:
+        """Park the controllers the now-suspended tasks were driving.
+
+        Suspending the executive record releases its leases; it does not stop a
+        navigator or a spatial behaviour. Pausable channels keep their
+        ``ResumeIntent``; the rest have none and are stopped, exactly as the
+        closed-intent PAUSE cap stops them.
+        """
+
+        for channel_name in channels:
+            self._journal_amendment(journal, "pause_channel", channel_name, "planned")
+            self._pause_channel(channel_name, reason=AMEND_SUSPEND_REASON)
+            self._journal_amendment(journal, "pause_channel", channel_name, "applied")
+        targets = tuple(
+            name for name in AMENDMENT_STOPPABLE_SOURCES if name in sources
+        )
+        if not targets:
+            return
+        listed = ",".join(targets)
+        self._journal_amendment(journal, "stop_unpausable", listed, "planned")
+        self.preempt("voice", reason=AMEND_SUSPEND_REASON, targets=targets)
+        self._journal_amendment(journal, "stop_unpausable", listed, "applied")
+
+    def _amendment_not_quiescent(
+        self,
+        channels: tuple[str, ...],
+        task_ids: list[str],
+        sources: frozenset[str],
+        *,
+        now_s: float,
+    ) -> str | None:
+        """Why the amendment window is not yet quiet, or ``None`` when it is.
+
+        Verified where the commands actually are — at the arbiter — not from
+        task state, because a suspended record over a live motion lease is
+        exactly the false claim this card exists to remove.
+        """
+
+        for channel_name in channels:
+            if not self._channel_is_parked(channel_name):
+                return f"channel_driving:{channel_name}"
+        if "spatial" in sources and self.spatial.active:
+            return "controller_active:spatial"
+        executive = self.task_executive.snapshot()
+        for row in executive.get("resource_leases", []):
+            if isinstance(row, dict) and row.get("task_id") in task_ids:
+                return f"lease_held:{row.get('task_id')}:{row.get('resource')}"
+        for task_id in task_ids:
+            state = self._task_state(task_id)
+            if state != "suspended":
+                return f"task_not_suspended:{task_id}:{state}"
+        intent = self.arbiter.current(now=now_s)
+        if intent is not None and intent.source in sources:
+            return f"active_intent:{intent.source}"
+        return None
+
+    def _refuse_amendment(
+        self,
+        failure: str,
+        channels: tuple[str, ...],
+        task_ids: list[str],
+        journal: list[dict[str, object]],
+        *,
+        controllers_parked: bool,
+    ) -> str:
+        """HOLD, refuse, roll back — in that order (A8).
+
+        The HOLD engaged at the top of the window is still on and stays on until
+        the rollback has finished, so a partial failure never leaves the system
+        half-amended and never leaves it driving either.
+        """
+
+        self._journal_amendment(journal, "refuse", failure, "applied")
+        self._rollback_amendment(
+            channels, task_ids, journal, controllers_parked=controllers_parked
+        )
+        self._release_amendment_hold(journal, "rollback_complete")
+        self._amendment_pending = False
+        self._amendment_txn = None
+        self._amendment_journal = [dict(row) for row in journal]
+        self.agent.last_brain_metrics["goal_amend_ok"] = False
+        self.agent.last_brain_metrics["goal_amend_reason"] = f"refused:{failure}"
+        self.agent.last_brain_metrics["goal_amend_journal"] = [
+            dict(row) for row in journal
+        ]
+        self._emit("voice", f"goal amend refused and rolled back: {failure}", "warning")
+        return (
+            "I couldn't safely pause everything to revise that, so I've left "
+            "the current goal exactly as it was."
+        )
+
+    def _rollback_amendment(
+        self,
+        channels: tuple[str, ...],
+        task_ids: list[str],
+        journal: list[dict[str, object]],
+        *,
+        controllers_parked: bool,
+    ) -> None:
+        """Undo whatever this window actually did, journalling each step first.
+
+        Which restore a task gets is decided by what happened to its
+        controller, exactly as the RESUME cap decides it (N14): a controller
+        that is still executing — because nothing was parked yet, or because
+        its channel just came back from its stored ``ResumeIntent`` — is
+        RE-BOUND (``resume_task_running``; a second dispatch would cold-start
+        the mission), and a controller that was STOPPED, which is every
+        behaviour that carries no ``ResumeIntent``, gets its task re-queued for
+        a fresh dispatch instead.
+        """
+
+        now_s = time.monotonic()
+        restored: set[str] = set()
+        for channel_name in channels:
+            if self._resume_store.peek(channel_name, now_s=now_s) is None:
+                continue
+            self._journal_amendment(journal, "rollback_channel", channel_name, "planned")
+            try:
+                self._resume_from_store(channel_name, now_s=now_s)
+            except (RuntimeError, ValueError, AttributeError) as error:
+                self._journal_amendment(
+                    journal, "rollback_channel", channel_name, f"failed:{error}"
+                )
+                continue
+            restored.add(channel_name)
+            self._journal_amendment(journal, "rollback_channel", channel_name, "applied")
+        for task_id in task_ids:
+            row = self._task_row(task_id)
+            if row.get("state") != "suspended":
+                continue
+            skill = row.get("skill")
+            channel = PAUSABLE_SKILL_CHANNELS.get(skill) if isinstance(skill, str) else None
+            live = not controllers_parked or (channel is not None and channel in restored)
+            self._journal_amendment(journal, "rollback_task", task_id, "planned")
+            if live:
+                disposition, request = self.task_executive.resume_task_running(
+                    task_id, reason=AMEND_ROLLBACK_REASON, now=now_s
+                )
+                if disposition.accepted and request is not None:
+                    self.semantic_tasks.adopt(request, now=now_s)
+                    self._journal_amendment(
+                        journal, "rollback_task", task_id, "applied:running"
+                    )
+                    continue
+            # Stale dispatch records first: the executive will emit a fresh
+            # DispatchRequest with the same key and the adapter refuses a
+            # dispatch whose key is already active.
+            self.semantic_tasks.cancel((task_id,))
+            requeue = self.task_executive.resume_task(task_id, reason=AMEND_ROLLBACK_REASON)
+            self._journal_amendment(
+                journal,
+                "rollback_task",
+                task_id,
+                "applied:queued" if requeue.accepted else f"failed:{requeue.action}",
+            )
+
+    def _close_amendment_window(self, outcome: str) -> None:
+        """Close an open window (commit or abandon) and drop its HOLD."""
+
+        txn = self._amendment_txn
+        if txn is None:
+            return
+        journal = txn["journal"]
+        assert isinstance(journal, list)
+        self._journal_amendment(journal, "close", outcome, "applied")
+        self._release_amendment_hold(journal, outcome)
+        self._amendment_txn = None
+        self._amendment_journal = [dict(row) for row in journal]
+
+    def _abandon_goal_amend(self, reason: str) -> str:
+        """Abandon an open amendment window and restore what it parked.
+
+        The mirror of the commit path: commit lets ``_accept_plan`` replace the
+        parked work, abandon puts it back. Both close the window, and neither
+        may leave the HOLD engaged.
+        """
+
+        txn = self._amendment_txn
+        if txn is None:
+            return "There's no goal revision in progress to drop."
+        channels = txn["channels"]
+        tasks = txn["tasks"]
+        journal = txn["journal"]
+        assert isinstance(channels, tuple) and isinstance(tasks, tuple)
+        assert isinstance(journal, list)
+        with self._command_lock:
+            self._journal_amendment(journal, "abandon", reason, "planned")
+            self._amendment_pending = False
+            # The window completed, so its controllers really were parked.
+            self._rollback_amendment(
+                channels, list(tasks), journal, controllers_parked=True
+            )
+            self._journal_amendment(journal, "abandon", reason, "applied")
+            self._close_amendment_window(f"abandoned:{reason}")
+        self.agent.last_brain_metrics["goal_amend_abandoned"] = reason
+        return "Okay — I've dropped that revision and picked up where I left off."
 
     def _step_reaction_bridge(self, observation: ObservationCarrierV1 | None) -> None:
         """Tick StimulusBus/ReactionArbiter; never preempt base (K6/B2)."""
@@ -10442,6 +10863,7 @@ class RobotRuntime:
                 "pace_factor": self._dialogue_pace_factor,
                 "gaze_mode": self._dialogue_gaze_mode,
                 "amendment_pending": self._amendment_pending,
+                "amendment_hold": dict(self._amendment_hold),
                 "reaction": dict(self._reaction_last),
             },
             "model": {
