@@ -93,5 +93,28 @@ are:
 This addendum supersedes stale status text above where it conflicts: H3 now
 has a verdict (non-travel drives useful, travel unsafe); H8 remains design
 only/deferred; H9 remains design only and must remove its superseded grammar
-arm; NAV-CORE and VOICE-GATE have no canonical result/verdict at this review.
-Fable cross-review is pending.
+arm. Fable subsequently adopted the HLD with amendments in
+[`FABLE_HLD_CROSS_REVIEW.md`](FABLE_HLD_CROSS_REVIEW.md). NAV-CORE now has a
+canonical result/verdict (the delegation hypothesis is refuted and Parcel's
+navigation glue remains below its promotion bar); VOICE-GATE remains a design.
+
+## Codex prototype capability wave 2 · 2026-08-24
+
+[`PROTOTYPE_RESEARCH_WAVE_2.md`](PROTOTYPE_RESEARCH_WAVE_2.md) synthesizes four
+new pre-registered mini-studies and their implementation consequences:
+
+- [`conversation-opportunity/`](conversation-opportunity/) — event-driven
+  local admission is conditionally supported, but owner identity and typed
+  fail-closed validation are prototype blockers;
+- [`spatiotemporal-noticing/`](spatiotemporal-noticing/) — spatial/track/time
+  fusion is mechanism evidence; a single novelty scalar and same-label map bit
+  are rejected;
+- [`safe-preference-adaptation/`](safe-preference-adaptation/) — the tested
+  implicit learner is refuted for enactment; explicit preferences plus shadow
+  learning are retained; and
+- [`terminal-aware-continuous-action/`](terminal-aware-continuous-action/) —
+  return-home plus stop-only TTC is refuted; proactive translation remains off
+  pending a safe-hold invariant and static-plus-dynamic planner.
+
+These four verdicts await independent Fable review. They do not change the
+Gate 0–8 order or claim physical readiness.

@@ -1,10 +1,10 @@
 # Portable Living-Dog Architecture · High-Level Design · 2026-08-24
 
-Status: **proposed authoritative architecture for Milestone 1**, prepared by
-Codex from the full `research/` corpus and a current product-path audit.
-Fable cross-review is requested. Existing research verdicts remain the
-evidence record; this document changes the system synthesis and build order,
-not their measurements.
+Status: **adopted-with-amendments as the frozen Milestone 1 architecture
+reference** by [`FABLE_HLD_CROSS_REVIEW.md`](FABLE_HLD_CROSS_REVIEW.md).
+Existing research verdicts remain the evidence record; this document changes
+the system synthesis and build order, not their measurements. The wave-2
+amendments in §16 await independent Fable review.
 
 ## 0. Milestone definition
 
@@ -737,3 +737,35 @@ living-dog milestone described here.
   first-milestone behavior.
 - Full semantic exploration/OCR: after real known-place navigation.
 - Self-initiated translation and outdoor ODD: post-M1 safety programs.
+
+## 16. Prototype research wave-2 amendments · 2026-08-24
+
+The evidence and full rationale are in
+[`PROTOTYPE_RESEARCH_WAVE_2.md`](PROTOTYPE_RESEARCH_WAVE_2.md). These amendments
+do not reorder Gates 0–8 or claim physical readiness.
+
+1. **Fail-closed social admission.** `ConversationOpportunityGate` consumes a
+   versioned typed candidate. Unknown/missing/wrong-type/non-finite/stale or
+   mixed-epoch state returns `DROP_INVALID` before scoring. A raw dictionary
+   with permissive defaults is prohibited. `OwnerBeliefV1` includes confidence,
+   ambiguity, consent and source epoch; presence alone never proves owner.
+2. **Structured world deltas.** Replace one novelty scalar with separate
+   identity novelty, place novelty, change surprise and social opportunity,
+   each linked to synchronized evidence. An uncertain delta first proposes
+   `GAZE_VERIFY`; it cannot directly create translation, durable memory, speech
+   or a hosted call.
+3. **Explicit preferences, shadow adaptation.** M1 enacts only explicit
+   per-owner likes/dislikes/quiet settings and deterministic cooldowns. An
+   implicit preference learner remains shadow-only until a held-out
+   longitudinal human study passes. It can never grant a skill, travel,
+   authority or a safety-bound change.
+4. **Safe-hold invariant for any future proactive travel.** Return-home plus
+   stop-only TTC is refuted. Admission must prove a reachable safe-hold region,
+   outbound success predicate and reserved return/yield budget. Execution must
+   plan over static and predicted dynamic occupancy and terminate explicitly
+   in `HOLD`, `RETURN`, `YIELD_ASIDE`, `FOLLOW_OWNER` or
+   `RELEASE_AUTHORITY`. Until noisy-track and physical promotion tests pass,
+   M1's self-initiated translation radius remains zero.
+
+Independent Fable review is required before these amendments become
+implementation acceptance rows.

@@ -18,3 +18,13 @@ shadow-only; the conversation opportunity gate requires commissioned
 owner/consent evidence before any enablement; noticing keeps separate
 identity/place/change/social evidence with GAZE_VERIFY before memory or
 speech. None of this promotes anything physical.
+
+## HLD §16 ratification (2026-08-24, after Codex's amendment edit)
+The four §16 amendments are RATIFIED as written — each restates a
+consequence this note already ratified from the re-run evidence
+(fail-closed social admission with `DROP_INVALID` before scoring;
+structured world deltas with `GAZE_VERIFY` gating memory/speech/hosted;
+explicit preferences enacted, implicit shadow-only behind a longitudinal
+human study; the safe-hold invariant with typed terminals replacing
+return-home + stop-only TTC, translation radius zero until promotion).
+None reorders Gates 0–8; none claims physical readiness.
