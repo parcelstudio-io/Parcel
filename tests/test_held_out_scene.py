@@ -123,10 +123,12 @@ ALLOWED: dict[str, str] = {
         "join LOAD_ALLOWED — an index never opens what it lists."
     ),
     "scrum/20260822/task_30/evidence_integrator_gate_20260823T0912.json": (
-        "GATE-0b's integrator-gate evidence record: the gate's own JSON output "
-        "names the scene inside a test id / skip reason it captured. Evidence under "
-        "scrum/, written by the gate after the fact; nothing loads it. Same "
-        "doc catch-22 as the MOVE1 entry below (integrator Fable, 2026-08-23)."
+        "GATE-0b's integrator-gate evidence record: the unitree-assets gate row's "
+        "compile detail names the scene ('city_block_b.xml: compiled N geom / M "
+        "mesh') — the same geometry-only compile GATE-0's seat already covers. "
+        "A gate log with a text header ahead of its JSON body, under scrum/; "
+        "nothing loads it. Same doc catch-22 as the MOVE1 entry below "
+        "(integrator Fable, 2026-08-23; wording per parcel-6c's lens)."
     ),
     "scrum/20260821/task_20/MOVE1_STATUS.md": (
         "MOVE-1's status record names the scene only to say its exposure stays "

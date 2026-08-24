@@ -119,7 +119,7 @@ def literal_lines(path: pathlib.Path, value: float) -> list[int]:
 #: ``(module path relative to parcel_robot, value) -> (cap, family, owner, why)``
 #:
 #: Census taken 2026-08-07 by this scanner. Every entry is a migration backlog
-#: item except the two tagged ``not-a-radius``, which are genuinely different
+#: item except those tagged ``not-a-radius``, which are genuinely different
 #: quantities that happen to share the literal 0.35.
 ALLOWLIST: dict[tuple[str, float], tuple[int, str, str, str]] = {
     # --- Lane A owns these; the residue is deliberate ----------------------
