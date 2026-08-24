@@ -33,3 +33,21 @@ was wrong; cost is driven by answering; (2) the pre-H1 ledger overcharged by
 M1-1 EAR. Design consequence: online = hosted mini as the answerer (it is
 cheap and far better), gated by VAD + owner voice identity + in-exchange
 triage; local = the OFFLINE floor (H9), not a cost lever.
+
+## Second read (parcel-6c, in-session, 2026-08-24) — CONCUR-WITH-NOTES
+(1) "Silence not billed" is not a cached-prefix artifact: rows 30/32 of
+`results/live_calibration.json` are different sessions and response ids
+(`h1_audio_60s_silence` / `h1_audio_no_silence`), both with
+`input_token_details.audio_tokens = 19`, `cached_tokens = 0`; no
+`speech_started`/`committed` events during the silence upload — server VAD
+discarded it before tokenisation. Notes: n = 1 pair (replicate at 0/30/120 s
+for ≤ $0.02 when budget allows); **scope: proven for server-VAD sessions
+only** — a lane that disables server VAD and commits buffers manually would
+tokenise what it commits, so the design must keep server VAD ON behind the
+local gate (`realtime.turn_detection` is a config-time knob; pin with a test).
+(2) P2 $/month: transcript $0.53 is measured end-to-end (39 escalated turns'
+text usage × mini card × 30 days) and independent of the audio calibration;
+audio $6.87 is modelled (output-audio term ≈ 84 % of audio_day; $6.39–$7.34
+at the two calibration points, $11.00 even at ratio 3.0). C8 is insensitive
+by two orders of magnitude; **the number that matters for a real house is
+the C5 refutation (960 opens/h on ambient speech), not C8.**

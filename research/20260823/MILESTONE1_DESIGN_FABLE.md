@@ -99,7 +99,12 @@ unmeasured half of C5) **and** in-exchange engagement triage
 is the floor (H9), not a cost lever; (iii) `runtime.py` builds `SpendLedger`
 with the rate card (one line) and the $200 ceiling is enforced on real
 prices with a $150 owner notice; (iv) Smart Turn v3 is wired to stop
-mid-sentence splits (3/20 in H1).
+mid-sentence splits (3/20 in H1); (v) the hosted session keeps **server VAD
+ON** behind the local gate — the not-billed-silence finding is proven for
+server-VAD sessions only (second read) — pinned by a config test; (vi) the
+silence pair is replicated at 0/30/120 s (≤ $0.02) in M1-1; (vii) the
+acceptance number for the house is ambient-speech false opens per hour
+(C5), measured with owner-voice gating on, not the monthly dollar figure.
 Local ear always on; Silero gate + pre-roll buffer opens the hosted socket
 only on speech and closes it at endpoint + idle; engagement triage decides
 hear-only / acknowledge (local, one clause) / answer (local 8B talker for
