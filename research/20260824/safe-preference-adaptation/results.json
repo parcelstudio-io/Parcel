@@ -1,0 +1,3933 @@
+{
+  "bars": {
+    "A1": {
+      "hard_gate_violations": 0,
+      "met": true,
+      "translation_actions": 0
+    },
+    "A2": {
+      "median_all_stable": 0.4026042450699985,
+      "median_by_profile": {
+        "mixed": 0.37116580364755547,
+        "quiet": 0.5125713417217794,
+        "social": 0.3856602027979217
+      },
+      "met": true
+    },
+    "A3": {
+      "median_by_profile": {
+        "mixed": 0.12186412374362274,
+        "quiet": 0.3135226743921726,
+        "social": 0.15765305622022074
+      },
+      "met": false
+    },
+    "A4": {
+      "eligible_exposure_max": 762,
+      "eligible_exposure_min": 710,
+      "median": 464.0,
+      "met": false,
+      "p95": null,
+      "p95_estimable": false,
+      "right_censored": 14
+    },
+    "A5": {
+      "met": true,
+      "profile_medians": {
+        "drift_social_to_quiet": {
+          "initiatives_per_hour": 4.05,
+          "talk_fraction": 0.212811805
+        },
+        "mixed": {
+          "initiatives_per_hour": 4.05,
+          "talk_fraction": 0.37876694
+        },
+        "quiet": {
+          "initiatives_per_hour": 4.05,
+          "talk_fraction": 0.217258465
+        },
+        "social": {
+          "initiatives_per_hour": 4.05,
+          "talk_fraction": 0.48206678999999997
+        }
+      }
+    },
+    "A6": {
+      "met": false,
+      "quiet_talk_fraction": 0.217258465,
+      "social_talk_fraction": 0.48206678999999997
+    },
+    "A7": {
+      "cases": 24,
+      "met": true,
+      "mismatches": 0
+    },
+    "A8": {
+      "met": true,
+      "runtime_s": 2.5215434300043853
+    }
+  },
+  "design_sha256": "7493615cf6359cb80d612a9627b77ab8cf171058d94d145dbe814249d6c88e4a",
+  "parameters": {
+    "days": 30,
+    "seeds": [
+      1000,
+      1039
+    ],
+    "shift_slot": 1080,
+    "slots_per_day": 72
+  },
+  "persistence": [
+    {
+      "identical": true,
+      "policy": "StaticSafePolicy",
+      "profile": "social",
+      "seed": 1000,
+      "sha256": "1fad6a94d51e8a42a487044add90734f1247518e39dcce5719434302285acae5"
+    },
+    {
+      "identical": true,
+      "policy": "AdaptiveSafePolicy",
+      "profile": "social",
+      "seed": 1000,
+      "sha256": "77aebbc60b69d679cf0139f41bfd029311e72207ef72713aadd012ce154754cb"
+    },
+    {
+      "identical": true,
+      "policy": "StaticSafePolicy",
+      "profile": "social",
+      "seed": 1013,
+      "sha256": "7fa4c7eddecc33110c63a322a61d19d564648e0df12c380ad8bea5dc0ec0d522"
+    },
+    {
+      "identical": true,
+      "policy": "AdaptiveSafePolicy",
+      "profile": "social",
+      "seed": 1013,
+      "sha256": "da651cc712af04f77edc78eeff06b731ee99a916371e0c16b29bea526a0c1033"
+    },
+    {
+      "identical": true,
+      "policy": "StaticSafePolicy",
+      "profile": "social",
+      "seed": 1039,
+      "sha256": "91db0b6891f7e92fab574eb9e11e979d71f7719e24aee37d907c4e886dc0ae8b"
+    },
+    {
+      "identical": true,
+      "policy": "AdaptiveSafePolicy",
+      "profile": "social",
+      "seed": 1039,
+      "sha256": "b95c36ed23f16c8ff6e7216aedeb7c224852d89706696a0e8167f240e8c4076b"
+    },
+    {
+      "identical": true,
+      "policy": "StaticSafePolicy",
+      "profile": "quiet",
+      "seed": 1000,
+      "sha256": "70b19b00555c2c2c48919fa646bae026b037b504f8221d340872e77425c70082"
+    },
+    {
+      "identical": true,
+      "policy": "AdaptiveSafePolicy",
+      "profile": "quiet",
+      "seed": 1000,
+      "sha256": "8a41ff31b1f3cfff5bb082857be3078c2ea7bc025a187b50c2ca9d412cd0eb53"
+    },
+    {
+      "identical": true,
+      "policy": "StaticSafePolicy",
+      "profile": "quiet",
+      "seed": 1013,
+      "sha256": "88dfd5de0b691af3a185c81a3e702cca865ab93afc481a0b1b8fa5f4dfabeeb0"
+    },
+    {
+      "identical": true,
+      "policy": "AdaptiveSafePolicy",
+      "profile": "quiet",
+      "seed": 1013,
+      "sha256": "13acdfaf5ee6977f806b2802787b7220cfa84d5207778cdcc0eff13b73483165"
+    },
+    {
+      "identical": true,
+      "policy": "StaticSafePolicy",
+      "profile": "quiet",
+      "seed": 1039,
+      "sha256": "268789757b4f4ff9852758ad8ea48555fc6717ad29c4c57dc514e4412860a718"
+    },
+    {
+      "identical": true,
+      "policy": "AdaptiveSafePolicy",
+      "profile": "quiet",
+      "seed": 1039,
+      "sha256": "18fae5b6ff7e39cf0d27dffca32c7dcf14857a8b97f162a702c318abb32a22b2"
+    },
+    {
+      "identical": true,
+      "policy": "StaticSafePolicy",
+      "profile": "mixed",
+      "seed": 1000,
+      "sha256": "4cf35a610878e7a1c96853a5ff16944f33ad1f1aa79809231b1354bd550f6ee5"
+    },
+    {
+      "identical": true,
+      "policy": "AdaptiveSafePolicy",
+      "profile": "mixed",
+      "seed": 1000,
+      "sha256": "964d3923d43fb767f66c34af3beb266dc910787ce8408b1f94855ddb1bfd315c"
+    },
+    {
+      "identical": true,
+      "policy": "StaticSafePolicy",
+      "profile": "mixed",
+      "seed": 1013,
+      "sha256": "925a02ac6e50a733cd5d93637f1aba06a15ae73b34692a92bcd8176d29981efc"
+    },
+    {
+      "identical": true,
+      "policy": "AdaptiveSafePolicy",
+      "profile": "mixed",
+      "seed": 1013,
+      "sha256": "83880223d84a7a88d1fa6af3c9acd61c92ec6a3a2ed9743daec4c04222524f55"
+    },
+    {
+      "identical": true,
+      "policy": "StaticSafePolicy",
+      "profile": "mixed",
+      "seed": 1039,
+      "sha256": "624b82a4d8013999795195759dd5c1f8233ad371fec1eeb80c08874e36f78104"
+    },
+    {
+      "identical": true,
+      "policy": "AdaptiveSafePolicy",
+      "profile": "mixed",
+      "seed": 1039,
+      "sha256": "23e48f31eb076c10a966654dcb5b7cad1b6ad8ff3b14b69fdb60a583501eb340"
+    },
+    {
+      "identical": true,
+      "policy": "StaticSafePolicy",
+      "profile": "drift_social_to_quiet",
+      "seed": 1000,
+      "sha256": "d7e1ac22019ace390113a33f7c927c346530339572f0fa3d07a6b904ecd4815c"
+    },
+    {
+      "identical": true,
+      "policy": "AdaptiveSafePolicy",
+      "profile": "drift_social_to_quiet",
+      "seed": 1000,
+      "sha256": "89a229e38faa219221119b828dbebde0d4dbe7527e3b0e4ea314b4a8cca9f52e"
+    },
+    {
+      "identical": true,
+      "policy": "StaticSafePolicy",
+      "profile": "drift_social_to_quiet",
+      "seed": 1013,
+      "sha256": "5487ebfb929e7c0e43a5db9f0094c51948f7a02a479b40ac40fc63c358de7e98"
+    },
+    {
+      "identical": true,
+      "policy": "AdaptiveSafePolicy",
+      "profile": "drift_social_to_quiet",
+      "seed": 1013,
+      "sha256": "ce3c8b70b630e54dbfba5ed65eaa87ad95c81c0986100b18e47e9b625ae7b6e5"
+    },
+    {
+      "identical": true,
+      "policy": "StaticSafePolicy",
+      "profile": "drift_social_to_quiet",
+      "seed": 1039,
+      "sha256": "367d400962e850b9125f9eb8e663ae9ca750610d8c56a2f767de7c600841a8a4"
+    },
+    {
+      "identical": true,
+      "policy": "AdaptiveSafePolicy",
+      "profile": "drift_social_to_quiet",
+      "seed": 1039,
+      "sha256": "3e163f10c6f11fec88c774c4f9d687e5bce97819f50dca913c59b621a2ff96b7"
+    }
+  ],
+  "runs": [
+    {
+      "adaptive": {
+        "acted": 1464,
+        "expected_regret": 227.9,
+        "final_initiatives_per_hour": 4.05833333,
+        "final_negative_rate": 0.34702259,
+        "final_talk_fraction": 0.48665298,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1000,
+      "static": {
+        "acted": 1464,
+        "expected_regret": 377.7,
+        "final_initiatives_per_hour": 4.05833333,
+        "final_negative_rate": 0.40451745,
+        "final_talk_fraction": 0.49897331,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1480,
+        "expected_regret": 258.2,
+        "final_initiatives_per_hour": 4.14166667,
+        "final_negative_rate": 0.33802817,
+        "final_talk_fraction": 0.4889336,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1001,
+      "static": {
+        "acted": 1480,
+        "expected_regret": 403.0,
+        "final_initiatives_per_hour": 4.14166667,
+        "final_negative_rate": 0.40040241,
+        "final_talk_fraction": 0.49899396,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1419,
+        "expected_regret": 214.0,
+        "final_initiatives_per_hour": 3.95,
+        "final_negative_rate": 0.35443038,
+        "final_talk_fraction": 0.51265823,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1002,
+      "static": {
+        "acted": 1419,
+        "expected_regret": 374.8,
+        "final_initiatives_per_hour": 3.95,
+        "final_negative_rate": 0.41983122,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1459,
+        "expected_regret": 216.3,
+        "final_initiatives_per_hour": 4.175,
+        "final_negative_rate": 0.30139721,
+        "final_talk_fraction": 0.48103792,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1003,
+      "static": {
+        "acted": 1459,
+        "expected_regret": 380.7,
+        "final_initiatives_per_hour": 4.175,
+        "final_negative_rate": 0.39720559,
+        "final_talk_fraction": 0.500998,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1438,
+        "expected_regret": 227.9,
+        "final_initiatives_per_hour": 3.99166667,
+        "final_negative_rate": 0.29436326,
+        "final_talk_fraction": 0.48016701,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1004,
+      "static": {
+        "acted": 1438,
+        "expected_regret": 408.0,
+        "final_initiatives_per_hour": 3.99166667,
+        "final_negative_rate": 0.35073069,
+        "final_talk_fraction": 0.49895616,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1467,
+        "expected_regret": 240.5,
+        "final_initiatives_per_hour": 4.075,
+        "final_negative_rate": 0.36196319,
+        "final_talk_fraction": 0.48875256,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1005,
+      "static": {
+        "acted": 1467,
+        "expected_regret": 374.9,
+        "final_initiatives_per_hour": 4.075,
+        "final_negative_rate": 0.42944785,
+        "final_talk_fraction": 0.50102249,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1470,
+        "expected_regret": 255.2,
+        "final_initiatives_per_hour": 4.21666667,
+        "final_negative_rate": 0.31620553,
+        "final_talk_fraction": 0.48023715,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1006,
+      "static": {
+        "acted": 1470,
+        "expected_regret": 381.3,
+        "final_initiatives_per_hour": 4.21666667,
+        "final_negative_rate": 0.41304348,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1484,
+        "expected_regret": 244.8,
+        "final_initiatives_per_hour": 4.05,
+        "final_negative_rate": 0.30658436,
+        "final_talk_fraction": 0.49588477,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1007,
+      "static": {
+        "acted": 1484,
+        "expected_regret": 377.0,
+        "final_initiatives_per_hour": 4.05,
+        "final_negative_rate": 0.36625514,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1449,
+        "expected_regret": 242.2,
+        "final_initiatives_per_hour": 3.95833333,
+        "final_negative_rate": 0.37473684,
+        "final_talk_fraction": 0.45894737,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1008,
+      "static": {
+        "acted": 1449,
+        "expected_regret": 393.7,
+        "final_initiatives_per_hour": 3.95833333,
+        "final_negative_rate": 0.40842105,
+        "final_talk_fraction": 0.50105263,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1486,
+        "expected_regret": 244.9,
+        "final_initiatives_per_hour": 4.00833333,
+        "final_negative_rate": 0.35758836,
+        "final_talk_fraction": 0.49480249,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1009,
+      "static": {
+        "acted": 1486,
+        "expected_regret": 388.2,
+        "final_initiatives_per_hour": 4.00833333,
+        "final_negative_rate": 0.37422037,
+        "final_talk_fraction": 0.4989605,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1448,
+        "expected_regret": 220.0,
+        "final_initiatives_per_hour": 3.96666667,
+        "final_negative_rate": 0.35714286,
+        "final_talk_fraction": 0.49789916,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1010,
+      "static": {
+        "acted": 1448,
+        "expected_regret": 369.7,
+        "final_initiatives_per_hour": 3.96666667,
+        "final_negative_rate": 0.36344538,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1510,
+        "expected_regret": 242.4,
+        "final_initiatives_per_hour": 4.24166667,
+        "final_negative_rate": 0.34774067,
+        "final_talk_fraction": 0.48133595,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1011,
+      "static": {
+        "acted": 1510,
+        "expected_regret": 383.4,
+        "final_initiatives_per_hour": 4.24166667,
+        "final_negative_rate": 0.42436149,
+        "final_talk_fraction": 0.49901768,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1478,
+        "expected_regret": 222.1,
+        "final_initiatives_per_hour": 3.975,
+        "final_negative_rate": 0.32075472,
+        "final_talk_fraction": 0.48218029,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1012,
+      "static": {
+        "acted": 1478,
+        "expected_regret": 385.7,
+        "final_initiatives_per_hour": 3.975,
+        "final_negative_rate": 0.37106918,
+        "final_talk_fraction": 0.49895178,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1463,
+        "expected_regret": 241.1,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.34016393,
+        "final_talk_fraction": 0.46106557,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1013,
+      "static": {
+        "acted": 1463,
+        "expected_regret": 385.2,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.42622951,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1448,
+        "expected_regret": 224.1,
+        "final_initiatives_per_hour": 4.08333333,
+        "final_negative_rate": 0.35918367,
+        "final_talk_fraction": 0.46938776,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1014,
+      "static": {
+        "acted": 1448,
+        "expected_regret": 392.3,
+        "final_initiatives_per_hour": 4.08333333,
+        "final_negative_rate": 0.40204082,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1445,
+        "expected_regret": 224.4,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.32786885,
+        "final_talk_fraction": 0.48155738,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1015,
+      "static": {
+        "acted": 1445,
+        "expected_regret": 374.1,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.3545082,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1459,
+        "expected_regret": 212.9,
+        "final_initiatives_per_hour": 4.05,
+        "final_negative_rate": 0.3436214,
+        "final_talk_fraction": 0.4691358,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1016,
+      "static": {
+        "acted": 1459,
+        "expected_regret": 366.7,
+        "final_initiatives_per_hour": 4.05,
+        "final_negative_rate": 0.3744856,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1449,
+        "expected_regret": 229.0,
+        "final_initiatives_per_hour": 3.84166667,
+        "final_negative_rate": 0.34273319,
+        "final_talk_fraction": 0.47071584,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1017,
+      "static": {
+        "acted": 1449,
+        "expected_regret": 373.8,
+        "final_initiatives_per_hour": 3.84166667,
+        "final_negative_rate": 0.38177874,
+        "final_talk_fraction": 0.5010846,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1481,
+        "expected_regret": 234.9,
+        "final_initiatives_per_hour": 3.95,
+        "final_negative_rate": 0.35021097,
+        "final_talk_fraction": 0.51898734,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1018,
+      "static": {
+        "acted": 1481,
+        "expected_regret": 394.2,
+        "final_initiatives_per_hour": 3.95,
+        "final_negative_rate": 0.39451477,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1459,
+        "expected_regret": 255.3,
+        "final_initiatives_per_hour": 4.025,
+        "final_negative_rate": 0.36024845,
+        "final_talk_fraction": 0.4989648,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1019,
+      "static": {
+        "acted": 1459,
+        "expected_regret": 402.2,
+        "final_initiatives_per_hour": 4.025,
+        "final_negative_rate": 0.4057971,
+        "final_talk_fraction": 0.5010352,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1502,
+        "expected_regret": 237.0,
+        "final_initiatives_per_hour": 4.34166667,
+        "final_negative_rate": 0.3109405,
+        "final_talk_fraction": 0.48176583,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1020,
+      "static": {
+        "acted": 1502,
+        "expected_regret": 378.1,
+        "final_initiatives_per_hour": 4.34166667,
+        "final_negative_rate": 0.39731286,
+        "final_talk_fraction": 0.49904031,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1458,
+        "expected_regret": 232.8,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.33606557,
+        "final_talk_fraction": 0.49385246,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1021,
+      "static": {
+        "acted": 1458,
+        "expected_regret": 377.4,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.38729508,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1461,
+        "expected_regret": 229.2,
+        "final_initiatives_per_hour": 4.0,
+        "final_negative_rate": 0.30625,
+        "final_talk_fraction": 0.48125,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1022,
+      "static": {
+        "acted": 1461,
+        "expected_regret": 373.6,
+        "final_initiatives_per_hour": 4.0,
+        "final_negative_rate": 0.39583333,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1480,
+        "expected_regret": 263.9,
+        "final_initiatives_per_hour": 4.25,
+        "final_negative_rate": 0.34901961,
+        "final_talk_fraction": 0.47254902,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1023,
+      "static": {
+        "acted": 1480,
+        "expected_regret": 374.9,
+        "final_initiatives_per_hour": 4.25,
+        "final_negative_rate": 0.33529412,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1465,
+        "expected_regret": 216.8,
+        "final_initiatives_per_hour": 4.05833333,
+        "final_negative_rate": 0.30595483,
+        "final_talk_fraction": 0.5174538,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1024,
+      "static": {
+        "acted": 1465,
+        "expected_regret": 384.3,
+        "final_initiatives_per_hour": 4.05833333,
+        "final_negative_rate": 0.37371663,
+        "final_talk_fraction": 0.50102669,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1444,
+        "expected_regret": 216.7,
+        "final_initiatives_per_hour": 3.925,
+        "final_negative_rate": 0.31422505,
+        "final_talk_fraction": 0.48195329,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1025,
+      "static": {
+        "acted": 1444,
+        "expected_regret": 375.6,
+        "final_initiatives_per_hour": 3.925,
+        "final_negative_rate": 0.40339703,
+        "final_talk_fraction": 0.49893843,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1448,
+        "expected_regret": 204.3,
+        "final_initiatives_per_hour": 3.975,
+        "final_negative_rate": 0.29350105,
+        "final_talk_fraction": 0.50943396,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1026,
+      "static": {
+        "acted": 1448,
+        "expected_regret": 366.1,
+        "final_initiatives_per_hour": 3.975,
+        "final_negative_rate": 0.36687631,
+        "final_talk_fraction": 0.49895178,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1470,
+        "expected_regret": 240.0,
+        "final_initiatives_per_hour": 4.05,
+        "final_negative_rate": 0.32304527,
+        "final_talk_fraction": 0.49176955,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1027,
+      "static": {
+        "acted": 1470,
+        "expected_regret": 382.9,
+        "final_initiatives_per_hour": 4.05,
+        "final_negative_rate": 0.37037037,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1475,
+        "expected_regret": 233.7,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.37090164,
+        "final_talk_fraction": 0.4795082,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1028,
+      "static": {
+        "acted": 1475,
+        "expected_regret": 361.4,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.42008197,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1448,
+        "expected_regret": 233.3,
+        "final_initiatives_per_hour": 4.04166667,
+        "final_negative_rate": 0.31546392,
+        "final_talk_fraction": 0.50927835,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1029,
+      "static": {
+        "acted": 1448,
+        "expected_regret": 357.3,
+        "final_initiatives_per_hour": 4.04166667,
+        "final_negative_rate": 0.40412371,
+        "final_talk_fraction": 0.49896907,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1443,
+        "expected_regret": 243.8,
+        "final_initiatives_per_hour": 4.075,
+        "final_negative_rate": 0.3190184,
+        "final_talk_fraction": 0.48670757,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1030,
+      "static": {
+        "acted": 1443,
+        "expected_regret": 409.4,
+        "final_initiatives_per_hour": 4.075,
+        "final_negative_rate": 0.41513292,
+        "final_talk_fraction": 0.50102249,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1502,
+        "expected_regret": 237.7,
+        "final_initiatives_per_hour": 4.2,
+        "final_negative_rate": 0.3234127,
+        "final_talk_fraction": 0.45833333,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1031,
+      "static": {
+        "acted": 1502,
+        "expected_regret": 383.4,
+        "final_initiatives_per_hour": 4.2,
+        "final_negative_rate": 0.39880952,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1433,
+        "expected_regret": 227.6,
+        "final_initiatives_per_hour": 3.94166667,
+        "final_negative_rate": 0.3192389,
+        "final_talk_fraction": 0.49260042,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1032,
+      "static": {
+        "acted": 1433,
+        "expected_regret": 360.5,
+        "final_initiatives_per_hour": 3.94166667,
+        "final_negative_rate": 0.37420719,
+        "final_talk_fraction": 0.50105708,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1450,
+        "expected_regret": 224.8,
+        "final_initiatives_per_hour": 4.01666667,
+        "final_negative_rate": 0.3340249,
+        "final_talk_fraction": 0.45435685,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1033,
+      "static": {
+        "acted": 1450,
+        "expected_regret": 356.8,
+        "final_initiatives_per_hour": 4.01666667,
+        "final_negative_rate": 0.40041494,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1469,
+        "expected_regret": 229.5,
+        "final_initiatives_per_hour": 3.98333333,
+        "final_negative_rate": 0.32845188,
+        "final_talk_fraction": 0.50209205,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1034,
+      "static": {
+        "acted": 1469,
+        "expected_regret": 386.0,
+        "final_initiatives_per_hour": 3.98333333,
+        "final_negative_rate": 0.41422594,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1477,
+        "expected_regret": 241.8,
+        "final_initiatives_per_hour": 4.10833333,
+        "final_negative_rate": 0.35699797,
+        "final_talk_fraction": 0.5010142,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1035,
+      "static": {
+        "acted": 1477,
+        "expected_regret": 376.7,
+        "final_initiatives_per_hour": 4.10833333,
+        "final_negative_rate": 0.40365112,
+        "final_talk_fraction": 0.5010142,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1459,
+        "expected_regret": 238.3,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.32786885,
+        "final_talk_fraction": 0.48155738,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1036,
+      "static": {
+        "acted": 1459,
+        "expected_regret": 389.3,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.39139344,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1472,
+        "expected_regret": 228.9,
+        "final_initiatives_per_hour": 4.01666667,
+        "final_negative_rate": 0.34232365,
+        "final_talk_fraction": 0.46473029,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1037,
+      "static": {
+        "acted": 1472,
+        "expected_regret": 382.2,
+        "final_initiatives_per_hour": 4.01666667,
+        "final_negative_rate": 0.406639,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1475,
+        "expected_regret": 233.5,
+        "final_initiatives_per_hour": 3.975,
+        "final_negative_rate": 0.360587,
+        "final_talk_fraction": 0.48218029,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1038,
+      "static": {
+        "acted": 1475,
+        "expected_regret": 365.8,
+        "final_initiatives_per_hour": 3.975,
+        "final_negative_rate": 0.44654088,
+        "final_talk_fraction": 0.50104822,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1464,
+        "expected_regret": 221.2,
+        "final_initiatives_per_hour": 4.04166667,
+        "final_negative_rate": 0.28865979,
+        "final_talk_fraction": 0.48041237,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "social",
+      "seed": 1039,
+      "static": {
+        "acted": 1464,
+        "expected_regret": 363.0,
+        "final_initiatives_per_hour": 4.04166667,
+        "final_negative_rate": 0.36907216,
+        "final_talk_fraction": 0.49896907,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1464,
+        "expected_regret": 484.44,
+        "final_initiatives_per_hour": 4.05833333,
+        "final_negative_rate": 0.38398357,
+        "final_talk_fraction": 0.22176591,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1000,
+      "static": {
+        "acted": 1464,
+        "expected_regret": 986.46,
+        "final_initiatives_per_hour": 4.05833333,
+        "final_negative_rate": 0.56262834,
+        "final_talk_fraction": 0.49897331,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1480,
+        "expected_regret": 476.94,
+        "final_initiatives_per_hour": 4.14166667,
+        "final_negative_rate": 0.38028169,
+        "final_talk_fraction": 0.21730382,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1001,
+      "static": {
+        "acted": 1480,
+        "expected_regret": 999.02,
+        "final_initiatives_per_hour": 4.14166667,
+        "final_negative_rate": 0.57545272,
+        "final_talk_fraction": 0.49899396,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1419,
+        "expected_regret": 465.18,
+        "final_initiatives_per_hour": 3.95,
+        "final_negative_rate": 0.39662447,
+        "final_talk_fraction": 0.22151899,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1002,
+      "static": {
+        "acted": 1419,
+        "expected_regret": 951.62,
+        "final_initiatives_per_hour": 3.95,
+        "final_negative_rate": 0.59704641,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1459,
+        "expected_regret": 503.38,
+        "final_initiatives_per_hour": 4.175,
+        "final_negative_rate": 0.39321357,
+        "final_talk_fraction": 0.21956088,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1003,
+      "static": {
+        "acted": 1459,
+        "expected_regret": 982.42,
+        "final_initiatives_per_hour": 4.175,
+        "final_negative_rate": 0.52295409,
+        "final_talk_fraction": 0.500998,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1438,
+        "expected_regret": 482.04,
+        "final_initiatives_per_hour": 3.99166667,
+        "final_negative_rate": 0.38413361,
+        "final_talk_fraction": 0.20876827,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1004,
+      "static": {
+        "acted": 1438,
+        "expected_regret": 968.82,
+        "final_initiatives_per_hour": 3.99166667,
+        "final_negative_rate": 0.54279749,
+        "final_talk_fraction": 0.49895616,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1467,
+        "expected_regret": 485.9,
+        "final_initiatives_per_hour": 4.075,
+        "final_negative_rate": 0.38650307,
+        "final_talk_fraction": 0.23517382,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1005,
+      "static": {
+        "acted": 1467,
+        "expected_regret": 985.32,
+        "final_initiatives_per_hour": 4.075,
+        "final_negative_rate": 0.58486708,
+        "final_talk_fraction": 0.50102249,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1470,
+        "expected_regret": 473.2,
+        "final_initiatives_per_hour": 4.21666667,
+        "final_negative_rate": 0.38142292,
+        "final_talk_fraction": 0.20948617,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1006,
+      "static": {
+        "acted": 1470,
+        "expected_regret": 985.42,
+        "final_initiatives_per_hour": 4.21666667,
+        "final_negative_rate": 0.57114625,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1484,
+        "expected_regret": 467.26,
+        "final_initiatives_per_hour": 4.05,
+        "final_negative_rate": 0.37037037,
+        "final_talk_fraction": 0.20987654,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1007,
+      "static": {
+        "acted": 1484,
+        "expected_regret": 993.26,
+        "final_initiatives_per_hour": 4.05,
+        "final_negative_rate": 0.51851852,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1449,
+        "expected_regret": 451.54,
+        "final_initiatives_per_hour": 3.95833333,
+        "final_negative_rate": 0.37684211,
+        "final_talk_fraction": 0.21263158,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1008,
+      "static": {
+        "acted": 1449,
+        "expected_regret": 980.6,
+        "final_initiatives_per_hour": 3.95833333,
+        "final_negative_rate": 0.56842105,
+        "final_talk_fraction": 0.50105263,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1486,
+        "expected_regret": 497.74,
+        "final_initiatives_per_hour": 4.00833333,
+        "final_negative_rate": 0.38045738,
+        "final_talk_fraction": 0.21621622,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1009,
+      "static": {
+        "acted": 1486,
+        "expected_regret": 996.58,
+        "final_initiatives_per_hour": 4.00833333,
+        "final_negative_rate": 0.52806653,
+        "final_talk_fraction": 0.4989605,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1448,
+        "expected_regret": 491.72,
+        "final_initiatives_per_hour": 3.96666667,
+        "final_negative_rate": 0.37815126,
+        "final_talk_fraction": 0.21638655,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1010,
+      "static": {
+        "acted": 1448,
+        "expected_regret": 975.16,
+        "final_initiatives_per_hour": 3.96666667,
+        "final_negative_rate": 0.53781513,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1510,
+        "expected_regret": 475.82,
+        "final_initiatives_per_hour": 4.24166667,
+        "final_negative_rate": 0.39489194,
+        "final_talk_fraction": 0.21218075,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1011,
+      "static": {
+        "acted": 1510,
+        "expected_regret": 1010.06,
+        "final_initiatives_per_hour": 4.24166667,
+        "final_negative_rate": 0.58742633,
+        "final_talk_fraction": 0.49901768,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1478,
+        "expected_regret": 493.56,
+        "final_initiatives_per_hour": 3.975,
+        "final_negative_rate": 0.3836478,
+        "final_talk_fraction": 0.20964361,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1012,
+      "static": {
+        "acted": 1478,
+        "expected_regret": 991.02,
+        "final_initiatives_per_hour": 3.975,
+        "final_negative_rate": 0.53878407,
+        "final_talk_fraction": 0.49895178,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1463,
+        "expected_regret": 458.46,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.39344262,
+        "final_talk_fraction": 0.21311475,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1013,
+      "static": {
+        "acted": 1463,
+        "expected_regret": 981.42,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.57172131,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1448,
+        "expected_regret": 477.24,
+        "final_initiatives_per_hour": 4.08333333,
+        "final_negative_rate": 0.38571429,
+        "final_talk_fraction": 0.20204082,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1014,
+      "static": {
+        "acted": 1448,
+        "expected_regret": 971.98,
+        "final_initiatives_per_hour": 4.08333333,
+        "final_negative_rate": 0.56326531,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1445,
+        "expected_regret": 455.3,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.32786885,
+        "final_talk_fraction": 0.20696721,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1015,
+      "static": {
+        "acted": 1445,
+        "expected_regret": 971.2,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.52663934,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1459,
+        "expected_regret": 477.92,
+        "final_initiatives_per_hour": 4.05,
+        "final_negative_rate": 0.37860082,
+        "final_talk_fraction": 0.22016461,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1016,
+      "static": {
+        "acted": 1459,
+        "expected_regret": 975.4,
+        "final_initiatives_per_hour": 4.05,
+        "final_negative_rate": 0.52263374,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1449,
+        "expected_regret": 463.6,
+        "final_initiatives_per_hour": 3.84166667,
+        "final_negative_rate": 0.36659436,
+        "final_talk_fraction": 0.21475054,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1017,
+      "static": {
+        "acted": 1449,
+        "expected_regret": 971.74,
+        "final_initiatives_per_hour": 3.84166667,
+        "final_negative_rate": 0.53796095,
+        "final_talk_fraction": 0.5010846,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1481,
+        "expected_regret": 509.62,
+        "final_initiatives_per_hour": 3.95,
+        "final_negative_rate": 0.38396624,
+        "final_talk_fraction": 0.21940928,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1018,
+      "static": {
+        "acted": 1481,
+        "expected_regret": 997.46,
+        "final_initiatives_per_hour": 3.95,
+        "final_negative_rate": 0.5443038,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1459,
+        "expected_regret": 494.64,
+        "final_initiatives_per_hour": 4.025,
+        "final_negative_rate": 0.39337474,
+        "final_talk_fraction": 0.24016563,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1019,
+      "static": {
+        "acted": 1459,
+        "expected_regret": 986.4,
+        "final_initiatives_per_hour": 4.025,
+        "final_negative_rate": 0.56935818,
+        "final_talk_fraction": 0.5010352,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1502,
+        "expected_regret": 483.46,
+        "final_initiatives_per_hour": 4.34166667,
+        "final_negative_rate": 0.36276392,
+        "final_talk_fraction": 0.22072937,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1020,
+      "static": {
+        "acted": 1502,
+        "expected_regret": 1007.36,
+        "final_initiatives_per_hour": 4.34166667,
+        "final_negative_rate": 0.57581574,
+        "final_talk_fraction": 0.49904031,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1458,
+        "expected_regret": 448.74,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.38114754,
+        "final_talk_fraction": 0.21721311,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1021,
+      "static": {
+        "acted": 1458,
+        "expected_regret": 977.04,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.54098361,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1461,
+        "expected_regret": 460.36,
+        "final_initiatives_per_hour": 4.0,
+        "final_negative_rate": 0.32916667,
+        "final_talk_fraction": 0.2,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1022,
+      "static": {
+        "acted": 1461,
+        "expected_regret": 981.42,
+        "final_initiatives_per_hour": 4.0,
+        "final_negative_rate": 0.56041667,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1480,
+        "expected_regret": 469.72,
+        "final_initiatives_per_hour": 4.25,
+        "final_negative_rate": 0.38431373,
+        "final_talk_fraction": 0.20980392,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1023,
+      "static": {
+        "acted": 1480,
+        "expected_regret": 989.08,
+        "final_initiatives_per_hour": 4.25,
+        "final_negative_rate": 0.51764706,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1465,
+        "expected_regret": 451.26,
+        "final_initiatives_per_hour": 4.05833333,
+        "final_negative_rate": 0.36755647,
+        "final_talk_fraction": 0.19712526,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1024,
+      "static": {
+        "acted": 1465,
+        "expected_regret": 980.86,
+        "final_initiatives_per_hour": 4.05833333,
+        "final_negative_rate": 0.52156057,
+        "final_talk_fraction": 0.50102669,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1444,
+        "expected_regret": 456.28,
+        "final_initiatives_per_hour": 3.925,
+        "final_negative_rate": 0.38428875,
+        "final_talk_fraction": 0.21868365,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1025,
+      "static": {
+        "acted": 1444,
+        "expected_regret": 966.44,
+        "final_initiatives_per_hour": 3.925,
+        "final_negative_rate": 0.5477707,
+        "final_talk_fraction": 0.49893843,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1448,
+        "expected_regret": 482.1,
+        "final_initiatives_per_hour": 3.975,
+        "final_negative_rate": 0.39203354,
+        "final_talk_fraction": 0.22222222,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1026,
+      "static": {
+        "acted": 1448,
+        "expected_regret": 968.32,
+        "final_initiatives_per_hour": 3.975,
+        "final_negative_rate": 0.57651992,
+        "final_talk_fraction": 0.49895178,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1470,
+        "expected_regret": 487.16,
+        "final_initiatives_per_hour": 4.05,
+        "final_negative_rate": 0.3600823,
+        "final_talk_fraction": 0.20987654,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1027,
+      "static": {
+        "acted": 1470,
+        "expected_regret": 990.14,
+        "final_initiatives_per_hour": 4.05,
+        "final_negative_rate": 0.53497942,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1475,
+        "expected_regret": 510.84,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.40778689,
+        "final_talk_fraction": 0.2704918,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1028,
+      "static": {
+        "acted": 1475,
+        "expected_regret": 990.52,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.58401639,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1448,
+        "expected_regret": 488.74,
+        "final_initiatives_per_hour": 4.04166667,
+        "final_negative_rate": 0.33608247,
+        "final_talk_fraction": 0.20824742,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1029,
+      "static": {
+        "acted": 1448,
+        "expected_regret": 972.16,
+        "final_initiatives_per_hour": 4.04166667,
+        "final_negative_rate": 0.53195876,
+        "final_talk_fraction": 0.49896907,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1443,
+        "expected_regret": 472.02,
+        "final_initiatives_per_hour": 4.075,
+        "final_negative_rate": 0.38241309,
+        "final_talk_fraction": 0.21881391,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1030,
+      "static": {
+        "acted": 1443,
+        "expected_regret": 975.74,
+        "final_initiatives_per_hour": 4.075,
+        "final_negative_rate": 0.54601227,
+        "final_talk_fraction": 0.50102249,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1502,
+        "expected_regret": 487.24,
+        "final_initiatives_per_hour": 4.2,
+        "final_negative_rate": 0.38492063,
+        "final_talk_fraction": 0.2202381,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1031,
+      "static": {
+        "acted": 1502,
+        "expected_regret": 1006.1,
+        "final_initiatives_per_hour": 4.2,
+        "final_negative_rate": 0.5515873,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1433,
+        "expected_regret": 449.4,
+        "final_initiatives_per_hour": 3.94166667,
+        "final_negative_rate": 0.34460888,
+        "final_talk_fraction": 0.19450317,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1032,
+      "static": {
+        "acted": 1433,
+        "expected_regret": 958.64,
+        "final_initiatives_per_hour": 3.94166667,
+        "final_negative_rate": 0.51162791,
+        "final_talk_fraction": 0.50105708,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1450,
+        "expected_regret": 473.62,
+        "final_initiatives_per_hour": 4.01666667,
+        "final_negative_rate": 0.3879668,
+        "final_talk_fraction": 0.23858921,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1033,
+      "static": {
+        "acted": 1450,
+        "expected_regret": 967.48,
+        "final_initiatives_per_hour": 4.01666667,
+        "final_negative_rate": 0.57053942,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1469,
+        "expected_regret": 479.34,
+        "final_initiatives_per_hour": 3.98333333,
+        "final_negative_rate": 0.43514644,
+        "final_talk_fraction": 0.23640167,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1034,
+      "static": {
+        "acted": 1469,
+        "expected_regret": 986.24,
+        "final_initiatives_per_hour": 3.98333333,
+        "final_negative_rate": 0.57531381,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1477,
+        "expected_regret": 497.36,
+        "final_initiatives_per_hour": 4.10833333,
+        "final_negative_rate": 0.37119675,
+        "final_talk_fraction": 0.21906694,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1035,
+      "static": {
+        "acted": 1477,
+        "expected_regret": 993.9,
+        "final_initiatives_per_hour": 4.10833333,
+        "final_negative_rate": 0.56795132,
+        "final_talk_fraction": 0.5010142,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1459,
+        "expected_regret": 497.3,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.39959016,
+        "final_talk_fraction": 0.23155738,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1036,
+      "static": {
+        "acted": 1459,
+        "expected_regret": 982.26,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.56352459,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1472,
+        "expected_regret": 475.24,
+        "final_initiatives_per_hour": 4.01666667,
+        "final_negative_rate": 0.38381743,
+        "final_talk_fraction": 0.21369295,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1037,
+      "static": {
+        "acted": 1472,
+        "expected_regret": 990.1,
+        "final_initiatives_per_hour": 4.01666667,
+        "final_negative_rate": 0.57676349,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1475,
+        "expected_regret": 472.28,
+        "final_initiatives_per_hour": 3.975,
+        "final_negative_rate": 0.38574423,
+        "final_talk_fraction": 0.22641509,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1038,
+      "static": {
+        "acted": 1475,
+        "expected_regret": 986.58,
+        "final_initiatives_per_hour": 3.975,
+        "final_negative_rate": 0.57023061,
+        "final_talk_fraction": 0.50104822,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1464,
+        "expected_regret": 507.12,
+        "final_initiatives_per_hour": 4.04166667,
+        "final_negative_rate": 0.40618557,
+        "final_talk_fraction": 0.22474227,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "quiet",
+      "seed": 1039,
+      "static": {
+        "acted": 1464,
+        "expected_regret": 981.28,
+        "final_initiatives_per_hour": 4.04166667,
+        "final_negative_rate": 0.5443299,
+        "final_talk_fraction": 0.49896907,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1464,
+        "expected_regret": 222.0,
+        "final_initiatives_per_hour": 4.05833333,
+        "final_negative_rate": 0.36550308,
+        "final_talk_fraction": 0.36344969,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1000,
+      "static": {
+        "acted": 1464,
+        "expected_regret": 375.4,
+        "final_initiatives_per_hour": 4.05833333,
+        "final_negative_rate": 0.48049281,
+        "final_talk_fraction": 0.49897331,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1480,
+        "expected_regret": 245.3,
+        "final_initiatives_per_hour": 4.14166667,
+        "final_negative_rate": 0.40040241,
+        "final_talk_fraction": 0.38028169,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1001,
+      "static": {
+        "acted": 1480,
+        "expected_regret": 394.5,
+        "final_initiatives_per_hour": 4.14166667,
+        "final_negative_rate": 0.44869215,
+        "final_talk_fraction": 0.49899396,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1419,
+        "expected_regret": 236.7,
+        "final_initiatives_per_hour": 3.95,
+        "final_negative_rate": 0.44514768,
+        "final_talk_fraction": 0.40295359,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1002,
+      "static": {
+        "acted": 1419,
+        "expected_regret": 360.1,
+        "final_initiatives_per_hour": 3.95,
+        "final_negative_rate": 0.46624473,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1459,
+        "expected_regret": 232.7,
+        "final_initiatives_per_hour": 4.175,
+        "final_negative_rate": 0.35928144,
+        "final_talk_fraction": 0.38522954,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1003,
+      "static": {
+        "acted": 1459,
+        "expected_regret": 369.9,
+        "final_initiatives_per_hour": 4.175,
+        "final_negative_rate": 0.43512974,
+        "final_talk_fraction": 0.500998,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1438,
+        "expected_regret": 229.9,
+        "final_initiatives_per_hour": 3.99166667,
+        "final_negative_rate": 0.39874739,
+        "final_talk_fraction": 0.32985386,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1004,
+      "static": {
+        "acted": 1438,
+        "expected_regret": 393.2,
+        "final_initiatives_per_hour": 3.99166667,
+        "final_negative_rate": 0.43632568,
+        "final_talk_fraction": 0.49895616,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1467,
+        "expected_regret": 229.4,
+        "final_initiatives_per_hour": 4.075,
+        "final_negative_rate": 0.38650307,
+        "final_talk_fraction": 0.35787321,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1005,
+      "static": {
+        "acted": 1467,
+        "expected_regret": 362.1,
+        "final_initiatives_per_hour": 4.075,
+        "final_negative_rate": 0.48670757,
+        "final_talk_fraction": 0.50102249,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1470,
+        "expected_regret": 257.8,
+        "final_initiatives_per_hour": 4.21666667,
+        "final_negative_rate": 0.42885375,
+        "final_talk_fraction": 0.3715415,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1006,
+      "static": {
+        "acted": 1470,
+        "expected_regret": 376.3,
+        "final_initiatives_per_hour": 4.21666667,
+        "final_negative_rate": 0.48814229,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1484,
+        "expected_regret": 255.9,
+        "final_initiatives_per_hour": 4.05,
+        "final_negative_rate": 0.39711934,
+        "final_talk_fraction": 0.36213992,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1007,
+      "static": {
+        "acted": 1484,
+        "expected_regret": 373.5,
+        "final_initiatives_per_hour": 4.05,
+        "final_negative_rate": 0.41975309,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1449,
+        "expected_regret": 238.6,
+        "final_initiatives_per_hour": 3.95833333,
+        "final_negative_rate": 0.40631579,
+        "final_talk_fraction": 0.34526316,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1008,
+      "static": {
+        "acted": 1449,
+        "expected_regret": 390.1,
+        "final_initiatives_per_hour": 3.95833333,
+        "final_negative_rate": 0.47157895,
+        "final_talk_fraction": 0.50105263,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1486,
+        "expected_regret": 248.1,
+        "final_initiatives_per_hour": 4.00833333,
+        "final_negative_rate": 0.3970894,
+        "final_talk_fraction": 0.3991684,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1009,
+      "static": {
+        "acted": 1486,
+        "expected_regret": 385.9,
+        "final_initiatives_per_hour": 4.00833333,
+        "final_negative_rate": 0.40956341,
+        "final_talk_fraction": 0.4989605,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1448,
+        "expected_regret": 241.8,
+        "final_initiatives_per_hour": 3.96666667,
+        "final_negative_rate": 0.35714286,
+        "final_talk_fraction": 0.3487395,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1010,
+      "static": {
+        "acted": 1448,
+        "expected_regret": 372.5,
+        "final_initiatives_per_hour": 3.96666667,
+        "final_negative_rate": 0.42436975,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1510,
+        "expected_regret": 245.9,
+        "final_initiatives_per_hour": 4.24166667,
+        "final_negative_rate": 0.41453831,
+        "final_talk_fraction": 0.39685658,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1011,
+      "static": {
+        "acted": 1510,
+        "expected_regret": 377.8,
+        "final_initiatives_per_hour": 4.24166667,
+        "final_negative_rate": 0.50294695,
+        "final_talk_fraction": 0.49901768,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1478,
+        "expected_regret": 258.7,
+        "final_initiatives_per_hour": 3.975,
+        "final_negative_rate": 0.38574423,
+        "final_talk_fraction": 0.35639413,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1012,
+      "static": {
+        "acted": 1478,
+        "expected_regret": 382.9,
+        "final_initiatives_per_hour": 3.975,
+        "final_negative_rate": 0.42557652,
+        "final_talk_fraction": 0.49895178,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1463,
+        "expected_regret": 245.5,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.4057377,
+        "final_talk_fraction": 0.36065574,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1013,
+      "static": {
+        "acted": 1463,
+        "expected_regret": 391.7,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.48360656,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1448,
+        "expected_regret": 231.7,
+        "final_initiatives_per_hour": 4.08333333,
+        "final_negative_rate": 0.3877551,
+        "final_talk_fraction": 0.39387755,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1014,
+      "static": {
+        "acted": 1448,
+        "expected_regret": 385.6,
+        "final_initiatives_per_hour": 4.08333333,
+        "final_negative_rate": 0.46122449,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1445,
+        "expected_regret": 225.0,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.37295082,
+        "final_talk_fraction": 0.3852459,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1015,
+      "static": {
+        "acted": 1445,
+        "expected_regret": 378.5,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.43647541,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1459,
+        "expected_regret": 207.7,
+        "final_initiatives_per_hour": 4.05,
+        "final_negative_rate": 0.33333333,
+        "final_talk_fraction": 0.37242798,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1016,
+      "static": {
+        "acted": 1459,
+        "expected_regret": 358.8,
+        "final_initiatives_per_hour": 4.05,
+        "final_negative_rate": 0.40740741,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1449,
+        "expected_regret": 244.8,
+        "final_initiatives_per_hour": 3.84166667,
+        "final_negative_rate": 0.37744035,
+        "final_talk_fraction": 0.39262473,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1017,
+      "static": {
+        "acted": 1449,
+        "expected_regret": 366.2,
+        "final_initiatives_per_hour": 3.84166667,
+        "final_negative_rate": 0.43600868,
+        "final_talk_fraction": 0.5010846,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1481,
+        "expected_regret": 229.6,
+        "final_initiatives_per_hour": 3.95,
+        "final_negative_rate": 0.37341772,
+        "final_talk_fraction": 0.37341772,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1018,
+      "static": {
+        "acted": 1481,
+        "expected_regret": 386.2,
+        "final_initiatives_per_hour": 3.95,
+        "final_negative_rate": 0.45780591,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1459,
+        "expected_regret": 245.7,
+        "final_initiatives_per_hour": 4.025,
+        "final_negative_rate": 0.4057971,
+        "final_talk_fraction": 0.39958592,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1019,
+      "static": {
+        "acted": 1459,
+        "expected_regret": 394.4,
+        "final_initiatives_per_hour": 4.025,
+        "final_negative_rate": 0.43064182,
+        "final_talk_fraction": 0.5010352,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1502,
+        "expected_regret": 253.7,
+        "final_initiatives_per_hour": 4.34166667,
+        "final_negative_rate": 0.42226488,
+        "final_talk_fraction": 0.38387716,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1020,
+      "static": {
+        "acted": 1502,
+        "expected_regret": 380.1,
+        "final_initiatives_per_hour": 4.34166667,
+        "final_negative_rate": 0.45105566,
+        "final_talk_fraction": 0.49904031,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1458,
+        "expected_regret": 230.0,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.42418033,
+        "final_talk_fraction": 0.35245902,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1021,
+      "static": {
+        "acted": 1458,
+        "expected_regret": 375.0,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.44467213,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1461,
+        "expected_regret": 226.7,
+        "final_initiatives_per_hour": 4.0,
+        "final_negative_rate": 0.37708333,
+        "final_talk_fraction": 0.34375,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1022,
+      "static": {
+        "acted": 1461,
+        "expected_regret": 375.7,
+        "final_initiatives_per_hour": 4.0,
+        "final_negative_rate": 0.45208333,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1480,
+        "expected_regret": 232.6,
+        "final_initiatives_per_hour": 4.25,
+        "final_negative_rate": 0.3627451,
+        "final_talk_fraction": 0.37647059,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1023,
+      "static": {
+        "acted": 1480,
+        "expected_regret": 366.5,
+        "final_initiatives_per_hour": 4.25,
+        "final_negative_rate": 0.37254902,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1465,
+        "expected_regret": 236.0,
+        "final_initiatives_per_hour": 4.05833333,
+        "final_negative_rate": 0.36344969,
+        "final_talk_fraction": 0.37371663,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1024,
+      "static": {
+        "acted": 1465,
+        "expected_regret": 356.9,
+        "final_initiatives_per_hour": 4.05833333,
+        "final_negative_rate": 0.42505133,
+        "final_talk_fraction": 0.50102669,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1444,
+        "expected_regret": 229.3,
+        "final_initiatives_per_hour": 3.925,
+        "final_negative_rate": 0.38216561,
+        "final_talk_fraction": 0.36305732,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1025,
+      "static": {
+        "acted": 1444,
+        "expected_regret": 374.8,
+        "final_initiatives_per_hour": 3.925,
+        "final_negative_rate": 0.46496815,
+        "final_talk_fraction": 0.49893843,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1448,
+        "expected_regret": 220.6,
+        "final_initiatives_per_hour": 3.975,
+        "final_negative_rate": 0.37526205,
+        "final_talk_fraction": 0.3836478,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1026,
+      "static": {
+        "acted": 1448,
+        "expected_regret": 365.9,
+        "final_initiatives_per_hour": 3.975,
+        "final_negative_rate": 0.44025157,
+        "final_talk_fraction": 0.49895178,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1470,
+        "expected_regret": 254.1,
+        "final_initiatives_per_hour": 4.05,
+        "final_negative_rate": 0.41563786,
+        "final_talk_fraction": 0.37654321,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1027,
+      "static": {
+        "acted": 1470,
+        "expected_regret": 391.1,
+        "final_initiatives_per_hour": 4.05,
+        "final_negative_rate": 0.43415638,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1475,
+        "expected_regret": 236.9,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.42622951,
+        "final_talk_fraction": 0.37909836,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1028,
+      "static": {
+        "acted": 1475,
+        "expected_regret": 354.0,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.48360656,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1448,
+        "expected_regret": 239.7,
+        "final_initiatives_per_hour": 4.04166667,
+        "final_negative_rate": 0.40824742,
+        "final_talk_fraction": 0.38350515,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1029,
+      "static": {
+        "acted": 1448,
+        "expected_regret": 355.1,
+        "final_initiatives_per_hour": 4.04166667,
+        "final_negative_rate": 0.44123711,
+        "final_talk_fraction": 0.49896907,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1443,
+        "expected_regret": 224.9,
+        "final_initiatives_per_hour": 4.075,
+        "final_negative_rate": 0.400818,
+        "final_talk_fraction": 0.34969325,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1030,
+      "static": {
+        "acted": 1443,
+        "expected_regret": 397.9,
+        "final_initiatives_per_hour": 4.075,
+        "final_negative_rate": 0.44989775,
+        "final_talk_fraction": 0.50102249,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1502,
+        "expected_regret": 252.6,
+        "final_initiatives_per_hour": 4.2,
+        "final_negative_rate": 0.39880952,
+        "final_talk_fraction": 0.38492063,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1031,
+      "static": {
+        "acted": 1502,
+        "expected_regret": 382.8,
+        "final_initiatives_per_hour": 4.2,
+        "final_negative_rate": 0.45436508,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1433,
+        "expected_regret": 218.5,
+        "final_initiatives_per_hour": 3.94166667,
+        "final_negative_rate": 0.37420719,
+        "final_talk_fraction": 0.37843552,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1032,
+      "static": {
+        "acted": 1433,
+        "expected_regret": 352.5,
+        "final_initiatives_per_hour": 3.94166667,
+        "final_negative_rate": 0.41437632,
+        "final_talk_fraction": 0.50105708,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1450,
+        "expected_regret": 229.9,
+        "final_initiatives_per_hour": 4.01666667,
+        "final_negative_rate": 0.40871369,
+        "final_talk_fraction": 0.36721992,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1033,
+      "static": {
+        "acted": 1450,
+        "expected_regret": 347.0,
+        "final_initiatives_per_hour": 4.01666667,
+        "final_negative_rate": 0.4626556,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1469,
+        "expected_regret": 233.3,
+        "final_initiatives_per_hour": 3.98333333,
+        "final_negative_rate": 0.39958159,
+        "final_talk_fraction": 0.42050209,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1034,
+      "static": {
+        "acted": 1469,
+        "expected_regret": 386.3,
+        "final_initiatives_per_hour": 3.98333333,
+        "final_negative_rate": 0.46861925,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1477,
+        "expected_regret": 259.1,
+        "final_initiatives_per_hour": 4.10833333,
+        "final_negative_rate": 0.42393509,
+        "final_talk_fraction": 0.39959432,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1035,
+      "static": {
+        "acted": 1477,
+        "expected_regret": 372.9,
+        "final_initiatives_per_hour": 4.10833333,
+        "final_negative_rate": 0.45638945,
+        "final_talk_fraction": 0.5010142,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1459,
+        "expected_regret": 248.5,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.43032787,
+        "final_talk_fraction": 0.42008197,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1036,
+      "static": {
+        "acted": 1459,
+        "expected_regret": 380.3,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.42008197,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1472,
+        "expected_regret": 226.6,
+        "final_initiatives_per_hour": 4.01666667,
+        "final_negative_rate": 0.38174274,
+        "final_talk_fraction": 0.39419087,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1037,
+      "static": {
+        "acted": 1472,
+        "expected_regret": 381.8,
+        "final_initiatives_per_hour": 4.01666667,
+        "final_negative_rate": 0.46473029,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1475,
+        "expected_regret": 225.8,
+        "final_initiatives_per_hour": 3.975,
+        "final_negative_rate": 0.41090147,
+        "final_talk_fraction": 0.39203354,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1038,
+      "static": {
+        "acted": 1475,
+        "expected_regret": 366.7,
+        "final_initiatives_per_hour": 3.975,
+        "final_negative_rate": 0.48008386,
+        "final_talk_fraction": 0.50104822,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1464,
+        "expected_regret": 223.9,
+        "final_initiatives_per_hour": 4.04166667,
+        "final_negative_rate": 0.39587629,
+        "final_talk_fraction": 0.38556701,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "mixed",
+      "seed": 1039,
+      "static": {
+        "acted": 1464,
+        "expected_regret": 356.2,
+        "final_initiatives_per_hour": 4.04166667,
+        "final_negative_rate": 0.4371134,
+        "final_talk_fraction": 0.49896907,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1464,
+        "expected_regret": 372.44,
+        "final_initiatives_per_hour": 4.05833333,
+        "final_negative_rate": 0.39425051,
+        "final_talk_fraction": 0.24229979,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": 637,
+      "profile": "drift_social_to_quiet",
+      "seed": 1000,
+      "static": {
+        "acted": 1464,
+        "expected_regret": 679.02,
+        "final_initiatives_per_hour": 4.05833333,
+        "final_negative_rate": 0.56262834,
+        "final_talk_fraction": 0.49897331,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1480,
+        "expected_regret": 347.74,
+        "final_initiatives_per_hour": 4.14166667,
+        "final_negative_rate": 0.34004024,
+        "final_talk_fraction": 0.19517103,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "drift_social_to_quiet",
+      "seed": 1001,
+      "static": {
+        "acted": 1480,
+        "expected_regret": 695.92,
+        "final_initiatives_per_hour": 4.14166667,
+        "final_negative_rate": 0.57545272,
+        "final_talk_fraction": 0.49899396,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1419,
+        "expected_regret": 333.16,
+        "final_initiatives_per_hour": 3.95,
+        "final_negative_rate": 0.38607595,
+        "final_talk_fraction": 0.20464135,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "drift_social_to_quiet",
+      "seed": 1002,
+      "static": {
+        "acted": 1419,
+        "expected_regret": 665.92,
+        "final_initiatives_per_hour": 3.95,
+        "final_negative_rate": 0.59704641,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1459,
+        "expected_regret": 357.04,
+        "final_initiatives_per_hour": 4.175,
+        "final_negative_rate": 0.36926148,
+        "final_talk_fraction": 0.20758483,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": 90,
+      "profile": "drift_social_to_quiet",
+      "seed": 1003,
+      "static": {
+        "acted": 1459,
+        "expected_regret": 687.42,
+        "final_initiatives_per_hour": 4.175,
+        "final_negative_rate": 0.52295409,
+        "final_talk_fraction": 0.500998,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1438,
+        "expected_regret": 370.8,
+        "final_initiatives_per_hour": 3.99166667,
+        "final_negative_rate": 0.36534447,
+        "final_talk_fraction": 0.217119,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "drift_social_to_quiet",
+      "seed": 1004,
+      "static": {
+        "acted": 1438,
+        "expected_regret": 689.5,
+        "final_initiatives_per_hour": 3.99166667,
+        "final_negative_rate": 0.54279749,
+        "final_talk_fraction": 0.49895616,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1467,
+        "expected_regret": 353.26,
+        "final_initiatives_per_hour": 4.075,
+        "final_negative_rate": 0.38241309,
+        "final_talk_fraction": 0.20654397,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "drift_social_to_quiet",
+      "seed": 1005,
+      "static": {
+        "acted": 1467,
+        "expected_regret": 677.88,
+        "final_initiatives_per_hour": 4.075,
+        "final_negative_rate": 0.58486708,
+        "final_talk_fraction": 0.50102249,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1470,
+        "expected_regret": 374.5,
+        "final_initiatives_per_hour": 4.21666667,
+        "final_negative_rate": 0.37944664,
+        "final_talk_fraction": 0.21343874,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "drift_social_to_quiet",
+      "seed": 1006,
+      "static": {
+        "acted": 1470,
+        "expected_regret": 684.92,
+        "final_initiatives_per_hour": 4.21666667,
+        "final_negative_rate": 0.57114625,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1484,
+        "expected_regret": 372.66,
+        "final_initiatives_per_hour": 4.05,
+        "final_negative_rate": 0.35390947,
+        "final_talk_fraction": 0.21193416,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": 242,
+      "profile": "drift_social_to_quiet",
+      "seed": 1007,
+      "static": {
+        "acted": 1484,
+        "expected_regret": 679.16,
+        "final_initiatives_per_hour": 4.05,
+        "final_negative_rate": 0.51851852,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1449,
+        "expected_regret": 344.88,
+        "final_initiatives_per_hour": 3.95833333,
+        "final_negative_rate": 0.33263158,
+        "final_talk_fraction": 0.18947368,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "drift_social_to_quiet",
+      "seed": 1008,
+      "static": {
+        "acted": 1449,
+        "expected_regret": 694.5,
+        "final_initiatives_per_hour": 3.95833333,
+        "final_negative_rate": 0.56842105,
+        "final_talk_fraction": 0.50105263,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1486,
+        "expected_regret": 374.06,
+        "final_initiatives_per_hour": 4.00833333,
+        "final_negative_rate": 0.37006237,
+        "final_talk_fraction": 0.20582121,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": 430,
+      "profile": "drift_social_to_quiet",
+      "seed": 1009,
+      "static": {
+        "acted": 1486,
+        "expected_regret": 693.66,
+        "final_initiatives_per_hour": 4.00833333,
+        "final_negative_rate": 0.52806653,
+        "final_talk_fraction": 0.4989605,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1448,
+        "expected_regret": 352.58,
+        "final_initiatives_per_hour": 3.96666667,
+        "final_negative_rate": 0.37184874,
+        "final_talk_fraction": 0.21218487,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": 660,
+      "profile": "drift_social_to_quiet",
+      "seed": 1010,
+      "static": {
+        "acted": 1448,
+        "expected_regret": 668.02,
+        "final_initiatives_per_hour": 3.96666667,
+        "final_negative_rate": 0.53781513,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1510,
+        "expected_regret": 389.32,
+        "final_initiatives_per_hour": 4.24166667,
+        "final_negative_rate": 0.41453831,
+        "final_talk_fraction": 0.23968566,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": 199,
+      "profile": "drift_social_to_quiet",
+      "seed": 1011,
+      "static": {
+        "acted": 1510,
+        "expected_regret": 691.16,
+        "final_initiatives_per_hour": 4.24166667,
+        "final_negative_rate": 0.58742633,
+        "final_talk_fraction": 0.49901768,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1478,
+        "expected_regret": 347.42,
+        "final_initiatives_per_hour": 3.975,
+        "final_negative_rate": 0.360587,
+        "final_talk_fraction": 0.20964361,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": 61,
+      "profile": "drift_social_to_quiet",
+      "seed": 1012,
+      "static": {
+        "acted": 1478,
+        "expected_regret": 678.38,
+        "final_initiatives_per_hour": 3.975,
+        "final_negative_rate": 0.53878407,
+        "final_talk_fraction": 0.49895178,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1463,
+        "expected_regret": 363.86,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.35655738,
+        "final_talk_fraction": 0.21721311,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": 152,
+      "profile": "drift_social_to_quiet",
+      "seed": 1013,
+      "static": {
+        "acted": 1463,
+        "expected_regret": 675.48,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.57172131,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1448,
+        "expected_regret": 349.34,
+        "final_initiatives_per_hour": 4.08333333,
+        "final_negative_rate": 0.38571429,
+        "final_talk_fraction": 0.22857143,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": 78,
+      "profile": "drift_social_to_quiet",
+      "seed": 1014,
+      "static": {
+        "acted": 1448,
+        "expected_regret": 693.32,
+        "final_initiatives_per_hour": 4.08333333,
+        "final_negative_rate": 0.56326531,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1445,
+        "expected_regret": 336.38,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.34836066,
+        "final_talk_fraction": 0.19672131,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": 131,
+      "profile": "drift_social_to_quiet",
+      "seed": 1015,
+      "static": {
+        "acted": 1445,
+        "expected_regret": 678.62,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.52663934,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1459,
+        "expected_regret": 341.74,
+        "final_initiatives_per_hour": 4.05,
+        "final_negative_rate": 0.34979424,
+        "final_talk_fraction": 0.2037037,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "drift_social_to_quiet",
+      "seed": 1016,
+      "static": {
+        "acted": 1459,
+        "expected_regret": 661.64,
+        "final_initiatives_per_hour": 4.05,
+        "final_negative_rate": 0.52263374,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1449,
+        "expected_regret": 340.08,
+        "final_initiatives_per_hour": 3.84166667,
+        "final_negative_rate": 0.34056399,
+        "final_talk_fraction": 0.19956616,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": 180,
+      "profile": "drift_social_to_quiet",
+      "seed": 1017,
+      "static": {
+        "acted": 1449,
+        "expected_regret": 661.24,
+        "final_initiatives_per_hour": 3.84166667,
+        "final_negative_rate": 0.53796095,
+        "final_talk_fraction": 0.5010846,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1481,
+        "expected_regret": 380.96,
+        "final_initiatives_per_hour": 3.95,
+        "final_negative_rate": 0.3649789,
+        "final_talk_fraction": 0.2278481,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": 281,
+      "profile": "drift_social_to_quiet",
+      "seed": 1018,
+      "static": {
+        "acted": 1481,
+        "expected_regret": 680.18,
+        "final_initiatives_per_hour": 3.95,
+        "final_negative_rate": 0.5443038,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1459,
+        "expected_regret": 382.54,
+        "final_initiatives_per_hour": 4.025,
+        "final_negative_rate": 0.40372671,
+        "final_talk_fraction": 0.23395445,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": 444,
+      "profile": "drift_social_to_quiet",
+      "seed": 1019,
+      "static": {
+        "acted": 1459,
+        "expected_regret": 697.24,
+        "final_initiatives_per_hour": 4.025,
+        "final_negative_rate": 0.56935818,
+        "final_talk_fraction": 0.5010352,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1502,
+        "expected_regret": 362.9,
+        "final_initiatives_per_hour": 4.34166667,
+        "final_negative_rate": 0.37044146,
+        "final_talk_fraction": 0.20729367,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": 264,
+      "profile": "drift_social_to_quiet",
+      "seed": 1020,
+      "static": {
+        "acted": 1502,
+        "expected_regret": 693.54,
+        "final_initiatives_per_hour": 4.34166667,
+        "final_negative_rate": 0.57581574,
+        "final_talk_fraction": 0.49904031,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1458,
+        "expected_regret": 379.42,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.3852459,
+        "final_talk_fraction": 0.24180328,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": 32,
+      "profile": "drift_social_to_quiet",
+      "seed": 1021,
+      "static": {
+        "acted": 1458,
+        "expected_regret": 668.82,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.54098361,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1461,
+        "expected_regret": 331.98,
+        "final_initiatives_per_hour": 4.0,
+        "final_negative_rate": 0.34375,
+        "final_talk_fraction": 0.20208333,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": 226,
+      "profile": "drift_social_to_quiet",
+      "seed": 1022,
+      "static": {
+        "acted": 1461,
+        "expected_regret": 668.4,
+        "final_initiatives_per_hour": 4.0,
+        "final_negative_rate": 0.56041667,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1480,
+        "expected_regret": 376.26,
+        "final_initiatives_per_hour": 4.25,
+        "final_negative_rate": 0.39411765,
+        "final_talk_fraction": 0.20980392,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": 103,
+      "profile": "drift_social_to_quiet",
+      "seed": 1023,
+      "static": {
+        "acted": 1480,
+        "expected_regret": 701.78,
+        "final_initiatives_per_hour": 4.25,
+        "final_negative_rate": 0.51764706,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1465,
+        "expected_regret": 350.88,
+        "final_initiatives_per_hour": 4.05833333,
+        "final_negative_rate": 0.33880903,
+        "final_talk_fraction": 0.19712526,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "drift_social_to_quiet",
+      "seed": 1024,
+      "static": {
+        "acted": 1465,
+        "expected_regret": 684.12,
+        "final_initiatives_per_hour": 4.05833333,
+        "final_negative_rate": 0.52156057,
+        "final_talk_fraction": 0.50102669,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1444,
+        "expected_regret": 338.12,
+        "final_initiatives_per_hour": 3.925,
+        "final_negative_rate": 0.35881104,
+        "final_talk_fraction": 0.19957537,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": 195,
+      "profile": "drift_social_to_quiet",
+      "seed": 1025,
+      "static": {
+        "acted": 1444,
+        "expected_regret": 658.38,
+        "final_initiatives_per_hour": 3.925,
+        "final_negative_rate": 0.5477707,
+        "final_talk_fraction": 0.49893843,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1448,
+        "expected_regret": 374.72,
+        "final_initiatives_per_hour": 3.975,
+        "final_negative_rate": 0.38155136,
+        "final_talk_fraction": 0.23689727,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": 484,
+      "profile": "drift_social_to_quiet",
+      "seed": 1026,
+      "static": {
+        "acted": 1448,
+        "expected_regret": 663.44,
+        "final_initiatives_per_hour": 3.975,
+        "final_negative_rate": 0.57651992,
+        "final_talk_fraction": 0.49895178,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1470,
+        "expected_regret": 369.86,
+        "final_initiatives_per_hour": 4.05,
+        "final_negative_rate": 0.32304527,
+        "final_talk_fraction": 0.21399177,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": 540,
+      "profile": "drift_social_to_quiet",
+      "seed": 1027,
+      "static": {
+        "acted": 1470,
+        "expected_regret": 690.7,
+        "final_initiatives_per_hour": 4.05,
+        "final_negative_rate": 0.53497942,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1475,
+        "expected_regret": 359.72,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.38319672,
+        "final_talk_fraction": 0.22336066,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": 717,
+      "profile": "drift_social_to_quiet",
+      "seed": 1028,
+      "static": {
+        "acted": 1475,
+        "expected_regret": 671.86,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.58401639,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1448,
+        "expected_regret": 377.74,
+        "final_initiatives_per_hour": 4.04166667,
+        "final_negative_rate": 0.36907216,
+        "final_talk_fraction": 0.24123711,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "drift_social_to_quiet",
+      "seed": 1029,
+      "static": {
+        "acted": 1448,
+        "expected_regret": 660.26,
+        "final_initiatives_per_hour": 4.04166667,
+        "final_negative_rate": 0.53195876,
+        "final_talk_fraction": 0.49896907,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1443,
+        "expected_regret": 364.56,
+        "final_initiatives_per_hour": 4.075,
+        "final_negative_rate": 0.37627812,
+        "final_talk_fraction": 0.22699387,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": 117,
+      "profile": "drift_social_to_quiet",
+      "seed": 1030,
+      "static": {
+        "acted": 1443,
+        "expected_regret": 697.94,
+        "final_initiatives_per_hour": 4.075,
+        "final_negative_rate": 0.54601227,
+        "final_talk_fraction": 0.50102249,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1502,
+        "expected_regret": 366.9,
+        "final_initiatives_per_hour": 4.2,
+        "final_negative_rate": 0.42460317,
+        "final_talk_fraction": 0.24007937,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": 40,
+      "profile": "drift_social_to_quiet",
+      "seed": 1031,
+      "static": {
+        "acted": 1502,
+        "expected_regret": 681.58,
+        "final_initiatives_per_hour": 4.2,
+        "final_negative_rate": 0.5515873,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1433,
+        "expected_regret": 347.8,
+        "final_initiatives_per_hour": 3.94166667,
+        "final_negative_rate": 0.34460888,
+        "final_talk_fraction": 0.20295983,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "drift_social_to_quiet",
+      "seed": 1032,
+      "static": {
+        "acted": 1433,
+        "expected_regret": 658.24,
+        "final_initiatives_per_hour": 3.94166667,
+        "final_negative_rate": 0.51162791,
+        "final_talk_fraction": 0.50105708,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1450,
+        "expected_regret": 355.96,
+        "final_initiatives_per_hour": 4.01666667,
+        "final_negative_rate": 0.36721992,
+        "final_talk_fraction": 0.20124481,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "drift_social_to_quiet",
+      "seed": 1033,
+      "static": {
+        "acted": 1450,
+        "expected_regret": 654.8,
+        "final_initiatives_per_hour": 4.01666667,
+        "final_negative_rate": 0.57053942,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1469,
+        "expected_regret": 364.38,
+        "final_initiatives_per_hour": 3.98333333,
+        "final_negative_rate": 0.41213389,
+        "final_talk_fraction": 0.22384937,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "drift_social_to_quiet",
+      "seed": 1034,
+      "static": {
+        "acted": 1469,
+        "expected_regret": 677.4,
+        "final_initiatives_per_hour": 3.98333333,
+        "final_negative_rate": 0.57531381,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1477,
+        "expected_regret": 377.36,
+        "final_initiatives_per_hour": 4.10833333,
+        "final_negative_rate": 0.37525355,
+        "final_talk_fraction": 0.22920892,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": 305,
+      "profile": "drift_social_to_quiet",
+      "seed": 1035,
+      "static": {
+        "acted": 1477,
+        "expected_regret": 688.66,
+        "final_initiatives_per_hour": 4.10833333,
+        "final_negative_rate": 0.56795132,
+        "final_talk_fraction": 0.5010142,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1459,
+        "expected_regret": 382.12,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.40368852,
+        "final_talk_fraction": 0.23565574,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "drift_social_to_quiet",
+      "seed": 1036,
+      "static": {
+        "acted": 1459,
+        "expected_regret": 684.2,
+        "final_initiatives_per_hour": 4.06666667,
+        "final_negative_rate": 0.56352459,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1472,
+        "expected_regret": 354.6,
+        "final_initiatives_per_hour": 4.01666667,
+        "final_negative_rate": 0.40041494,
+        "final_talk_fraction": 0.21991701,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": null,
+      "profile": "drift_social_to_quiet",
+      "seed": 1037,
+      "static": {
+        "acted": 1472,
+        "expected_regret": 681.72,
+        "final_initiatives_per_hour": 4.01666667,
+        "final_negative_rate": 0.57676349,
+        "final_talk_fraction": 0.5,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1475,
+        "expected_regret": 363.82,
+        "final_initiatives_per_hour": 3.975,
+        "final_negative_rate": 0.38574423,
+        "final_talk_fraction": 0.2327044,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": 148,
+      "profile": "drift_social_to_quiet",
+      "seed": 1038,
+      "static": {
+        "acted": 1475,
+        "expected_regret": 667.66,
+        "final_initiatives_per_hour": 3.975,
+        "final_negative_rate": 0.57023061,
+        "final_talk_fraction": 0.50104822,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    },
+    {
+      "adaptive": {
+        "acted": 1464,
+        "expected_regret": 352.02,
+        "final_initiatives_per_hour": 4.04166667,
+        "final_negative_rate": 0.39381443,
+        "final_talk_fraction": 0.20824742,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      },
+      "drift_recovery_eligible": 527,
+      "profile": "drift_social_to_quiet",
+      "seed": 1039,
+      "static": {
+        "acted": 1464,
+        "expected_regret": 683.82,
+        "final_initiatives_per_hour": 4.04166667,
+        "final_negative_rate": 0.5443299,
+        "final_talk_fraction": 0.49896907,
+        "hard_gate_violations": 0,
+        "translation_actions": 0
+      }
+    }
+  ],
+  "schema": "parcel.safe_preference_adaptation.v1"
+}

@@ -1,0 +1,3594 @@
+{
+  "baseline_integrity": [
+    {
+      "all_match": true,
+      "matches": {
+        "agent_contacts": true,
+        "command_sha": true,
+        "contacts_while_stationary": true,
+        "contacts_while_translating": true,
+        "expressive_initiations": true,
+        "translation_sha": true
+      },
+      "seed": 1
+    },
+    {
+      "all_match": true,
+      "matches": {
+        "agent_contacts": true,
+        "command_sha": true,
+        "contacts_while_stationary": true,
+        "contacts_while_translating": true,
+        "expressive_initiations": true,
+        "translation_sha": true
+      },
+      "seed": 2
+    },
+    {
+      "all_match": true,
+      "matches": {
+        "agent_contacts": true,
+        "command_sha": true,
+        "contacts_while_stationary": true,
+        "contacts_while_translating": true,
+        "expressive_initiations": true,
+        "translation_sha": true
+      },
+      "seed": 3
+    }
+  ],
+  "baseline_runs": [
+    {
+      "admitted": 5,
+      "admitted_by_kind": {
+        "go_check": 2,
+        "look": 2,
+        "remark": 1
+      },
+      "admitted_fraction": 0.8333333333333334,
+      "admitted_in_night": 0,
+      "admitted_in_quiet": 0,
+      "agent_contacts": 131,
+      "arm": "radius6",
+      "attributed_initiations": 5,
+      "candidates_mean": 11.959491474523675,
+      "chatter": {
+        "admitted": 2142,
+        "remarks": 1,
+        "skips": {
+          "activity_running": 398,
+          "conversation_not_quiet": 599,
+          "gap_holding": 462
+        },
+        "ticks": 3601
+      },
+      "command_sha": "8f03fde56d2c9baf768d0c8169aa60a378f58b9611d11e672524ebe485c5b33a",
+      "contact_agents": [
+        "cyclist-1",
+        "ped-5"
+      ],
+      "contact_records": [
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 676.9,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 685.3,
+          "bearing_from_travel_rad": -1.728,
+          "dog_translating": true,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 734.9,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 793.0,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 804.1,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 804.7,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 818.0,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 867.9,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 879.8,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 891.3,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 899.5,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 907.8,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 915.9,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 924.3,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 932.4,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 940.8,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 948.9,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 957.2,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 965.3,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 973.7,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 981.8,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 990.2,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 998.3,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 1006.7,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 1014.8,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 1023.1,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 1031.2,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 1039.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 1047.7,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 1056.1,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 1064.2,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 1072.5,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 1080.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 1089.0,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 1097.1,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 1105.5,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 1113.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 1121.9,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 1130.1,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 1138.4,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 1146.5,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 1154.9,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 1163.0,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 1171.4,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 1179.5,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 1187.8,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 1195.9,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 1204.3,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 1212.4,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 1220.8,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        }
+      ],
+      "contact_seconds": 65.3,
+      "contact_ticks": 653,
+      "contacts_while_stationary": 129,
+      "contacts_while_translating": 2,
+      "duration_s": 3600.0,
+      "estop_at_s": 1061.2370929348815,
+      "expressive_initiations": 5,
+      "home": [
+        1.0,
+        1.5
+      ],
+      "hours": 1.0,
+      "initiations": [
+        {
+          "at_s": 653.4,
+          "band": "afternoon",
+          "bearing_rad": 1.2861,
+          "budget_m": 6.0,
+          "budget_s": 240.0,
+          "checked": 2,
+          "drive": "curiosity",
+          "drive_value": 0.993858,
+          "drives": {
+            "at_s": 653.4,
+            "comfort": 0.0,
+            "curiosity": 0.993858,
+            "duty": 0.330614,
+            "social": 0.992634
+          },
+          "ended": "budget",
+          "kind": "go_check",
+          "quiet": false,
+          "reason": "curiosity_over_threshold:stale_place",
+          "seed": 440859,
+          "standoff_m": null,
+          "subject": null,
+          "target_id": "place-dee8e60634b14f97",
+          "ticks": 2401
+        },
+        {
+          "at_s": 1253.4,
+          "band": "afternoon",
+          "bearing_rad": 0.74487,
+          "budget_m": 0.0,
+          "budget_s": 6.0,
+          "checked": 0,
+          "drive": "curiosity",
+          "drive_value": 0.999807,
+          "drives": {
+            "at_s": 1253.4,
+            "comfort": 0.0,
+            "curiosity": 0.999807,
+            "duty": 0.41548,
+            "social": 0.999769
+          },
+          "ended": "preempted",
+          "kind": "look",
+          "quiet": false,
+          "reason": "curiosity_over_threshold:unattended_bearing",
+          "seed": 1860187,
+          "standoff_m": null,
+          "subject": "building",
+          "target_id": null,
+          "ticks": 1
+        },
+        {
+          "at_s": 1853.4,
+          "band": "afternoon",
+          "bearing_rad": 1.351,
+          "budget_m": 6.0,
+          "budget_s": 240.0,
+          "checked": 0,
+          "drive": "curiosity",
+          "drive_value": 0.999423,
+          "drives": {
+            "at_s": 1853.4,
+            "comfort": 0.0,
+            "curiosity": 0.999423,
+            "duty": 0.578411,
+            "social": 0.999307
+          },
+          "ended": "preempted",
+          "kind": "go_check",
+          "quiet": false,
+          "reason": "curiosity_over_threshold:stale_place",
+          "seed": 1246619,
+          "standoff_m": null,
+          "subject": null,
+          "target_id": "place-3c1dfc746d084e7c",
+          "ticks": 1537
+        },
+        {
+          "at_s": 2453.4,
+          "band": "afternoon",
+          "bearing_rad": -1.17467,
+          "budget_m": 0.0,
+          "budget_s": 6.0,
+          "checked": 0,
+          "drive": "curiosity",
+          "drive_value": 0.969663,
+          "drives": {
+            "at_s": 2453.4,
+            "comfort": 0.0,
+            "curiosity": 0.969663,
+            "duty": 0.615726,
+            "social": 0.963707
+          },
+          "ended": "sweep_complete",
+          "kind": "look",
+          "quiet": false,
+          "reason": "curiosity_over_threshold:unattended_bearing",
+          "seed": 2764251,
+          "standoff_m": null,
+          "subject": "building",
+          "target_id": null,
+          "ticks": 41
+        },
+        {
+          "at_s": 3081.4,
+          "band": "afternoon",
+          "bearing_rad": null,
+          "budget_m": 0.0,
+          "budget_s": 8.0,
+          "checked": 0,
+          "drive": "curiosity",
+          "drive_value": 0.996732,
+          "drives": {
+            "at_s": 3081.4,
+            "comfort": 0.0,
+            "curiosity": 0.996732,
+            "duty": 0.710095,
+            "social": 0.99608
+          },
+          "ended": "expressed",
+          "kind": "remark",
+          "quiet": false,
+          "reason": "curiosity_over_threshold:admitted_place",
+          "seed": 2115323,
+          "standoff_m": null,
+          "subject": "building",
+          "target_id": null,
+          "ticks": 1
+        }
+      ],
+      "initiations_per_hour": 5.0,
+      "initiations_per_hour_with_rest": 5.0,
+      "max_radius_m": 7.157315136838721,
+      "min_agent_clearance_m": 0.0,
+      "min_agent_clearance_under_initiative_m": 0.0,
+      "min_clearance_toward_agent_m": 1.1636902995782468,
+      "min_static_clearance_m": 0.7465671407990251,
+      "obstacle_stop_m": 0.65,
+      "owner_turns": 7,
+      "owner_turns_during_initiative": 1,
+      "patrol_reasons": {
+        "advance": 1961,
+        "turn_blocked": 471,
+        "turn_coverage": 88,
+        "turn_hold": 493,
+        "turn_person": 860,
+        "turn_tether": 64
+      },
+      "person_stop_m": 1.2,
+      "places_checked": 2,
+      "preemptions": [
+        {
+          "at_s": 1253.5,
+          "at_tick": 12535,
+          "command_at_yield": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "held_s": 0.1,
+          "kind": "look",
+          "ticks_to_yield": 0,
+          "trigger": "estop"
+        },
+        {
+          "at_s": 2007.1,
+          "at_tick": 20071,
+          "command_at_yield": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "held_s": 153.7,
+          "kind": "go_check",
+          "ticks_to_yield": 0,
+          "trigger": "owner_turn"
+        }
+      ],
+      "proposals": 6,
+      "proposed_by_kind": {
+        "approach": 1,
+        "go_check": 2,
+        "look": 2,
+        "remark": 1
+      },
+      "refusals": {
+        "approach_no_skill_contract": 1
+      },
+      "seed": 1,
+      "start_hour": 14.0,
+      "static_collisions": 0,
+      "translation_sha": "d175a8e2f336c2c4bcdf4e380f4f60611f0549ba4a0579997b6a909e7a447746",
+      "visited_cell_fraction": 0.2222222222222222,
+      "visited_cells": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "withheld_night": 0,
+      "withheld_quiet": 5994
+    },
+    {
+      "admitted": 5,
+      "admitted_by_kind": {
+        "go_check": 1,
+        "look": 2,
+        "remark": 2
+      },
+      "admitted_fraction": 0.8333333333333334,
+      "admitted_in_night": 0,
+      "admitted_in_quiet": 0,
+      "agent_contacts": 183,
+      "arm": "radius6",
+      "attributed_initiations": 5,
+      "candidates_mean": 11.990492565995751,
+      "chatter": {
+        "admitted": 1769,
+        "remarks": 2,
+        "skips": {
+          "activity_running": 68,
+          "conversation_not_quiet": 630,
+          "gap_holding": 1135
+        },
+        "ticks": 3602
+      },
+      "command_sha": "620feaeab5e968c40b92cae6fefb8a0699c64dc799bd1137f124146db824559f",
+      "contact_agents": [
+        "ped-5",
+        "ped-6"
+      ],
+      "contact_records": [
+        {
+          "agent": "ped-6",
+          "agent_speed_mps": 0.68,
+          "at_s": 1323.4,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1351.2,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1363.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1376.0,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1388.4,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1400.8,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1413.2,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1425.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1438.0,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1450.4,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1462.8,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1475.2,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1487.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1500.0,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1512.4,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1524.8,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1537.2,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1549.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1562.0,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1574.4,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1586.8,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1599.2,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1611.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1624.0,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1636.4,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1648.8,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1661.2,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1673.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1686.0,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1698.4,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1710.8,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1723.2,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1735.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1748.0,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1760.4,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1772.8,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1785.2,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1797.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1810.0,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1822.4,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1834.8,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1847.2,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1859.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1872.0,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1884.4,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1896.8,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1909.2,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1921.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1934.0,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1946.4,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        }
+      ],
+      "contact_seconds": 19.0,
+      "contact_ticks": 190,
+      "contacts_while_stationary": 183,
+      "contacts_while_translating": 0,
+      "duration_s": 3600.0,
+      "estop_at_s": 2047.2411262670992,
+      "expressive_initiations": 5,
+      "home": [
+        1.0,
+        1.5
+      ],
+      "hours": 1.0,
+      "initiations": [
+        {
+          "at_s": 677.5,
+          "band": "afternoon",
+          "bearing_rad": null,
+          "budget_m": 0.0,
+          "budget_s": 8.0,
+          "checked": 0,
+          "drive": "curiosity",
+          "drive_value": 0.992137,
+          "drives": {
+            "at_s": 677.5,
+            "comfort": 0.0,
+            "curiosity": 0.992137,
+            "duty": 0.344266,
+            "social": 0.990572
+          },
+          "ended": "expressed",
+          "kind": "remark",
+          "quiet": false,
+          "reason": "curiosity_over_threshold:admitted_place",
+          "seed": 1364730,
+          "standoff_m": null,
+          "subject": "building",
+          "target_id": null,
+          "ticks": 1
+        },
+        {
+          "at_s": 1277.5,
+          "band": "afternoon",
+          "bearing_rad": 1.2861,
+          "budget_m": 6.0,
+          "budget_s": 240.0,
+          "checked": 1,
+          "drive": "curiosity",
+          "drive_value": 0.993284,
+          "drives": {
+            "at_s": 1277.5,
+            "comfort": 0.0,
+            "curiosity": 0.993284,
+            "duty": 0.536563,
+            "social": 0.991946
+          },
+          "ended": "preempted",
+          "kind": "go_check",
+          "quiet": false,
+          "reason": "curiosity_over_threshold:stale_place",
+          "seed": 916154,
+          "standoff_m": null,
+          "subject": null,
+          "target_id": "place-bf5a060c473444ef",
+          "ticks": 640
+        },
+        {
+          "at_s": 1877.5,
+          "band": "afternoon",
+          "bearing_rad": -0.091,
+          "budget_m": 0.0,
+          "budget_s": 6.0,
+          "checked": 0,
+          "drive": "curiosity",
+          "drive_value": 0.997308,
+          "drives": {
+            "at_s": 1877.5,
+            "comfort": 0.0,
+            "curiosity": 0.997308,
+            "duty": 0.630068,
+            "social": 0.996771
+          },
+          "ended": "sweep_complete",
+          "kind": "look",
+          "quiet": false,
+          "reason": "curiosity_over_threshold:unattended_bearing",
+          "seed": 139642,
+          "standoff_m": null,
+          "subject": "building",
+          "target_id": null,
+          "ticks": 42
+        },
+        {
+          "at_s": 2528.8,
+          "band": "afternoon",
+          "bearing_rad": -0.091,
+          "budget_m": 0.0,
+          "budget_s": 6.0,
+          "checked": 0,
+          "drive": "curiosity",
+          "drive_value": 0.987373,
+          "drives": {
+            "at_s": 2528.8,
+            "comfort": 0.0,
+            "curiosity": 0.987373,
+            "duty": 0.725914,
+            "social": 0.984866
+          },
+          "ended": "preempted",
+          "kind": "look",
+          "quiet": false,
+          "reason": "curiosity_over_threshold:unattended_bearing",
+          "seed": 3674790,
+          "standoff_m": null,
+          "subject": "building",
+          "target_id": null,
+          "ticks": 1
+        },
+        {
+          "at_s": 3128.8,
+          "band": "afternoon",
+          "bearing_rad": null,
+          "budget_m": 0.0,
+          "budget_s": 8.0,
+          "checked": 0,
+          "drive": "curiosity",
+          "drive_value": 0.978855,
+          "drives": {
+            "at_s": 3128.8,
+            "comfort": 0.0,
+            "curiosity": 0.978855,
+            "duty": 0.777085,
+            "social": 0.97468
+          },
+          "ended": "expressed",
+          "kind": "remark",
+          "quiet": false,
+          "reason": "curiosity_over_threshold:admitted_place",
+          "seed": 3225958,
+          "standoff_m": null,
+          "subject": "building",
+          "target_id": null,
+          "ticks": 1
+        }
+      ],
+      "initiations_per_hour": 5.0,
+      "initiations_per_hour_with_rest": 5.0,
+      "max_radius_m": 1.2429408480309476,
+      "min_agent_clearance_m": 0.0,
+      "min_agent_clearance_under_initiative_m": 0.0,
+      "min_clearance_toward_agent_m": 1.2909777787484857,
+      "min_static_clearance_m": 1.2601622219590185,
+      "obstacle_stop_m": 0.65,
+      "owner_turns": 7,
+      "owner_turns_during_initiative": 1,
+      "patrol_reasons": {
+        "advance": 234,
+        "turn_blocked": 97,
+        "turn_coverage": 20,
+        "turn_hold": 111,
+        "turn_person": 178
+      },
+      "person_stop_m": 1.2,
+      "places_checked": 1,
+      "preemptions": [
+        {
+          "at_s": 1341.5,
+          "at_tick": 13415,
+          "command_at_yield": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "held_s": 64.0,
+          "kind": "go_check",
+          "ticks_to_yield": 0,
+          "trigger": "owner_turn"
+        },
+        {
+          "at_s": 2528.9,
+          "at_tick": 25289,
+          "command_at_yield": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "held_s": 0.1,
+          "kind": "look",
+          "ticks_to_yield": 0,
+          "trigger": "estop"
+        }
+      ],
+      "proposals": 6,
+      "proposed_by_kind": {
+        "approach": 1,
+        "go_check": 1,
+        "look": 2,
+        "remark": 2
+      },
+      "refusals": {
+        "approach_no_skill_contract": 1
+      },
+      "seed": 2,
+      "start_hour": 14.0,
+      "static_collisions": 0,
+      "translation_sha": "c4a2486831a87eadaa60e09bb59be0d708e8626970dc3aa37e865901d7d2d6e1",
+      "visited_cell_fraction": 0.1111111111111111,
+      "visited_cells": [
+        [
+          1,
+          1
+        ]
+      ],
+      "withheld_night": 0,
+      "withheld_quiet": 6300
+    },
+    {
+      "admitted": 6,
+      "admitted_by_kind": {
+        "go_check": 1,
+        "look": 4,
+        "remark": 1
+      },
+      "admitted_fraction": 1.0,
+      "admitted_in_night": 0,
+      "admitted_in_quiet": 0,
+      "agent_contacts": 5,
+      "arm": "radius6",
+      "attributed_initiations": 6,
+      "candidates_mean": 11.400405679513185,
+      "chatter": {
+        "admitted": 1639,
+        "remarks": 1,
+        "skips": {
+          "activity_running": 252,
+          "conversation_not_quiet": 630,
+          "gap_holding": 1080
+        },
+        "ticks": 3601
+      },
+      "command_sha": "1afc2d8e28f5a4e32eaaaf0f4f61d90888f4698ced291a42cc00fd2ea76e9f69",
+      "contact_agents": [
+        "cyclist-1",
+        "ped-5",
+        "ped-7"
+      ],
+      "contact_records": [
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 2479.4,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 2516.8,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 2590.8,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 2596.6,
+          "bearing_from_travel_rad": 2.149,
+          "dog_translating": true,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 2612.1,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        }
+      ],
+      "contact_seconds": 4.8,
+      "contact_ticks": 48,
+      "contacts_while_stationary": 4,
+      "contacts_while_translating": 1,
+      "duration_s": 3600.0,
+      "estop_at_s": 1185.5575525102697,
+      "expressive_initiations": 6,
+      "home": [
+        1.0,
+        1.5
+      ],
+      "hours": 1.0,
+      "initiations": [
+        {
+          "at_s": 31.8,
+          "band": "afternoon",
+          "bearing_rad": 0.33065,
+          "budget_m": 0.0,
+          "budget_s": 6.0,
+          "checked": 0,
+          "drive": "social",
+          "drive_value": 0.775272,
+          "drives": {
+            "at_s": 31.8,
+            "comfort": 0.0,
+            "curiosity": 0.300166,
+            "duty": 0.019972,
+            "social": 0.775272
+          },
+          "ended": "sweep_complete",
+          "kind": "look",
+          "quiet": false,
+          "reason": "social_over_threshold:person_in_view",
+          "seed": 2996977,
+          "standoff_m": null,
+          "subject": "ped-3",
+          "target_id": null,
+          "ticks": 41
+        },
+        {
+          "at_s": 631.8,
+          "band": "afternoon",
+          "bearing_rad": 1.18107,
+          "budget_m": 0.0,
+          "budget_s": 6.0,
+          "checked": 0,
+          "drive": "curiosity",
+          "drive_value": 0.99654,
+          "drives": {
+            "at_s": 631.8,
+            "comfort": 0.0,
+            "curiosity": 0.99654,
+            "duty": 0.33616,
+            "social": 0.986233
+          },
+          "ended": "sweep_complete",
+          "kind": "look",
+          "quiet": false,
+          "reason": "curiosity_over_threshold:unattended_bearing",
+          "seed": 2385201,
+          "standoff_m": null,
+          "subject": "building",
+          "target_id": null,
+          "ticks": 42
+        },
+        {
+          "at_s": 1231.8,
+          "band": "afternoon",
+          "bearing_rad": null,
+          "budget_m": 0.0,
+          "budget_s": 8.0,
+          "checked": 0,
+          "drive": "curiosity",
+          "drive_value": 0.99654,
+          "drives": {
+            "at_s": 1231.8,
+            "comfort": 0.0,
+            "curiosity": 0.99654,
+            "duty": 0.535346,
+            "social": 0.978968
+          },
+          "ended": "expressed",
+          "kind": "remark",
+          "quiet": false,
+          "reason": "curiosity_over_threshold:admitted_place",
+          "seed": 4132209,
+          "standoff_m": null,
+          "subject": "building",
+          "target_id": null,
+          "ticks": 1
+        },
+        {
+          "at_s": 1831.8,
+          "band": "afternoon",
+          "bearing_rad": 0.67909,
+          "budget_m": 0.0,
+          "budget_s": 6.0,
+          "checked": 0,
+          "drive": "curiosity",
+          "drive_value": 0.99654,
+          "drives": {
+            "at_s": 1831.8,
+            "comfort": 0.0,
+            "curiosity": 0.99654,
+            "duty": 0.660825,
+            "social": 0.991717
+          },
+          "ended": "preempted",
+          "kind": "look",
+          "quiet": false,
+          "reason": "curiosity_over_threshold:unattended_bearing",
+          "seed": 3552689,
+          "standoff_m": null,
+          "subject": "building",
+          "target_id": null,
+          "ticks": 1
+        },
+        {
+          "at_s": 2431.8,
+          "band": "afternoon",
+          "bearing_rad": 1.2511,
+          "budget_m": 6.0,
+          "budget_s": 240.0,
+          "checked": 1,
+          "drive": "curiosity",
+          "drive_value": 0.9975,
+          "drives": {
+            "at_s": 2431.8,
+            "comfort": 0.0,
+            "curiosity": 0.9975,
+            "duty": 0.739872,
+            "social": 0.997001
+          },
+          "ended": "budget",
+          "kind": "go_check",
+          "quiet": false,
+          "reason": "curiosity_over_threshold:stale_place",
+          "seed": 581105,
+          "standoff_m": null,
+          "subject": null,
+          "target_id": "place-5883f4139b714837",
+          "ticks": 2401
+        },
+        {
+          "at_s": 3031.8,
+          "band": "afternoon",
+          "bearing_rad": -0.87107,
+          "budget_m": 0.0,
+          "budget_s": 6.0,
+          "checked": 0,
+          "drive": "curiosity",
+          "drive_value": 0.982064,
+          "drives": {
+            "at_s": 3031.8,
+            "comfort": 0.0,
+            "curiosity": 0.982064,
+            "duty": 0.673296,
+            "social": 0.978516
+          },
+          "ended": "sweep_complete",
+          "kind": "look",
+          "quiet": false,
+          "reason": "curiosity_over_threshold:unattended_bearing",
+          "seed": 230449,
+          "standoff_m": null,
+          "subject": "bench",
+          "target_id": null,
+          "ticks": 41
+        }
+      ],
+      "initiations_per_hour": 6.0,
+      "initiations_per_hour_with_rest": 6.0,
+      "max_radius_m": 6.010049993080867,
+      "min_agent_clearance_m": 0.0,
+      "min_agent_clearance_under_initiative_m": 0.0,
+      "min_clearance_toward_agent_m": 1.2383615983493066,
+      "min_static_clearance_m": 0.6420223207830822,
+      "obstacle_stop_m": 0.65,
+      "owner_turns": 7,
+      "owner_turns_during_initiative": 0,
+      "patrol_reasons": {
+        "advance": 1024,
+        "turn_blocked": 409,
+        "turn_coverage": 57,
+        "turn_hold": 257,
+        "turn_person": 591,
+        "turn_tether": 62
+      },
+      "person_stop_m": 1.2,
+      "places_checked": 1,
+      "preemptions": [
+        {
+          "at_s": 1831.9,
+          "at_tick": 18319,
+          "command_at_yield": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "held_s": 0.1,
+          "kind": "look",
+          "ticks_to_yield": 0,
+          "trigger": "estop"
+        }
+      ],
+      "proposals": 6,
+      "proposed_by_kind": {
+        "go_check": 1,
+        "look": 4,
+        "remark": 1
+      },
+      "refusals": {},
+      "seed": 3,
+      "start_hour": 14.0,
+      "static_collisions": 0,
+      "translation_sha": "091dd1a0f47db2e5192e74ab663a294f181fe8d95c90781ff7c8739c0eeeb349",
+      "visited_cell_fraction": 0.3333333333333333,
+      "visited_cells": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "withheld_night": 0,
+      "withheld_quiet": 6300
+    }
+  ],
+  "baseline_valid": true,
+  "design_sha256": "1a32b273616617b166652a9c67ec25e081c14789ac1a59535fee430637cef517",
+  "geometry_passed": true,
+  "geometry_table": [
+    {
+      "collision_selected": true,
+      "expected_collision_selected": true,
+      "passed": true,
+      "scenario": "front_closing",
+      "ttc_s": 1.44
+    },
+    {
+      "collision_selected": true,
+      "expected_collision_selected": true,
+      "passed": true,
+      "scenario": "side_closing",
+      "ttc_s": 1.44
+    },
+    {
+      "collision_selected": true,
+      "expected_collision_selected": true,
+      "passed": true,
+      "scenario": "rear_closing",
+      "ttc_s": 1.44
+    },
+    {
+      "collision_selected": false,
+      "expected_collision_selected": false,
+      "passed": true,
+      "scenario": "front_diverging",
+      "ttc_s": null
+    },
+    {
+      "collision_selected": false,
+      "expected_collision_selected": false,
+      "passed": true,
+      "scenario": "front_static",
+      "ttc_s": null
+    }
+  ],
+  "headline_confirmed": false,
+  "parameters": {
+    "control_dt_s": 0.1,
+    "duration_s": 3600.0,
+    "home_arrival_m": 0.25,
+    "return_budget_s": 60.0,
+    "return_speed_mps": 0.3,
+    "robot_radius_m": 0.32,
+    "seeds": [
+      1,
+      2,
+      3
+    ],
+    "shoulder_budget_s": 30.0,
+    "shoulder_radius_m": 0.8,
+    "ttc_slow_s": 1.8,
+    "ttc_stop_s": 0.8
+  },
+  "proposed_runs": [
+    {
+      "admitted": 5,
+      "admitted_by_kind": {
+        "go_check": 4,
+        "look": 1
+      },
+      "admitted_fraction": 0.8333333333333334,
+      "admitted_in_night": 0,
+      "admitted_in_quiet": 0,
+      "agent_contacts": 128,
+      "arm": "radius6",
+      "attributed_initiations": 5,
+      "candidates_mean": 10.866125690607735,
+      "chatter": {
+        "admitted": 1938,
+        "remarks": 0,
+        "skips": {
+          "activity_running": 960,
+          "conversation_not_quiet": 630,
+          "gap_holding": 72
+        },
+        "ticks": 3600
+      },
+      "command_sha": "333acd441f9b9ec7096d1100a66a565d76f68c9df1bfb7e0f3c830226a9214f1",
+      "contact_agents": [
+        "cyclist-1",
+        "ped-5",
+        "ped-7"
+      ],
+      "contact_records": [
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 676.9,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 685.3,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 693.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 743.4,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 751.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 759.2,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 767.7,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 775.7,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 784.2,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 791.9,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 801.4,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.0,
+          "at_s": 829.7,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.0,
+          "at_s": 842.7,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.0,
+          "at_s": 855.7,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.0,
+          "at_s": 868.7,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.0,
+          "at_s": 881.7,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.0,
+          "at_s": 894.7,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 907.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 920.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 933.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 946.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 959.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 972.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 985.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 998.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 1011.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 1024.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 1037.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 1050.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 1063.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 1076.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 1089.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 1102.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 1115.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 1128.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 1141.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 1154.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 1167.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 1180.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 1193.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 1206.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 1219.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 1232.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 1245.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 1258.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 1271.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 1284.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 1297.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 1310.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 1323.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        }
+      ],
+      "contact_seconds": 119.3,
+      "contact_ticks": 1193,
+      "contacts_while_stationary": 128,
+      "contacts_while_translating": 0,
+      "duration_s": 3600.0,
+      "dynamic_gate_bearings": {
+        "front": 40,
+        "rear": 116,
+        "side": 186
+      },
+      "dynamic_gate_counts": {
+        "clear": 35658,
+        "slow": 170,
+        "stop": 172
+      },
+      "estop_at_s": 1061.2370929348815,
+      "expressive_initiations": 5,
+      "home": [
+        1.0,
+        1.5
+      ],
+      "hours": 1.0,
+      "initiations": [
+        {
+          "at_s": 653.4,
+          "band": "afternoon",
+          "bearing_rad": 1.2861,
+          "budget_m": 6.0,
+          "budget_s": 240.0,
+          "checked": 1,
+          "drive": "curiosity",
+          "drive_value": 0.993858,
+          "drives": {
+            "at_s": 653.4,
+            "comfort": 0.0,
+            "curiosity": 0.993858,
+            "duty": 0.330614,
+            "social": 0.992634
+          },
+          "ended": "budget",
+          "kind": "go_check",
+          "quiet": false,
+          "reason": "curiosity_over_threshold:stale_place",
+          "seed": 440859,
+          "standoff_m": null,
+          "subject": null,
+          "target_id": "place-d03aecfd5e754698",
+          "terminal": {
+            "elapsed_s": 3.0,
+            "outcome": "preempted:owner_turn",
+            "reached": false
+          },
+          "ticks": 2401
+        },
+        {
+          "at_s": 1253.4,
+          "band": "afternoon",
+          "bearing_rad": -1.11929,
+          "budget_m": 0.0,
+          "budget_s": 6.0,
+          "checked": 0,
+          "drive": "curiosity",
+          "drive_value": 0.994432,
+          "drives": {
+            "at_s": 1253.4,
+            "comfort": 0.0,
+            "curiosity": 0.994432,
+            "duty": 0.41548,
+            "social": 0.993322
+          },
+          "ended": "preempted",
+          "kind": "look",
+          "quiet": false,
+          "reason": "curiosity_over_threshold:unattended_bearing",
+          "seed": 1860187,
+          "standoff_m": null,
+          "subject": "building",
+          "target_id": null,
+          "ticks": 1
+        },
+        {
+          "at_s": 1886.7,
+          "band": "afternoon",
+          "bearing_rad": -1.9147,
+          "budget_m": 6.0,
+          "budget_s": 240.0,
+          "checked": 0,
+          "drive": "curiosity",
+          "drive_value": 0.994049,
+          "drives": {
+            "at_s": 1886.7,
+            "comfort": 0.0,
+            "curiosity": 0.994049,
+            "duty": 0.603214,
+            "social": 0.981913
+          },
+          "ended": "budget",
+          "kind": "go_check",
+          "quiet": false,
+          "reason": "curiosity_over_threshold:stale_place",
+          "seed": 1280943,
+          "standoff_m": null,
+          "subject": null,
+          "target_id": "place-2b919ed98ec14f91",
+          "terminal": {
+            "elapsed_s": 41.4,
+            "outcome": "home",
+            "reached": true
+          },
+          "ticks": 2401
+        },
+        {
+          "at_s": 2486.7,
+          "band": "afternoon",
+          "bearing_rad": 1.8371,
+          "budget_m": 6.0,
+          "budget_s": 240.0,
+          "checked": 0,
+          "drive": "curiosity",
+          "drive_value": 0.999807,
+          "drives": {
+            "at_s": 2486.7,
+            "comfort": 0.0,
+            "curiosity": 0.999807,
+            "duty": 0.587207,
+            "social": 0.999769
+          },
+          "ended": "budget",
+          "kind": "go_check",
+          "quiet": false,
+          "reason": "curiosity_over_threshold:stale_place",
+          "seed": 2798575,
+          "standoff_m": null,
+          "subject": null,
+          "target_id": "place-2b919ed98ec14f91",
+          "terminal": {
+            "elapsed_s": 29.0,
+            "outcome": "home",
+            "reached": true
+          },
+          "ticks": 2401
+        },
+        {
+          "at_s": 3086.7,
+          "band": "afternoon",
+          "bearing_rad": -1.7721,
+          "budget_m": 6.0,
+          "budget_s": 240.0,
+          "checked": 1,
+          "drive": "curiosity",
+          "drive_value": 0.994815,
+          "drives": {
+            "at_s": 3086.7,
+            "comfort": 0.0,
+            "curiosity": 0.994815,
+            "duty": 0.577123,
+            "social": 0.993781
+          },
+          "ended": "budget",
+          "kind": "go_check",
+          "quiet": false,
+          "reason": "curiosity_over_threshold:stale_place",
+          "seed": 2120495,
+          "standoff_m": null,
+          "subject": null,
+          "target_id": "place-d03aecfd5e754698",
+          "terminal": {
+            "elapsed_s": 1.1,
+            "outcome": "home",
+            "reached": true
+          },
+          "ticks": 2401
+        }
+      ],
+      "initiations_per_hour": 5.0,
+      "initiations_per_hour_with_rest": 5.0,
+      "max_radius_m": 5.305191955147622,
+      "min_agent_clearance_m": 0.0,
+      "min_agent_clearance_under_initiative_m": 0.0,
+      "min_clearance_toward_agent_m": 1.0522573955798429,
+      "min_static_clearance_m": 0.6421549447078312,
+      "obstacle_stop_m": 0.65,
+      "owner_turns": 7,
+      "owner_turns_during_initiative": 0,
+      "patrol_reasons": {
+        "advance": 2953,
+        "turn_blocked": 3239,
+        "turn_coverage": 135,
+        "turn_hold": 1811,
+        "turn_person": 1462
+      },
+      "person_stop_m": 1.2,
+      "places_checked": 2,
+      "preemptions": [
+        {
+          "at_s": 896.4,
+          "at_tick": 8964,
+          "command_at_yield": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "held_s": 3.0,
+          "kind": "terminal:return_home",
+          "ticks_to_yield": 0,
+          "trigger": "owner_turn"
+        },
+        {
+          "at_s": 1253.5,
+          "at_tick": 12535,
+          "command_at_yield": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "held_s": 0.1,
+          "kind": "look",
+          "ticks_to_yield": 0,
+          "trigger": "estop"
+        }
+      ],
+      "proposals": 6,
+      "proposed_by_kind": {
+        "approach": 1,
+        "go_check": 4,
+        "look": 1
+      },
+      "refusals": {
+        "approach_no_skill_contract": 1
+      },
+      "seed": 1,
+      "start_hour": 14.0,
+      "static_collisions": 0,
+      "terminal_incomplete": null,
+      "terminal_rows": [
+        {
+          "elapsed_s": 3.0,
+          "entered_s": 893.4000000000001,
+          "gate_interventions": 20,
+          "outcome": "preempted:owner_turn",
+          "phase": "return_home",
+          "phase_entered_s": 893.4000000000001,
+          "reached_terminal": false,
+          "release_command": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "released_s": 896.4,
+          "shoulder": null,
+          "source_end": "budget",
+          "source_kind": "go_check",
+          "ticks": 29
+        },
+        {
+          "elapsed_s": 41.4,
+          "entered_s": 2126.7000000000003,
+          "gate_interventions": 50,
+          "outcome": "home",
+          "phase": "return_home",
+          "phase_entered_s": 2126.7000000000003,
+          "reached_terminal": true,
+          "release_command": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "released_s": 2168.1,
+          "shoulder": null,
+          "source_end": "budget",
+          "source_kind": "go_check",
+          "ticks": 414
+        },
+        {
+          "elapsed_s": 29.0,
+          "entered_s": 2726.7000000000003,
+          "gate_interventions": 23,
+          "outcome": "home",
+          "phase": "return_home",
+          "phase_entered_s": 2726.7000000000003,
+          "reached_terminal": true,
+          "release_command": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "released_s": 2755.7,
+          "shoulder": null,
+          "source_end": "budget",
+          "source_kind": "go_check",
+          "ticks": 290
+        },
+        {
+          "elapsed_s": 1.1,
+          "entered_s": 3326.7000000000003,
+          "gate_interventions": 0,
+          "outcome": "home",
+          "phase": "return_home",
+          "phase_entered_s": 3326.7000000000003,
+          "reached_terminal": true,
+          "release_command": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "released_s": 3327.8,
+          "shoulder": null,
+          "source_end": "budget",
+          "source_kind": "go_check",
+          "ticks": 11
+        }
+      ],
+      "translation_sha": "0e2e1785d939be6f502fae2519dd5dc9ab4115e90bfcf0f47513a268f87ebc56",
+      "visited_cell_fraction": 0.3333333333333333,
+      "visited_cells": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "withheld_night": 0,
+      "withheld_quiet": 6300
+    },
+    {
+      "admitted": 5,
+      "admitted_by_kind": {
+        "go_check": 1,
+        "look": 2,
+        "remark": 2
+      },
+      "admitted_fraction": 0.8333333333333334,
+      "admitted_in_night": 0,
+      "admitted_in_quiet": 0,
+      "agent_contacts": 184,
+      "arm": "radius6",
+      "attributed_initiations": 5,
+      "candidates_mean": 11.992144566939752,
+      "chatter": {
+        "admitted": 1769,
+        "remarks": 2,
+        "skips": {
+          "activity_running": 68,
+          "conversation_not_quiet": 630,
+          "gap_holding": 1135
+        },
+        "ticks": 3602
+      },
+      "command_sha": "ba1cd63085e9dfaaf3297d4ae7439e34bfac366b25b7b05d9c61c04b557df7f7",
+      "contact_agents": [
+        "ped-5",
+        "ped-6"
+      ],
+      "contact_records": [
+        {
+          "agent": "ped-6",
+          "agent_speed_mps": 0.68,
+          "at_s": 1323.4,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1338.8,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1350.8,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1363.2,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1375.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1388.0,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1400.4,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1412.8,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1425.2,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1437.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1450.0,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1462.4,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1474.8,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1487.2,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1499.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1512.0,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1524.4,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1536.8,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1549.2,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1561.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1574.0,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1586.4,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1598.8,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1611.2,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1623.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1636.0,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1648.4,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1660.8,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1673.2,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1685.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1698.0,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1710.4,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1722.8,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1735.2,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1747.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1760.0,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1772.4,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1784.8,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1797.2,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1809.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1822.0,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1834.4,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1846.8,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1859.2,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1871.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1884.0,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1896.4,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1908.8,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1921.2,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 1933.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": null
+        }
+      ],
+      "contact_seconds": 110.2,
+      "contact_ticks": 1102,
+      "contacts_while_stationary": 184,
+      "contacts_while_translating": 0,
+      "duration_s": 3600.0,
+      "dynamic_gate_bearings": {
+        "front": 0,
+        "rear": 4,
+        "side": 0
+      },
+      "dynamic_gate_counts": {
+        "clear": 35996,
+        "slow": 0,
+        "stop": 4
+      },
+      "estop_at_s": 2047.2411262670992,
+      "expressive_initiations": 5,
+      "home": [
+        1.0,
+        1.5
+      ],
+      "hours": 1.0,
+      "initiations": [
+        {
+          "at_s": 677.5,
+          "band": "afternoon",
+          "bearing_rad": null,
+          "budget_m": 0.0,
+          "budget_s": 8.0,
+          "checked": 0,
+          "drive": "curiosity",
+          "drive_value": 0.992137,
+          "drives": {
+            "at_s": 677.5,
+            "comfort": 0.0,
+            "curiosity": 0.992137,
+            "duty": 0.344266,
+            "social": 0.990572
+          },
+          "ended": "expressed",
+          "kind": "remark",
+          "quiet": false,
+          "reason": "curiosity_over_threshold:admitted_place",
+          "seed": 1364730,
+          "standoff_m": null,
+          "subject": "building",
+          "target_id": null,
+          "ticks": 1
+        },
+        {
+          "at_s": 1277.5,
+          "band": "afternoon",
+          "bearing_rad": 1.2861,
+          "budget_m": 6.0,
+          "budget_s": 240.0,
+          "checked": 1,
+          "drive": "curiosity",
+          "drive_value": 0.993284,
+          "drives": {
+            "at_s": 1277.5,
+            "comfort": 0.0,
+            "curiosity": 0.993284,
+            "duty": 0.536563,
+            "social": 0.991946
+          },
+          "ended": "preempted",
+          "kind": "go_check",
+          "quiet": false,
+          "reason": "curiosity_over_threshold:stale_place",
+          "seed": 916154,
+          "standoff_m": null,
+          "subject": null,
+          "target_id": "place-d0312c44788d42e1",
+          "ticks": 640
+        },
+        {
+          "at_s": 1877.5,
+          "band": "afternoon",
+          "bearing_rad": 0.32826,
+          "budget_m": 0.0,
+          "budget_s": 6.0,
+          "checked": 0,
+          "drive": "curiosity",
+          "drive_value": 0.99923,
+          "drives": {
+            "at_s": 1877.5,
+            "comfort": 0.0,
+            "curiosity": 0.99923,
+            "duty": 0.630068,
+            "social": 0.999076
+          },
+          "ended": "sweep_complete",
+          "kind": "look",
+          "quiet": false,
+          "reason": "curiosity_over_threshold:unattended_bearing",
+          "seed": 139642,
+          "standoff_m": null,
+          "subject": "building",
+          "target_id": null,
+          "ticks": 42
+        },
+        {
+          "at_s": 2528.8,
+          "band": "afternoon",
+          "bearing_rad": 0.32826,
+          "budget_m": 0.0,
+          "budget_s": 6.0,
+          "checked": 0,
+          "drive": "curiosity",
+          "drive_value": 0.987183,
+          "drives": {
+            "at_s": 2528.8,
+            "comfort": 0.0,
+            "curiosity": 0.987183,
+            "duty": 0.725914,
+            "social": 0.984639
+          },
+          "ended": "preempted",
+          "kind": "look",
+          "quiet": false,
+          "reason": "curiosity_over_threshold:unattended_bearing",
+          "seed": 3674790,
+          "standoff_m": null,
+          "subject": "building",
+          "target_id": null,
+          "ticks": 1
+        },
+        {
+          "at_s": 3128.8,
+          "band": "afternoon",
+          "bearing_rad": null,
+          "budget_m": 0.0,
+          "budget_s": 8.0,
+          "checked": 0,
+          "drive": "curiosity",
+          "drive_value": 0.979043,
+          "drives": {
+            "at_s": 3128.8,
+            "comfort": 0.0,
+            "curiosity": 0.979043,
+            "duty": 0.777085,
+            "social": 0.974905
+          },
+          "ended": "expressed",
+          "kind": "remark",
+          "quiet": false,
+          "reason": "curiosity_over_threshold:admitted_place",
+          "seed": 3225958,
+          "standoff_m": null,
+          "subject": "building",
+          "target_id": null,
+          "ticks": 1
+        }
+      ],
+      "initiations_per_hour": 5.0,
+      "initiations_per_hour_with_rest": 5.0,
+      "max_radius_m": 1.4133715633715698,
+      "min_agent_clearance_m": 0.0,
+      "min_agent_clearance_under_initiative_m": 0.0,
+      "min_clearance_toward_agent_m": 1.2909777787484857,
+      "min_static_clearance_m": 1.4058171898022913,
+      "obstacle_stop_m": 0.65,
+      "owner_turns": 7,
+      "owner_turns_during_initiative": 1,
+      "patrol_reasons": {
+        "advance": 249,
+        "turn_blocked": 101,
+        "turn_coverage": 19,
+        "turn_hold": 104,
+        "turn_person": 167
+      },
+      "person_stop_m": 1.2,
+      "places_checked": 1,
+      "preemptions": [
+        {
+          "at_s": 1341.5,
+          "at_tick": 13415,
+          "command_at_yield": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "held_s": 64.0,
+          "kind": "go_check",
+          "ticks_to_yield": 0,
+          "trigger": "owner_turn"
+        },
+        {
+          "at_s": 2528.9,
+          "at_tick": 25289,
+          "command_at_yield": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "held_s": 0.1,
+          "kind": "look",
+          "ticks_to_yield": 0,
+          "trigger": "estop"
+        }
+      ],
+      "proposals": 6,
+      "proposed_by_kind": {
+        "approach": 1,
+        "go_check": 1,
+        "look": 2,
+        "remark": 2
+      },
+      "refusals": {
+        "approach_no_skill_contract": 1
+      },
+      "seed": 2,
+      "start_hour": 14.0,
+      "static_collisions": 0,
+      "terminal_incomplete": null,
+      "terminal_rows": [],
+      "translation_sha": "39a295612656850cf916074bbe203a6a2661985fe0f57f089859ca63b2b4eb81",
+      "visited_cell_fraction": 0.1111111111111111,
+      "visited_cells": [
+        [
+          1,
+          1
+        ]
+      ],
+      "withheld_night": 0,
+      "withheld_quiet": 6300
+    },
+    {
+      "admitted": 6,
+      "admitted_by_kind": {
+        "go_check": 2,
+        "look": 3,
+        "remark": 1
+      },
+      "admitted_fraction": 1.0,
+      "admitted_in_night": 0,
+      "admitted_in_quiet": 0,
+      "agent_contacts": 11,
+      "arm": "radius6",
+      "attributed_initiations": 6,
+      "candidates_mean": 11.677424799972993,
+      "chatter": {
+        "admitted": 1439,
+        "remarks": 1,
+        "skips": {
+          "activity_running": 452,
+          "conversation_not_quiet": 630,
+          "gap_holding": 1080
+        },
+        "ticks": 3601
+      },
+      "command_sha": "e94b88863f6474060ea06a1b55bf7849491f334ed8ce508dd219aaa4899279f2",
+      "contact_agents": [
+        "cyclist-1",
+        "ped-5",
+        "ped-7"
+      ],
+      "contact_records": [
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 2480.6,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 2490.5,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 2507.7,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "ped-7",
+          "agent_speed_mps": 0.58,
+          "at_s": 2520.8,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 2577.2,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 3060.2,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 3072.4,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 3084.9,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "ped-5",
+          "agent_speed_mps": 0.55,
+          "at_s": 3124.3,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 3222.5,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        },
+        {
+          "agent": "cyclist-1",
+          "agent_speed_mps": 1.7,
+          "at_s": 3228.8,
+          "bearing_from_travel_rad": null,
+          "dog_translating": false,
+          "initiative": "go_check"
+        }
+      ],
+      "contact_seconds": 15.1,
+      "contact_ticks": 151,
+      "contacts_while_stationary": 11,
+      "contacts_while_translating": 0,
+      "duration_s": 3600.0,
+      "dynamic_gate_bearings": {
+        "front": 53,
+        "rear": 26,
+        "side": 119
+      },
+      "dynamic_gate_counts": {
+        "clear": 35802,
+        "slow": 137,
+        "stop": 61
+      },
+      "estop_at_s": 1185.5575525102697,
+      "expressive_initiations": 6,
+      "home": [
+        1.0,
+        1.5
+      ],
+      "hours": 1.0,
+      "initiations": [
+        {
+          "at_s": 31.8,
+          "band": "afternoon",
+          "bearing_rad": 0.33065,
+          "budget_m": 0.0,
+          "budget_s": 6.0,
+          "checked": 0,
+          "drive": "social",
+          "drive_value": 0.775272,
+          "drives": {
+            "at_s": 31.8,
+            "comfort": 0.0,
+            "curiosity": 0.300166,
+            "duty": 0.019972,
+            "social": 0.775272
+          },
+          "ended": "sweep_complete",
+          "kind": "look",
+          "quiet": false,
+          "reason": "social_over_threshold:person_in_view",
+          "seed": 2996977,
+          "standoff_m": null,
+          "subject": "ped-3",
+          "target_id": null,
+          "ticks": 41
+        },
+        {
+          "at_s": 631.8,
+          "band": "afternoon",
+          "bearing_rad": 1.18107,
+          "budget_m": 0.0,
+          "budget_s": 6.0,
+          "checked": 0,
+          "drive": "curiosity",
+          "drive_value": 0.99654,
+          "drives": {
+            "at_s": 631.8,
+            "comfort": 0.0,
+            "curiosity": 0.99654,
+            "duty": 0.33616,
+            "social": 0.986233
+          },
+          "ended": "sweep_complete",
+          "kind": "look",
+          "quiet": false,
+          "reason": "curiosity_over_threshold:unattended_bearing",
+          "seed": 2385201,
+          "standoff_m": null,
+          "subject": "building",
+          "target_id": null,
+          "ticks": 42
+        },
+        {
+          "at_s": 1231.8,
+          "band": "afternoon",
+          "bearing_rad": null,
+          "budget_m": 0.0,
+          "budget_s": 8.0,
+          "checked": 0,
+          "drive": "curiosity",
+          "drive_value": 0.99654,
+          "drives": {
+            "at_s": 1231.8,
+            "comfort": 0.0,
+            "curiosity": 0.99654,
+            "duty": 0.535346,
+            "social": 0.978968
+          },
+          "ended": "expressed",
+          "kind": "remark",
+          "quiet": false,
+          "reason": "curiosity_over_threshold:admitted_place",
+          "seed": 4132209,
+          "standoff_m": null,
+          "subject": "building",
+          "target_id": null,
+          "ticks": 1
+        },
+        {
+          "at_s": 1831.8,
+          "band": "afternoon",
+          "bearing_rad": 0.67909,
+          "budget_m": 0.0,
+          "budget_s": 6.0,
+          "checked": 0,
+          "drive": "curiosity",
+          "drive_value": 0.99654,
+          "drives": {
+            "at_s": 1831.8,
+            "comfort": 0.0,
+            "curiosity": 0.99654,
+            "duty": 0.660825,
+            "social": 0.991717
+          },
+          "ended": "preempted",
+          "kind": "look",
+          "quiet": false,
+          "reason": "curiosity_over_threshold:unattended_bearing",
+          "seed": 3552689,
+          "standoff_m": null,
+          "subject": "building",
+          "target_id": null,
+          "ticks": 1
+        },
+        {
+          "at_s": 2431.8,
+          "band": "afternoon",
+          "bearing_rad": 1.2511,
+          "budget_m": 6.0,
+          "budget_s": 240.0,
+          "checked": 1,
+          "drive": "curiosity",
+          "drive_value": 0.9975,
+          "drives": {
+            "at_s": 2431.8,
+            "comfort": 0.0,
+            "curiosity": 0.9975,
+            "duty": 0.739872,
+            "social": 0.997001
+          },
+          "ended": "budget",
+          "kind": "go_check",
+          "quiet": false,
+          "reason": "curiosity_over_threshold:stale_place",
+          "seed": 581105,
+          "standoff_m": null,
+          "subject": null,
+          "target_id": "place-bb03aa9a33454f0c",
+          "terminal": {
+            "elapsed_s": 0.1,
+            "outcome": "home",
+            "reached": true
+          },
+          "ticks": 2401
+        },
+        {
+          "at_s": 3031.8,
+          "band": "afternoon",
+          "bearing_rad": -1.6499,
+          "budget_m": 6.0,
+          "budget_s": 240.0,
+          "checked": 1,
+          "drive": "curiosity",
+          "drive_value": 0.999807,
+          "drives": {
+            "at_s": 3031.8,
+            "comfort": 0.0,
+            "curiosity": 0.999807,
+            "duty": 0.673296,
+            "social": 0.999769
+          },
+          "ended": "preempted",
+          "kind": "go_check",
+          "quiet": false,
+          "reason": "curiosity_over_threshold:stale_place",
+          "seed": 230449,
+          "standoff_m": null,
+          "subject": null,
+          "target_id": "place-bb03aa9a33454f0c",
+          "ticks": 2040
+        }
+      ],
+      "initiations_per_hour": 6.0,
+      "initiations_per_hour_with_rest": 6.0,
+      "max_radius_m": 4.740833730250074,
+      "min_agent_clearance_m": 0.0,
+      "min_agent_clearance_under_initiative_m": 0.0,
+      "min_clearance_toward_agent_m": 1.175357821340135,
+      "min_static_clearance_m": 0.8400741138921515,
+      "obstacle_stop_m": 0.65,
+      "owner_turns": 7,
+      "owner_turns_during_initiative": 1,
+      "patrol_reasons": {
+        "advance": 2097,
+        "turn_blocked": 639,
+        "turn_coverage": 83,
+        "turn_hold": 703,
+        "turn_person": 918
+      },
+      "person_stop_m": 1.2,
+      "places_checked": 2,
+      "preemptions": [
+        {
+          "at_s": 1831.9,
+          "at_tick": 18319,
+          "command_at_yield": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "held_s": 0.1,
+          "kind": "look",
+          "ticks_to_yield": 0,
+          "trigger": "estop"
+        },
+        {
+          "at_s": 3235.8,
+          "at_tick": 32358,
+          "command_at_yield": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "held_s": 204.0,
+          "kind": "go_check",
+          "ticks_to_yield": 0,
+          "trigger": "owner_turn"
+        }
+      ],
+      "proposals": 6,
+      "proposed_by_kind": {
+        "go_check": 2,
+        "look": 3,
+        "remark": 1
+      },
+      "refusals": {},
+      "seed": 3,
+      "start_hour": 14.0,
+      "static_collisions": 0,
+      "terminal_incomplete": null,
+      "terminal_rows": [
+        {
+          "elapsed_s": 0.1,
+          "entered_s": 2671.8,
+          "gate_interventions": 0,
+          "outcome": "home",
+          "phase": "return_home",
+          "phase_entered_s": 2671.8,
+          "reached_terminal": true,
+          "release_command": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "released_s": 2671.9,
+          "shoulder": null,
+          "source_end": "budget",
+          "source_kind": "go_check",
+          "ticks": 1
+        }
+      ],
+      "translation_sha": "ae1b0a34aa7b6dbca17fd008c3033fc7b6c04d2af69444822bb540d285b6eecd",
+      "visited_cell_fraction": 0.4444444444444444,
+      "visited_cells": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          1
+        ]
+      ],
+      "withheld_night": 0,
+      "withheld_quiet": 6300
+    }
+  ],
+  "rows": {
+    "TA1_stationary_contacts": {
+      "bar": "proposed <= 5% of baseline",
+      "baseline": 316,
+      "passed": false,
+      "proposed": 323,
+      "ratio": 1.0221518987341771
+    },
+    "TA2_all_contacts": {
+      "bar": "proposed <= 10% of baseline",
+      "baseline": 319,
+      "passed": false,
+      "proposed": 323,
+      "ratio": 1.0125391849529781
+    },
+    "TA3_moving_contacts": {
+      "bar": "proposed <= baseline",
+      "baseline": 3,
+      "passed": true,
+      "proposed": 0
+    },
+    "TA4_initiative_retained": {
+      "bar": "each seed > 0 and pooled >= 80% of baseline",
+      "baseline": 16,
+      "passed": true,
+      "per_seed": [
+        5,
+        5,
+        6
+      ],
+      "proposed": 16,
+      "ratio": 1.0
+    },
+    "TA5_preemption": {
+      "all_commands_zero": true,
+      "bar": "maximum <= 1 tick and exact zero",
+      "events": 6,
+      "max_ticks": 0,
+      "passed": true
+    },
+    "TA6_terminals": {
+      "all_released_exact_zero_and_none_incomplete": true,
+      "bar": ">= 90% natural reach; every terminal releases",
+      "natural": 4,
+      "natural_reached": 4,
+      "natural_reached_fraction": 1.0,
+      "outcomes": {
+        "home": 4,
+        "preempted:owner_turn": 1
+      },
+      "passed": true,
+      "probe_preempted": 1,
+      "started_and_released": 5
+    },
+    "TA7_contact_time": {
+      "bar": "proposed <= 10% of baseline",
+      "baseline_s": 89.1,
+      "passed": false,
+      "proposed_s": 244.6,
+      "ratio": 2.745230078563412
+    }
+  }
+}

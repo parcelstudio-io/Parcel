@@ -1,0 +1,1516 @@
+{
+  "authored_counterfactual_refuters": {
+    "admitted": 0,
+    "all_rejected": true,
+    "authored": true,
+    "cases": 48,
+    "failures": []
+  },
+  "authored_stateful_sequence": {
+    "authored": true,
+    "exact": true,
+    "premature_repeats": 0,
+    "rows": [
+      {
+        "admitted": true,
+        "expected": true,
+        "reason": "opportunity_admitted",
+        "step": "subject@0"
+      },
+      {
+        "admitted": false,
+        "expected": false,
+        "reason": "internal_speech_cooldown",
+        "step": "subject@30"
+      },
+      {
+        "admitted": false,
+        "expected": false,
+        "reason": "subject_dedup",
+        "step": "subject@90"
+      },
+      {
+        "admitted": false,
+        "expected": false,
+        "reason": "subject_dedup",
+        "step": "subject@120"
+      },
+      {
+        "admitted": true,
+        "expected": true,
+        "reason": "opportunity_admitted",
+        "step": "distinct@120"
+      },
+      {
+        "admitted": true,
+        "expected": true,
+        "reason": "opportunity_admitted",
+        "step": "subject@601"
+      }
+    ]
+  },
+  "call_reduction_vs_naive": 0.6590909090909091,
+  "cases": [
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": false,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "ignore",
+      "id": "ign-01",
+      "opportunity": {
+        "a": false,
+        "k": "c47923ffc381bc1e",
+        "p": [
+          "verified_owner_absent"
+        ],
+        "r": "verified_owner_absent",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "ignore",
+      "id": "ign-02",
+      "opportunity": {
+        "a": false,
+        "k": "ea3987b4a8b765c9",
+        "p": [
+          "owner_speaking",
+          "owner_turn_gap"
+        ],
+        "r": "owner_speaking",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "ignore",
+      "id": "ign-03",
+      "opportunity": {
+        "a": false,
+        "k": "3e43500b3905453a",
+        "p": [
+          "lane_busy",
+          "owner_turn_gap"
+        ],
+        "r": "lane_busy",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": true,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "ignore",
+      "id": "ign-04",
+      "opportunity": {
+        "a": false,
+        "k": "f43a77a3f5d1d570",
+        "p": [
+          "quiet_hours"
+        ],
+        "r": "quiet_hours",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": false,
+        "opportunity_gate": false,
+        "timer_only": false
+      },
+      "gold": "ignore",
+      "id": "ign-05",
+      "opportunity": {
+        "a": false,
+        "k": "f3926c0fa30f0571",
+        "p": [],
+        "r": "score_below_threshold",
+        "s": 0.01625
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": false,
+        "timer_only": false
+      },
+      "gold": "ignore",
+      "id": "ign-06",
+      "opportunity": {
+        "a": false,
+        "k": "none",
+        "p": [
+          "robot_speech_cooldown",
+          "noticing_stale",
+          "recent_remark"
+        ],
+        "r": "robot_speech_cooldown",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "ignore",
+      "id": "ign-07",
+      "opportunity": {
+        "a": false,
+        "k": "61ce731756a72c2c",
+        "p": [
+          "owner_speaking",
+          "estop_latched",
+          "owner_turn_gap"
+        ],
+        "r": "owner_speaking",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "ignore",
+      "id": "ign-08",
+      "opportunity": {
+        "a": false,
+        "k": "5c0e4196701a9936",
+        "p": [
+          "verified_owner_absent"
+        ],
+        "r": "verified_owner_absent",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": false,
+        "opportunity_gate": false,
+        "timer_only": false
+      },
+      "gold": "ignore",
+      "id": "ign-09",
+      "opportunity": {
+        "a": false,
+        "k": "36fda093268b4b5b",
+        "p": [
+          "owner_turn_gap",
+          "robot_speech_cooldown"
+        ],
+        "r": "owner_turn_gap",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": false,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "ignore",
+      "id": "ign-10",
+      "opportunity": {
+        "a": false,
+        "k": "aa353229613fbfc2",
+        "p": [],
+        "r": "score_below_threshold",
+        "s": 0.065
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": false,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "ignore",
+      "id": "ign-11",
+      "opportunity": {
+        "a": false,
+        "k": "385cfd2c97325d63",
+        "p": [
+          "verified_owner_absent"
+        ],
+        "r": "verified_owner_absent",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": false,
+        "opportunity_gate": false,
+        "timer_only": false
+      },
+      "gold": "ignore",
+      "id": "ign-12",
+      "opportunity": {
+        "a": false,
+        "k": "e1f9b48f1caae27f",
+        "p": [],
+        "r": "score_below_threshold",
+        "s": 0.04875
+      }
+    },
+    {
+      "arguable": true,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "ignore",
+      "id": "ign-13",
+      "opportunity": {
+        "a": false,
+        "k": "0e7758dba0136ee9",
+        "p": [
+          "owner_speaking",
+          "owner_turn_gap"
+        ],
+        "r": "owner_speaking",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": false,
+        "timer_only": false
+      },
+      "gold": "ignore",
+      "id": "ign-14",
+      "opportunity": {
+        "a": false,
+        "k": "69105510eeb9dd5e",
+        "p": [
+          "robot_speech_cooldown",
+          "recent_remark"
+        ],
+        "r": "robot_speech_cooldown",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": true,
+        "naive_novelty": false,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "ignore",
+      "id": "ign-15",
+      "opportunity": {
+        "a": false,
+        "k": "none",
+        "p": [
+          "no_noticing"
+        ],
+        "r": "no_noticing",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "ignore",
+      "id": "ign-16",
+      "opportunity": {
+        "a": false,
+        "k": "444c66598235d050",
+        "p": [
+          "quiet_hours"
+        ],
+        "r": "quiet_hours",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": true,
+        "naive_novelty": true,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "ignore",
+      "id": "ign-17",
+      "opportunity": {
+        "a": false,
+        "k": "none",
+        "p": [
+          "noticing_stale",
+          "recent_remark"
+        ],
+        "r": "noticing_stale",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "ignore",
+      "id": "ign-18",
+      "opportunity": {
+        "a": false,
+        "k": "248ff59153861333",
+        "p": [
+          "verified_owner_absent"
+        ],
+        "r": "verified_owner_absent",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "ignore",
+      "id": "ign-19",
+      "opportunity": {
+        "a": false,
+        "k": "cc26e17251a503b3",
+        "p": [
+          "lane_busy",
+          "owner_turn_gap"
+        ],
+        "r": "lane_busy",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": false,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "ignore",
+      "id": "ign-20",
+      "opportunity": {
+        "a": false,
+        "k": "db44f2842a722fff",
+        "p": [
+          "owner_speaking",
+          "owner_turn_gap"
+        ],
+        "r": "owner_speaking",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": false,
+        "opportunity_gate": false,
+        "timer_only": false
+      },
+      "gold": "ignore",
+      "id": "ign-21",
+      "opportunity": {
+        "a": false,
+        "k": "60d707583c55f4df",
+        "p": [
+          "robot_speech_cooldown"
+        ],
+        "r": "robot_speech_cooldown",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": false,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "ignore",
+      "id": "ign-22",
+      "opportunity": {
+        "a": false,
+        "k": "937182acad704d4d",
+        "p": [],
+        "r": "score_below_threshold",
+        "s": 0.073125
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "ignore",
+      "id": "ign-23",
+      "opportunity": {
+        "a": false,
+        "k": "ed94a6238007f11e",
+        "p": [
+          "quiet_hours"
+        ],
+        "r": "quiet_hours",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "ignore",
+      "id": "ign-24",
+      "opportunity": {
+        "a": false,
+        "k": "81a0c13f515b9d69",
+        "p": [
+          "verified_owner_absent"
+        ],
+        "r": "verified_owner_absent",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "look",
+      "id": "look-01",
+      "opportunity": {
+        "a": false,
+        "k": "f5c645c534fcc7e6",
+        "p": [
+          "verified_owner_absent"
+        ],
+        "r": "verified_owner_absent",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "look",
+      "id": "look-02",
+      "opportunity": {
+        "a": false,
+        "k": "7cf175405e525f12",
+        "p": [
+          "lane_busy",
+          "owner_turn_gap"
+        ],
+        "r": "lane_busy",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "look",
+      "id": "look-03",
+      "opportunity": {
+        "a": false,
+        "k": "4cd4695bf594428c",
+        "p": [
+          "owner_speaking",
+          "owner_turn_gap"
+        ],
+        "r": "owner_speaking",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "look",
+      "id": "look-04",
+      "opportunity": {
+        "a": false,
+        "k": "6ac4cbf76f99af9a",
+        "p": [
+          "quiet_hours"
+        ],
+        "r": "quiet_hours",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": false,
+        "timer_only": false
+      },
+      "gold": "look",
+      "id": "look-05",
+      "opportunity": {
+        "a": false,
+        "k": "76208afc42e18e83",
+        "p": [
+          "robot_speech_cooldown"
+        ],
+        "r": "robot_speech_cooldown",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "look",
+      "id": "look-06",
+      "opportunity": {
+        "a": false,
+        "k": "ff25198cda253224",
+        "p": [
+          "verified_owner_absent"
+        ],
+        "r": "verified_owner_absent",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "look",
+      "id": "look-07",
+      "opportunity": {
+        "a": false,
+        "k": "b95aec030d45718d",
+        "p": [
+          "verified_owner_absent"
+        ],
+        "r": "verified_owner_absent",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "look",
+      "id": "look-08",
+      "opportunity": {
+        "a": false,
+        "k": "536bcd64c9c81689",
+        "p": [
+          "owner_speaking",
+          "owner_turn_gap"
+        ],
+        "r": "owner_speaking",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "look",
+      "id": "look-09",
+      "opportunity": {
+        "a": false,
+        "k": "25a44d1af0d85b8c",
+        "p": [
+          "verified_owner_absent",
+          "estop_latched"
+        ],
+        "r": "verified_owner_absent",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "look",
+      "id": "look-10",
+      "opportunity": {
+        "a": false,
+        "k": "0b45392d7bce280c",
+        "p": [
+          "verified_owner_absent"
+        ],
+        "r": "verified_owner_absent",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": true,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": false,
+        "timer_only": false
+      },
+      "gold": "look",
+      "id": "look-11",
+      "opportunity": {
+        "a": false,
+        "k": "e2e9fded3df76619",
+        "p": [
+          "robot_speech_cooldown",
+          "recent_remark"
+        ],
+        "r": "robot_speech_cooldown",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "look",
+      "id": "look-12",
+      "opportunity": {
+        "a": false,
+        "k": "6be2cc4043ec20be",
+        "p": [
+          "verified_owner_absent"
+        ],
+        "r": "verified_owner_absent",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": true,
+        "naive_novelty": true,
+        "opportunity_gate": true,
+        "timer_only": true
+      },
+      "gold": "remark",
+      "id": "rem-01",
+      "opportunity": {
+        "a": true,
+        "k": "ea3987b4a8b765c9",
+        "p": [],
+        "r": "opportunity_admitted",
+        "s": 0.8213
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": true,
+        "naive_novelty": true,
+        "opportunity_gate": true,
+        "timer_only": true
+      },
+      "gold": "remark",
+      "id": "rem-02",
+      "opportunity": {
+        "a": true,
+        "k": "4d487e81a4d6f95a",
+        "p": [],
+        "r": "opportunity_admitted",
+        "s": 0.6876
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": true,
+        "naive_novelty": true,
+        "opportunity_gate": true,
+        "timer_only": true
+      },
+      "gold": "remark",
+      "id": "rem-03",
+      "opportunity": {
+        "a": true,
+        "k": "90e8c941dace6e7e",
+        "p": [],
+        "r": "opportunity_admitted",
+        "s": 0.6494
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": true,
+        "naive_novelty": true,
+        "opportunity_gate": true,
+        "timer_only": true
+      },
+      "gold": "remark",
+      "id": "rem-04",
+      "opportunity": {
+        "a": true,
+        "k": "8f96f5108bf9c3cc",
+        "p": [],
+        "r": "opportunity_admitted",
+        "s": 0.6685
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": true,
+        "timer_only": false
+      },
+      "gold": "remark",
+      "id": "rem-05",
+      "opportunity": {
+        "a": true,
+        "k": "3169446319ae62c6",
+        "p": [],
+        "r": "opportunity_admitted",
+        "s": 0.79265
+      }
+    },
+    {
+      "arguable": true,
+      "arms": {
+        "context_timer": true,
+        "naive_novelty": true,
+        "opportunity_gate": true,
+        "timer_only": true
+      },
+      "gold": "remark",
+      "id": "rem-06",
+      "opportunity": {
+        "a": true,
+        "k": "10623d278c1abf48",
+        "p": [],
+        "r": "opportunity_admitted",
+        "s": 0.52525
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": true,
+        "timer_only": true
+      },
+      "gold": "remark",
+      "id": "rem-07",
+      "opportunity": {
+        "a": true,
+        "k": "a256aea2824efccd",
+        "p": [],
+        "r": "opportunity_admitted",
+        "s": 0.8316
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": true,
+        "timer_only": false
+      },
+      "gold": "remark",
+      "id": "rem-08",
+      "opportunity": {
+        "a": true,
+        "k": "fa4389c3456dbbfe",
+        "p": [],
+        "r": "opportunity_admitted",
+        "s": 0.52
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": true,
+        "naive_novelty": true,
+        "opportunity_gate": true,
+        "timer_only": true
+      },
+      "gold": "remark",
+      "id": "rem-09",
+      "opportunity": {
+        "a": true,
+        "k": "39432a0cdd930a72",
+        "p": [],
+        "r": "opportunity_admitted",
+        "s": 0.40625
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": true,
+        "naive_novelty": true,
+        "opportunity_gate": true,
+        "timer_only": true
+      },
+      "gold": "remark",
+      "id": "rem-10",
+      "opportunity": {
+        "a": true,
+        "k": "34677fc8793d6c08",
+        "p": [],
+        "r": "opportunity_admitted",
+        "s": 0.84105
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": true,
+        "naive_novelty": true,
+        "opportunity_gate": true,
+        "timer_only": true
+      },
+      "gold": "remark",
+      "id": "rem-11",
+      "opportunity": {
+        "a": true,
+        "k": "d78940077353e08b",
+        "p": [],
+        "r": "opportunity_admitted",
+        "s": 0.71625
+      }
+    },
+    {
+      "arguable": true,
+      "arms": {
+        "context_timer": true,
+        "naive_novelty": true,
+        "opportunity_gate": true,
+        "timer_only": true
+      },
+      "gold": "remark",
+      "id": "rem-12",
+      "opportunity": {
+        "a": true,
+        "k": "579244076481069d",
+        "p": [],
+        "r": "opportunity_admitted",
+        "s": 0.573
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": true,
+        "timer_only": true
+      },
+      "gold": "ask",
+      "id": "ask-01",
+      "opportunity": {
+        "a": true,
+        "k": "cb5a8079d6b31503",
+        "p": [],
+        "r": "opportunity_admitted",
+        "s": 0.82215
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": true,
+        "naive_novelty": true,
+        "opportunity_gate": true,
+        "timer_only": true
+      },
+      "gold": "ask",
+      "id": "ask-02",
+      "opportunity": {
+        "a": true,
+        "k": "26e33e36191ec98c",
+        "p": [],
+        "r": "opportunity_admitted",
+        "s": 0.756
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": true,
+        "timer_only": false
+      },
+      "gold": "ask",
+      "id": "ask-03",
+      "opportunity": {
+        "a": true,
+        "k": "2d7a938383e8ad1e",
+        "p": [],
+        "r": "opportunity_admitted",
+        "s": 0.6303
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": true,
+        "timer_only": false
+      },
+      "gold": "ask",
+      "id": "ask-04",
+      "opportunity": {
+        "a": true,
+        "k": "15cb2c70b4527de6",
+        "p": [],
+        "r": "opportunity_admitted",
+        "s": 0.47125
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": true,
+        "naive_novelty": true,
+        "opportunity_gate": true,
+        "timer_only": true
+      },
+      "gold": "ask",
+      "id": "ask-05",
+      "opportunity": {
+        "a": true,
+        "k": "0c60eec2145c7378",
+        "p": [],
+        "r": "opportunity_admitted",
+        "s": 0.86625
+      }
+    },
+    {
+      "arguable": true,
+      "arms": {
+        "context_timer": true,
+        "naive_novelty": true,
+        "opportunity_gate": true,
+        "timer_only": true
+      },
+      "gold": "ask",
+      "id": "ask-06",
+      "opportunity": {
+        "a": true,
+        "k": "957beb8ca81793e4",
+        "p": [],
+        "r": "opportunity_admitted",
+        "s": 0.5921
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "go_check",
+      "id": "chk-01",
+      "opportunity": {
+        "a": false,
+        "k": "b30941004c7ffc39",
+        "p": [
+          "verified_owner_absent"
+        ],
+        "r": "verified_owner_absent",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "go_check",
+      "id": "chk-02",
+      "opportunity": {
+        "a": false,
+        "k": "35aaaa1f3f426c3f",
+        "p": [
+          "verified_owner_absent"
+        ],
+        "r": "verified_owner_absent",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "go_check",
+      "id": "chk-03",
+      "opportunity": {
+        "a": false,
+        "k": "8271fddeee28e200",
+        "p": [
+          "verified_owner_absent"
+        ],
+        "r": "verified_owner_absent",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "go_check",
+      "id": "chk-04",
+      "opportunity": {
+        "a": false,
+        "k": "0c3d5e88f65142c3",
+        "p": [
+          "verified_owner_absent"
+        ],
+        "r": "verified_owner_absent",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "go_check",
+      "id": "chk-05",
+      "opportunity": {
+        "a": false,
+        "k": "05b13f475f9432b3",
+        "p": [
+          "verified_owner_absent"
+        ],
+        "r": "verified_owner_absent",
+        "s": 0.0
+      }
+    },
+    {
+      "arguable": false,
+      "arms": {
+        "context_timer": false,
+        "naive_novelty": true,
+        "opportunity_gate": false,
+        "timer_only": true
+      },
+      "gold": "go_check",
+      "id": "chk-06",
+      "opportunity": {
+        "a": false,
+        "k": "32c64566164771e1",
+        "p": [
+          "verified_owner_absent"
+        ],
+        "r": "verified_owner_absent",
+        "s": 0.0
+      }
+    }
+  ],
+  "costs": {
+    "context_timer": {
+      "corpus_pass_usd": 0.048081,
+      "h3_normalized_month_usd": 1.7095466666666665,
+      "per_1000_candidates_usd": 0.8903888888888888
+    },
+    "naive_novelty": {
+      "corpus_pass_usd": 0.192324,
+      "h3_normalized_month_usd": 6.838186666666666,
+      "per_1000_candidates_usd": 3.561555555555555
+    },
+    "opportunity_gate": {
+      "corpus_pass_usd": 0.065565,
+      "h3_normalized_month_usd": 2.3312,
+      "per_1000_candidates_usd": 1.2141666666666666
+    },
+    "timer_only": {
+      "corpus_pass_usd": 0.18795299999999998,
+      "h3_normalized_month_usd": 6.6827733333333335,
+      "per_1000_candidates_usd": 3.480611111111111
+    }
+  },
+  "criteria": {
+    "O1_zero_prohibited": true,
+    "O2_recall_ge_0_80": true,
+    "O3_precision_ge_0_80": true,
+    "O4_call_reduction_ge_0_50": true,
+    "O5_stateful_exact": true,
+    "O6_deterministic": true,
+    "O7_p95_le_1ms": true,
+    "O8_cost_reported": true
+  },
+  "determinism": {
+    "all_equal": true,
+    "repeats": 10,
+    "unique_hashes": [
+      "3f454abdc5c207f955faf217de4e682d4ff38ebdbc2df0370ce0b64e9b83c032"
+    ]
+  },
+  "evidence_tier": "preserved-authored-desktop-replay",
+  "exploratory_ablation": {
+    "hard_gates_without_score_unarguable": {
+      "calls": 19,
+      "cases": 54,
+      "fn": 0,
+      "fp": 4,
+      "precision": 0.7894736842105263,
+      "recall": 1.0,
+      "tn": 35,
+      "tp": 15,
+      "useful": 15
+    },
+    "maximum_rejected_score_after_hard_gates": 0.073125,
+    "minimum_admitted_score": 0.40625,
+    "post_registered": true,
+    "score_separation_margin": 0.333125
+  },
+  "exploratory_contract_refuters": {
+    "admitted": 9,
+    "all_failed_closed": false,
+    "cases": 9,
+    "expected": "every malformed or incomplete candidate fails closed",
+    "post_registered": true,
+    "rows": [
+      {
+        "admitted": true,
+        "mutation": "missing_owner_speaking",
+        "reason": "opportunity_admitted"
+      },
+      {
+        "admitted": true,
+        "mutation": "missing_lane_busy",
+        "reason": "opportunity_admitted"
+      },
+      {
+        "admitted": true,
+        "mutation": "missing_quiet_hours",
+        "reason": "opportunity_admitted"
+      },
+      {
+        "admitted": true,
+        "mutation": "missing_estop",
+        "reason": "opportunity_admitted"
+      },
+      {
+        "admitted": true,
+        "mutation": "missing_owner_turn_age",
+        "reason": "opportunity_admitted"
+      },
+      {
+        "admitted": true,
+        "mutation": "missing_robot_utterance_age",
+        "reason": "opportunity_admitted"
+      },
+      {
+        "admitted": true,
+        "mutation": "string_false_owner_present",
+        "reason": "opportunity_admitted"
+      },
+      {
+        "admitted": true,
+        "mutation": "nan_owner_turn_age",
+        "reason": "opportunity_admitted"
+      },
+      {
+        "admitted": true,
+        "mutation": "nan_robot_utterance_age",
+        "reason": "opportunity_admitted"
+      }
+    ]
+  },
+  "exploratory_sensor_refuters": {
+    "lane_busy_false_negative": {
+      "admitted": 0,
+      "admitted_ids": [],
+      "mutated_cases": 3
+    },
+    "owner_false_positive": {
+      "admitted": 14,
+      "admitted_ids": [
+        "ign-08",
+        "ign-18",
+        "ign-24",
+        "look-01",
+        "look-06",
+        "look-07",
+        "look-10",
+        "look-12",
+        "chk-01",
+        "chk-02",
+        "chk-03",
+        "chk-04",
+        "chk-05",
+        "chk-06"
+      ],
+      "mutated_cases": 17
+    },
+    "owner_speaking_false_negative": {
+      "admitted": 0,
+      "admitted_ids": [],
+      "mutated_cases": 6
+    },
+    "post_registered": true,
+    "quiet_hours_false_negative": {
+      "admitted": 3,
+      "admitted_ids": [
+        "ign-04",
+        "ign-23",
+        "look-04"
+      ],
+      "mutated_cases": 4
+    }
+  },
+  "h3_context": {
+    "initiative_candidates_per_hour": 5.333333333333333,
+    "normalized_candidates_per_month": 1920.0,
+    "preserved_trace": {
+      "owner_turns": 7,
+      "prior_owner_turn_gap_s": [
+        90.0
+      ],
+      "remark_at_s": [
+        3081.4
+      ],
+      "remark_proposals": 1
+    },
+    "remarks_across_three_headline_hours": 4
+  },
+  "latency": {
+    "decisions": 120000,
+    "max_ms": 0.127222,
+    "median_ms": 0.002053,
+    "p95_ms": 0.003536,
+    "p99_ms": 0.003926
+  },
+  "metrics_all_cases": {
+    "context_timer": {
+      "calls": 14,
+      "cases": 60,
+      "fn": 6,
+      "fp": 2,
+      "precision": 0.8571428571428571,
+      "recall": 0.6666666666666666,
+      "tn": 40,
+      "tp": 12,
+      "useful": 18
+    },
+    "naive_novelty": {
+      "calls": 50,
+      "cases": 60,
+      "fn": 0,
+      "fp": 32,
+      "precision": 0.36,
+      "recall": 1.0,
+      "tn": 10,
+      "tp": 18,
+      "useful": 18
+    },
+    "opportunity_gate": {
+      "calls": 18,
+      "cases": 60,
+      "fn": 0,
+      "fp": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "tn": 42,
+      "tp": 18,
+      "useful": 18
+    },
+    "timer_only": {
+      "calls": 48,
+      "cases": 60,
+      "fn": 4,
+      "fp": 34,
+      "precision": 0.2916666666666667,
+      "recall": 0.7777777777777778,
+      "tn": 8,
+      "tp": 14,
+      "useful": 18
+    }
+  },
+  "metrics_unarguable_headline": {
+    "context_timer": {
+      "calls": 11,
+      "cases": 54,
+      "fn": 6,
+      "fp": 2,
+      "precision": 0.8181818181818182,
+      "recall": 0.6,
+      "tn": 37,
+      "tp": 9,
+      "useful": 15
+    },
+    "naive_novelty": {
+      "calls": 44,
+      "cases": 54,
+      "fn": 0,
+      "fp": 29,
+      "precision": 0.3409090909090909,
+      "recall": 1.0,
+      "tn": 10,
+      "tp": 15,
+      "useful": 15
+    },
+    "opportunity_gate": {
+      "calls": 15,
+      "cases": 54,
+      "fn": 0,
+      "fp": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "tn": 39,
+      "tp": 15,
+      "useful": 15
+    },
+    "timer_only": {
+      "calls": 43,
+      "cases": 54,
+      "fn": 4,
+      "fp": 32,
+      "precision": 0.2558139534883721,
+      "recall": 0.7333333333333333,
+      "tn": 7,
+      "tp": 11,
+      "useful": 15
+    }
+  },
+  "overall_pass": true,
+  "parameters": {
+    "h1_median_audio_turn_usd": 0.004371,
+    "noticing_max_age_s": 30.0,
+    "novelty_threshold": 0.35,
+    "owner_turn_gap_s": 15.0,
+    "robot_speech_cooldown_s": 90.0,
+    "subject_dedup_s": 600.0,
+    "timer_gap_s": 360.0
+  },
+  "prohibited_admissions": [],
+  "provenance": {
+    "h1_path": "research/20260823/ambient-ear-cost-ladder/results/p0_hosted_always.json",
+    "h2_arguable": 6,
+    "h2_cases": 60,
+    "h2_path": "research/20260823/local-cognition-gpu/results/gold_set.json",
+    "h2_sha256": "8afcf8e0b2ff2af0ba9796d02a5505f837dd68769e0fef8cffd937b6dafe90ff",
+    "h3_path": "research/20260823/drives-and-initiative/results/rows.json",
+    "h3_trace_path": "research/20260823/drives-and-initiative/logs/ticks_radius6_seed1.jsonl.gz"
+  },
+  "schema": "parcel.research.conversation-opportunity.v1"
+}
