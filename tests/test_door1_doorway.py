@@ -425,20 +425,42 @@ def test_every_production_planner_site_passes_gate_clearance(relative: str) -> N
 
 
 def test_the_grid_navigator_planner_is_never_built_with_none() -> None:
-    """Dynamic: the object the product actually builds carries a float."""
+    """Dynamic: the object the product actually builds carries a float.
+
+    **PORTED by card A2 (2026-08-24), old -> new recorded.** The commissioned
+    arm asserted ``gate_clearance_m == PROTOTYPE_RING_M`` (0.45) because DOOR-1
+    passed the commissioned ring through unchanged and then capped it. A2 lifts
+    the cap and states the ring in the frame the planner inflates in — the gate
+    compares a body-SURFACE range and the grid inflates from the body CENTRE —
+    so a commissioned ring arrives as ``ring + footprint``
+    (``ClearanceProfile.gate_range_ring_m``): 0.45 -> 0.77 m, and the hard
+    inflation it implies 0.42 -> 0.7028 m. The UN-commissioned arm is unchanged
+    to the digit, which is the property that keeps the re-freeze scoped to
+    callers that named a gate.
+    """
 
     registry = ModelRegistry.load(MODELS_ROOT)
     navigator = registry.create("grid_v1", arrive_radius_m=1.5)
     try:
         config = navigator._planner.config
         assert config.gate_clearance_m is not None
+        assert config.gate_clearance_m == DEFAULT_CLEARANCE_PROFILE.legacy_equivalent_ring_m
         assert config.gate_clearance_m == DEFAULT_CLEARANCE_PROFILE.obstacle_ring_m
-        # ...and a commissioned caller gets its own ring through.
+        assert config.inflation_radius_m == (
+            config.robot_radius_m + config.effective_hard_margin_m
+        )
+        # ...and a commissioned caller gets its own ring through, whole.
         commissioned = registry.create(
             "grid_v1", arrive_radius_m=1.5, map_gate_clearance_m=PROTOTYPE_RING_M
         )
         try:
-            assert commissioned._planner.config.gate_clearance_m == PROTOTYPE_RING_M
+            prototype = ClearanceProfile(obstacle_ring_m=PROTOTYPE_RING_M)
+            assert commissioned._planner.config.gate_clearance_m == pytest.approx(
+                prototype.gate_range_ring_m
+            )
+            assert commissioned._planner.config.inflation_radius_m == pytest.approx(
+                prototype.commissioned_planner_inflation_m
+            )
         finally:
             commissioned.close()
     finally:
@@ -459,33 +481,55 @@ def test_the_owner_search_planner_takes_the_runtimes_own_commissioned_ring() -> 
     controller = SearchOwnerController(safety_policy=policy)
     controller._update_map(_corridor_observation(1.20, policy=policy))
     assert controller._planner is not None
-    assert controller._planner.config.gate_clearance_m == PROTOTYPE_RING_M
+    # PORTED by card A2: 0.45 -> 0.77 m. The ring still comes from the runtime's
+    # own policy and from nowhere else; what changed is that it now arrives in
+    # the planner's own frame (``ReactiveSafetyPolicy.planner_gate_ring_m``).
+    assert controller._planner.config.gate_clearance_m == pytest.approx(
+        policy.planner_gate_ring_m
+    )
 
 
-def test_the_owner_search_planner_keeps_its_legacy_inflation_when_shipped() -> None:
-    """The frozen-evidence guard on site 2 (verifier catch, correction pass).
+def test_the_owner_search_planner_agrees_with_the_gate_it_holds() -> None:
+    """**REPLACES** ``..._keeps_its_legacy_inflation_when_shipped`` — card A2.
 
-    ``evals/companion_nav/runner.py:213`` constructs ``SearchOwnerController``
-    and the follow-bench is a hard-safety gate row. Passing the RAW commissioned
-    ring moved this planner's hard inflation 0.42 -> 0.5933 m on the SHIPPED
-    profile — measured at the search planner's own 0.20 m grid, the inflated
-    non-traversable set around a point obstacle grew 18 -> 30 cells (+67%).
-    Seeded RED (S6).
+    DOOR-1 froze site 2 at the legacy inflation because raising it moves the
+    follow-bench row ``evals/companion_nav/runner.py:213`` builds this
+    controller for, and DOOR-1 had no mandate to move frozen evidence (its
+    HALTED item H-2). A2 has that mandate by integrator delegation, and NAV-CORE
+    priced the deferral: with the planner at 0.42 m the gate this same policy
+    enforces parked 31/60 arm-B episodes at ~0.74 m of body-surface clearance
+    with the route still ``status=planned``.
+
+    Recorded old -> new, both profiles:
+
+    * shipped 0.65 m ring: ``gate_clearance_m`` 0.4601 -> 0.97 m, hard inflation
+      0.42 -> 0.885381 m;
+    * prototype 0.45 m ring: ``gate_clearance_m`` 0.45 -> 0.77 m, hard inflation
+      0.42 -> 0.702823 m.
+
+    The direction is the only one allowed: the planner moved UP to agree with
+    the gate. Nothing here can move what ``apply_reactive_safety`` enforces, and
+    the seeded-RED case is the reverse — a planner inside the gate's lateral
+    demand still refuses to construct (see the section-5 test below).
     """
 
     from parcel_robot.navigation.search_owner import SearchOwnerController
 
-    for policy, expected_ring in (
-        (ReactiveSafetyPolicy(), LEGACY_GATE_CLEARANCE_M),
-        (ReactiveSafetyPolicy(obstacle_stop_m=PROTOTYPE_RING_M), PROTOTYPE_RING_M),
+    for policy in (
+        ReactiveSafetyPolicy(),
+        ReactiveSafetyPolicy(obstacle_stop_m=PROTOTYPE_RING_M),
     ):
         controller = SearchOwnerController(safety_policy=policy)
         controller._update_map(_corridor_observation(1.20, policy=policy))
         config = controller._planner.config
-        assert config.gate_clearance_m == pytest.approx(expected_ring)
-        assert config.inflation_radius_m == (
-            config.robot_radius_m + config.effective_hard_margin_m
+        profile = policy.clearance_profile
+        assert config.gate_clearance_m == pytest.approx(profile.gate_range_ring_m)
+        assert config.inflation_radius_m == pytest.approx(
+            profile.commissioned_planner_inflation_m
         )
+        # The one-directional property DOOR-1 stated: a planner outside the
+        # gate's lateral demand is merely conservative; inside it is RED.
+        assert config.inflation_radius_m + 1e-12 >= config.gate_lateral_clearance_m
 
 
 # ---------------------------------------------------------------------------

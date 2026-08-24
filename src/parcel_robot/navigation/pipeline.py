@@ -773,7 +773,7 @@ class DirectiveNavigator:
         # Baseline / pre-N-O2: frustum only. Candidate: memory → ScanBehavior → SearchEntity.
         # Without instructnav (historical BARN bundles), recovery stays off.
         self.instructnav_recovery = bool(instructnav_recovery) and _HAS_INSTRUCTNAV
-        self._navigator = registry.create(model_id, arrive_radius_m=arrive_radius_m)
+        self._navigator = self._create_navigator(model_id, arrive_radius_m)
         self.mission: Mission | None = None
         self._best_goal_distance_m: float | None = None
         self._steps_without_progress = 0
@@ -845,6 +845,8 @@ class DirectiveNavigator:
         # Consecutive ticks the local obstacle gate hard-stopped translation.
         # See ``_gate_blocked_route_recovery``.
         self._steps_gate_blocked = 0
+        self._gate_blocked_anchor_xy: tuple[float, float] | None = None
+        self._body_is_still = True
         self._arrival_confidence_threshold = (
             None
             if arrival_confidence_threshold is None
@@ -1073,11 +1075,48 @@ class DirectiveNavigator:
             ),
         )
 
+    def _planner_gate_ring_m(self) -> float:
+        """The ring THIS navigator's own brake enforces, for its own planner.
+
+        Card A2, fix 3 ("one clearance authority"). ``_apply_safety`` brakes
+        every command this object emits at ``self.collision.obstacle_stop_m``
+        (``configs/navigation/default.yaml`` ``safety.stop_distance_m``, 0.8 m
+        of body-surface clearance on the shipped config), which is a STRICTER
+        authority than the runtime reactive gate's 0.65 m ring. There is no
+        excuse for the planner underneath to hold a third opinion: NAV-CORE
+        sampled 8 stalls and every one of them ended inside a brake ring with
+        the route still ``status=planned``, arm A's at ~0.79 m against exactly
+        this number.
+
+        What travels is the RING, in the convention the brake reads it in
+        (``LidarObstacle.distance_m``, body-surface to obstacle-surface). The
+        frame conversion into the grid's own centre-to-surface inflation is the
+        planner's, once, in ``grid_navigator._planner_coupling_ring_m`` via
+        ``ClearanceProfile.gate_range_ring_m``. The planner moves UP to agree;
+        nothing here can move what ``apply_collision_brake`` enforces.
+        """
+
+        return float(self.collision.obstacle_stop_m)
+
+    def _create_navigator(self, model_id: str, arrive_radius_m: float) -> Any:
+        """Build the controller, commissioning its planner with our own brake.
+
+        Card A2. The ring only reaches models that HAVE an occupancy planner to
+        inflate — ``StubNavigator`` is a point-goal controller with no map and a
+        strict keyword signature, and handing it a number it would have to
+        ignore is how a safety-relevant value gets silently dropped.
+        """
+
+        options: dict[str, Any] = {"arrive_radius_m": arrive_radius_m}
+        if self.registry.get(model_id).type.lower() == "grid":
+            options["map_gate_clearance_m"] = self._planner_gate_ring_m()
+        return self.registry.create(model_id, **options)
+
     def set_model(self, model_id: str) -> None:
         if self._navigator is not None:
             self._navigator.close()
         self.model_id = model_id
-        self._navigator = self.registry.create(model_id, arrive_radius_m=self.arrive_radius_m)
+        self._navigator = self._create_navigator(model_id, self.arrive_radius_m)
 
     def list_models(self):
         return self.registry.list()
@@ -1155,6 +1194,7 @@ class DirectiveNavigator:
         self._unreachable_candidates = set()
         self._steps_goal_unroutable = 0
         self._steps_gate_blocked = 0
+        self._gate_blocked_anchor_xy = None
         # RM-2: MISSION BOUNDARY. The graph survives (that is the whole point --
         # a route driven under an earlier directive is what makes the next one
         # solvable), the ingest TRACK does not. Skipping this is the one failure
@@ -1311,6 +1351,9 @@ class DirectiveNavigator:
         if lost is not None:
             return lost
         self._update_tracker(observation)
+        # Card A2 fix 3.4: one displacement witness per tick, read by both the
+        # gate-blocked and the unroutable-goal releases below.
+        self._update_body_stillness(observation)
         if self.mission.goal is None:
             # VS-5: the searching path is the value map's path; stamp its
             # counters here, the one place every searching command returns
@@ -1395,7 +1438,19 @@ class DirectiveNavigator:
         # unmodified obstacle verdict is the proof this counter is about.
         # ``person_stop`` deliberately never counts: yielding to a person is
         # the gate doing its job, not evidence that a route is impassable.
-        if cnote == "obstacle_stop" and self._steps_without_progress > 0:
+        #
+        # Card A2 (NAV-GLUE), fix 3.4 — the second half of this guard used to be
+        # ``self._steps_without_progress > 0`` and NAV-CORE measured why that is
+        # the wrong witness. A SEMANTIC goal is re-estimated from a noisy
+        # detector every tick, so ``_progress_watchdog``'s running minimum
+        # distance-to-goal keeps ratcheting down while the body stands still.
+        # Over a fully stopped 900-tick arm-A episode the counter peaked at
+        # FOUR, the 60-tick release never fired, and the mission spent its whole
+        # step budget parked at 0.79 m with the route still ``status=planned``.
+        # That is the silent-stall class (33/60 arm A). The witness is now the
+        # BODY — it did not travel while the gate hard-stopped it — which no
+        # amount of goal jitter can reset.
+        if cnote == "obstacle_stop" and self._body_is_still:
             self._steps_gate_blocked += 1
         else:
             self._steps_gate_blocked = 0
@@ -3123,6 +3178,9 @@ class DirectiveNavigator:
                 "recovery_phase": self._recovery_phase,
                 "candidate_id": result.candidate_id,
                 "candidate_label": result.label,
+                # Card A2 fix 1: what the map SAW, kept beside what the owner
+                # asked for, so the re-sight can ask for the committed thing.
+                "candidate_kind": result.kind,
                 "candidate_confidence": result.confidence,
                 "candidate_source": result.source,
                 "target_polygon": result.polygon,
@@ -3252,6 +3310,7 @@ class DirectiveNavigator:
         self._steps_without_progress = 0
         self._steps_goal_unroutable = 0
         self._steps_gate_blocked = 0
+        self._gate_blocked_anchor_xy = None
         self._terminal_verification_steps = 0
         # Bind the freshly committed target to a confirmed track now, so the
         # very next tick's geometric association has an anchor.
@@ -4603,10 +4662,16 @@ class DirectiveNavigator:
         if status not in {"goal_blocked", "no_path"}:
             self._steps_goal_unroutable = 0
             return None
-        # ``_progress_watchdog`` has already run this tick and zeroes this
-        # counter on any real closing of the gap. Unroutable *while closing the
-        # gap* is a detour in progress, not a dead goal.
-        if self._steps_without_progress == 0:
+        # Unroutable *while the body is still travelling* is a detour in
+        # progress, not a dead goal. Card A2 fix 3.4: the witness used to be
+        # ``_steps_without_progress == 0`` — the distance-to-goal watchdog — and
+        # a semantic goal that jitters with its detector kept resetting it, so
+        # this release never fired: 778 ticks of ``grid_recover_scan
+        # status=goal_blocked`` in one measured episode, in-place yaw the whole
+        # way, ending in the step limit with no typed reason. In-place recovery
+        # yaw is exactly the case the body-displacement witness reads correctly
+        # and the goal-distance one does not.
+        if not self._body_is_still:
             self._steps_goal_unroutable = 0
             return None
         self._steps_goal_unroutable += 1
@@ -5562,6 +5627,47 @@ class DirectiveNavigator:
     #: 10 Hz, and the same reasoning, as :attr:`UNROUTABLE_GOAL_STEPS`.
     GATE_BLOCKED_ROUTE_STEPS = 60
 
+    #: Displacement that counts as the body having MOVED while the obstacle gate
+    #: was hard-stopping it (card A2). One cell of the shipped 0.10 m planner
+    #: grid, and comfortably above the largest single-update MAP correction
+    #: NAV-CORE measured over 120 episodes (0.029 m, median 0.009 m), so
+    #: localisation noise alone cannot masquerade as escape and reset the
+    #: release the way goal jitter used to.
+    GATE_HOLD_DISPLACEMENT_M = 0.10
+
+    def _update_body_stillness(self, observation: NavObservation) -> None:
+        """Set :attr:`_body_is_still` — did the body travel, this stretch of ticks?
+
+        Card A2 (NAV-GLUE) fix 3.4, and the one witness both release paths now
+        use. Both used to ask ``_steps_without_progress``, i.e. "is the distance
+        to the goal still falling", and NAV-CORE measured what that costs
+        off-oracle: a semantic goal is re-estimated from a detector that
+        scatters 0.15 m per axis, so the watchdog's running minimum keeps
+        ratcheting down while the body stands still. Over a fully stopped
+        900-tick arm-A episode ``_steps_gate_blocked`` peaked at FOUR against a
+        60-tick release, and the ``goal_blocked`` release never fired at all
+        through 778 ticks of in-place recovery yaw.
+
+        The body cannot be talked out of its own displacement. MAP, not ODOM:
+        the anchor has to survive hundreds of ticks, so it needs the globally
+        consistent frame for the same reason ``_progress_watchdog`` does, and
+        the threshold sits an order of magnitude above the largest single-update
+        MAP correction NAV-CORE measured (0.029 m over 120 episodes).
+        """
+
+        robot_map = _pose_in(observation, MAP_FRAME)
+        here = (robot_map.x, robot_map.y)
+        anchor = self._gate_blocked_anchor_xy
+        if anchor is None:
+            self._gate_blocked_anchor_xy = here
+            self._body_is_still = True
+            return
+        if math.hypot(here[0] - anchor[0], here[1] - anchor[1]) > self.GATE_HOLD_DISPLACEMENT_M:
+            self._gate_blocked_anchor_xy = here
+            self._body_is_still = False
+            return
+        self._body_is_still = True
+
     def _gate_blocked_route_recovery(self) -> MidLevelCommand | None:
         """Release a commitment the *safety gate* has proved unexecutable.
 
@@ -5603,13 +5709,13 @@ class DirectiveNavigator:
             return None
         if self._steps_gate_blocked < self.GATE_BLOCKED_ROUTE_STEPS:
             return None
-        # The counter only advances on ticks that already had zero progress,
-        # but re-read it here so a tick that *did* progress cannot fire a
-        # stale count.
-        if self._steps_without_progress == 0:
-            self._steps_gate_blocked = 0
-            return None
+        # Card A2: the stale-count re-read used to be ``_steps_without_progress
+        # == 0``, and it shared the defect that pinned the counter at four — a
+        # jittering semantic goal could reset it on the very tick the release
+        # was due. The counter now advances only on ticks the BODY did not
+        # travel, so it is its own proof and needs no second opinion here.
         self.mission.metadata["blocked_route_gate"] = "obstacle_stop"
+        self.mission.metadata["gate_blocked_steps"] = int(self._steps_gate_blocked)
         return self._release_unreachable_candidate(
             str(self.mission.metadata.get("candidate_id") or ""),
             note="semantic_replan_after_blocked_route",
@@ -5647,6 +5753,7 @@ class DirectiveNavigator:
         self._steps_without_progress = 0
         self._steps_goal_unroutable = 0
         self._steps_gate_blocked = 0
+        self._gate_blocked_anchor_xy = None
         self._terminal_verification_steps = 0
         self._recovery_phase = "frustum"
         self._scan_steps = 0
@@ -5728,6 +5835,8 @@ class DirectiveNavigator:
             return False
         candidate = self._resight_committed_candidate(observation)
         arrival_region = self._arrival_goal_region()
+        # Card A2 (NAV-GLUE) fix 2 — is this target one the ORACLE described?
+        off_oracle = candidate is not None and self._arrival_target_is_off_oracle(candidate)
         if candidate is None:
             if relation != "inside" or arrival_region is None:
                 self.mission.metadata["arrival_not_verified_reason"] = (
@@ -5747,6 +5856,12 @@ class DirectiveNavigator:
                 tuple((float(px), float(py)) for px, py in polygon),
                 clearance,
             )
+        # Card A2 fix 2 kept this check for EVERY target, oracle or not. The
+        # off-oracle path below replaces only what is unsatisfiABLE off-oracle
+        # (a polygon nobody surveyed, a LiDAR id join that does not exist); the
+        # committed region is plain geometry that an observed map can satisfy,
+        # so it stays a live refusal and ``outside_arrival_region`` stays a
+        # TYPED non-arrival rather than becoming a claim.
         if arrival_region is not None and not arrival_region.contains(
             position[0],
             position[1],
@@ -5768,6 +5883,11 @@ class DirectiveNavigator:
             return False
         if relation == "inside":
             polygon = _polygon(candidate.get("polygon"))
+            if not polygon and off_oracle:
+                # Card A2 fix 2: a region the dog learned by looking is a
+                # remembered PLACE, not a surveyed polygon. Standing on it,
+                # re-confirmed by this tick's detection, is the arrival.
+                return self._off_oracle_arrival_verified(robot_map, candidate, relation)
             clearance = float(self.mission.metadata.get("terminal_clearance_m", 0.32))
             return bool(polygon) and self._inside_polygon_verified(
                 robot_map, polygon, clearance
@@ -5778,6 +5898,15 @@ class DirectiveNavigator:
                 return False
             if relation == "near":
                 target_clearance = self._target_clearance(observation)
+                if target_clearance is None and off_oracle:
+                    # Card A2 fix 2, the exact 15/60 case: the surface half of
+                    # this check is unsatisfiABLE here, not unsatisfied. No
+                    # polygon, no id join, and no range return the geometry can
+                    # attribute to the target — so the band is measured to the
+                    # detection itself instead of to a surface nothing observed.
+                    return self._off_oracle_arrival_verified(
+                        robot_map, candidate, relation
+                    )
                 radius = float(self.mission.metadata.get("candidate_radius_m", 0.0))
                 minimum = float(self.mission.metadata.get("minimum_vicinity_radius_m", 0.0))
                 maximum = float(self.mission.metadata.get("vicinity_radius_m", 1.35))
@@ -5809,6 +5938,101 @@ class DirectiveNavigator:
             # next_to / towards: GoalRegion membership is the spatial authority.
             return True
         return False
+
+    def _arrival_target_is_off_oracle(self, candidate: dict[str, Any]) -> bool:
+        """Does this target carry NONE of the evidence only an oracle supplies?
+
+        Card A2 (NAV-GLUE) fix 2. The simulator's semantic channel ships a
+        POLYGON for a region and an ``associated_lidar_ids`` join between the
+        semantic id space and the range id space for an object. A detector and a
+        LiDAR share no id space at all, and a map the dog built by looking
+        stores a surface POINT — so off-oracle BOTH halves are simply absent and
+        the two arrival branches that consume them (``inside``'s polygon
+        containment, ``near``'s surface-clearance band) are unsatisfiABLE rather
+        than unsatisfied. NAV-CORE measured the cost: 15/60 arm-A episodes drove
+        to the place, resolved it, and wrote ``target_surface_unobserved``.
+
+        The predicate is POSITIVE about provenance, not merely about absent
+        fields, and that distinction is load-bearing: the sim's own camera
+        fixtures ship an object with no polygon and no id join either, and
+        answering their ``near`` band from a metric distance would relax a live
+        oracle check (caught by
+        ``test_near_object_arrival_requires_vicinity_and_safe_support_region``,
+        which stands one pose too far down the sidewalk and must refuse). So the
+        candidate has to SAY it came from the map the dog built — the ingress
+        stamps ``metadata['semantic_source'] = 'learned_map'`` and
+        ``source = 'online_map'`` (``semantic_map.learned_map_candidates``) —
+        and to carry neither piece of oracle evidence. Every other candidate
+        keeps the pre-A2 path exactly, byte for byte.
+        """
+
+        metadata = candidate.get("metadata")
+        metadata = metadata if isinstance(metadata, dict) else {}
+        observed_map = (
+            metadata.get("semantic_source") == "learned_map"
+            or candidate.get("source") == "online_map"
+        )
+        if not observed_map:
+            return False
+        if _polygon(candidate.get("polygon")):
+            return False
+        return not metadata.get("associated_lidar_ids")
+
+    def _off_oracle_arrival_verified(
+        self,
+        robot_map: Any,
+        candidate: dict[str, Any],
+        relation: str,
+    ) -> bool:
+        """Metric band + THIS TICK's detection — the off-oracle arrival claim.
+
+        Card A2 fix 2, and the whole of it. Two things must both be true: the
+        goal class was re-detected in THIS frame (``candidate`` is what
+        :meth:`_resight_committed_candidate` returned, so a remembered anchor
+        cannot stand in for a live look), and the body is inside the terminal
+        band the mission itself committed to, measured to that fresh detection
+        rather than to a surface nothing observed.
+
+        What this deliberately is NOT: an arrival from the localiser's own
+        confidence. NAV-CORE's refuter R3 produced a false arrival at
+        ``p = 0.9922`` with the body 0.534 m from the goal against a 0.5 m band,
+        because the chance constraint was reading a covariance nothing has
+        calibrated (H7's missed L5/NEES row). Until card A3 lands that
+        calibration, no covariance and no probability threshold may VERIFY
+        anything on this path — they may only refuse. The detector
+        re-confirmation is what makes the claim, and it is unconditional.
+        """
+
+        assert self.mission is not None
+        metadata = self.mission.metadata
+        # The BAND's centre is the tracker's fused estimate of where the target
+        # is, not the single box this frame happened to produce: a detector that
+        # scatters its estimate by 0.15 m per axis (0.212 m radial RMS, measured)
+        # cannot also be the ruler. The single box's job is the OTHER half —
+        # ``candidate`` is this tick's re-sighting, associated to that same
+        # anchor inside ``CANDIDATE_ASSOCIATION_GATE_M``, and without it this
+        # method is never reached.
+        del candidate
+        point = self._tracked_target_xy()
+        if point is None:
+            metadata["arrival_not_verified_reason"] = "target_not_resighted"
+            return False
+        distance = math.hypot(point[0] - robot_map.x, point[1] - robot_map.y)
+        metadata["arrival_off_oracle_distance_m"] = float(distance)
+        maximum = float(metadata.get("vicinity_radius_m", 0.0) or 0.0)
+        # ``inside`` has no stand-off: the terminal relation IS being on the
+        # place. Every band relation keeps the minimum the mission committed to.
+        minimum = (
+            0.0
+            if relation == "inside"
+            else float(metadata.get("minimum_vicinity_radius_m", 0.0) or 0.0)
+        )
+        if maximum <= 0.0 or not minimum - 1e-6 <= distance <= maximum + 1e-6:
+            metadata["arrival_not_verified_reason"] = "outside_off_oracle_arrival_band"
+            return False
+        metadata.pop("arrival_not_verified_reason", None)
+        metadata["arrival_verified_by"] = "off_oracle_band_and_resight"
+        return True
 
     def _arrival_evidence(self) -> Any:
         """Cumulative evidence for the committed target, from the tracker."""
@@ -5983,7 +6207,20 @@ class DirectiveNavigator:
         return _current_semantic_candidate(
             observation,
             self.mission.metadata,
-            expected_kind=self.mission.semantic_goal.kind,
+            # Card A2 fix 1: re-find the thing this mission COMMITTED to, which
+            # is what this method's own docstring promises. It used to ask for
+            # ``semantic_goal.kind`` — the goal's kind is a function of the
+            # owner's phrasing ("go to the bed" -> region, "sit by the bed" ->
+            # object), so once the kind-tolerant query lets a region goal commit
+            # to an object-kinded learned-map row, asking for the GOAL's kind
+            # here means the committed target can never be re-sighted and every
+            # such episode dies ``target_not_resighted`` one metre from the
+            # place. Falls back to the goal's kind when nothing was recorded, so
+            # a frozen bundle without the field keeps its behaviour.
+            expected_kind=str(
+                self.mission.metadata.get("candidate_kind")
+                or self.mission.semantic_goal.kind
+            ),
             minimum_confidence=self.mission.semantic_goal.minimum_confidence,
             target_xy=self._tracked_target_xy(),
             gate_m=self.CANDIDATE_ASSOCIATION_GATE_M
@@ -6249,6 +6486,7 @@ class DirectiveNavigator:
         self._unreachable_candidates = set()
         self._steps_goal_unroutable = 0
         self._steps_gate_blocked = 0
+        self._gate_blocked_anchor_xy = None
         # RM-2: the other mission boundary (see ``start``).
         self._reset_route_memory_track()
 

@@ -1087,6 +1087,55 @@ class ClearanceProfile:
 
         return max(self.legacy_footprint_term_m, self.gate_lateral_clearance_m)
 
+    @property
+    def gate_range_ring_m(self) -> float:
+        """The stop ring in the frame an occupancy grid inflates in.
+
+        Card A2 (NAV-GLUE), and the correction that makes "one number, two
+        consumers" true rather than nearly true. :attr:`obstacle_ring_m` is
+        compared by the gate against ``SimObservation.nearest_obstacle_m`` /
+        ``LidarObstacle.distance_m``, and those fields are **body-surface** to
+        obstacle-surface: ``simulation/mujoco_lidar.py`` subtracts the footprint
+        (``signed_clearance = signed_center_distance - robot_radius_m``) before
+        the gate ever sees a number, and the Go2 range bridge carries the same
+        convention. A planner, by contrast, inflates occupied cells around the
+        body **centre** — ``legacy_footprint_term_m`` is ``footprint + margin``,
+        centre-to-surface — so handing it :attr:`obstacle_ring_m` compares two
+        different measurements and understates the gate's demand by exactly one
+        footprint radius.
+
+        NAV-CORE measured that understatement as a stall class: with the planner
+        at 0.42 m the reactive gate parked 31/60 arm-B episodes at ~0.74 m of
+        body-surface clearance with the route still ``status=planned``, and a
+        0.45 m hard margin (0.77 m inflation, still short of the 0.885 m this
+        property implies at the shipped ring) recovered 1 of 8 sampled stalls.
+
+        This is a RESTATEMENT of the commissioned ring, not a new commissioning
+        number and not a floor: nothing here can move what
+        ``apply_reactive_safety`` enforces.
+        """
+
+        return self.obstacle_ring_m + self.envelope.footprint_radius_m
+
+    @property
+    def commissioned_planner_inflation_m(self) -> float:
+        """Inflation that makes a planner agree with this gate, cap lifted.
+
+        ``max(legacy footprint term, lateral demand of``
+        :attr:`gate_range_ring_m` ``)`` — the uncapped, unit-corrected sibling
+        of :attr:`planner_inflation_m`. This is what the two PRODUCTION planner
+        construction sites are built from once DOOR-1's item H-2 is closed
+        (card A2); :attr:`planner_inflation_m` remains what an un-commissioned
+        call site gets, and stays exactly the legacy term.
+        """
+
+        return max(
+            self.legacy_footprint_term_m,
+            gate_lateral_clearance_m(
+                self.gate_range_ring_m, half_angle_rad=self.gate_half_angle_rad
+            ),
+        )
+
     def final_gate_ring_m(self, speed_mps: float = 0.0) -> float:
         """What the FINAL gate stops at, recomputed from this profile alone.
 
@@ -1142,6 +1191,8 @@ class ClearanceProfile:
             "planner_coupling_is_deferred": bool(self.planner_coupling_is_deferred),
             "planner_inflation_m": float(self.planner_inflation_m),
             "uncapped_planner_inflation_m": float(self.uncapped_planner_inflation_m),
+            "gate_range_ring_m": float(self.gate_range_ring_m),
+            "commissioned_planner_inflation_m": float(self.commissioned_planner_inflation_m),
             "final_gate_ring_m": float(self.final_gate_ring_m(0.0)),
         }
 

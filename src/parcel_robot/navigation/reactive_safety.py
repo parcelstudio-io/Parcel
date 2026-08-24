@@ -426,9 +426,43 @@ class ReactiveSafetyPolicy:
         A map whose cells are PEOPLE takes ``person_stop_m`` instead — same
         function, the other ring — which is why the number is derived here and
         not frozen into the planner.
+
+        **Card A2 correction — do not feed THIS number to a planner.** The
+        conversion above is right about the cone and wrong about the frame:
+        this gate compares ``obstacle_stop_m`` against a body-SURFACE range
+        while a grid planner inflates from the body CENTRE, so the demand it
+        states is one footprint radius short. Use
+        :attr:`planner_gate_ring_m` (which is what
+        ``GridPlannerConfig.gate_clearance_m`` wants anyway — a ring, not a
+        lateral radius) and read
+        :attr:`~parcel_robot.authority.ClearanceProfile.gate_range_ring_m` for
+        the measurement that says why.
         """
 
         return gate_lateral_clearance_m(self.obstacle_stop_m)
+
+    @property
+    def planner_gate_ring_m(self) -> float:
+        """The ring to hand ``GridPlannerConfig.gate_clearance_m``, card A2.
+
+        One number, two consumers, one frame: this gate stops translation at
+        :attr:`obstacle_stop_m` of body-surface clearance, which is this many
+        metres centre-to-surface, which is what an occupancy grid inflates in.
+        A planner built from it does not choose corridors this gate will stand
+        in and refuse — and it stays a RESTATEMENT of the commissioned ring:
+        nothing here moves what :func:`apply_reactive_safety` enforces.
+
+        A map whose cells are PEOPLE takes ``person_stop_m`` through the same
+        conversion (:attr:`person_planner_gate_ring_m`).
+        """
+
+        return self.clearance_profile.gate_range_ring_m
+
+    @property
+    def person_planner_gate_ring_m(self) -> float:
+        """:attr:`planner_gate_ring_m` for a map whose cells are PEOPLE."""
+
+        return self.person_stop_m + self.envelope.footprint_radius_m
 
 
 def apply_reactive_safety(

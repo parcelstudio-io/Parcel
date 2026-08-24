@@ -23,26 +23,41 @@ def _planner_coupling_ring_m(
     *,
     hard_margin_m: float,
 ) -> float:
-    """The gate ring THIS planner profile may couple to (card DOOR-1).
+    """The gate ring THIS planner profile couples to (cards DOOR-1, A2).
 
-    Shared shape with production site 2 (``navigation/search_owner.py``): the
-    commissioned ring, capped at the ring whose lateral demand this profile's
-    own footprint term already covers. ``None`` resolves to the authority's
-    un-commissioned default rather than to ``None``.
+    Shared shape with production site 2 (``navigation/search_owner.py``).
 
-    Tighter-only, deliberately. Raising an inflation moves planned routes and
-    therefore the frozen navigation evidence; that re-cut is DOOR-1's HALTED
-    item H-2 and belongs to whoever owns those baselines, not to this call site.
+    **The tighter-only cap is GONE (card A2, owner-authorised).** DOOR-1 capped
+    a COMMISSIONED ring at ``ClearanceProfile.planner_coupling_ring_m`` because
+    raising an inflation moves planned routes and therefore the frozen
+    navigation evidence — its HALTED item H-2, deferred to "whoever owns those
+    baselines". A2 is that owner by integrator delegation, and NAV-CORE priced
+    the deferral: 33/60 arm-A and 31/60 arm-B episodes ended inside a brake
+    ring with the route still ``status=planned``, because the planner was
+    routing through corridors the gate then stood in and refused. So a
+    commissioned ring now comes through whole, converted into the frame the
+    planner inflates in (``ClearanceProfile.gate_range_ring_m`` — the gate
+    compares body-SURFACE ranges, the grid inflates from the body CENTRE).
+
+    What did NOT move: ``None``. An un-commissioned call site still resolves to
+    the ring whose lateral demand this profile's own footprint term already
+    covers, so every profile that never named a gate keeps its legacy inflation
+    exactly (0.42 m at the default margin, 0.35 m at
+    ``grid_clearance.yaml``'s 0.03 m). Commissioning is opt-in and its cost is
+    recorded per call site, never spent by default.
     """
 
-    ring = (
-        DEFAULT_CLEARANCE_PROFILE.obstacle_ring_m
-        if requested_ring_m is None
-        else float(requested_ring_m)
+    profile = ClearanceProfile(
+        obstacle_ring_m=(
+            DEFAULT_CLEARANCE_PROFILE.obstacle_ring_m
+            if requested_ring_m is None
+            else float(requested_ring_m)
+        ),
+        planner_hard_margin_m=float(hard_margin_m),
     )
-    return ClearanceProfile(
-        obstacle_ring_m=ring, planner_hard_margin_m=float(hard_margin_m)
-    ).planner_coupling_ring_m
+    if requested_ring_m is None:
+        return profile.legacy_equivalent_ring_m
+    return profile.gate_range_ring_m
 
 
 from .base import ODOM_FRAME, MidLevelCommand, Mission, ModelSpec, NavObservation
@@ -281,14 +296,13 @@ class GridNavigator:
                 # audit §6 named: a planner with no opinion about the gate,
                 # routing through corridors the gate refuses.
                 #
-                # The value is SCOPED (DOOR-1 correction pass): the coupling may
-                # tighten a planner, never loosen the frozen routes by raising an
-                # inflation. The cap is computed from THIS profile's own hard
-                # margin, not from the module-level ``LEGACY_GATE_CLEARANCE_M``,
-                # because the margin is per-profile —
+                # Card A2: a COMMISSIONED ring now comes through whole (DOOR-1's
+                # tighter-only cap is lifted under a recorded re-freeze), and an
+                # un-commissioned one still reproduces the legacy inflation of
+                # THIS profile's own hard margin — per-profile, because
                 # ``configs/navigation/models/grid_clearance.yaml`` runs 0.03 m
                 # and a flat cap would have moved its inflation 0.35 -> 0.42 m.
-                # See ``ClearanceProfile.planner_coupling_ring_m``.
+                # See ``_planner_coupling_ring_m`` above.
                 gate_clearance_m=_planner_coupling_ring_m(
                     map_gate_clearance_m,
                     hard_margin_m=(

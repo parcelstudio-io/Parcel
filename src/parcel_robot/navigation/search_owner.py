@@ -635,21 +635,23 @@ class SearchOwnerController:
                         # and refuses, which reads as "the search stalled" rather
                         # than as a disagreement.
                         #
-                        # ``planner_coupling_ring_m``, NOT ``obstacle_ring_m`` —
-                        # DOOR-1's correction pass, and the correction matters.
-                        # The raw commissioned ring is 0.65 m on the SHIPPED
-                        # ``configs/robot.yaml``, which would have raised this
-                        # planner's hard inflation 0.42 -> 0.5933 m, and
-                        # ``evals/companion_nav/runner.py`` builds this controller
-                        # for the follow-bench: a frozen-evidence row would have
-                        # moved as a side effect of wiring a seam. The coupling is
-                        # TIGHTER-ONLY (see the property's docstring); the
-                        # prototype's 0.45 m still comes through unchanged, the
-                        # shipped 0.65 m is capped and the disagreement stays
-                        # openly deferred as DOOR-1's HALTED item H-2.
-                        gate_clearance_m=(
-                            self._safety_policy.clearance_profile.planner_coupling_ring_m
-                        ),
+                        # ``planner_gate_ring_m``, card A2 — DOOR-1's HALTED
+                        # item H-2, CLOSED under a recorded re-freeze. DOOR-1
+                        # shipped ``planner_coupling_ring_m`` here, which capped
+                        # the shipped 0.65 m ring back down to the ring the
+                        # legacy 0.42 m inflation already covered, so this
+                        # planner kept routing through corridors this very
+                        # policy would then stand in and refuse. The commissioned
+                        # ring now comes through whole and in the planner's own
+                        # frame (centre-to-surface; the gate compares
+                        # body-surface ranges), which raises the hard inflation
+                        # 0.42 -> 0.8854 m on the shipped config and
+                        # 0.42 -> 0.7028 m on the prototype's 0.45 m ring. That
+                        # moves the follow-bench row ``evals/companion_nav/
+                        # runner.py`` builds this controller for; the move is
+                        # pre-registered and recorded in
+                        # ``scrum/20260824/task_2/A2_STATUS.md``, not silent.
+                        gate_clearance_m=self._safety_policy.planner_gate_ring_m,
                     )
                 )
             self._planner.update(

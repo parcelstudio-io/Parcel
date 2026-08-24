@@ -26,13 +26,18 @@ residual risk (owner: Jae).
 | A9 | **MEMORY-FIXES + NON-TRAVEL LIFE** (HLD Gate 8) | H5's four verified defects (session-id filter, chat-completions proposer, tombstone-aware upsert, ranking margin); body composer (H4: 50 Hz, HOLD-as-command, e-stop 0.88 tick) + drives (H3: 5.3/h, 90 % admitted, 0-tick yield; **travel radius 0** — 1,222 contacts refuted travel; and per the ratified wave-2 terminal-aware refutation, the initiated-leg terminal is a **safe-hold invariant + receding-horizon against live people-flow**, NOT a scripted stop-and-return, which measured worse: contacts 319→323, contact time 89→245 s) under the zero-translation lease | governance suite + soak + the human nuisance bar |
 
 ## Lane B — decision studies (sequential; one at a time)
-1. **NAV-CORE v2** — DECIDED at the pre-registered rule: both arms failed
-   (A 0/60 — honest but unable; B 29/60 with 0 typed failures); **delegation
-   refuted** (all defects are Parcel glue; 8/8 stalls inside Parcel's own
-   brake rings with the route planned). The topology decision is DEFERRED to
-   A2's corpus re-run by the executor's own rule. First measured
-   `localization_jump_m` = 0.029 m max. Verification: mine, when the register
-   lands; second lens: parcel-6c on refuter 4b honesty.
+1. **NAV-CORE v2 + A2 — TOPOLOGY DECIDED: SIMPLIFY** (A2_VERDICT_FABLE.md).
+   Post-fix corpus: arm A 0.10 (its `near` stand-off is outside the 0.5 m
+   band by construction), arm B 0.483 (byte-identical by design — legacy
+   inflation in the harness). M1 ships the metric point-goal shape + typed
+   refusal; the semantic ladder returns post-M1. **M1 nav acceptance row:
+   the SHIPPED configuration (commissioned inflation) re-measured on this
+   exact corpus ≥ 0.80 before the first physical point-goal session.** The
+   `near` stand-off family re-derivation ("what does 'arrived at the desk'
+   mean") is flagged as a milestone design decision. A4 SPINE gains: range
+   conventions stamped by the observation SOURCE (body-surface vs centre
+   frame; the BARN adapter publishes raw ranges) and the
+   isotropic-planner-vs-directional-gate successor to DOOR-1 H-2.
 2. **VOICE-GATE v2 — DECIDED: push-to-talk for M1** (VERDICT in its
    folder). The pass rule was unsatisfiable on this host (no loudspeaker
    but the array's own DAC ⇒ AEC/barge-in unmeasurable; every arm row is

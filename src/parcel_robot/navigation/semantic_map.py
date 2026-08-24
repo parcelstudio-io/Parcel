@@ -76,10 +76,36 @@ class ObservationSemanticMap:
                 candidate = _candidate(item, index)
             except (KeyError, TypeError, ValueError):
                 continue
-            if candidate.kind == goal.kind and _matches(
-                goal.query, candidate.label, candidate.metadata.get("aliases")
-            ):
+            if _matches(goal.query, candidate.label, candidate.metadata.get("aliases")):
                 candidates.append(candidate)
+        # Card A2 (NAV-GLUE) fix 1 — the kind match is STRICT-FIRST, TOLERANT
+        # ONLY WHEN STRICT FINDS NOTHING.
+        #
+        # It used to be plain equality, and NAV-CORE measured what that costs
+        # off-oracle: ``goals.semantic_goal_from_directive("bed")`` returns
+        # ``kind="region"`` (R10's place-class table), while
+        # ``semantic_map.learned_map_candidates`` stamps every row it emits
+        # ``kind="object"`` — a hard-coded constant, not a measurement — so all
+        # 12 ``bed`` episodes answered ``not_found`` about a place the map was
+        # holding the whole time.
+        #
+        # The fix is here and not at the ingress because the two ``kind``
+        # fields answer different questions and only one of them is about the
+        # place. The GOAL's kind is a function of the owner's PHRASING: "go to
+        # the bed" compiles to ``region``/``inside`` and "sit by the bed" to
+        # ``object``/``next_to``, same place, same map row. Stamping the
+        # ingress from the place-class table would fix the first sentence and
+        # break the second. So the map keeps saying what it saw, the goal keeps
+        # saying how the owner wants to arrive, and the join stops requiring
+        # them to be the same word.
+        #
+        # Strict-first is what keeps this ADDITIVE: wherever a same-kind
+        # candidate exists the result is byte-identical to the old one, in
+        # order and in membership, so no oracle row can move. The relaxation
+        # can only turn a ``not_found`` into a candidate, never re-rank a
+        # resolution that already had one.
+        exact = [item for item in candidates if item.kind == goal.kind]
+        candidates = exact or candidates
         robot_x, robot_y = observation.position[:2]
         ordered = sorted(
             candidates,
