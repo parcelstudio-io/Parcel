@@ -1,0 +1,844 @@
+{
+ "pass_rule": "DESIGN v2 final + A9: an arm passes only if EVERY row passes; a BLOCKED row is not a pass",
+ "arms_in_order": [
+  "vad_only",
+  "owner_id",
+  "owner_id_calibrated",
+  "wake_phrase",
+  "push_to_talk",
+  "restricted"
+ ],
+ "arms_passing_the_full_rule": [],
+ "early_stop_fired": false,
+ "decision": "push-to-talk for M1",
+ "table": {
+  "vad_only": [
+   {
+    "row_id": "P1",
+    "name": "owner committed-turn recall 1-3 m <= 60 deg",
+    "bar": ">= 0.95",
+    "measured": "1.000 (worst cell 1.000, n=36)",
+    "status": "PASS",
+    "source": "arms.json"
+   },
+   {
+    "row_id": "P2",
+    "name": "hosted bytes for TV / self-TTS / non-owner",
+    "bar": "0",
+    "measured": "42672768 B",
+    "status": "FAIL",
+    "source": "arms.json (fake transport)"
+   },
+   {
+    "row_id": "P3",
+    "name": "false hosted openings per 24 h",
+    "bar": "<= 1",
+    "measured": "3238/day with a TV on 4 h; quiet real room <= 87.0/24h (95% bound)",
+    "status": "FAIL",
+    "source": "arms.json + ambient_real.json"
+   },
+   {
+    "row_id": "P4",
+    "name": "local STOP recall",
+    "bar": ">= 0.99",
+    "measured": "0.875 (n=64)",
+    "status": "FAIL",
+    "source": "stop_local.json"
+   },
+   {
+    "row_id": "P5",
+    "name": "STOP tail p95 (hotword end -> latch)",
+    "bar": "<= 800 ms",
+    "measured": "935 ms",
+    "status": "FAIL",
+    "source": "stop_local.json"
+   },
+   {
+    "row_id": "P6",
+    "name": "STOP finite-sample: n >= 60, all <= 1.0 s",
+    "bar": "n >= 60 and 0 over 1.0 s",
+    "measured": "n=64, 0 over 1.0 s",
+    "status": "PASS",
+    "source": "stop_local.json"
+   },
+   {
+    "row_id": "P7",
+    "name": "false STOPs per 24 h",
+    "bar": "<= 1",
+    "measured": "TV tape 864/24h; real room <= 87/24h",
+    "status": "FAIL",
+    "source": "stop_local.json + ambient_real.json"
+   },
+   {
+    "row_id": "P8",
+    "name": "self-transcribed motion commands",
+    "bar": "0",
+    "measured": "3 with no AEC, 3 at a hypothetical 20 dB",
+    "status": "BLOCKED",
+    "source": "arms.json (with echo admitted, this row waits on P9)"
+   },
+   {
+    "row_id": "P9",
+    "name": "AEC attenuation, XVF3800 -> CQRobot",
+    "bar": ">= 20 dB",
+    "measured": "UNDETERMINED_ON_THIS_HOST",
+    "status": "BLOCKED",
+    "source": "no loudspeaker on this host but the array's own DAC"
+   },
+   {
+    "row_id": "P10",
+    "name": "barge-in acoustic stop p50",
+    "bar": "<= 0.52 s",
+    "measured": "not measurable here",
+    "status": "BLOCKED",
+    "source": "no loudspeaker on this host but the array's own DAC"
+   },
+   {
+    "row_id": "P11",
+    "name": "cancel p95",
+    "bar": "<= 700 ms",
+    "measured": "740 ms (DUPLEX-1, shipped floor)",
+    "status": "FAIL",
+    "source": "scrum/20260822/task_26"
+   },
+   {
+    "row_id": "P12",
+    "name": "critical-slot accuracy",
+    "bar": ">= 0.95",
+    "measured": "0.700 (n=40, espeak); 0.850 (n=20, piper control)",
+    "status": "FAIL",
+    "source": "content.json + content_control_piper.json"
+   },
+   {
+    "row_id": "P13",
+    "name": "first-word loss with the 500 ms pre-roll",
+    "bar": "<= 2 %",
+    "measured": "2.8 % (n=36)",
+    "status": "FAIL",
+    "source": "arms.json"
+   },
+   {
+    "row_id": "P14",
+    "name": "endpoint p50",
+    "bar": "<= 0.8 s",
+    "measured": "0.56 s",
+    "status": "PASS",
+    "source": "arms.json"
+   },
+   {
+    "row_id": "P15",
+    "name": "projected spend, H1 day model (14.5 turns/h, 12 h, TV 4 h)",
+    "bar": "<= $0.50/day",
+    "measured": "$3.31/day (owner $0.15 + TV $3.16); $99/month vs the $160 envelope",
+    "status": "FAIL",
+    "source": "arms.json + realtime/cost.py MINI_RATE_CARD"
+   },
+   {
+    "row_id": "P16",
+    "name": "second-person false accept",
+    "bar": "<= 2 %",
+    "measured": "100.0 % (n=62)",
+    "status": "FAIL",
+    "source": "arms.json"
+   },
+   {
+    "row_id": "P17",
+    "name": "owner-recording REPLAY acceptance (honesty row)",
+    "bar": "reported; no arm may claim immunity",
+    "measured": "100.0 % accepted (n=36)",
+    "status": "REPORTED",
+    "source": "arms.json"
+   }
+  ],
+  "owner_id": [
+   {
+    "row_id": "P1",
+    "name": "owner committed-turn recall 1-3 m <= 60 deg",
+    "bar": ">= 0.95",
+    "measured": "0.000 (worst cell 0.000, n=36)",
+    "status": "FAIL",
+    "source": "arms.json"
+   },
+   {
+    "row_id": "P2",
+    "name": "hosted bytes for TV / self-TTS / non-owner",
+    "bar": "0",
+    "measured": "0 B",
+    "status": "PASS",
+    "source": "arms.json (fake transport)"
+   },
+   {
+    "row_id": "P3",
+    "name": "false hosted openings per 24 h",
+    "bar": "<= 1",
+    "measured": "0/day with a TV on 4 h; quiet real room <= 87.0/24h (95% bound)",
+    "status": "PASS",
+    "source": "arms.json + ambient_real.json"
+   },
+   {
+    "row_id": "P4",
+    "name": "local STOP recall",
+    "bar": ">= 0.99",
+    "measured": "0.875 (n=64)",
+    "status": "FAIL",
+    "source": "stop_local.json"
+   },
+   {
+    "row_id": "P5",
+    "name": "STOP tail p95 (hotword end -> latch)",
+    "bar": "<= 800 ms",
+    "measured": "935 ms",
+    "status": "FAIL",
+    "source": "stop_local.json"
+   },
+   {
+    "row_id": "P6",
+    "name": "STOP finite-sample: n >= 60, all <= 1.0 s",
+    "bar": "n >= 60 and 0 over 1.0 s",
+    "measured": "n=64, 0 over 1.0 s",
+    "status": "PASS",
+    "source": "stop_local.json"
+   },
+   {
+    "row_id": "P7",
+    "name": "false STOPs per 24 h",
+    "bar": "<= 1",
+    "measured": "TV tape 864/24h; real room <= 87/24h",
+    "status": "FAIL",
+    "source": "stop_local.json + ambient_real.json"
+   },
+   {
+    "row_id": "P8",
+    "name": "self-transcribed motion commands",
+    "bar": "0",
+    "measured": "0 \u2014 the gate admitted no self-speech at any echo level (0 to -30 dB)",
+    "status": "PASS",
+    "source": "arms.json (with echo admitted, this row waits on P9)"
+   },
+   {
+    "row_id": "P9",
+    "name": "AEC attenuation, XVF3800 -> CQRobot",
+    "bar": ">= 20 dB",
+    "measured": "UNDETERMINED_ON_THIS_HOST",
+    "status": "BLOCKED",
+    "source": "no loudspeaker on this host but the array's own DAC"
+   },
+   {
+    "row_id": "P10",
+    "name": "barge-in acoustic stop p50",
+    "bar": "<= 0.52 s",
+    "measured": "not measurable here",
+    "status": "BLOCKED",
+    "source": "no loudspeaker on this host but the array's own DAC"
+   },
+   {
+    "row_id": "P11",
+    "name": "cancel p95",
+    "bar": "<= 700 ms",
+    "measured": "740 ms (DUPLEX-1, shipped floor)",
+    "status": "FAIL",
+    "source": "scrum/20260822/task_26"
+   },
+   {
+    "row_id": "P12",
+    "name": "critical-slot accuracy",
+    "bar": ">= 0.95",
+    "measured": "0.700 (n=40, espeak); 0.850 (n=20, piper control)",
+    "status": "FAIL",
+    "source": "content.json + content_control_piper.json"
+   },
+   {
+    "row_id": "P13",
+    "name": "first-word loss with the 500 ms pre-roll",
+    "bar": "<= 2 %",
+    "measured": "nan % (n=0)",
+    "status": "FAIL",
+    "source": "arms.json"
+   },
+   {
+    "row_id": "P14",
+    "name": "endpoint p50",
+    "bar": "<= 0.8 s",
+    "measured": "nan s",
+    "status": "FAIL",
+    "source": "arms.json"
+   },
+   {
+    "row_id": "P15",
+    "name": "projected spend, H1 day model (14.5 turns/h, 12 h, TV 4 h)",
+    "bar": "<= $0.50/day",
+    "measured": "$0.10/day (owner $0.10 + TV $0.00); $3/month vs the $160 envelope",
+    "status": "PASS",
+    "source": "arms.json + realtime/cost.py MINI_RATE_CARD"
+   },
+   {
+    "row_id": "P16",
+    "name": "second-person false accept",
+    "bar": "<= 2 %",
+    "measured": "0.0 % (n=62)",
+    "status": "PASS",
+    "source": "arms.json"
+   },
+   {
+    "row_id": "P17",
+    "name": "owner-recording REPLAY acceptance (honesty row)",
+    "bar": "reported; no arm may claim immunity",
+    "measured": "0.0 % accepted (n=36)",
+    "status": "REPORTED",
+    "source": "arms.json"
+   }
+  ],
+  "owner_id_calibrated": [
+   {
+    "row_id": "P1",
+    "name": "owner committed-turn recall 1-3 m <= 60 deg",
+    "bar": ">= 0.95",
+    "measured": "0.889 (worst cell 0.667, n=36)",
+    "status": "FAIL",
+    "source": "arms.json"
+   },
+   {
+    "row_id": "P2",
+    "name": "hosted bytes for TV / self-TTS / non-owner",
+    "bar": "0",
+    "measured": "0 B",
+    "status": "PASS",
+    "source": "arms.json (fake transport)"
+   },
+   {
+    "row_id": "P3",
+    "name": "false hosted openings per 24 h",
+    "bar": "<= 1",
+    "measured": "0/day with a TV on 4 h; quiet real room <= 87.0/24h (95% bound)",
+    "status": "PASS",
+    "source": "arms.json + ambient_real.json"
+   },
+   {
+    "row_id": "P4",
+    "name": "local STOP recall",
+    "bar": ">= 0.99",
+    "measured": "0.875 (n=64)",
+    "status": "FAIL",
+    "source": "stop_local.json"
+   },
+   {
+    "row_id": "P5",
+    "name": "STOP tail p95 (hotword end -> latch)",
+    "bar": "<= 800 ms",
+    "measured": "935 ms",
+    "status": "FAIL",
+    "source": "stop_local.json"
+   },
+   {
+    "row_id": "P6",
+    "name": "STOP finite-sample: n >= 60, all <= 1.0 s",
+    "bar": "n >= 60 and 0 over 1.0 s",
+    "measured": "n=64, 0 over 1.0 s",
+    "status": "PASS",
+    "source": "stop_local.json"
+   },
+   {
+    "row_id": "P7",
+    "name": "false STOPs per 24 h",
+    "bar": "<= 1",
+    "measured": "TV tape 864/24h; real room <= 87/24h",
+    "status": "FAIL",
+    "source": "stop_local.json + ambient_real.json"
+   },
+   {
+    "row_id": "P8",
+    "name": "self-transcribed motion commands",
+    "bar": "0",
+    "measured": "0 \u2014 the gate admitted no self-speech at any echo level (0 to -30 dB)",
+    "status": "PASS",
+    "source": "arms.json (with echo admitted, this row waits on P9)"
+   },
+   {
+    "row_id": "P9",
+    "name": "AEC attenuation, XVF3800 -> CQRobot",
+    "bar": ">= 20 dB",
+    "measured": "UNDETERMINED_ON_THIS_HOST",
+    "status": "BLOCKED",
+    "source": "no loudspeaker on this host but the array's own DAC"
+   },
+   {
+    "row_id": "P10",
+    "name": "barge-in acoustic stop p50",
+    "bar": "<= 0.52 s",
+    "measured": "not measurable here",
+    "status": "BLOCKED",
+    "source": "no loudspeaker on this host but the array's own DAC"
+   },
+   {
+    "row_id": "P11",
+    "name": "cancel p95",
+    "bar": "<= 700 ms",
+    "measured": "740 ms (DUPLEX-1, shipped floor)",
+    "status": "FAIL",
+    "source": "scrum/20260822/task_26"
+   },
+   {
+    "row_id": "P12",
+    "name": "critical-slot accuracy",
+    "bar": ">= 0.95",
+    "measured": "0.700 (n=40, espeak); 0.850 (n=20, piper control)",
+    "status": "FAIL",
+    "source": "content.json + content_control_piper.json"
+   },
+   {
+    "row_id": "P13",
+    "name": "first-word loss with the 500 ms pre-roll",
+    "bar": "<= 2 %",
+    "measured": "21.9 % (n=32)",
+    "status": "FAIL",
+    "source": "arms.json"
+   },
+   {
+    "row_id": "P14",
+    "name": "endpoint p50",
+    "bar": "<= 0.8 s",
+    "measured": "0.56 s",
+    "status": "PASS",
+    "source": "arms.json"
+   },
+   {
+    "row_id": "P15",
+    "name": "projected spend, H1 day model (14.5 turns/h, 12 h, TV 4 h)",
+    "bar": "<= $0.50/day",
+    "measured": "$0.16/day (owner $0.16 + TV $0.00); $5/month vs the $160 envelope",
+    "status": "PASS",
+    "source": "arms.json + realtime/cost.py MINI_RATE_CARD"
+   },
+   {
+    "row_id": "P16",
+    "name": "second-person false accept",
+    "bar": "<= 2 %",
+    "measured": "0.0 % (n=62)",
+    "status": "PASS",
+    "source": "arms.json"
+   },
+   {
+    "row_id": "P17",
+    "name": "owner-recording REPLAY acceptance (honesty row)",
+    "bar": "reported; no arm may claim immunity",
+    "measured": "69.4 % accepted (n=36)",
+    "status": "REPORTED",
+    "source": "arms.json"
+   }
+  ],
+  "wake_phrase": [
+   {
+    "row_id": "P1",
+    "name": "owner committed-turn recall 1-3 m <= 60 deg (denominator: turns carrying the wake phrase)",
+    "bar": ">= 0.95",
+    "measured": "0.250 (worst cell 0.167, n=24)",
+    "status": "FAIL",
+    "source": "arms.json"
+   },
+   {
+    "row_id": "P2",
+    "name": "hosted bytes for TV / self-TTS / non-owner",
+    "bar": "0",
+    "measured": "0 B",
+    "status": "PASS",
+    "source": "arms.json (fake transport)"
+   },
+   {
+    "row_id": "P3",
+    "name": "false hosted openings per 24 h",
+    "bar": "<= 1",
+    "measured": "0/day with a TV on 4 h; quiet real room <= 87.0/24h (95% bound)",
+    "status": "PASS",
+    "source": "arms.json + ambient_real.json"
+   },
+   {
+    "row_id": "P4",
+    "name": "local STOP recall",
+    "bar": ">= 0.99",
+    "measured": "0.875 (n=64)",
+    "status": "FAIL",
+    "source": "stop_local.json"
+   },
+   {
+    "row_id": "P5",
+    "name": "STOP tail p95 (hotword end -> latch)",
+    "bar": "<= 800 ms",
+    "measured": "935 ms",
+    "status": "FAIL",
+    "source": "stop_local.json"
+   },
+   {
+    "row_id": "P6",
+    "name": "STOP finite-sample: n >= 60, all <= 1.0 s",
+    "bar": "n >= 60 and 0 over 1.0 s",
+    "measured": "n=64, 0 over 1.0 s",
+    "status": "PASS",
+    "source": "stop_local.json"
+   },
+   {
+    "row_id": "P7",
+    "name": "false STOPs per 24 h",
+    "bar": "<= 1",
+    "measured": "TV tape 864/24h; real room <= 87/24h",
+    "status": "FAIL",
+    "source": "stop_local.json + ambient_real.json"
+   },
+   {
+    "row_id": "P8",
+    "name": "self-transcribed motion commands",
+    "bar": "0",
+    "measured": "0 \u2014 the gate admitted no self-speech at any echo level (0 to -30 dB)",
+    "status": "PASS",
+    "source": "arms.json (with echo admitted, this row waits on P9)"
+   },
+   {
+    "row_id": "P9",
+    "name": "AEC attenuation, XVF3800 -> CQRobot",
+    "bar": ">= 20 dB",
+    "measured": "UNDETERMINED_ON_THIS_HOST",
+    "status": "BLOCKED",
+    "source": "no loudspeaker on this host but the array's own DAC"
+   },
+   {
+    "row_id": "P10",
+    "name": "barge-in acoustic stop p50",
+    "bar": "<= 0.52 s",
+    "measured": "not measurable here",
+    "status": "BLOCKED",
+    "source": "no loudspeaker on this host but the array's own DAC"
+   },
+   {
+    "row_id": "P11",
+    "name": "cancel p95",
+    "bar": "<= 700 ms",
+    "measured": "740 ms (DUPLEX-1, shipped floor)",
+    "status": "FAIL",
+    "source": "scrum/20260822/task_26"
+   },
+   {
+    "row_id": "P12",
+    "name": "critical-slot accuracy",
+    "bar": ">= 0.95",
+    "measured": "0.700 (n=40, espeak); 0.850 (n=20, piper control)",
+    "status": "FAIL",
+    "source": "content.json + content_control_piper.json"
+   },
+   {
+    "row_id": "P13",
+    "name": "first-word loss with the 500 ms pre-roll",
+    "bar": "<= 2 %",
+    "measured": "0.0 % (n=6)",
+    "status": "PASS",
+    "source": "arms.json"
+   },
+   {
+    "row_id": "P14",
+    "name": "endpoint p50",
+    "bar": "<= 0.8 s",
+    "measured": "0.62 s",
+    "status": "PASS",
+    "source": "arms.json"
+   },
+   {
+    "row_id": "P15",
+    "name": "projected spend, H1 day model (14.5 turns/h, 12 h, TV 4 h)",
+    "bar": "<= $0.50/day",
+    "measured": "$0.10/day (owner $0.10 + TV $0.00); $3/month vs the $160 envelope",
+    "status": "PASS",
+    "source": "arms.json + realtime/cost.py MINI_RATE_CARD"
+   },
+   {
+    "row_id": "P16",
+    "name": "second-person false accept",
+    "bar": "<= 2 %",
+    "measured": "0.0 % (n=62)",
+    "status": "PASS",
+    "source": "arms.json"
+   },
+   {
+    "row_id": "P17",
+    "name": "owner-recording REPLAY acceptance (honesty row)",
+    "bar": "reported; no arm may claim immunity",
+    "measured": "0.0 % accepted (n=36)",
+    "status": "REPORTED",
+    "source": "arms.json"
+   }
+  ],
+  "push_to_talk": [
+   {
+    "row_id": "P1",
+    "name": "owner committed-turn recall 1-3 m <= 60 deg",
+    "bar": ">= 0.95",
+    "measured": "1.000 (worst cell 1.000, n=36)",
+    "status": "PASS",
+    "source": "arms.json"
+   },
+   {
+    "row_id": "P2",
+    "name": "hosted bytes for TV / self-TTS / non-owner",
+    "bar": "0",
+    "measured": "0 B",
+    "status": "PASS",
+    "source": "arms.json (fake transport)"
+   },
+   {
+    "row_id": "P3",
+    "name": "false hosted openings per 24 h",
+    "bar": "<= 1",
+    "measured": "0/day with a TV on 4 h; quiet real room <= 87.0/24h (95% bound)",
+    "status": "PASS",
+    "source": "arms.json + ambient_real.json"
+   },
+   {
+    "row_id": "P4",
+    "name": "local STOP recall",
+    "bar": ">= 0.99",
+    "measured": "0.875 (n=64)",
+    "status": "FAIL",
+    "source": "stop_local.json"
+   },
+   {
+    "row_id": "P5",
+    "name": "STOP tail p95 (hotword end -> latch)",
+    "bar": "<= 800 ms",
+    "measured": "935 ms",
+    "status": "FAIL",
+    "source": "stop_local.json"
+   },
+   {
+    "row_id": "P6",
+    "name": "STOP finite-sample: n >= 60, all <= 1.0 s",
+    "bar": "n >= 60 and 0 over 1.0 s",
+    "measured": "n=64, 0 over 1.0 s",
+    "status": "PASS",
+    "source": "stop_local.json"
+   },
+   {
+    "row_id": "P7",
+    "name": "false STOPs per 24 h",
+    "bar": "<= 1",
+    "measured": "TV tape 864/24h; real room <= 87/24h",
+    "status": "FAIL",
+    "source": "stop_local.json + ambient_real.json"
+   },
+   {
+    "row_id": "P8",
+    "name": "self-transcribed motion commands",
+    "bar": "0",
+    "measured": "0 \u2014 the gate admitted no self-speech at any echo level (0 to -30 dB)",
+    "status": "PASS",
+    "source": "arms.json (with echo admitted, this row waits on P9)"
+   },
+   {
+    "row_id": "P9",
+    "name": "AEC attenuation, XVF3800 -> CQRobot",
+    "bar": ">= 20 dB",
+    "measured": "UNDETERMINED_ON_THIS_HOST",
+    "status": "BLOCKED",
+    "source": "no loudspeaker on this host but the array's own DAC"
+   },
+   {
+    "row_id": "P10",
+    "name": "barge-in acoustic stop p50",
+    "bar": "<= 0.52 s",
+    "measured": "not measurable here",
+    "status": "BLOCKED",
+    "source": "no loudspeaker on this host but the array's own DAC"
+   },
+   {
+    "row_id": "P11",
+    "name": "cancel p95",
+    "bar": "<= 700 ms",
+    "measured": "740 ms (DUPLEX-1, shipped floor)",
+    "status": "FAIL",
+    "source": "scrum/20260822/task_26"
+   },
+   {
+    "row_id": "P12",
+    "name": "critical-slot accuracy",
+    "bar": ">= 0.95",
+    "measured": "0.700 (n=40, espeak); 0.850 (n=20, piper control)",
+    "status": "FAIL",
+    "source": "content.json + content_control_piper.json"
+   },
+   {
+    "row_id": "P13",
+    "name": "first-word loss with the 500 ms pre-roll",
+    "bar": "<= 2 %",
+    "measured": "2.8 % (n=36)",
+    "status": "FAIL",
+    "source": "arms.json"
+   },
+   {
+    "row_id": "P14",
+    "name": "endpoint p50",
+    "bar": "<= 0.8 s",
+    "measured": "0.56 s",
+    "status": "PASS",
+    "source": "arms.json"
+   },
+   {
+    "row_id": "P15",
+    "name": "projected spend, H1 day model (14.5 turns/h, 12 h, TV 4 h)",
+    "bar": "<= $0.50/day",
+    "measured": "$0.15/day (owner $0.15 + TV $0.00); $5/month vs the $160 envelope",
+    "status": "PASS",
+    "source": "arms.json + realtime/cost.py MINI_RATE_CARD"
+   },
+   {
+    "row_id": "P16",
+    "name": "second-person false accept",
+    "bar": "<= 2 %",
+    "measured": "0.0 % (n=62)",
+    "status": "PASS",
+    "source": "arms.json"
+   },
+   {
+    "row_id": "P17",
+    "name": "owner-recording REPLAY acceptance (honesty row)",
+    "bar": "reported; no arm may claim immunity",
+    "measured": "0.0 % accepted (n=36)",
+    "status": "REPORTED",
+    "source": "arms.json"
+   }
+  ],
+  "restricted": [
+   {
+    "row_id": "P1",
+    "name": "owner committed-turn recall 1-3 m <= 60 deg",
+    "bar": ">= 0.95",
+    "measured": "1.000 (worst cell 1.000, n=36)",
+    "status": "PASS",
+    "source": "arms.json"
+   },
+   {
+    "row_id": "P2",
+    "name": "hosted bytes for TV / self-TTS / non-owner",
+    "bar": "0",
+    "measured": "6301056 B",
+    "status": "FAIL",
+    "source": "arms.json (fake transport)"
+   },
+   {
+    "row_id": "P3",
+    "name": "false hosted openings per 24 h",
+    "bar": "<= 1",
+    "measured": "0/day with a TV on 4 h; quiet real room <= 87.0/24h (95% bound)",
+    "status": "PASS",
+    "source": "arms.json + ambient_real.json"
+   },
+   {
+    "row_id": "P4",
+    "name": "local STOP recall",
+    "bar": ">= 0.99",
+    "measured": "0.875 (n=64)",
+    "status": "FAIL",
+    "source": "stop_local.json"
+   },
+   {
+    "row_id": "P5",
+    "name": "STOP tail p95 (hotword end -> latch)",
+    "bar": "<= 800 ms",
+    "measured": "935 ms",
+    "status": "FAIL",
+    "source": "stop_local.json"
+   },
+   {
+    "row_id": "P6",
+    "name": "STOP finite-sample: n >= 60, all <= 1.0 s",
+    "bar": "n >= 60 and 0 over 1.0 s",
+    "measured": "n=64, 0 over 1.0 s",
+    "status": "PASS",
+    "source": "stop_local.json"
+   },
+   {
+    "row_id": "P7",
+    "name": "false STOPs per 24 h",
+    "bar": "<= 1",
+    "measured": "TV tape 864/24h; real room <= 87/24h",
+    "status": "FAIL",
+    "source": "stop_local.json + ambient_real.json"
+   },
+   {
+    "row_id": "P8",
+    "name": "self-transcribed motion commands",
+    "bar": "0",
+    "measured": "0 \u2014 the gate admitted no self-speech at any echo level (0 to -30 dB)",
+    "status": "PASS",
+    "source": "arms.json (with echo admitted, this row waits on P9)"
+   },
+   {
+    "row_id": "P9",
+    "name": "AEC attenuation, XVF3800 -> CQRobot",
+    "bar": ">= 20 dB",
+    "measured": "UNDETERMINED_ON_THIS_HOST",
+    "status": "BLOCKED",
+    "source": "no loudspeaker on this host but the array's own DAC"
+   },
+   {
+    "row_id": "P10",
+    "name": "barge-in acoustic stop p50",
+    "bar": "<= 0.52 s",
+    "measured": "not measurable here",
+    "status": "BLOCKED",
+    "source": "no loudspeaker on this host but the array's own DAC"
+   },
+   {
+    "row_id": "P11",
+    "name": "cancel p95",
+    "bar": "<= 700 ms",
+    "measured": "740 ms (DUPLEX-1, shipped floor)",
+    "status": "FAIL",
+    "source": "scrum/20260822/task_26"
+   },
+   {
+    "row_id": "P12",
+    "name": "critical-slot accuracy",
+    "bar": ">= 0.95",
+    "measured": "0.700 (n=40, espeak); 0.850 (n=20, piper control)",
+    "status": "FAIL",
+    "source": "content.json + content_control_piper.json"
+   },
+   {
+    "row_id": "P13",
+    "name": "first-word loss with the 500 ms pre-roll",
+    "bar": "<= 2 %",
+    "measured": "2.8 % (n=36)",
+    "status": "FAIL",
+    "source": "arms.json"
+   },
+   {
+    "row_id": "P14",
+    "name": "endpoint p50",
+    "bar": "<= 0.8 s",
+    "measured": "0.56 s",
+    "status": "PASS",
+    "source": "arms.json"
+   },
+   {
+    "row_id": "P15",
+    "name": "projected spend, H1 day model (14.5 turns/h, 12 h, TV 4 h)",
+    "bar": "<= $0.50/day",
+    "measured": "$0.15/day (owner $0.15 + TV $0.00); $5/month vs the $160 envelope",
+    "status": "PASS",
+    "source": "arms.json + realtime/cost.py MINI_RATE_CARD"
+   },
+   {
+    "row_id": "P16",
+    "name": "second-person false accept",
+    "bar": "<= 2 %",
+    "measured": "100.0 % (n=62)",
+    "status": "FAIL",
+    "source": "arms.json"
+   },
+   {
+    "row_id": "P17",
+    "name": "owner-recording REPLAY acceptance (honesty row)",
+    "bar": "reported; no arm may claim immunity",
+    "measured": "100.0 % accepted (n=36)",
+    "status": "REPORTED",
+    "source": "arms.json"
+   }
+  ]
+ }
+}

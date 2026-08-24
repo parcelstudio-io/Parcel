@@ -1,0 +1,402 @@
+{
+ "tier": "replay",
+ "hosted_usd": 0.0,
+ "asr": "whisper.cpp base.en, resident, 8 threads, 127.0.0.1:8099",
+ "critical_slot": {
+  "n": 40,
+  "hits": 28,
+  "accuracy": 0.7,
+  "by_kind": {
+   "name": {
+    "n": 8,
+    "hits": 3,
+    "accuracy": 0.375
+   },
+   "place": {
+    "n": 24,
+    "hits": 17,
+    "accuracy": 0.7083333333333334
+   },
+   "stop": {
+    "n": 8,
+    "hits": 8,
+    "accuracy": 1.0
+   }
+  },
+  "rows": [
+   {
+    "name": "slot_en_m3_0_1m/0deg",
+    "slot": "sidewalk",
+    "hit": 1,
+    "text": "Go to the sidewalk"
+   },
+   {
+    "name": "slot_en_m3_1_1m/0deg",
+    "slot": "lamppost",
+    "hit": 0,
+    "text": "Go to the lampost."
+   },
+   {
+    "name": "slot_en_m3_2_1m/0deg",
+    "slot": "bench",
+    "hit": 1,
+    "text": "Walk to the bench."
+   },
+   {
+    "name": "slot_en_m3_3_1m/0deg",
+    "slot": "crosswalk",
+    "hit": 1,
+    "text": "Can you get to the crosswalk?"
+   },
+   {
+    "name": "slot_en_m3_4_1m/0deg",
+    "slot": "coffee shop",
+    "hit": 1,
+    "text": "Hand over to the coffee shop."
+   },
+   {
+    "name": "slot_en_m3_5_1m/0deg",
+    "slot": "kitchen",
+    "hit": 1,
+    "text": "Go wait in the kitchen"
+   },
+   {
+    "name": "slot_en_m3_6_1m/0deg",
+    "slot": "parcel",
+    "hit": 0,
+    "text": "Pausell, come here."
+   },
+   {
+    "name": "slot_en_m3_7_1m/0deg",
+    "slot": "parcel",
+    "hit": 1,
+    "text": "Good boy, Parcel."
+   },
+   {
+    "name": "slot_en_m3_8_1m/0deg",
+    "slot": "stop",
+    "hit": 1,
+    "text": "Stop right there."
+   },
+   {
+    "name": "slot_en_m3_9_1m/0deg",
+    "slot": "stop",
+    "hit": 1,
+    "text": "Stop and wait for me."
+   },
+   {
+    "name": "slot_en_f4_0_1m/0deg",
+    "slot": "sidewalk",
+    "hit": 1,
+    "text": "Go to the sidewalk."
+   },
+   {
+    "name": "slot_en_f4_1_1m/0deg",
+    "slot": "lamppost",
+    "hit": 1,
+    "text": "Go to the lamppost."
+   },
+   {
+    "name": "slot_en_f4_2_1m/0deg",
+    "slot": "bench",
+    "hit": 0,
+    "text": "Walk to the men."
+   },
+   {
+    "name": "slot_en_f4_3_1m/0deg",
+    "slot": "crosswalk",
+    "hit": 1,
+    "text": "Can you get to the crosswalk?"
+   },
+   {
+    "name": "slot_en_f4_4_1m/0deg",
+    "slot": "coffee shop",
+    "hit": 1,
+    "text": "and over to the coffee shop."
+   },
+   {
+    "name": "slot_en_f4_5_1m/0deg",
+    "slot": "kitchen",
+    "hit": 1,
+    "text": "No wait in the kitchen"
+   },
+   {
+    "name": "slot_en_f4_6_1m/0deg",
+    "slot": "parcel",
+    "hit": 0,
+    "text": "Pause, come here."
+   },
+   {
+    "name": "slot_en_f4_7_1m/0deg",
+    "slot": "parcel",
+    "hit": 1,
+    "text": "Don't boy parcel."
+   },
+   {
+    "name": "slot_en_f4_8_1m/0deg",
+    "slot": "stop",
+    "hit": 1,
+    "text": "Stop right there."
+   },
+   {
+    "name": "slot_en_f4_9_1m/0deg",
+    "slot": "stop",
+    "hit": 1,
+    "text": "Stop and wait for me."
+   },
+   {
+    "name": "slot_en_m3_0_3m/30deg",
+    "slot": "sidewalk",
+    "hit": 1,
+    "text": "Go to the sidewalk"
+   },
+   {
+    "name": "slot_en_m3_1_3m/30deg",
+    "slot": "lamppost",
+    "hit": 0,
+    "text": "Go to the lampost."
+   },
+   {
+    "name": "slot_en_m3_2_3m/30deg",
+    "slot": "bench",
+    "hit": 1,
+    "text": "Walk to the bench."
+   },
+   {
+    "name": "slot_en_m3_3_3m/30deg",
+    "slot": "crosswalk",
+    "hit": 1,
+    "text": "Can you get to the crosswalk?"
+   },
+   {
+    "name": "slot_en_m3_4_3m/30deg",
+    "slot": "coffee shop",
+    "hit": 1,
+    "text": "head over to the coffee shop"
+   },
+   {
+    "name": "slot_en_m3_5_3m/30deg",
+    "slot": "kitchen",
+    "hit": 1,
+    "text": "Go wait in her kitchen."
+   },
+   {
+    "name": "slot_en_m3_6_3m/30deg",
+    "slot": "parcel",
+    "hit": 0,
+    "text": "Pausell, come here."
+   },
+   {
+    "name": "slot_en_m3_7_3m/30deg",
+    "slot": "parcel",
+    "hit": 1,
+    "text": "Good boy, Parcel."
+   },
+   {
+    "name": "slot_en_m3_8_3m/30deg",
+    "slot": "stop",
+    "hit": 1,
+    "text": "Stop right there."
+   },
+   {
+    "name": "slot_en_m3_9_3m/30deg",
+    "slot": "stop",
+    "hit": 1,
+    "text": "Stop and wait for me."
+   },
+   {
+    "name": "slot_en_f4_0_3m/30deg",
+    "slot": "sidewalk",
+    "hit": 1,
+    "text": "Go to the sidewalk."
+   },
+   {
+    "name": "slot_en_f4_1_3m/30deg",
+    "slot": "lamppost",
+    "hit": 0,
+    "text": "Go to the lamboat."
+   },
+   {
+    "name": "slot_en_f4_2_3m/30deg",
+    "slot": "bench",
+    "hit": 0,
+    "text": "Walk to the manage."
+   },
+   {
+    "name": "slot_en_f4_3_3m/30deg",
+    "slot": "crosswalk",
+    "hit": 1,
+    "text": "Can you get to the crosswalk?"
+   },
+   {
+    "name": "slot_en_f4_4_3m/30deg",
+    "slot": "coffee shop",
+    "hit": 0,
+    "text": "and over to the Kelsey shop."
+   },
+   {
+    "name": "slot_en_f4_5_3m/30deg",
+    "slot": "kitchen",
+    "hit": 0,
+    "text": "Go wait and look at it, young."
+   },
+   {
+    "name": "slot_en_f4_6_3m/30deg",
+    "slot": "parcel",
+    "hit": 0,
+    "text": "Pause'll come here."
+   },
+   {
+    "name": "slot_en_f4_7_3m/30deg",
+    "slot": "parcel",
+    "hit": 0,
+    "text": "Your boy Parsel."
+   },
+   {
+    "name": "slot_en_f4_8_3m/30deg",
+    "slot": "stop",
+    "hit": 1,
+    "text": "Stop writing there."
+   },
+   {
+    "name": "slot_en_f4_9_3m/30deg",
+    "slot": "stop",
+    "hit": 1,
+    "text": "Stop and wait for me."
+   }
+  ]
+ },
+ "wake_phrase": {
+  "n": 24,
+  "hits": 13,
+  "detection_rate": 0.5416666666666666,
+  "tokens": [
+   "hey parcel",
+   "hey, parcel",
+   "parcel"
+  ],
+  "rows": [
+   {
+    "name": "wake_en_m3_0_1m/0deg",
+    "hit": 0,
+    "text": "K-PASL"
+   },
+   {
+    "name": "wake_en_m3_1_1m/0deg",
+    "hit": 0,
+    "text": "K-PASL, come here."
+   },
+   {
+    "name": "wake_en_m3_2_1m/0deg",
+    "hit": 0,
+    "text": "K-Parsal, what is that?"
+   },
+   {
+    "name": "wake_en_f4_0_1m/0deg",
+    "hit": 1,
+    "text": "Pay parcel"
+   },
+   {
+    "name": "wake_en_f4_1_1m/0deg",
+    "hit": 1,
+    "text": "Hey, Parcel, come here."
+   },
+   {
+    "name": "wake_en_f4_2_1m/0deg",
+    "hit": 1,
+    "text": "Hey Parcel, what is that?"
+   },
+   {
+    "name": "wake_en_us_m7_0_1m/0deg",
+    "hit": 0,
+    "text": "Hey Potter soul"
+   },
+   {
+    "name": "wake_en_us_m7_1_1m/0deg",
+    "hit": 0,
+    "text": "Hey, Potter-soul, come here."
+   },
+   {
+    "name": "wake_en_us_m7_2_1m/0deg",
+    "hit": 0,
+    "text": "Hey Pottersel, what is that?"
+   },
+   {
+    "name": "wake_en_f2_0_1m/0deg",
+    "hit": 1,
+    "text": "Hey, Parcel."
+   },
+   {
+    "name": "wake_en_f2_1_1m/0deg",
+    "hit": 1,
+    "text": "Hey, Parcel, come here."
+   },
+   {
+    "name": "wake_en_f2_2_1m/0deg",
+    "hit": 1,
+    "text": "Hey Parcel, what is that?"
+   },
+   {
+    "name": "wake_en_m3_0_3m/30deg",
+    "hit": 0,
+    "text": "K-Parsal"
+   },
+   {
+    "name": "wake_en_m3_1_3m/30deg",
+    "hit": 1,
+    "text": "Hey, Parcel, come here."
+   },
+   {
+    "name": "wake_en_m3_2_3m/30deg",
+    "hit": 0,
+    "text": "K-Parsal, what is that?"
+   },
+   {
+    "name": "wake_en_f4_0_3m/30deg",
+    "hit": 1,
+    "text": "Hey, Parcel."
+   },
+   {
+    "name": "wake_en_f4_1_3m/30deg",
+    "hit": 1,
+    "text": "Hey, Parcel, come here."
+   },
+   {
+    "name": "wake_en_f4_2_3m/30deg",
+    "hit": 1,
+    "text": "Hey Parcel, what is that?"
+   },
+   {
+    "name": "wake_en_us_m7_0_3m/30deg",
+    "hit": 0,
+    "text": "Hey, Paracal."
+   },
+   {
+    "name": "wake_en_us_m7_1_3m/30deg",
+    "hit": 0,
+    "text": "Hey Pottersill, come here."
+   },
+   {
+    "name": "wake_en_us_m7_2_3m/30deg",
+    "hit": 0,
+    "text": "Hey, Pottersel, what is that?"
+   },
+   {
+    "name": "wake_en_f2_0_3m/30deg",
+    "hit": 1,
+    "text": "Pay parcel."
+   },
+   {
+    "name": "wake_en_f2_1_3m/30deg",
+    "hit": 1,
+    "text": "Hey Parcel, come here."
+   },
+   {
+    "name": "wake_en_f2_2_3m/30deg",
+    "hit": 1,
+    "text": "Hey Parcel, what is that?"
+   }
+  ]
+ },
+ "voice_note": "content rows use espeak-ng voices because arbitrary words cannot be put in the mouth of the only real speech on this host; the identity rows use the real voices instead"
+}

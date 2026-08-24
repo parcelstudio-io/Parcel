@@ -1,0 +1,1839 @@
+{
+ "tier": "replay",
+ "tier_note": "no stimulus was presented through air: this host has no loudspeaker but the array's own DAC, and playing a stimulus through it would hand the XVF3800's AEC its own reference. The room floor under every tape is real.",
+ "host": "jaewoo-jang-parcel",
+ "git_head": "9d6b37a",
+ "hosted_usd": 0.0,
+ "room_floor_dbfs": -52.344967211179906,
+ "speech_level_dbfs_at_1m": -27.344967211179906,
+ "gate_config": {
+  "threshold": 0.5,
+  "open_frames": 2,
+  "hangover_ms": 500.0,
+  "preroll_ms": 500.0,
+  "decision_window_s": 1.0
+ },
+ "calibrated_arm": {
+  "threshold": 0.352,
+  "decision_window_s": 2.0,
+  "gallery": "channel_matched",
+  "caveat": "the threshold is read off identity_roc.json, which fitted it on the SAME 36 owner trials scored here; the calibrated arm's recall is an upper bound"
+ },
+ "tape_seconds": {
+  "owner": 237.0,
+  "owner_replay": 237.0,
+  "second_person": 406.0,
+  "tv": 1267.64,
+  "self_tts": 144.895,
+  "stop": 377.922,
+  "wake": 153.015625,
+  "slots": 248.131875,
+  "fan": 125.0
+ },
+ "tape_placements": {
+  "owner": 36,
+  "owner_replay": 36,
+  "second_person": 62,
+  "tv": 221,
+  "self_tts": 20,
+  "stop": 64,
+  "wake": 24,
+  "slots": 40,
+  "fan": 1
+ },
+ "whisper_calls": 616,
+ "whisper_mean_latency_s": 0.35677792068359,
+ "wall_s": 295.08072447776794,
+ "arms": [
+  {
+   "arm": "vad_only",
+   "owner": {
+    "role": "owner",
+    "trials": 36,
+    "accepted": 36,
+    "acceptance_rate": 1.0,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 6,
+      "accepted": 6,
+      "rate": 1.0
+     },
+     "1m/30deg": {
+      "n": 6,
+      "accepted": 6,
+      "rate": 1.0
+     },
+     "1m/60deg": {
+      "n": 6,
+      "accepted": 6,
+      "rate": 1.0
+     },
+     "3m/0deg": {
+      "n": 6,
+      "accepted": 6,
+      "rate": 1.0
+     },
+     "3m/30deg": {
+      "n": 6,
+      "accepted": 6,
+      "rate": 1.0
+     },
+     "3m/60deg": {
+      "n": 6,
+      "accepted": 6,
+      "rate": 1.0
+     }
+    },
+    "tape_seconds": 237.0,
+    "spans_considered": 43,
+    "spans_admitted": 43,
+    "opens_per_hour": 653.1645569620254,
+    "uploaded_seconds": 118.556,
+    "uploaded_bytes": 3793792,
+    "uploaded_bytes_by_role": {
+     "owner": 3793792
+    },
+    "uploaded_seconds_per_hour": 1800.8506329113925,
+    "projected_usd_per_hour": 0.5719837974683545
+   },
+   "owner_quality": {
+    "n": 36,
+    "first_word_lost": 1,
+    "first_word_loss_rate": 0.027777777777777776,
+    "truncation_ms_p50": -452.0000000000053,
+    "truncation_ms_max": 51.9999999999925,
+    "endpoint_s_p50": 0.5580000000000087,
+    "endpoint_s_p95": 0.6540000000000177,
+    "admission_latency_s_p50": 1.1120000000000019,
+    "admission_latency_s_p95": 1.4820000000000135
+   },
+   "wake_quality": {
+    "n": 24,
+    "first_word_lost": 0,
+    "first_word_loss_rate": 0.0,
+    "truncation_ms_p50": -485.06250000001216,
+    "truncation_ms_max": -446.87500000000034,
+    "endpoint_s_p50": 0.6226250000000064,
+    "endpoint_s_p95": 0.6871562500000039,
+    "admission_latency_s_p50": 1.0789374999999808,
+    "admission_latency_s_p95": 1.104337499999998
+   },
+   "owner_replay": {
+    "role": "owner_replay",
+    "trials": 36,
+    "accepted": 36,
+    "acceptance_rate": 1.0,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 6,
+      "accepted": 6,
+      "rate": 1.0
+     },
+     "1m/30deg": {
+      "n": 6,
+      "accepted": 6,
+      "rate": 1.0
+     },
+     "1m/60deg": {
+      "n": 6,
+      "accepted": 6,
+      "rate": 1.0
+     },
+     "3m/0deg": {
+      "n": 6,
+      "accepted": 6,
+      "rate": 1.0
+     },
+     "3m/30deg": {
+      "n": 6,
+      "accepted": 6,
+      "rate": 1.0
+     },
+     "3m/60deg": {
+      "n": 6,
+      "accepted": 6,
+      "rate": 1.0
+     }
+    },
+    "tape_seconds": 237.0,
+    "spans_considered": 43,
+    "spans_admitted": 43,
+    "opens_per_hour": 653.1645569620254,
+    "uploaded_seconds": 116.668,
+    "uploaded_bytes": 3733376,
+    "uploaded_bytes_by_role": {
+     "owner_replay": 3698944,
+     "ambient": 34432
+    },
+    "uploaded_seconds_per_hour": 1772.1721518987345,
+    "projected_usd_per_hour": 0.5691159493670886
+   },
+   "second_person": {
+    "role": "second_person",
+    "trials": 62,
+    "accepted": 62,
+    "acceptance_rate": 1.0,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 31,
+      "accepted": 31,
+      "rate": 1.0
+     },
+     "3m/30deg": {
+      "n": 31,
+      "accepted": 31,
+      "rate": 1.0
+     }
+    },
+    "tape_seconds": 406.0,
+    "spans_considered": 71,
+    "spans_admitted": 71,
+    "opens_per_hour": 629.5566502463054,
+    "uploaded_seconds": 196.908,
+    "uploaded_bytes": 6301056,
+    "uploaded_bytes_by_role": {
+     "second_person": 6301056
+    },
+    "uploaded_seconds_per_hour": 1745.982266009852,
+    "projected_usd_per_hour": 0.5523322167487684
+   },
+   "tv": {
+    "role": "tv",
+    "trials": 221,
+    "accepted": 221,
+    "acceptance_rate": 1.0,
+    "per_geometry": {
+     "3m/30deg": {
+      "n": 221,
+      "accepted": 221,
+      "rate": 1.0
+     }
+    },
+    "tape_seconds": 1267.64,
+    "spans_considered": 285,
+    "spans_admitted": 285,
+    "opens_per_hour": 809.3780568615696,
+    "uploaded_seconds": 1072.868,
+    "uploaded_bytes": 34331776,
+    "uploaded_bytes_by_role": {
+     "tv": 33223040,
+     "ambient": 1108736
+    },
+    "uploaded_seconds_per_hour": 3046.8625161717837,
+    "projected_usd_per_hour": 0.7903130857341201
+   },
+   "self_tts": {
+    "role": "self_tts",
+    "trials": 20,
+    "accepted": 20,
+    "acceptance_rate": 1.0,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 20,
+      "accepted": 20,
+      "rate": 1.0
+     }
+    },
+    "tape_seconds": 144.895,
+    "spans_considered": 29,
+    "spans_admitted": 29,
+    "opens_per_hour": 720.5217571344766,
+    "uploaded_seconds": 63.748,
+    "uploaded_bytes": 2039936,
+    "uploaded_bytes_by_role": {
+     "self_tts": 1812480,
+     "ambient": 227456
+    },
+    "uploaded_seconds_per_hour": 1583.8558956485729,
+    "projected_usd_per_hour": 0.5906986438455433
+   },
+   "self_tts_by_aec_level": {
+    "0dB": {
+     "trials": 5,
+     "admitted": 5,
+     "self_transcribed_motion_commands": 3
+    },
+    "-10dB": {
+     "trials": 5,
+     "admitted": 5,
+     "self_transcribed_motion_commands": 3
+    },
+    "-20dB": {
+     "trials": 5,
+     "admitted": 5,
+     "self_transcribed_motion_commands": 3
+    },
+    "-30dB": {
+     "trials": 5,
+     "admitted": 5,
+     "self_transcribed_motion_commands": 3
+    }
+   },
+   "fan": {
+    "role": "wind",
+    "trials": 1,
+    "accepted": 0,
+    "acceptance_rate": 0.0,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 1,
+      "accepted": 0,
+      "rate": 0.0
+     }
+    },
+    "tape_seconds": 125.0,
+    "spans_considered": 0,
+    "spans_admitted": 0,
+    "opens_per_hour": 0.0,
+    "uploaded_seconds": 0,
+    "uploaded_bytes": 0,
+    "uploaded_bytes_by_role": {},
+    "uploaded_seconds_per_hour": 0.0,
+    "projected_usd_per_hour": 0.0
+   },
+   "wake_turns": {
+    "role": "wake",
+    "trials": 24,
+    "accepted": 24,
+    "acceptance_rate": 1.0,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 12,
+      "accepted": 12,
+      "rate": 1.0
+     },
+     "3m/30deg": {
+      "n": 12,
+      "accepted": 12,
+      "rate": 1.0
+     }
+    },
+    "tape_seconds": 153.015625,
+    "spans_considered": 24,
+    "spans_admitted": 24,
+    "opens_per_hour": 564.6482181149802,
+    "uploaded_seconds": 54.208,
+    "uploaded_bytes": 1734656,
+    "uploaded_bytes_by_role": {
+     "wake": 1734656
+    },
+    "uploaded_seconds_per_hour": 1275.352108649035,
+    "projected_usd_per_hour": 0.4663241417338916
+   },
+   "identity_scores": {
+    "owner": {},
+    "owner_replay": {},
+    "second_person": {},
+    "tv": {},
+    "self_tts": {},
+    "stop": {},
+    "wake": {},
+    "slots": {},
+    "fan": {}
+   },
+   "hosted_bytes_non_owner": 42672768,
+   "wall_s": 16.018775939941406
+  },
+  {
+   "arm": "owner_id",
+   "owner": {
+    "role": "owner",
+    "trials": 36,
+    "accepted": 0,
+    "acceptance_rate": 0.0,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 6,
+      "accepted": 0,
+      "rate": 0.0
+     },
+     "1m/30deg": {
+      "n": 6,
+      "accepted": 0,
+      "rate": 0.0
+     },
+     "1m/60deg": {
+      "n": 6,
+      "accepted": 0,
+      "rate": 0.0
+     },
+     "3m/0deg": {
+      "n": 6,
+      "accepted": 0,
+      "rate": 0.0
+     },
+     "3m/30deg": {
+      "n": 6,
+      "accepted": 0,
+      "rate": 0.0
+     },
+     "3m/60deg": {
+      "n": 6,
+      "accepted": 0,
+      "rate": 0.0
+     }
+    },
+    "tape_seconds": 237.0,
+    "spans_considered": 43,
+    "spans_admitted": 0,
+    "opens_per_hour": 0.0,
+    "uploaded_seconds": 0,
+    "uploaded_bytes": 0,
+    "uploaded_bytes_by_role": {},
+    "uploaded_seconds_per_hour": 0.0,
+    "projected_usd_per_hour": 0.0
+   },
+   "owner_quality": {
+    "n": 0,
+    "first_word_lost": 0,
+    "first_word_loss_rate": NaN,
+    "truncation_ms_p50": NaN,
+    "truncation_ms_max": NaN,
+    "endpoint_s_p50": NaN,
+    "endpoint_s_p95": NaN,
+    "admission_latency_s_p50": NaN,
+    "admission_latency_s_p95": NaN
+   },
+   "wake_quality": {
+    "n": 0,
+    "first_word_lost": 0,
+    "first_word_loss_rate": NaN,
+    "truncation_ms_p50": NaN,
+    "truncation_ms_max": NaN,
+    "endpoint_s_p50": NaN,
+    "endpoint_s_p95": NaN,
+    "admission_latency_s_p50": NaN,
+    "admission_latency_s_p95": NaN
+   },
+   "owner_replay": {
+    "role": "owner_replay",
+    "trials": 36,
+    "accepted": 0,
+    "acceptance_rate": 0.0,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 6,
+      "accepted": 0,
+      "rate": 0.0
+     },
+     "1m/30deg": {
+      "n": 6,
+      "accepted": 0,
+      "rate": 0.0
+     },
+     "1m/60deg": {
+      "n": 6,
+      "accepted": 0,
+      "rate": 0.0
+     },
+     "3m/0deg": {
+      "n": 6,
+      "accepted": 0,
+      "rate": 0.0
+     },
+     "3m/30deg": {
+      "n": 6,
+      "accepted": 0,
+      "rate": 0.0
+     },
+     "3m/60deg": {
+      "n": 6,
+      "accepted": 0,
+      "rate": 0.0
+     }
+    },
+    "tape_seconds": 237.0,
+    "spans_considered": 43,
+    "spans_admitted": 0,
+    "opens_per_hour": 0.0,
+    "uploaded_seconds": 0,
+    "uploaded_bytes": 0,
+    "uploaded_bytes_by_role": {},
+    "uploaded_seconds_per_hour": 0.0,
+    "projected_usd_per_hour": 0.0
+   },
+   "second_person": {
+    "role": "second_person",
+    "trials": 62,
+    "accepted": 0,
+    "acceptance_rate": 0.0,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 31,
+      "accepted": 0,
+      "rate": 0.0
+     },
+     "3m/30deg": {
+      "n": 31,
+      "accepted": 0,
+      "rate": 0.0
+     }
+    },
+    "tape_seconds": 406.0,
+    "spans_considered": 71,
+    "spans_admitted": 0,
+    "opens_per_hour": 0.0,
+    "uploaded_seconds": 0,
+    "uploaded_bytes": 0,
+    "uploaded_bytes_by_role": {},
+    "uploaded_seconds_per_hour": 0.0,
+    "projected_usd_per_hour": 0.0
+   },
+   "tv": {
+    "role": "tv",
+    "trials": 221,
+    "accepted": 0,
+    "acceptance_rate": 0.0,
+    "per_geometry": {
+     "3m/30deg": {
+      "n": 221,
+      "accepted": 0,
+      "rate": 0.0
+     }
+    },
+    "tape_seconds": 1267.64,
+    "spans_considered": 285,
+    "spans_admitted": 0,
+    "opens_per_hour": 0.0,
+    "uploaded_seconds": 0,
+    "uploaded_bytes": 0,
+    "uploaded_bytes_by_role": {},
+    "uploaded_seconds_per_hour": 0.0,
+    "projected_usd_per_hour": 0.0
+   },
+   "self_tts": {
+    "role": "self_tts",
+    "trials": 20,
+    "accepted": 0,
+    "acceptance_rate": 0.0,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 20,
+      "accepted": 0,
+      "rate": 0.0
+     }
+    },
+    "tape_seconds": 144.895,
+    "spans_considered": 29,
+    "spans_admitted": 0,
+    "opens_per_hour": 0.0,
+    "uploaded_seconds": 0,
+    "uploaded_bytes": 0,
+    "uploaded_bytes_by_role": {},
+    "uploaded_seconds_per_hour": 0.0,
+    "projected_usd_per_hour": 0.0
+   },
+   "self_tts_by_aec_level": {
+    "0dB": {
+     "trials": 5,
+     "admitted": 0,
+     "self_transcribed_motion_commands": 0
+    },
+    "-10dB": {
+     "trials": 5,
+     "admitted": 0,
+     "self_transcribed_motion_commands": 0
+    },
+    "-20dB": {
+     "trials": 5,
+     "admitted": 0,
+     "self_transcribed_motion_commands": 0
+    },
+    "-30dB": {
+     "trials": 5,
+     "admitted": 0,
+     "self_transcribed_motion_commands": 0
+    }
+   },
+   "fan": {
+    "role": "wind",
+    "trials": 1,
+    "accepted": 0,
+    "acceptance_rate": 0.0,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 1,
+      "accepted": 0,
+      "rate": 0.0
+     }
+    },
+    "tape_seconds": 125.0,
+    "spans_considered": 0,
+    "spans_admitted": 0,
+    "opens_per_hour": 0.0,
+    "uploaded_seconds": 0,
+    "uploaded_bytes": 0,
+    "uploaded_bytes_by_role": {},
+    "uploaded_seconds_per_hour": 0.0,
+    "projected_usd_per_hour": 0.0
+   },
+   "wake_turns": {
+    "role": "wake",
+    "trials": 24,
+    "accepted": 0,
+    "acceptance_rate": 0.0,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 12,
+      "accepted": 0,
+      "rate": 0.0
+     },
+     "3m/30deg": {
+      "n": 12,
+      "accepted": 0,
+      "rate": 0.0
+     }
+    },
+    "tape_seconds": 153.015625,
+    "spans_considered": 24,
+    "spans_admitted": 0,
+    "opens_per_hour": 0.0,
+    "uploaded_seconds": 0,
+    "uploaded_bytes": 0,
+    "uploaded_bytes_by_role": {},
+    "uploaded_seconds_per_hour": 0.0,
+    "projected_usd_per_hour": 0.0
+   },
+   "identity_scores": {
+    "owner": {
+     "n": 43,
+     "p5": 0.14372233575001733,
+     "p50": 0.31835748054056645,
+     "p95": 0.39290258464579064,
+     "min": 0.10913912308086116,
+     "max": 0.4197972290005303
+    },
+    "owner_replay": {
+     "n": 43,
+     "p5": 0.10799622704322713,
+     "p50": 0.22889047530699594,
+     "p95": 0.3304499296078526,
+     "min": -0.02670243609865888,
+     "max": 0.33383900522218474
+    },
+    "second_person": {
+     "n": 71,
+     "p5": -0.06679031097188654,
+     "p50": 0.043213586898720416,
+     "p95": 0.19529529074390498,
+     "min": -0.10341321586692125,
+     "max": 0.28733687540207753
+    },
+    "tv": {
+     "n": 285,
+     "p5": -0.11363286666802026,
+     "p50": -0.004114387591500234,
+     "p95": 0.07403505369706563,
+     "min": -0.1423430508803674,
+     "max": 0.12991349360412116
+    },
+    "self_tts": {
+     "n": 29,
+     "p5": -0.06268359154313052,
+     "p50": 0.025643413634481377,
+     "p95": 0.1710342871900957,
+     "min": -0.09335018048597374,
+     "max": 0.18433457061130934
+    },
+    "stop": {
+     "n": 60,
+     "p5": -0.07468312987943998,
+     "p50": 0.01649651046249519,
+     "p95": 0.0781117921657342,
+     "min": -0.18241666502272694,
+     "max": 0.09636221007508766
+    },
+    "wake": {
+     "n": 24,
+     "p5": -0.007597041024598133,
+     "p50": 0.029617179079194516,
+     "p95": 0.10131944468257774,
+     "min": -0.014468138930673806,
+     "max": 0.1116834093797909
+    },
+    "slots": {
+     "n": 40,
+     "p5": -0.02053016265855225,
+     "p50": 0.0463906173881764,
+     "p95": 0.13875776497981618,
+     "min": -0.04428323159769337,
+     "max": 0.2295478973462717
+    },
+    "fan": {}
+   },
+   "hosted_bytes_non_owner": 0,
+   "wall_s": 15.957477807998657
+  },
+  {
+   "arm": "owner_id_calibrated",
+   "owner": {
+    "role": "owner",
+    "trials": 36,
+    "accepted": 32,
+    "acceptance_rate": 0.8888888888888888,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 6,
+      "accepted": 6,
+      "rate": 1.0
+     },
+     "1m/30deg": {
+      "n": 6,
+      "accepted": 6,
+      "rate": 1.0
+     },
+     "1m/60deg": {
+      "n": 6,
+      "accepted": 6,
+      "rate": 1.0
+     },
+     "3m/0deg": {
+      "n": 6,
+      "accepted": 5,
+      "rate": 0.8333333333333334
+     },
+     "3m/30deg": {
+      "n": 6,
+      "accepted": 5,
+      "rate": 0.8333333333333334
+     },
+     "3m/60deg": {
+      "n": 6,
+      "accepted": 4,
+      "rate": 0.6666666666666666
+     }
+    },
+    "tape_seconds": 237.0,
+    "spans_considered": 43,
+    "spans_admitted": 32,
+    "opens_per_hour": 486.07594936708864,
+    "uploaded_seconds": 98.656,
+    "uploaded_bytes": 3156992,
+    "uploaded_bytes_by_role": {
+     "owner": 3156992
+    },
+    "uploaded_seconds_per_hour": 1498.5721518987343,
+    "projected_usd_per_hour": 0.44150278481012667
+   },
+   "owner_quality": {
+    "n": 32,
+    "first_word_lost": 7,
+    "first_word_loss_rate": 0.21875,
+    "truncation_ms_p50": -421.99999999999704,
+    "truncation_ms_max": 996.0000000000023,
+    "endpoint_s_p50": 0.563999999999993,
+    "endpoint_s_p95": 0.6556000000000196,
+    "admission_latency_s_p50": 2.142000000000003,
+    "admission_latency_s_p95": 3.5476000000000076
+   },
+   "wake_quality": {
+    "n": 0,
+    "first_word_lost": 0,
+    "first_word_loss_rate": NaN,
+    "truncation_ms_p50": NaN,
+    "truncation_ms_max": NaN,
+    "endpoint_s_p50": NaN,
+    "endpoint_s_p95": NaN,
+    "admission_latency_s_p50": NaN,
+    "admission_latency_s_p95": NaN
+   },
+   "owner_replay": {
+    "role": "owner_replay",
+    "trials": 36,
+    "accepted": 25,
+    "acceptance_rate": 0.6944444444444444,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 6,
+      "accepted": 4,
+      "rate": 0.6666666666666666
+     },
+     "1m/30deg": {
+      "n": 6,
+      "accepted": 5,
+      "rate": 0.8333333333333334
+     },
+     "1m/60deg": {
+      "n": 6,
+      "accepted": 5,
+      "rate": 0.8333333333333334
+     },
+     "3m/0deg": {
+      "n": 6,
+      "accepted": 5,
+      "rate": 0.8333333333333334
+     },
+     "3m/30deg": {
+      "n": 6,
+      "accepted": 2,
+      "rate": 0.3333333333333333
+     },
+     "3m/60deg": {
+      "n": 6,
+      "accepted": 4,
+      "rate": 0.6666666666666666
+     }
+    },
+    "tape_seconds": 237.0,
+    "spans_considered": 43,
+    "spans_admitted": 25,
+    "opens_per_hour": 379.74683544303804,
+    "uploaded_seconds": 78.004,
+    "uploaded_bytes": 2496128,
+    "uploaded_bytes_by_role": {
+     "owner_replay": 2496128
+    },
+    "uploaded_seconds_per_hour": 1184.8708860759496,
+    "projected_usd_per_hour": 0.34633518987341777
+   },
+   "second_person": {
+    "role": "second_person",
+    "trials": 62,
+    "accepted": 0,
+    "acceptance_rate": 0.0,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 31,
+      "accepted": 0,
+      "rate": 0.0
+     },
+     "3m/30deg": {
+      "n": 31,
+      "accepted": 0,
+      "rate": 0.0
+     }
+    },
+    "tape_seconds": 406.0,
+    "spans_considered": 71,
+    "spans_admitted": 0,
+    "opens_per_hour": 0.0,
+    "uploaded_seconds": 0,
+    "uploaded_bytes": 0,
+    "uploaded_bytes_by_role": {},
+    "uploaded_seconds_per_hour": 0.0,
+    "projected_usd_per_hour": 0.0
+   },
+   "tv": {
+    "role": "tv",
+    "trials": 221,
+    "accepted": 0,
+    "acceptance_rate": 0.0,
+    "per_geometry": {
+     "3m/30deg": {
+      "n": 221,
+      "accepted": 0,
+      "rate": 0.0
+     }
+    },
+    "tape_seconds": 1267.64,
+    "spans_considered": 285,
+    "spans_admitted": 0,
+    "opens_per_hour": 0.0,
+    "uploaded_seconds": 0,
+    "uploaded_bytes": 0,
+    "uploaded_bytes_by_role": {},
+    "uploaded_seconds_per_hour": 0.0,
+    "projected_usd_per_hour": 0.0
+   },
+   "self_tts": {
+    "role": "self_tts",
+    "trials": 20,
+    "accepted": 0,
+    "acceptance_rate": 0.0,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 20,
+      "accepted": 0,
+      "rate": 0.0
+     }
+    },
+    "tape_seconds": 144.895,
+    "spans_considered": 29,
+    "spans_admitted": 0,
+    "opens_per_hour": 0.0,
+    "uploaded_seconds": 0,
+    "uploaded_bytes": 0,
+    "uploaded_bytes_by_role": {},
+    "uploaded_seconds_per_hour": 0.0,
+    "projected_usd_per_hour": 0.0
+   },
+   "self_tts_by_aec_level": {
+    "0dB": {
+     "trials": 5,
+     "admitted": 0,
+     "self_transcribed_motion_commands": 0
+    },
+    "-10dB": {
+     "trials": 5,
+     "admitted": 0,
+     "self_transcribed_motion_commands": 0
+    },
+    "-20dB": {
+     "trials": 5,
+     "admitted": 0,
+     "self_transcribed_motion_commands": 0
+    },
+    "-30dB": {
+     "trials": 5,
+     "admitted": 0,
+     "self_transcribed_motion_commands": 0
+    }
+   },
+   "fan": {
+    "role": "wind",
+    "trials": 1,
+    "accepted": 0,
+    "acceptance_rate": 0.0,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 1,
+      "accepted": 0,
+      "rate": 0.0
+     }
+    },
+    "tape_seconds": 125.0,
+    "spans_considered": 0,
+    "spans_admitted": 0,
+    "opens_per_hour": 0.0,
+    "uploaded_seconds": 0,
+    "uploaded_bytes": 0,
+    "uploaded_bytes_by_role": {},
+    "uploaded_seconds_per_hour": 0.0,
+    "projected_usd_per_hour": 0.0
+   },
+   "wake_turns": {
+    "role": "wake",
+    "trials": 24,
+    "accepted": 0,
+    "acceptance_rate": 0.0,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 12,
+      "accepted": 0,
+      "rate": 0.0
+     },
+     "3m/30deg": {
+      "n": 12,
+      "accepted": 0,
+      "rate": 0.0
+     }
+    },
+    "tape_seconds": 153.015625,
+    "spans_considered": 24,
+    "spans_admitted": 0,
+    "opens_per_hour": 0.0,
+    "uploaded_seconds": 0,
+    "uploaded_bytes": 0,
+    "uploaded_bytes_by_role": {},
+    "uploaded_seconds_per_hour": 0.0,
+    "projected_usd_per_hour": 0.0
+   },
+   "identity_scores": {
+    "owner": {
+     "n": 43,
+     "p5": 0.23522702546786298,
+     "p50": 0.47853092777788914,
+     "p95": 0.5787776540095846,
+     "min": 0.21747647195576744,
+     "max": 0.623274086514023
+    },
+    "owner_replay": {
+     "n": 43,
+     "p5": 0.20488926013123965,
+     "p50": 0.3681405884751133,
+     "p95": 0.5393140113069977,
+     "min": 0.021339275869275715,
+     "max": 0.5723776214708466
+    },
+    "second_person": {
+     "n": 71,
+     "p5": -0.04773446144563172,
+     "p50": 0.09248113891610418,
+     "p95": 0.24585910578600065,
+     "min": -0.08592872319437118,
+     "max": 0.27665789454933215
+    },
+    "tv": {
+     "n": 285,
+     "p5": -0.06922237073503718,
+     "p50": 0.00898306162160926,
+     "p95": 0.08772589955360516,
+     "min": -0.10678940425829012,
+     "max": 0.17777592627180647
+    },
+    "self_tts": {
+     "n": 29,
+     "p5": -0.024411236342765846,
+     "p50": 0.0663378238616532,
+     "p95": 0.12840666670881257,
+     "min": -0.044681037755714484,
+     "max": 0.1293158509642063
+    },
+    "stop": {
+     "n": 60,
+     "p5": -0.012054177420453845,
+     "p50": 0.060727245793235754,
+     "p95": 0.12754092063400246,
+     "min": -0.07431246978418021,
+     "max": 0.16194862770919666
+    },
+    "wake": {
+     "n": 24,
+     "p5": -0.00845853990399622,
+     "p50": 0.059374775183489784,
+     "p95": 0.09808715743500974,
+     "min": -0.01993411664876567,
+     "max": 0.1204279053777365
+    },
+    "slots": {
+     "n": 40,
+     "p5": -0.02743727168487112,
+     "p50": 0.03777205587716987,
+     "p95": 0.1432625002151174,
+     "min": -0.034625907110659576,
+     "max": 0.22943668908455708
+    },
+    "fan": {}
+   },
+   "hosted_bytes_non_owner": 0,
+   "wall_s": 21.48230004310608
+  },
+  {
+   "arm": "wake_phrase",
+   "owner": {
+    "role": "owner",
+    "trials": 36,
+    "accepted": 0,
+    "acceptance_rate": 0.0,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 6,
+      "accepted": 0,
+      "rate": 0.0
+     },
+     "1m/30deg": {
+      "n": 6,
+      "accepted": 0,
+      "rate": 0.0
+     },
+     "1m/60deg": {
+      "n": 6,
+      "accepted": 0,
+      "rate": 0.0
+     },
+     "3m/0deg": {
+      "n": 6,
+      "accepted": 0,
+      "rate": 0.0
+     },
+     "3m/30deg": {
+      "n": 6,
+      "accepted": 0,
+      "rate": 0.0
+     },
+     "3m/60deg": {
+      "n": 6,
+      "accepted": 0,
+      "rate": 0.0
+     }
+    },
+    "tape_seconds": 237.0,
+    "spans_considered": 43,
+    "spans_admitted": 0,
+    "opens_per_hour": 0.0,
+    "uploaded_seconds": 0,
+    "uploaded_bytes": 0,
+    "uploaded_bytes_by_role": {},
+    "uploaded_seconds_per_hour": 0.0,
+    "projected_usd_per_hour": 0.0
+   },
+   "owner_quality": {
+    "n": 0,
+    "first_word_lost": 0,
+    "first_word_loss_rate": NaN,
+    "truncation_ms_p50": NaN,
+    "truncation_ms_max": NaN,
+    "endpoint_s_p50": NaN,
+    "endpoint_s_p95": NaN,
+    "admission_latency_s_p50": NaN,
+    "admission_latency_s_p95": NaN
+   },
+   "wake_quality": {
+    "n": 6,
+    "first_word_lost": 0,
+    "first_word_loss_rate": 0.0,
+    "truncation_ms_p50": -493.2499999999962,
+    "truncation_ms_max": -446.87500000000034,
+    "endpoint_s_p50": 0.6227187500000042,
+    "endpoint_s_p95": 0.6780312499999965,
+    "admission_latency_s_p50": 1.0707500000000039,
+    "admission_latency_s_p95": 1.1090312499999997
+   },
+   "owner_replay": {
+    "role": "owner_replay",
+    "trials": 36,
+    "accepted": 0,
+    "acceptance_rate": 0.0,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 6,
+      "accepted": 0,
+      "rate": 0.0
+     },
+     "1m/30deg": {
+      "n": 6,
+      "accepted": 0,
+      "rate": 0.0
+     },
+     "1m/60deg": {
+      "n": 6,
+      "accepted": 0,
+      "rate": 0.0
+     },
+     "3m/0deg": {
+      "n": 6,
+      "accepted": 0,
+      "rate": 0.0
+     },
+     "3m/30deg": {
+      "n": 6,
+      "accepted": 0,
+      "rate": 0.0
+     },
+     "3m/60deg": {
+      "n": 6,
+      "accepted": 0,
+      "rate": 0.0
+     }
+    },
+    "tape_seconds": 237.0,
+    "spans_considered": 43,
+    "spans_admitted": 0,
+    "opens_per_hour": 0.0,
+    "uploaded_seconds": 0,
+    "uploaded_bytes": 0,
+    "uploaded_bytes_by_role": {},
+    "uploaded_seconds_per_hour": 0.0,
+    "projected_usd_per_hour": 0.0
+   },
+   "second_person": {
+    "role": "second_person",
+    "trials": 62,
+    "accepted": 0,
+    "acceptance_rate": 0.0,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 31,
+      "accepted": 0,
+      "rate": 0.0
+     },
+     "3m/30deg": {
+      "n": 31,
+      "accepted": 0,
+      "rate": 0.0
+     }
+    },
+    "tape_seconds": 406.0,
+    "spans_considered": 71,
+    "spans_admitted": 0,
+    "opens_per_hour": 0.0,
+    "uploaded_seconds": 0,
+    "uploaded_bytes": 0,
+    "uploaded_bytes_by_role": {},
+    "uploaded_seconds_per_hour": 0.0,
+    "projected_usd_per_hour": 0.0
+   },
+   "tv": {
+    "role": "tv",
+    "trials": 221,
+    "accepted": 0,
+    "acceptance_rate": 0.0,
+    "per_geometry": {
+     "3m/30deg": {
+      "n": 221,
+      "accepted": 0,
+      "rate": 0.0
+     }
+    },
+    "tape_seconds": 1267.64,
+    "spans_considered": 285,
+    "spans_admitted": 0,
+    "opens_per_hour": 0.0,
+    "uploaded_seconds": 0,
+    "uploaded_bytes": 0,
+    "uploaded_bytes_by_role": {},
+    "uploaded_seconds_per_hour": 0.0,
+    "projected_usd_per_hour": 0.0
+   },
+   "self_tts": {
+    "role": "self_tts",
+    "trials": 20,
+    "accepted": 0,
+    "acceptance_rate": 0.0,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 20,
+      "accepted": 0,
+      "rate": 0.0
+     }
+    },
+    "tape_seconds": 144.895,
+    "spans_considered": 29,
+    "spans_admitted": 0,
+    "opens_per_hour": 0.0,
+    "uploaded_seconds": 0,
+    "uploaded_bytes": 0,
+    "uploaded_bytes_by_role": {},
+    "uploaded_seconds_per_hour": 0.0,
+    "projected_usd_per_hour": 0.0
+   },
+   "self_tts_by_aec_level": {
+    "0dB": {
+     "trials": 5,
+     "admitted": 0,
+     "self_transcribed_motion_commands": 0
+    },
+    "-10dB": {
+     "trials": 5,
+     "admitted": 0,
+     "self_transcribed_motion_commands": 0
+    },
+    "-20dB": {
+     "trials": 5,
+     "admitted": 0,
+     "self_transcribed_motion_commands": 0
+    },
+    "-30dB": {
+     "trials": 5,
+     "admitted": 0,
+     "self_transcribed_motion_commands": 0
+    }
+   },
+   "fan": {
+    "role": "wind",
+    "trials": 1,
+    "accepted": 0,
+    "acceptance_rate": 0.0,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 1,
+      "accepted": 0,
+      "rate": 0.0
+     }
+    },
+    "tape_seconds": 125.0,
+    "spans_considered": 0,
+    "spans_admitted": 0,
+    "opens_per_hour": 0.0,
+    "uploaded_seconds": 0,
+    "uploaded_bytes": 0,
+    "uploaded_bytes_by_role": {},
+    "uploaded_seconds_per_hour": 0.0,
+    "projected_usd_per_hour": 0.0
+   },
+   "wake_turns": {
+    "role": "wake",
+    "trials": 24,
+    "accepted": 6,
+    "acceptance_rate": 0.25,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 12,
+      "accepted": 2,
+      "rate": 0.16666666666666666
+     },
+     "3m/30deg": {
+      "n": 12,
+      "accepted": 4,
+      "rate": 0.3333333333333333
+     }
+    },
+    "tape_seconds": 153.015625,
+    "spans_considered": 24,
+    "spans_admitted": 6,
+    "opens_per_hour": 141.16205452874505,
+    "uploaded_seconds": 13.464,
+    "uploaded_bytes": 430848,
+    "uploaded_bytes_by_role": {
+     "wake": 430848
+    },
+    "uploaded_seconds_per_hour": 316.76765036250384,
+    "projected_usd_per_hour": 0.11637399775349741
+   },
+   "identity_scores": {
+    "owner": {},
+    "owner_replay": {},
+    "second_person": {},
+    "tv": {},
+    "self_tts": {},
+    "stop": {},
+    "wake": {},
+    "slots": {},
+    "fan": {}
+   },
+   "hosted_bytes_non_owner": 0,
+   "wall_s": 222.07580280303955
+  },
+  {
+   "arm": "push_to_talk",
+   "owner": {
+    "role": "owner",
+    "trials": 36,
+    "accepted": 36,
+    "acceptance_rate": 1.0,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 6,
+      "accepted": 6,
+      "rate": 1.0
+     },
+     "1m/30deg": {
+      "n": 6,
+      "accepted": 6,
+      "rate": 1.0
+     },
+     "1m/60deg": {
+      "n": 6,
+      "accepted": 6,
+      "rate": 1.0
+     },
+     "3m/0deg": {
+      "n": 6,
+      "accepted": 6,
+      "rate": 1.0
+     },
+     "3m/30deg": {
+      "n": 6,
+      "accepted": 6,
+      "rate": 1.0
+     },
+     "3m/60deg": {
+      "n": 6,
+      "accepted": 6,
+      "rate": 1.0
+     }
+    },
+    "tape_seconds": 237.0,
+    "spans_considered": 43,
+    "spans_admitted": 43,
+    "opens_per_hour": 653.1645569620254,
+    "uploaded_seconds": 118.556,
+    "uploaded_bytes": 3793792,
+    "uploaded_bytes_by_role": {
+     "owner": 3793792
+    },
+    "uploaded_seconds_per_hour": 1800.8506329113925,
+    "projected_usd_per_hour": 0.5719837974683545
+   },
+   "owner_quality": {
+    "n": 36,
+    "first_word_lost": 1,
+    "first_word_loss_rate": 0.027777777777777776,
+    "truncation_ms_p50": -452.0000000000053,
+    "truncation_ms_max": 51.9999999999925,
+    "endpoint_s_p50": 0.5580000000000087,
+    "endpoint_s_p95": 0.6540000000000177,
+    "admission_latency_s_p50": 1.1120000000000019,
+    "admission_latency_s_p95": 1.4820000000000135
+   },
+   "wake_quality": {
+    "n": 24,
+    "first_word_lost": 0,
+    "first_word_loss_rate": 0.0,
+    "truncation_ms_p50": -485.06250000001216,
+    "truncation_ms_max": -446.87500000000034,
+    "endpoint_s_p50": 0.6226250000000064,
+    "endpoint_s_p95": 0.6871562500000039,
+    "admission_latency_s_p50": 1.0789374999999808,
+    "admission_latency_s_p95": 1.104337499999998
+   },
+   "owner_replay": {
+    "role": "owner_replay",
+    "trials": 36,
+    "accepted": 0,
+    "acceptance_rate": 0.0,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 6,
+      "accepted": 0,
+      "rate": 0.0
+     },
+     "1m/30deg": {
+      "n": 6,
+      "accepted": 0,
+      "rate": 0.0
+     },
+     "1m/60deg": {
+      "n": 6,
+      "accepted": 0,
+      "rate": 0.0
+     },
+     "3m/0deg": {
+      "n": 6,
+      "accepted": 0,
+      "rate": 0.0
+     },
+     "3m/30deg": {
+      "n": 6,
+      "accepted": 0,
+      "rate": 0.0
+     },
+     "3m/60deg": {
+      "n": 6,
+      "accepted": 0,
+      "rate": 0.0
+     }
+    },
+    "tape_seconds": 237.0,
+    "spans_considered": 43,
+    "spans_admitted": 0,
+    "opens_per_hour": 0.0,
+    "uploaded_seconds": 0,
+    "uploaded_bytes": 0,
+    "uploaded_bytes_by_role": {},
+    "uploaded_seconds_per_hour": 0.0,
+    "projected_usd_per_hour": 0.0
+   },
+   "second_person": {
+    "role": "second_person",
+    "trials": 62,
+    "accepted": 0,
+    "acceptance_rate": 0.0,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 31,
+      "accepted": 0,
+      "rate": 0.0
+     },
+     "3m/30deg": {
+      "n": 31,
+      "accepted": 0,
+      "rate": 0.0
+     }
+    },
+    "tape_seconds": 406.0,
+    "spans_considered": 71,
+    "spans_admitted": 0,
+    "opens_per_hour": 0.0,
+    "uploaded_seconds": 0,
+    "uploaded_bytes": 0,
+    "uploaded_bytes_by_role": {},
+    "uploaded_seconds_per_hour": 0.0,
+    "projected_usd_per_hour": 0.0
+   },
+   "tv": {
+    "role": "tv",
+    "trials": 221,
+    "accepted": 0,
+    "acceptance_rate": 0.0,
+    "per_geometry": {
+     "3m/30deg": {
+      "n": 221,
+      "accepted": 0,
+      "rate": 0.0
+     }
+    },
+    "tape_seconds": 1267.64,
+    "spans_considered": 285,
+    "spans_admitted": 0,
+    "opens_per_hour": 0.0,
+    "uploaded_seconds": 0,
+    "uploaded_bytes": 0,
+    "uploaded_bytes_by_role": {},
+    "uploaded_seconds_per_hour": 0.0,
+    "projected_usd_per_hour": 0.0
+   },
+   "self_tts": {
+    "role": "self_tts",
+    "trials": 20,
+    "accepted": 0,
+    "acceptance_rate": 0.0,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 20,
+      "accepted": 0,
+      "rate": 0.0
+     }
+    },
+    "tape_seconds": 144.895,
+    "spans_considered": 29,
+    "spans_admitted": 0,
+    "opens_per_hour": 0.0,
+    "uploaded_seconds": 0,
+    "uploaded_bytes": 0,
+    "uploaded_bytes_by_role": {},
+    "uploaded_seconds_per_hour": 0.0,
+    "projected_usd_per_hour": 0.0
+   },
+   "self_tts_by_aec_level": {
+    "0dB": {
+     "trials": 5,
+     "admitted": 0,
+     "self_transcribed_motion_commands": 0
+    },
+    "-10dB": {
+     "trials": 5,
+     "admitted": 0,
+     "self_transcribed_motion_commands": 0
+    },
+    "-20dB": {
+     "trials": 5,
+     "admitted": 0,
+     "self_transcribed_motion_commands": 0
+    },
+    "-30dB": {
+     "trials": 5,
+     "admitted": 0,
+     "self_transcribed_motion_commands": 0
+    }
+   },
+   "fan": {
+    "role": "wind",
+    "trials": 1,
+    "accepted": 0,
+    "acceptance_rate": 0.0,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 1,
+      "accepted": 0,
+      "rate": 0.0
+     }
+    },
+    "tape_seconds": 125.0,
+    "spans_considered": 0,
+    "spans_admitted": 0,
+    "opens_per_hour": 0.0,
+    "uploaded_seconds": 0,
+    "uploaded_bytes": 0,
+    "uploaded_bytes_by_role": {},
+    "uploaded_seconds_per_hour": 0.0,
+    "projected_usd_per_hour": 0.0
+   },
+   "wake_turns": {
+    "role": "wake",
+    "trials": 24,
+    "accepted": 24,
+    "acceptance_rate": 1.0,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 12,
+      "accepted": 12,
+      "rate": 1.0
+     },
+     "3m/30deg": {
+      "n": 12,
+      "accepted": 12,
+      "rate": 1.0
+     }
+    },
+    "tape_seconds": 153.015625,
+    "spans_considered": 24,
+    "spans_admitted": 24,
+    "opens_per_hour": 564.6482181149802,
+    "uploaded_seconds": 54.208,
+    "uploaded_bytes": 1734656,
+    "uploaded_bytes_by_role": {
+     "wake": 1734656
+    },
+    "uploaded_seconds_per_hour": 1275.352108649035,
+    "projected_usd_per_hour": 0.4663241417338916
+   },
+   "identity_scores": {
+    "owner": {},
+    "owner_replay": {},
+    "second_person": {},
+    "tv": {},
+    "self_tts": {},
+    "stop": {},
+    "wake": {},
+    "slots": {},
+    "fan": {}
+   },
+   "hosted_bytes_non_owner": 0,
+   "wall_s": 8.762500524520874
+  },
+  {
+   "arm": "restricted",
+   "owner": {
+    "role": "owner",
+    "trials": 36,
+    "accepted": 36,
+    "acceptance_rate": 1.0,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 6,
+      "accepted": 6,
+      "rate": 1.0
+     },
+     "1m/30deg": {
+      "n": 6,
+      "accepted": 6,
+      "rate": 1.0
+     },
+     "1m/60deg": {
+      "n": 6,
+      "accepted": 6,
+      "rate": 1.0
+     },
+     "3m/0deg": {
+      "n": 6,
+      "accepted": 6,
+      "rate": 1.0
+     },
+     "3m/30deg": {
+      "n": 6,
+      "accepted": 6,
+      "rate": 1.0
+     },
+     "3m/60deg": {
+      "n": 6,
+      "accepted": 6,
+      "rate": 1.0
+     }
+    },
+    "tape_seconds": 237.0,
+    "spans_considered": 43,
+    "spans_admitted": 43,
+    "opens_per_hour": 653.1645569620254,
+    "uploaded_seconds": 118.556,
+    "uploaded_bytes": 3793792,
+    "uploaded_bytes_by_role": {
+     "owner": 3793792
+    },
+    "uploaded_seconds_per_hour": 1800.8506329113925,
+    "projected_usd_per_hour": 0.5719837974683545
+   },
+   "owner_quality": {
+    "n": 36,
+    "first_word_lost": 1,
+    "first_word_loss_rate": 0.027777777777777776,
+    "truncation_ms_p50": -452.0000000000053,
+    "truncation_ms_max": 51.9999999999925,
+    "endpoint_s_p50": 0.5580000000000087,
+    "endpoint_s_p95": 0.6540000000000177,
+    "admission_latency_s_p50": 1.1120000000000019,
+    "admission_latency_s_p95": 1.4820000000000135
+   },
+   "wake_quality": {
+    "n": 24,
+    "first_word_lost": 0,
+    "first_word_loss_rate": 0.0,
+    "truncation_ms_p50": -485.06250000001216,
+    "truncation_ms_max": -446.87500000000034,
+    "endpoint_s_p50": 0.6226250000000064,
+    "endpoint_s_p95": 0.6871562500000039,
+    "admission_latency_s_p50": 1.0789374999999808,
+    "admission_latency_s_p95": 1.104337499999998
+   },
+   "owner_replay": {
+    "role": "owner_replay",
+    "trials": 36,
+    "accepted": 36,
+    "acceptance_rate": 1.0,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 6,
+      "accepted": 6,
+      "rate": 1.0
+     },
+     "1m/30deg": {
+      "n": 6,
+      "accepted": 6,
+      "rate": 1.0
+     },
+     "1m/60deg": {
+      "n": 6,
+      "accepted": 6,
+      "rate": 1.0
+     },
+     "3m/0deg": {
+      "n": 6,
+      "accepted": 6,
+      "rate": 1.0
+     },
+     "3m/30deg": {
+      "n": 6,
+      "accepted": 6,
+      "rate": 1.0
+     },
+     "3m/60deg": {
+      "n": 6,
+      "accepted": 6,
+      "rate": 1.0
+     }
+    },
+    "tape_seconds": 237.0,
+    "spans_considered": 43,
+    "spans_admitted": 43,
+    "opens_per_hour": 653.1645569620254,
+    "uploaded_seconds": 116.668,
+    "uploaded_bytes": 3733376,
+    "uploaded_bytes_by_role": {
+     "owner_replay": 3698944,
+     "ambient": 34432
+    },
+    "uploaded_seconds_per_hour": 1772.1721518987345,
+    "projected_usd_per_hour": 0.5691159493670886
+   },
+   "second_person": {
+    "role": "second_person",
+    "trials": 62,
+    "accepted": 62,
+    "acceptance_rate": 1.0,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 31,
+      "accepted": 31,
+      "rate": 1.0
+     },
+     "3m/30deg": {
+      "n": 31,
+      "accepted": 31,
+      "rate": 1.0
+     }
+    },
+    "tape_seconds": 406.0,
+    "spans_considered": 71,
+    "spans_admitted": 71,
+    "opens_per_hour": 629.5566502463054,
+    "uploaded_seconds": 196.908,
+    "uploaded_bytes": 6301056,
+    "uploaded_bytes_by_role": {
+     "second_person": 6301056
+    },
+    "uploaded_seconds_per_hour": 1745.982266009852,
+    "projected_usd_per_hour": 0.5523322167487684
+   },
+   "tv": {
+    "role": "tv",
+    "trials": 221,
+    "accepted": 0,
+    "acceptance_rate": 0.0,
+    "per_geometry": {
+     "3m/30deg": {
+      "n": 221,
+      "accepted": 0,
+      "rate": 0.0
+     }
+    },
+    "tape_seconds": 1267.64,
+    "spans_considered": 285,
+    "spans_admitted": 0,
+    "opens_per_hour": 0.0,
+    "uploaded_seconds": 0,
+    "uploaded_bytes": 0,
+    "uploaded_bytes_by_role": {},
+    "uploaded_seconds_per_hour": 0.0,
+    "projected_usd_per_hour": 0.0
+   },
+   "self_tts": {
+    "role": "self_tts",
+    "trials": 20,
+    "accepted": 0,
+    "acceptance_rate": 0.0,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 20,
+      "accepted": 0,
+      "rate": 0.0
+     }
+    },
+    "tape_seconds": 144.895,
+    "spans_considered": 29,
+    "spans_admitted": 0,
+    "opens_per_hour": 0.0,
+    "uploaded_seconds": 0,
+    "uploaded_bytes": 0,
+    "uploaded_bytes_by_role": {},
+    "uploaded_seconds_per_hour": 0.0,
+    "projected_usd_per_hour": 0.0
+   },
+   "self_tts_by_aec_level": {
+    "0dB": {
+     "trials": 5,
+     "admitted": 0,
+     "self_transcribed_motion_commands": 0
+    },
+    "-10dB": {
+     "trials": 5,
+     "admitted": 0,
+     "self_transcribed_motion_commands": 0
+    },
+    "-20dB": {
+     "trials": 5,
+     "admitted": 0,
+     "self_transcribed_motion_commands": 0
+    },
+    "-30dB": {
+     "trials": 5,
+     "admitted": 0,
+     "self_transcribed_motion_commands": 0
+    }
+   },
+   "fan": {
+    "role": "wind",
+    "trials": 1,
+    "accepted": 0,
+    "acceptance_rate": 0.0,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 1,
+      "accepted": 0,
+      "rate": 0.0
+     }
+    },
+    "tape_seconds": 125.0,
+    "spans_considered": 0,
+    "spans_admitted": 0,
+    "opens_per_hour": 0.0,
+    "uploaded_seconds": 0,
+    "uploaded_bytes": 0,
+    "uploaded_bytes_by_role": {},
+    "uploaded_seconds_per_hour": 0.0,
+    "projected_usd_per_hour": 0.0
+   },
+   "wake_turns": {
+    "role": "wake",
+    "trials": 24,
+    "accepted": 24,
+    "acceptance_rate": 1.0,
+    "per_geometry": {
+     "1m/0deg": {
+      "n": 12,
+      "accepted": 12,
+      "rate": 1.0
+     },
+     "3m/30deg": {
+      "n": 12,
+      "accepted": 12,
+      "rate": 1.0
+     }
+    },
+    "tape_seconds": 153.015625,
+    "spans_considered": 24,
+    "spans_admitted": 24,
+    "opens_per_hour": 564.6482181149802,
+    "uploaded_seconds": 54.208,
+    "uploaded_bytes": 1734656,
+    "uploaded_bytes_by_role": {
+     "wake": 1734656
+    },
+    "uploaded_seconds_per_hour": 1275.352108649035,
+    "projected_usd_per_hour": 0.4663241417338916
+   },
+   "identity_scores": {
+    "owner": {},
+    "owner_replay": {},
+    "second_person": {},
+    "tv": {},
+    "self_tts": {},
+    "stop": {},
+    "wake": {},
+    "slots": {},
+    "fan": {}
+   },
+   "hosted_bytes_non_owner": 6301056,
+   "wall_s": 8.654902219772339
+  }
+ ]
+}

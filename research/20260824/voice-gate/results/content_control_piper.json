@@ -1,0 +1,186 @@
+{
+ "tier": "replay",
+ "hosted_usd": 0.0,
+ "voice": "models/piper/voice.onnx (en_US-lessac-medium) \u2014 the CONTROL for espeak",
+ "critical_slot": {
+  "n": 20,
+  "hits": 17,
+  "accuracy": 0.85,
+  "by_kind": {
+   "name": {
+    "n": 4,
+    "hits": 3,
+    "accuracy": 0.75
+   },
+   "place": {
+    "n": 12,
+    "hits": 11,
+    "accuracy": 0.9166666666666666
+   },
+   "stop": {
+    "n": 4,
+    "hits": 3,
+    "accuracy": 0.75
+   }
+  },
+  "rows": [
+   {
+    "name": "pslot_0_1m/0deg",
+    "slot": "sidewalk",
+    "hit": 1,
+    "text": "Go to the sidewalk."
+   },
+   {
+    "name": "pslot_1_1m/0deg",
+    "slot": "lamppost",
+    "hit": 1,
+    "text": "Go to the lamppost."
+   },
+   {
+    "name": "pslot_2_1m/0deg",
+    "slot": "bench",
+    "hit": 1,
+    "text": "Walk to the bench."
+   },
+   {
+    "name": "pslot_3_1m/0deg",
+    "slot": "crosswalk",
+    "hit": 1,
+    "text": "Can you get to the crosswalk?"
+   },
+   {
+    "name": "pslot_4_1m/0deg",
+    "slot": "coffee shop",
+    "hit": 1,
+    "text": "Head over to the coffee shop."
+   },
+   {
+    "name": "pslot_5_1m/0deg",
+    "slot": "kitchen",
+    "hit": 1,
+    "text": "But wait in the kitchen."
+   },
+   {
+    "name": "pslot_6_1m/0deg",
+    "slot": "parcel",
+    "hit": 1,
+    "text": "Parcel, come here."
+   },
+   {
+    "name": "pslot_7_1m/0deg",
+    "slot": "parcel",
+    "hit": 1,
+    "text": "Good boy, Parcel."
+   },
+   {
+    "name": "pslot_8_1m/0deg",
+    "slot": "stop",
+    "hit": 1,
+    "text": "Stop right there."
+   },
+   {
+    "name": "pslot_9_1m/0deg",
+    "slot": "stop",
+    "hit": 1,
+    "text": "Stop and wait for me."
+   },
+   {
+    "name": "pslot_0_3m/30deg",
+    "slot": "sidewalk",
+    "hit": 1,
+    "text": "Go to the sidewalk."
+   },
+   {
+    "name": "pslot_1_3m/30deg",
+    "slot": "lamppost",
+    "hit": 1,
+    "text": "Go to the lamppost."
+   },
+   {
+    "name": "pslot_2_3m/30deg",
+    "slot": "bench",
+    "hit": 1,
+    "text": "Walk to the bench."
+   },
+   {
+    "name": "pslot_3_3m/30deg",
+    "slot": "crosswalk",
+    "hit": 0,
+    "text": "Can you get to the crosewalk?"
+   },
+   {
+    "name": "pslot_4_3m/30deg",
+    "slot": "coffee shop",
+    "hit": 1,
+    "text": "Head over to the coffee shop."
+   },
+   {
+    "name": "pslot_5_3m/30deg",
+    "slot": "kitchen",
+    "hit": 1,
+    "text": "Go wait in the kitchen."
+   },
+   {
+    "name": "pslot_6_3m/30deg",
+    "slot": "parcel",
+    "hit": 0,
+    "text": "\"Pursal, come here.\""
+   },
+   {
+    "name": "pslot_7_3m/30deg",
+    "slot": "parcel",
+    "hit": 1,
+    "text": "Good boy, parcel."
+   },
+   {
+    "name": "pslot_8_3m/30deg",
+    "slot": "stop",
+    "hit": 1,
+    "text": "Stop right there."
+   },
+   {
+    "name": "pslot_9_3m/30deg",
+    "slot": "stop",
+    "hit": 0,
+    "text": "Dump and wait for me."
+   }
+  ]
+ },
+ "wake_phrase": {
+  "n": 6,
+  "hits": 6,
+  "detection_rate": 1.0,
+  "rows": [
+   {
+    "name": "pwake_0_1m/0deg",
+    "hit": 1,
+    "text": "Hey, parcel."
+   },
+   {
+    "name": "pwake_1_1m/0deg",
+    "hit": 1,
+    "text": "Hey, Parcel, come here."
+   },
+   {
+    "name": "pwake_2_1m/0deg",
+    "hit": 1,
+    "text": "Hey, Parcel, what is that?"
+   },
+   {
+    "name": "pwake_0_3m/30deg",
+    "hit": 1,
+    "text": "Hey, parcel."
+   },
+   {
+    "name": "pwake_1_3m/30deg",
+    "hit": 1,
+    "text": "Hey, parcel come here"
+   },
+   {
+    "name": "pwake_2_3m/30deg",
+    "hit": 1,
+    "text": "Hey, Parcel, what is that?"
+   }
+  ]
+ }
+}

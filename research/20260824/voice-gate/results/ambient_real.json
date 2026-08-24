@@ -1,0 +1,40 @@
+{
+ "tier": "desktop-real-sensor",
+ "host": "jaewoo-jang-parcel",
+ "device": "reSpeaker XVF3800 4-Mic Array: USB Audio (hw:1,0)",
+ "channel": 1,
+ "channel_note": "ch0 = Conference beam, ch1 = ASR beam (xvf3800_probe.py)",
+ "hosted_usd": 0.0,
+ "tape_seconds": 2978.432,
+ "tape_hours": 0.8273422222222222,
+ "xruns": null,
+ "room_floor_dbfs_rms": -53.45367648773251,
+ "room_frame_dbfs_p5": -55.91908053351596,
+ "room_frame_dbfs_p50": -54.145533311721984,
+ "room_frame_dbfs_p99": -49.313392821243184,
+ "room_peak_dbfs": -36.32959861190474,
+ "vad_only": {
+  "spans": 0,
+  "opens_per_hour": 0.0,
+  "opens_per_24h": 0.0,
+  "upper_bound_per_24h": 87.02565645279127,
+  "uploaded_seconds": 0.0,
+  "span_open_times_s": []
+ },
+ "owner_id": {
+  "spans_considered": 0,
+  "admitted": 0,
+  "admitted_per_24h": 0.0,
+  "upper_bound_per_24h": 87.02565645279127,
+  "uploaded_seconds": 0.0,
+  "max_score": null
+ },
+ "stop_local": {
+  "asr_checks": 0,
+  "false_stops": 0,
+  "false_stops_per_24h": 0.0,
+  "upper_bound_per_24h": 87.02565645279127,
+  "texts": []
+ },
+ "rule_of_three_note": "with zero events the 95 % upper bound on the rate is 3/T; proving <= 1 per 24 h needs about 72 h of tape with no event"
+}

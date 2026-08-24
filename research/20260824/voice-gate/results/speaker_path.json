@@ -1,0 +1,399 @@
+{
+ "tier": "desktop-real-sensor",
+ "host": "jaewoo-jang-parcel",
+ "device_index": 4,
+ "question": "does the XVF3800 DAC -> JST amp -> CQRobot speaker path emit sound?",
+ "verdict": "UNDETERMINED_ON_THIS_HOST",
+ "why": "the array's AEC references its own DAC and its USB capture exposes only processed beams, so 'no speaker attached' and 'a working canceller' produce the same recording; this host has no independent microphone and no other loudspeaker to cross-check with",
+ "frames_out_nonzero": true,
+ "frames_out_note": "HWMIC_STATUS.md recorded frames_out 0 to date; this run is the first audio ever pushed to this board's playback endpoint",
+ "output_inventory": {
+  "pipewire_devices": [
+   {
+    "id": 51,
+    "name": "alsa_card.pci-0000_03_00.7",
+    "description": "HD-Audio Generic",
+    "active_profile": [
+     "off"
+    ],
+    "profiles": [
+     {
+      "name": "off",
+      "description": "Off",
+      "available": "yes"
+     },
+     {
+      "name": "output:analog-stereo+input:analog-stereo",
+      "description": "Analog Stereo Duplex",
+      "available": "no"
+     },
+     {
+      "name": "output:analog-stereo",
+      "description": "Analog Stereo Output",
+      "available": "no"
+     },
+     {
+      "name": "input:analog-stereo",
+      "description": "Analog Stereo Input",
+      "available": "no"
+     },
+     {
+      "name": "pro-audio",
+      "description": "Pro Audio",
+      "available": "unknown"
+     }
+    ]
+   },
+   {
+    "id": 52,
+    "name": "alsa_card.pci-0000_e1_00.1",
+    "description": "AD102 High Definition Audio Controller",
+    "active_profile": [
+     "off"
+    ],
+    "profiles": [
+     {
+      "name": "off",
+      "description": "Off",
+      "available": "yes"
+     },
+     {
+      "name": "output:hdmi-stereo",
+      "description": "Digital Stereo (HDMI) Output",
+      "available": "no"
+     },
+     {
+      "name": "output:hdmi-stereo-extra1",
+      "description": "Digital Stereo (HDMI 2) Output",
+      "available": "no"
+     },
+     {
+      "name": "output:hdmi-stereo-extra2",
+      "description": "Digital Stereo (HDMI 3) Output",
+      "available": "no"
+     },
+     {
+      "name": "output:hdmi-stereo-extra3",
+      "description": "Digital Stereo (HDMI 4) Output",
+      "available": "no"
+     },
+     {
+      "name": "output:hdmi-surround",
+      "description": "Digital Surround 5.1 (HDMI) Output",
+      "available": "no"
+     },
+     {
+      "name": "output:hdmi-surround71",
+      "description": "Digital Surround 7.1 (HDMI) Output",
+      "available": "no"
+     },
+     {
+      "name": "output:hdmi-surround-extra1",
+      "description": "Digital Surround 5.1 (HDMI 2) Output",
+      "available": "no"
+     },
+     {
+      "name": "output:hdmi-surround71-extra1",
+      "description": "Digital Surround 7.1 (HDMI 2) Output",
+      "available": "no"
+     },
+     {
+      "name": "output:hdmi-surround-extra2",
+      "description": "Digital Surround 5.1 (HDMI 3) Output",
+      "available": "no"
+     },
+     {
+      "name": "output:hdmi-surround71-extra2",
+      "description": "Digital Surround 7.1 (HDMI 3) Output",
+      "available": "no"
+     },
+     {
+      "name": "output:hdmi-surround-extra3",
+      "description": "Digital Surround 5.1 (HDMI 4) Output",
+      "available": "no"
+     },
+     {
+      "name": "output:hdmi-surround71-extra3",
+      "description": "Digital Surround 7.1 (HDMI 4) Output",
+      "available": "no"
+     },
+     {
+      "name": "pro-audio",
+      "description": "Pro Audio",
+      "available": "unknown"
+     }
+    ]
+   },
+   {
+    "id": 53,
+    "name": "alsa_card.usb-Seeed_Studio_reSpeaker_XVF3800_4-Mic_Array_114993701262100819-00",
+    "description": "reSpeaker XVF3800 4-Mic Array",
+    "active_profile": [
+     "output:analog-stereo+input:analog-stereo"
+    ],
+    "profiles": [
+     {
+      "name": "off",
+      "description": "Off",
+      "available": "yes"
+     },
+     {
+      "name": "output:analog-stereo+input:analog-stereo",
+      "description": "Analog Stereo Duplex",
+      "available": "unknown"
+     },
+     {
+      "name": "output:analog-stereo+input:iec958-stereo",
+      "description": "Analog Stereo Output + Digital Stereo (IEC958) Input",
+      "available": "unknown"
+     },
+     {
+      "name": "output:analog-stereo",
+      "description": "Analog Stereo Output",
+      "available": "unknown"
+     },
+     {
+      "name": "output:iec958-stereo+input:analog-stereo",
+      "description": "Digital Stereo (IEC958) Output + Analog Stereo Input",
+      "available": "unknown"
+     },
+     {
+      "name": "output:iec958-stereo+input:iec958-stereo",
+      "description": "Digital Stereo Duplex (IEC958)",
+      "available": "unknown"
+     },
+     {
+      "name": "output:iec958-stereo",
+      "description": "Digital Stereo (IEC958) Output",
+      "available": "unknown"
+     },
+     {
+      "name": "input:analog-stereo",
+      "description": "Analog Stereo Input",
+      "available": "unknown"
+     },
+     {
+      "name": "input:iec958-stereo",
+      "description": "Digital Stereo (IEC958) Input",
+      "available": "unknown"
+     },
+     {
+      "name": "pro-audio",
+      "description": "Pro Audio",
+      "available": "yes"
+     }
+    ]
+   }
+  ],
+  "bluetooth_devices": ""
+ },
+ "burst_probe": {
+  "bursts": 5,
+  "burst_s": 0.15,
+  "amplitude": 0.95,
+  "levels": {
+   "ch0": [
+    {
+     "burst_at_s": 2.0,
+     "floor_dbfs": -44.378960132092104,
+     "peak_dbfs": -45.02431266916133,
+     "rise_db": -0.645352537069229
+    },
+    {
+     "burst_at_s": 4.0,
+     "floor_dbfs": -47.75029836941845,
+     "peak_dbfs": -43.57576226305043,
+     "rise_db": 4.1745361063680235
+    },
+    {
+     "burst_at_s": 6.0,
+     "floor_dbfs": -45.519868758814624,
+     "peak_dbfs": -43.71440774812507,
+     "rise_db": 1.8054610106895552
+    },
+    {
+     "burst_at_s": 8.0,
+     "floor_dbfs": -48.0088766092207,
+     "peak_dbfs": -44.30838901763196,
+     "rise_db": 3.7004875915887396
+    },
+    {
+     "burst_at_s": 10.0,
+     "floor_dbfs": -43.934190818535654,
+     "peak_dbfs": -45.32678941698898,
+     "rise_db": -1.3925985984533256
+    }
+   ],
+   "ch1": [
+    {
+     "burst_at_s": 2.0,
+     "floor_dbfs": -54.018970450264845,
+     "peak_dbfs": -52.2499990254704,
+     "rise_db": 1.7689714247944437
+    },
+    {
+     "burst_at_s": 4.0,
+     "floor_dbfs": -55.33480203513702,
+     "peak_dbfs": -52.520809528646744,
+     "rise_db": 2.8139925064902727
+    },
+    {
+     "burst_at_s": 6.0,
+     "floor_dbfs": -54.198835008577646,
+     "peak_dbfs": -53.59200105151377,
+     "rise_db": 0.606833957063877
+    },
+    {
+     "burst_at_s": 8.0,
+     "floor_dbfs": -55.6074354942266,
+     "peak_dbfs": -52.92170332145895,
+     "rise_db": 2.6857321727676506
+    },
+    {
+     "burst_at_s": 10.0,
+     "floor_dbfs": -53.67119947269307,
+     "peak_dbfs": -53.06888857299345,
+     "rise_db": 0.6023108996996172
+    }
+   ]
+  }
+ },
+ "robot_utterances": [
+  {
+   "wav": "/tmp/claude-1000/-home-jaewoo-jang-Desktop-Projects-Parcel/0b505906-665b-45ea-a2b7-686b3aecb89d/scratchpad/voice-gate/stimuli/self_tts_0.wav",
+   "seconds": 3.347875,
+   "levels": {
+    "ch0": [
+     {
+      "burst_at_s": 2.0,
+      "floor_dbfs": -45.737557304570394,
+      "peak_dbfs": -41.64214757496686,
+      "rise_db": 4.0954097296035314
+     }
+    ],
+    "ch1": [
+     {
+      "burst_at_s": 2.0,
+      "floor_dbfs": -55.32388074527471,
+      "peak_dbfs": -48.794166336572935,
+      "rise_db": 6.529714408701771
+     }
+    ]
+   },
+   "vad_spans": 0,
+   "vad_uploaded_seconds": 0.0,
+   "transcript": "(wind blowing)",
+   "capture_rms_dbfs": -54.253665947913284
+  },
+  {
+   "wav": "/tmp/claude-1000/-home-jaewoo-jang-Desktop-Projects-Parcel/0b505906-665b-45ea-a2b7-686b3aecb89d/scratchpad/voice-gate/stimuli/self_tts_1.wav",
+   "seconds": 3.0808125,
+   "levels": {
+    "ch0": [
+     {
+      "burst_at_s": 2.0,
+      "floor_dbfs": -47.94539056314677,
+      "peak_dbfs": -37.991635468407715,
+      "rise_db": 9.953755094739059
+     }
+    ],
+    "ch1": [
+     {
+      "burst_at_s": 2.0,
+      "floor_dbfs": -56.18490119411481,
+      "peak_dbfs": -49.59274190389506,
+      "rise_db": 6.5921592902197474
+     }
+    ]
+   },
+   "vad_spans": 0,
+   "vad_uploaded_seconds": 0.0,
+   "transcript": "[BLANK_AUDIO]",
+   "capture_rms_dbfs": -54.094015752765124
+  },
+  {
+   "wav": "/tmp/claude-1000/-home-jaewoo-jang-Desktop-Projects-Parcel/0b505906-665b-45ea-a2b7-686b3aecb89d/scratchpad/voice-gate/stimuli/self_tts_2.wav",
+   "seconds": 2.372625,
+   "levels": {
+    "ch0": [
+     {
+      "burst_at_s": 2.0,
+      "floor_dbfs": -42.447933676539115,
+      "peak_dbfs": -35.77455159390277,
+      "rise_db": 6.673382082636344
+     }
+    ],
+    "ch1": [
+     {
+      "burst_at_s": 2.0,
+      "floor_dbfs": -52.449402625842495,
+      "peak_dbfs": -46.73139466231555,
+      "rise_db": 5.718007963526944
+     }
+    ]
+   },
+   "vad_spans": 0,
+   "vad_uploaded_seconds": 0.0,
+   "transcript": "[BLANK_AUDIO]",
+   "capture_rms_dbfs": -51.57574629242251
+  },
+  {
+   "wav": "/tmp/claude-1000/-home-jaewoo-jang-Desktop-Projects-Parcel/0b505906-665b-45ea-a2b7-686b3aecb89d/scratchpad/voice-gate/stimuli/self_tts_3.wav",
+   "seconds": 2.929875,
+   "levels": {
+    "ch0": [
+     {
+      "burst_at_s": 2.0,
+      "floor_dbfs": -43.69300165960243,
+      "peak_dbfs": -40.1529607584346,
+      "rise_db": 3.5400409011678278
+     }
+    ],
+    "ch1": [
+     {
+      "burst_at_s": 2.0,
+      "floor_dbfs": -52.00667247584869,
+      "peak_dbfs": -46.882295144728054,
+      "rise_db": 5.124377331120634
+     }
+    ]
+   },
+   "vad_spans": 0,
+   "vad_uploaded_seconds": 0.0,
+   "transcript": "[BLANK_AUDIO]",
+   "capture_rms_dbfs": -51.4357355606385
+  },
+  {
+   "wav": "/tmp/claude-1000/-home-jaewoo-jang-Desktop-Projects-Parcel/0b505906-665b-45ea-a2b7-686b3aecb89d/scratchpad/voice-gate/stimuli/self_tts_4.wav",
+   "seconds": 3.7425625,
+   "levels": {
+    "ch0": [
+     {
+      "burst_at_s": 2.0,
+      "floor_dbfs": -43.452064910901235,
+      "peak_dbfs": -33.64225989017336,
+      "rise_db": 9.809805020727879
+     }
+    ],
+    "ch1": [
+     {
+      "burst_at_s": 2.0,
+      "floor_dbfs": -52.036832583818814,
+      "peak_dbfs": -40.66454696277242,
+      "rise_db": 11.372285621046395
+     }
+    ]
+   },
+   "vad_spans": 0,
+   "vad_uploaded_seconds": 0.0,
+   "transcript": "[ Silence ]",
+   "capture_rms_dbfs": -51.482166067153386
+  }
+ ],
+ "self_speech_row": {
+  "question": "while the array's own DAC played the robot's voice at -0.9 dBFS, did the ASR beam carry enough of it to open a VAD gate or be transcribed?",
+  "vad_spans_total": 0,
+  "transcribed_words_total": 8,
+  "reading": "zero of both is consistent with an unwired speaker AND with an on-chip AEC that suppresses self-speech below the ASR floor; it does not distinguish them, and it is not an AEC attenuation figure"
+ }
+}

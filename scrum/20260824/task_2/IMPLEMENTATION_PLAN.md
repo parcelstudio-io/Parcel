@@ -33,12 +33,22 @@ residual risk (owner: Jae).
    A2's corpus re-run by the executor's own rule. First measured
    `localization_jump_m` = 0.029 m max. Verification: mine, when the register
    lands; second lens: parcel-6c on refuter 4b honesty.
-2. **VOICE-GATE v2** (next dispatch, after the NAV-CORE register) — absorbs
-   Codex's pre-cloud-topology arms and bars: owner committed-turn recall
-   ≥ 95 %, local STOP recall ≥ 99 %, **no hosted bytes** for TV/self-TTS/
-   non-owner input, ≤ 1 false hosted opening/24 h, no self-transcribed
-   motion, projected p95 spend under the internal cap; failure selects
-   push-to-talk. Plus the A6/A9 rows (XVF3800→CQRobot path, replay honesty).
+2. **VOICE-GATE v2 — DECIDED: push-to-talk for M1** (VERDICT in its
+   folder). The pass rule was unsatisfiable on this host (no loudspeaker
+   but the array's own DAC ⇒ AEC/barge-in unmeasurable; every arm row is
+   honest `replay` tier) and PTT also measured best: owner recall 1.000,
+   0 non-owner hosted bytes, 0 false openings/day, $0.15/day, 0 % replay.
+   Consequences folded into the lane: **A6 STOP-LOCAL** ships
+   name-prefixed unless the owner rules otherwise (bare "stop" spotter =
+   ≈864 false/24 h on TV; name-prefixed = 0 on the same tape; a
+   context-scoped hybrid — bare "stop" live while the dog speaks/moves on
+   an owner mission — is proposed, unmeasured); **A7** gains: identity
+   threshold recalibrated on the deployment channel (0.55 ships 0.167
+   owner recall; ~0.352 gives 0.95 recall at 0.000 impostor FA, EER
+   0.000), channel-matched enrollment, constrained/boosted ASR decoding
+   over the known vocabulary (base.en misses names: slots 0.850), replay
+   documented as accepted indoor risk (52.8 % at the usable threshold).
+   Ambient upgrade = box-day mounted-acoustics decision.
 3. **CONNECTED-PLANNER probe** (conditional per Codex/HLD §15: only if
    compound physical commands are binding for M1 — OWNER INPUT WANTED;
    otherwise deferred and one-step clarification ships).

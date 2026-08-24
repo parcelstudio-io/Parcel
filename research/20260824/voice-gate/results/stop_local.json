@@ -1,0 +1,127 @@
+{
+ "tier": "replay",
+ "matcher": "harness STOP-LOCAL: Silero v6 + resident whisper base.en whole-word spot",
+ "product_status": "NOT in the product: realtime/lane.py:47-53 transcribes a spoken stop in the cloud. This is the A6/STOP-LOCAL reference implementation the build gate is measured against.",
+ "config": {
+  "vad_threshold": 0.5,
+  "open_frames": 2,
+  "window_s": 1.0,
+  "cadence_s": 0.3,
+  "speech_hold_s": 0.6
+ },
+ "hosted_usd": 0.0,
+ "stop_tape_seconds": 377.922,
+ "trials": 64,
+ "latched": 56,
+ "recall": 0.875,
+ "missed": [
+  "stop_en_f4_1_1m/0deg",
+  "stop_en_m3_0_3m/30deg",
+  "stop_en_m3_1_3m/30deg",
+  "stop_en_m3_2_3m/30deg",
+  "stop_en_f4_0_3m/30deg",
+  "stop_en_m3_1_3m/60deg",
+  "stop_en_us_m7_2_3m/60deg",
+  "stop_en_m3_1_3m/0deg"
+ ],
+ "latency_s_p50": 0.3491659915013372,
+ "latency_s_p95": 0.9352375220095306,
+ "latency_s_max": 0.9793630879905493,
+ "latency_s_over_1s": 0,
+ "latency_s_all": [
+  0.2887,
+  0.2961,
+  0.4222,
+  0.0,
+  0.9286,
+  0.6985,
+  0.0,
+  0.6027,
+  0.6019,
+  0.6598,
+  0.0687,
+  0.6208,
+  0.6049,
+  0.3074,
+  0.0,
+  0.0,
+  0.6239,
+  0.977,
+  0.0,
+  0.2262,
+  0.6012,
+  0.6768,
+  0.0,
+  0.6481,
+  0.2817,
+  0.9552,
+  0.0,
+  0.3375,
+  0.6641,
+  0.0,
+  0.9794,
+  0.6542,
+  0.6982,
+  0.0,
+  0.2139,
+  0.2269,
+  0.0,
+  0.6465,
+  0.6295,
+  0.3608,
+  0.0,
+  0.3133,
+  0.6602,
+  0.0,
+  0.6528,
+  0.6525,
+  0.5602,
+  0.0,
+  0.2065,
+  0.2096,
+  0.5385,
+  0.0,
+  0.3245,
+  0.66,
+  0.642,
+  0.0
+ ],
+ "asr_calls_stop_tape": 237,
+ "asr_skipped_busy": 261,
+ "asr_mean_latency_s": 0.35065911807993455,
+ "stop_tape_wall_s": 84.40472173690796,
+ "tv_tape": {
+  "seconds": 600.0,
+  "false_stops": 6,
+  "false_stops_substring_only": 2,
+  "substring_texts": [
+   "I'm so glad we stopped at the meeting.",
+   "I don't know why you were stopping to tell me"
+  ],
+  "false_stops_per_24h": 864.0,
+  "texts": [
+   "stop talking to me",
+   "I'm not going to stop the tattoo.",
+   "just stop talking, we didn't just",
+   "stop happening.",
+   "stop",
+   "stop at the intersection."
+  ],
+  "checks": 1234,
+  "wall_s": 446.37126541137695
+ },
+ "geometry_breakdown": {
+  "1m/0deg": {
+   "n": 16
+  },
+  "3m/0deg": {
+   "n": 16
+  },
+  "3m/30deg": {
+   "n": 16
+  },
+  "3m/60deg": {
+   "n": 16
+  }
+ }
+}

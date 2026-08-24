@@ -1,0 +1,75 @@
+{
+ "tier": "replay",
+ "host": "jaewoo-jang-parcel",
+ "owner_proxy": "conv_a",
+ "owner_proxy_source": "models/csm-1b/prompts/conversational_a.wav (real human speech)",
+ "why_a_proxy": "the owner is not present and no recording of the owner's voice exists on this disk: evals/20260820/voice_corpus_v1 keeps only its six espeak impostors and recordings/ holds no owner.wav",
+ "gallery_path": "/tmp/claude-1000/-home-jaewoo-jang-Desktop-Projects-Parcel/0b505906-665b-45ea-a2b7-686b3aecb89d/scratchpad/voice-gate/gallery/research_owner_voice.json",
+ "gallery_utterances": 6,
+ "enroll_stdout": "enrolled 6 utterance(s) with nemo_en_titanet_small.onnx\n  +0.816  enroll_0.wav\n  +0.641  enroll_1.wav\n  +0.827  enroll_2.wav\n  +0.720  enroll_3.wav\n  +0.700  enroll_4.wav\n  +0.745  enroll_5.wav\nwrote /tmp/claude-1000/-home-jaewoo-jang-Desktop-Projects-Parcel/0b505906-665b-45ea-a2b7-686b3aecb89d/scratchpad/voice-gate/gallery/research_owner_voice.json (mode 0600)\nspeaker verification will arm on the next lane construction; the emergency latch is NOT identity-gated and never will be.\n",
+ "product_threshold": 0.55,
+ "segments_per_voice": {
+  "conv_a": 15,
+  "conv_b": 15,
+  "read_a": 9,
+  "read_b": 6,
+  "read_c": 4,
+  "read_d": 5
+ },
+ "cosine_matrix": {
+  "conv_a": {
+   "conv_a": 0.42705063514741276,
+   "conv_b": 0.010214385959507516,
+   "read_a": 0.12947927150350633,
+   "read_b": 0.1586547084217904,
+   "read_c": 0.10923542506643806,
+   "read_d": 0.09315628624544682
+  },
+  "conv_b": {
+   "conv_a": 0.010214385959507516,
+   "conv_b": 0.433006423277965,
+   "read_a": 0.03953370458108918,
+   "read_b": 0.012640209789379325,
+   "read_c": 0.021515161624796518,
+   "read_d": -0.00891003424011094
+  },
+  "read_a": {
+   "conv_a": 0.12947927150350635,
+   "conv_b": 0.03953370458108918,
+   "read_a": 0.6708439803733038,
+   "read_b": 0.3391603440242352,
+   "read_c": 0.310050567629913,
+   "read_d": 0.4500003996937845
+  },
+  "read_b": {
+   "conv_a": 0.1586547084217904,
+   "conv_b": 0.012640209789379327,
+   "read_a": 0.33916034402423517,
+   "read_b": 0.6824001354480684,
+   "read_c": 0.3842458478862072,
+   "read_d": 0.22347959583838464
+  },
+  "read_c": {
+   "conv_a": 0.10923542506643807,
+   "conv_b": 0.02151516162479653,
+   "read_a": 0.31005056762991307,
+   "read_b": 0.38424584788620725,
+   "read_c": 0.6143291931833442,
+   "read_d": 0.2750349671496383
+  },
+  "read_d": {
+   "conv_a": 0.0931562862454468,
+   "conv_b": -0.00891003424011094,
+   "read_a": 0.4500003996937845,
+   "read_b": 0.22347959583838464,
+   "read_c": 0.2750349671496383,
+   "read_d": 0.6771727851731828
+  }
+ },
+ "owner_same_voice_mean_cosine": 0.42705063514741276,
+ "owner_cross_voice_mean_cosine": 0.10014801543933785,
+ "owner_cross_voice_max_cosine": 0.1586547084217904,
+ "room_floor_dbfs": -52.336529731516144,
+ "python": "3.14.4",
+ "git_head": "9d6b37a"
+}

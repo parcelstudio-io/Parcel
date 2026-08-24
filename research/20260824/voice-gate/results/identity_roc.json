@@ -1,0 +1,315 @@
+{
+ "tier": "replay",
+ "hosted_usd": 0.0,
+ "product_threshold": 0.55,
+ "windows_s": [
+  0.5,
+  1.0,
+  1.5,
+  2.0,
+  2.5
+ ],
+ "geometries": [
+  "1m/0deg",
+  "1m/30deg",
+  "1m/60deg",
+  "3m/0deg",
+  "3m/30deg",
+  "3m/60deg"
+ ],
+ "room_floor_dbfs": -52.344967211179906,
+ "galleries": {
+  "clean": {
+   "profile_path": "/tmp/claude-1000/-home-jaewoo-jang-Desktop-Projects-Parcel/0b505906-665b-45ea-a2b7-686b3aecb89d/scratchpad/voice-gate/gallery/research_owner_voice.json",
+   "enroll_stdout": "enrolled 6 utterance(s) with nemo_en_titanet_small.onnx\n  +0.816  enroll_0.wav\n  +0.641  enroll_1.wav\n  +0.827  enroll_2.wav\n  +0.720  enroll_3.wav\n  +0.700  enroll_4.wav\n  +0.745  enroll_5.wav\nwrote /tmp/claude-1000/-home-jaewoo-jang-Desktop-Projects-Parcel/0b505906-665b-45ea-a2b7-686b3aecb89d/scratchpad/voice-gate/gallery/research_owner_voice.json (mode 0600)\nspeaker verification will arm on the next lane construction; the emergency latch is NOT identity-gated and never will be.\n",
+   "by_decision_window": {
+    "0.5s": {
+     "n_owner": 36,
+     "n_impostor": 31,
+     "at_product_threshold": {
+      "threshold": 0.55,
+      "owner_recall": 0.0,
+      "impostor_false_accept": 0.0
+     },
+     "eer_threshold": 0.14059053642088679,
+     "eer": 0.13396057347670248,
+     "threshold_for_recall_0p95": 0.03912518346218566,
+     "impostor_false_accept_at_that_threshold": 0.45161290322580644,
+     "owner_p5": 0.04520638079841538,
+     "owner_p50": 0.2660388332345002,
+     "impostor_p95": 0.2044919449496519,
+     "impostor_max": 0.2426716923834082,
+     "replay_acceptance_at_product_threshold": 0.0,
+     "replay_acceptance_at_calibrated_threshold": 0.9444444444444444,
+     "replay_p50": 0.1942511967226103,
+     "owner_recall_by_cell": {
+      "1m/0deg": 0.0,
+      "1m/30deg": 0.0,
+      "1m/60deg": 0.0,
+      "3m/0deg": 0.0,
+      "3m/30deg": 0.0,
+      "3m/60deg": 0.0
+     }
+    },
+    "1s": {
+     "n_owner": 36,
+     "n_impostor": 31,
+     "at_product_threshold": {
+      "threshold": 0.55,
+      "owner_recall": 0.0,
+      "impostor_false_accept": 0.0
+     },
+     "eer_threshold": 0.20715010814665327,
+     "eer": 0.09005376344086023,
+     "threshold_for_recall_0p95": 0.18045247445613558,
+     "impostor_false_accept_at_that_threshold": 0.12903225806451613,
+     "owner_p5": 0.19179988080537952,
+     "owner_p50": 0.29693093999645315,
+     "impostor_p95": 0.21942554141927934,
+     "impostor_max": 0.25712511227818824,
+     "replay_acceptance_at_product_threshold": 0.0,
+     "replay_acceptance_at_calibrated_threshold": 0.6666666666666666,
+     "replay_p50": 0.2033701237791668,
+     "owner_recall_by_cell": {
+      "1m/0deg": 0.0,
+      "1m/30deg": 0.0,
+      "1m/60deg": 0.0,
+      "3m/0deg": 0.0,
+      "3m/30deg": 0.0,
+      "3m/60deg": 0.0
+     }
+    },
+    "1.5s": {
+     "n_owner": 36,
+     "n_impostor": 31,
+     "at_product_threshold": {
+      "threshold": 0.55,
+      "owner_recall": 0.0,
+      "impostor_false_accept": 0.0
+     },
+     "eer_threshold": 0.21605927447609757,
+     "eer": 0.06003584229390682,
+     "threshold_for_recall_0p95": 0.20469669615739156,
+     "impostor_false_accept_at_that_threshold": 0.12903225806451613,
+     "owner_p5": 0.21321862989642107,
+     "owner_p50": 0.36164227007181604,
+     "impostor_p95": 0.2242274002025983,
+     "impostor_max": 0.23555148925749686,
+     "replay_acceptance_at_product_threshold": 0.0,
+     "replay_acceptance_at_calibrated_threshold": 0.7222222222222222,
+     "replay_p50": 0.2621542878855425,
+     "owner_recall_by_cell": {
+      "1m/0deg": 0.0,
+      "1m/30deg": 0.0,
+      "1m/60deg": 0.0,
+      "3m/0deg": 0.0,
+      "3m/30deg": 0.0,
+      "3m/60deg": 0.0
+     }
+    },
+    "2s": {
+     "n_owner": 36,
+     "n_impostor": 31,
+     "at_product_threshold": {
+      "threshold": 0.55,
+      "owner_recall": 0.0,
+      "impostor_false_accept": 0.0
+     },
+     "eer_threshold": 0.275163084520411,
+     "eer": 0.0,
+     "threshold_for_recall_0p95": 0.293089992125239,
+     "impostor_false_accept_at_that_threshold": 0.0,
+     "owner_p5": 0.29652924021345267,
+     "owner_p50": 0.3859449183692515,
+     "impostor_p95": 0.21612605779120478,
+     "impostor_max": 0.24090589287934988,
+     "replay_acceptance_at_product_threshold": 0.0,
+     "replay_acceptance_at_calibrated_threshold": 0.3611111111111111,
+     "replay_p50": 0.2797341318689768,
+     "owner_recall_by_cell": {
+      "1m/0deg": 0.0,
+      "1m/30deg": 0.0,
+      "1m/60deg": 0.0,
+      "3m/0deg": 0.0,
+      "3m/30deg": 0.0,
+      "3m/60deg": 0.0
+     }
+    },
+    "2.5s": {
+     "n_owner": 36,
+     "n_impostor": 31,
+     "at_product_threshold": {
+      "threshold": 0.55,
+      "owner_recall": 0.0,
+      "impostor_false_accept": 0.0
+     },
+     "eer_threshold": 0.2784621396129663,
+     "eer": 0.0,
+     "threshold_for_recall_0p95": 0.2975822255181809,
+     "impostor_false_accept_at_that_threshold": 0.0,
+     "owner_p5": 0.2998953683402582,
+     "owner_p50": 0.4183169169185048,
+     "impostor_p95": 0.2290155680404961,
+     "impostor_max": 0.2525665268258909,
+     "replay_acceptance_at_product_threshold": 0.0,
+     "replay_acceptance_at_calibrated_threshold": 0.5833333333333334,
+     "replay_p50": 0.3143348095087825,
+     "owner_recall_by_cell": {
+      "1m/0deg": 0.0,
+      "1m/30deg": 0.0,
+      "1m/60deg": 0.0,
+      "3m/0deg": 0.0,
+      "3m/30deg": 0.0,
+      "3m/60deg": 0.0
+     }
+    }
+   }
+  },
+  "channel_matched": {
+   "profile_path": "/tmp/claude-1000/-home-jaewoo-jang-Desktop-Projects-Parcel/0b505906-665b-45ea-a2b7-686b3aecb89d/scratchpad/voice-gate/gallery_matched/research_owner_voice.json",
+   "enroll_stdout": "enrolled 6 utterance(s) with nemo_en_titanet_small.onnx\n  +0.737  enroll_0.wav\n  +0.642  enroll_1.wav\n  +0.738  enroll_2.wav\n  +0.705  enroll_3.wav\n  +0.693  enroll_4.wav\n  +0.688  enroll_5.wav\nwrote /tmp/claude-1000/-home-jaewoo-jang-Desktop-Projects-Parcel/0b505906-665b-45ea-a2b7-686b3aecb89d/scratchpad/voice-gate/gallery_matched/research_owner_voice.json (mode 0600)\nspeaker verification will arm on the next lane construction; the emergency latch is NOT identity-gated and never will be.\n",
+   "by_decision_window": {
+    "0.5s": {
+     "n_owner": 36,
+     "n_impostor": 31,
+     "at_product_threshold": {
+      "threshold": 0.55,
+      "owner_recall": 0.0,
+      "impostor_false_accept": 0.0
+     },
+     "eer_threshold": 0.15550357261195644,
+     "eer": 0.1939964157706093,
+     "threshold_for_recall_0p95": 0.09514413653381316,
+     "impostor_false_accept_at_that_threshold": 0.3870967741935484,
+     "owner_p5": 0.09679846510654512,
+     "owner_p50": 0.31320707154843574,
+     "impostor_p95": 0.19562351207998152,
+     "impostor_max": 0.25403143526284333,
+     "replay_acceptance_at_product_threshold": 0.0,
+     "replay_acceptance_at_calibrated_threshold": 0.9722222222222222,
+     "replay_p50": 0.2313900509490567,
+     "owner_recall_by_cell": {
+      "1m/0deg": 0.0,
+      "1m/30deg": 0.0,
+      "1m/60deg": 0.0,
+      "3m/0deg": 0.0,
+      "3m/30deg": 0.0,
+      "3m/60deg": 0.0
+     }
+    },
+    "1s": {
+     "n_owner": 36,
+     "n_impostor": 31,
+     "at_product_threshold": {
+      "threshold": 0.55,
+      "owner_recall": 0.0,
+      "impostor_false_accept": 0.0
+     },
+     "eer_threshold": 0.25194782782809844,
+     "eer": 0.06003584229390682,
+     "threshold_for_recall_0p95": 0.24758399936836292,
+     "impostor_false_accept_at_that_threshold": 0.0967741935483871,
+     "owner_p5": 0.25747111530318656,
+     "owner_p50": 0.3856229184370974,
+     "impostor_p95": 0.2507314535741937,
+     "impostor_max": 0.2523989113683951,
+     "replay_acceptance_at_product_threshold": 0.0,
+     "replay_acceptance_at_calibrated_threshold": 0.6388888888888888,
+     "replay_p50": 0.2789148697592966,
+     "owner_recall_by_cell": {
+      "1m/0deg": 0.0,
+      "1m/30deg": 0.0,
+      "1m/60deg": 0.0,
+      "3m/0deg": 0.0,
+      "3m/30deg": 0.0,
+      "3m/60deg": 0.0
+     }
+    },
+    "1.5s": {
+     "n_owner": 36,
+     "n_impostor": 31,
+     "at_product_threshold": {
+      "threshold": 0.55,
+      "owner_recall": 0.16666666666666666,
+      "impostor_false_accept": 0.0
+     },
+     "eer_threshold": 0.305795838360256,
+     "eer": 0.03001792114695341,
+     "threshold_for_recall_0p95": 0.34340271559006175,
+     "impostor_false_accept_at_that_threshold": 0.0,
+     "owner_p5": 0.34701496476587324,
+     "owner_p50": 0.44444781688427437,
+     "impostor_p95": 0.23675308999045785,
+     "impostor_max": 0.305795838360256,
+     "replay_acceptance_at_product_threshold": 0.0,
+     "replay_acceptance_at_calibrated_threshold": 0.5,
+     "replay_p50": 0.3459885114563006,
+     "owner_recall_by_cell": {
+      "1m/0deg": 0.3333333333333333,
+      "1m/30deg": 0.3333333333333333,
+      "1m/60deg": 0.3333333333333333,
+      "3m/0deg": 0.0,
+      "3m/30deg": 0.0,
+      "3m/60deg": 0.0
+     }
+    },
+    "2s": {
+     "n_owner": 36,
+     "n_impostor": 31,
+     "at_product_threshold": {
+      "threshold": 0.55,
+      "owner_recall": 0.16666666666666666,
+      "impostor_false_accept": 0.0
+     },
+     "eer_threshold": 0.33443164922892016,
+     "eer": 0.0,
+     "threshold_for_recall_0p95": 0.3521353487424461,
+     "impostor_false_accept_at_that_threshold": 0.0,
+     "owner_p5": 0.35790053450991494,
+     "owner_p50": 0.47008858334630294,
+     "impostor_p95": 0.2671999631827568,
+     "impostor_max": 0.2828737319610846,
+     "replay_acceptance_at_product_threshold": 0.0,
+     "replay_acceptance_at_calibrated_threshold": 0.5277777777777778,
+     "replay_p50": 0.36670317104618355,
+     "owner_recall_by_cell": {
+      "1m/0deg": 0.5,
+      "1m/30deg": 0.3333333333333333,
+      "1m/60deg": 0.16666666666666666,
+      "3m/0deg": 0.0,
+      "3m/30deg": 0.0,
+      "3m/60deg": 0.0
+     }
+    },
+    "2.5s": {
+     "n_owner": 36,
+     "n_impostor": 31,
+     "at_product_threshold": {
+      "threshold": 0.55,
+      "owner_recall": 0.3055555555555556,
+      "impostor_false_accept": 0.0
+     },
+     "eer_threshold": 0.3522495614169013,
+     "eer": 0.0,
+     "threshold_for_recall_0p95": 0.37558756179679287,
+     "impostor_false_accept_at_that_threshold": 0.0,
+     "owner_p5": 0.39278983919342897,
+     "owner_p50": 0.5083474630002852,
+     "impostor_p95": 0.2618355187329666,
+     "impostor_max": 0.2905598203007549,
+     "replay_acceptance_at_product_threshold": 0.0,
+     "replay_acceptance_at_calibrated_threshold": 0.7222222222222222,
+     "replay_p50": 0.41032246732117866,
+     "owner_recall_by_cell": {
+      "1m/0deg": 0.5,
+      "1m/30deg": 0.6666666666666666,
+      "1m/60deg": 0.3333333333333333,
+      "3m/0deg": 0.16666666666666666,
+      "3m/30deg": 0.16666666666666666,
+      "3m/60deg": 0.0
+     }
+    }
+   }
+  }
+ }
+}
