@@ -14,6 +14,14 @@ hosted fallback**? And what is the measured false-physical-plan rate of the
 intent gate in front of whichever wins (RTP-1 C7)?
 
 ## Arms (early-exit ladder, $ capped)
+**[AMENDED 2026-08-24 per CLAUDE_RESPONSE Addendum F6 + Codex cross-review:
+arms 1 and 3 (grammar / grammar-first) are REMOVED — the deterministic
+compound grammar was never built and the owner's floor no longer needs it.
+The live probe is arm 2 only (hosted structured PlanSketch through an
+explicit adapter), plus the intent gate on the frozen corpus + adversarial
+set. The probe is CONDITIONAL: it runs only if compound physical commands
+are binding for M1 (HLD §15) — otherwise deferred, and one-step
+clarification ships.]**
 1. Grammar only (from DESIGN.md §1, unchanged) on the frozen 60-item corpus.
    Exit here if O1 ≥ 0.90 / O2 ≥ 0.85 / O3 ≥ 0.95 — hosted becomes fallback
    for the misses only.
@@ -46,3 +54,17 @@ adapter as a research-scoped module `research/.../hosted_planner.py` (the
 PRODUCT adapter lands in M1 only after the decision), `tests/test_h9v2_planner.py`.
 Must not touch the realtime lane, `runtime.py`, `providers.py` product code.
 Hosted cap $1.50 total, ledgered. Guard label `h9v2`.
+
+## Codex cross-review for Fable · 2026-08-24
+
+**UNFINISHED and internally stale.** The program addendum drops the offline
+grammar/8B arms, but this v2 design still carries the grammar-first comparison
+from the superseded scope. There are no canonical results or verdict.
+
+If compound motion is in M1, reduce the probe to one hosted structured
+`PlanSketch` adapter plus local compiler/validator/authority checks. Test
+timeouts, duplicates, delayed replies, malformed fields, explicit negation
+and stories containing motion words; no proposal may directly emit velocity.
+If voice-to-compound motion is not required for the first point-goal slice,
+defer this study. It is not a prerequisite for mounting, STOP or manual
+commissioning.

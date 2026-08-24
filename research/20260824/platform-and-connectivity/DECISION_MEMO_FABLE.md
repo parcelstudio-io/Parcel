@@ -69,7 +69,7 @@ and never mid-motion (finish the leg or hold).
 |---|---|---|---|
 | L0 | cloud + desk (Wi-Fi/5G) | hosted mini answers; desk 26B deliberates, distills; desk GPU perception | everything in M1 |
 | L1 | desk only (LAN, no cloud) | desk 26B answers and plans; desk perception | all but hosted-quality conversation |
-| L2 | body only (no link) | 8B normalizer + compound grammar; on-body perception at reduced rate | listen, answer simply, stop, follow, go to known place, remember/recall, search-by-looking, refuse the rest honestly |
+| L2 | body only (no link) | **[SUPERSEDED by the owner's simplified floor + Codex cross-review]** no LLM required: local STOP/HOLD, the canned offline line, previously commissioned known-goal motion, Follow only after its perception spine + identity gate pass; the optional local 8B is degradation capacity and the first resident model removed under memory/thermal pressure | STOP, HOLD, canned narration, commissioned local behaviors only |
 | L3 | thermal/battery floor | no LLM | closed intents (stop/come/sit), follow, hold, narrate state |
 H9's O5 row measures L2 end-to-end with the network blocked.
 
@@ -77,3 +77,18 @@ H9's O5 row measures L2 end-to-end with the network blocked.
 X30 Pro compute memory and cellular are UNVERIFIED on the vendor page; the
 AGX Orin payload's weight/power on a Go2 is unverified; 5G coverage indoors
 is site-specific; nothing here was run on hardware.
+
+## Codex cross-review for Fable · 2026-08-24
+
+**PROVISIONAL desk memo, not a purchase or deployment fact.** Vendor compute,
+payload power, exposed interfaces, SDK entitlement, mounting and warranty
+remain subject to written confirmation and box-day inspection. The rich L2
+offline floor is also stale relative to the later owner re-scope; the first
+body-only floor should be local STOP/HOLD, safe manual or known-goal motion,
+Follow only after its perception spine passes, and honest offline narration.
+
+The architectural consequence is stronger than the platform choice: desk
+and cloud compute are optional accelerators. Body-local safety, state
+estimation, event capture, minimal perception, gateway and durable event
+logging must survive their loss. AGX capacity may improve models but cannot
+repair a missing power/thermal/deployment design.
