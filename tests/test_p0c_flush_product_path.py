@@ -40,15 +40,8 @@ import yaml
 
 from parcel_robot.audio_io import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
-from parcel_robot.brain import (
-    GoalSpec,
-    GoalTarget,
-    PlanIR,
-    PlanStep,
-    PlanValidator,
-    SkillContractRegistry,
-    SuccessCondition,
-)
+from parcel_robot.brain.contracts import GoalSpec, GoalTarget, PlanIR, PlanStep, SuccessCondition
+from parcel_robot.brain.validator import PlanValidator, SkillContractRegistry
 from parcel_robot.instructnav.arbiter import SE2Goal
 from parcel_robot.runtime import RobotRuntime
 

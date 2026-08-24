@@ -53,9 +53,8 @@ from parcel_robot.core.yield_policy import (
     person_blocked_from_note,
 )
 from parcel_robot.models import VelocityCommand
-from parcel_robot.navigation.base import NavObservation
+from parcel_robot.navigation.base import MidLevelCommand, NavObservation
 from parcel_robot.navigation.grounder import PlaceGrounder
-from parcel_robot.navigation.models import MidLevelCommand
 from parcel_robot.navigation.pipeline import DirectiveNavigator
 from parcel_robot.navigation.registry import ModelRegistry
 from parcel_robot.runtime import RobotRuntime

@@ -18,15 +18,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from parcel_robot.brain import (
-    IntentFrame,
-    ObservationSnapshot,
-    PlanIR,
-    PlanValidationError,
-    PlanValidator,
-    SkillContractRegistry,
-)
-from parcel_robot.prompting import PromptLibrary
+from parcel_robot.brain.contracts import IntentFrame, ObservationSnapshot, PlanIR
+from parcel_robot.brain.validator import PlanValidationError, PlanValidator, SkillContractRegistry
+from parcel_robot.prompting.loader import PromptLibrary
 from parcel_robot.providers import LlamaCppProvider, PlanningModel
 
 SUITE_ID = "parcel-live-planner-v1"

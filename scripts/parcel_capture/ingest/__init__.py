@@ -45,7 +45,7 @@ import inspect  # ---- CARD HW-5 (task_41): the venue region below ----
 from collections.abc import Sequence
 from typing import Any
 
-from parcel_robot.capture import CHANNELS, Channel, Transport
+from parcel_robot.capture.channels import CHANNELS, Channel, Transport
 
 from .base import (
     ABSENT,

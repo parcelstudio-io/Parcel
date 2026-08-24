@@ -1,3 +1,1 @@
-from .loader import FunctionProfile, PersonalityProfile, PromptLibrary
-
-__all__ = ["FunctionProfile", "PersonalityProfile", "PromptLibrary"]
+"""Personality/function prompt profiles loaded from ``prompts/`` on disk."""

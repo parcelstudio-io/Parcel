@@ -783,7 +783,7 @@ def test_a_conversation_lane_physical_proposal_never_leaks_the_validator_string(
     raw ``Unknown proposed skill`` string — a clarify stands in its place."""
 
     from parcel_robot.agent import VoiceAgent
-    from parcel_robot.skills import Dog
+    from parcel_robot.skills.api import Dog
 
     dog = Dog.from_config(REPO / "configs" / "robot.yaml")
     agent = VoiceAgent(

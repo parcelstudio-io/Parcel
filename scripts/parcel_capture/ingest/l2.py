@@ -31,8 +31,7 @@ import importlib
 from collections.abc import Callable, Iterator
 from typing import Any, ClassVar
 
-from parcel_robot.capture import Channel, Transport
-from parcel_robot.capture.channels import SourceClock
+from parcel_robot.capture.channels import Channel, SourceClock, Transport
 
 from ..preflight import AbsenceReason, ImuSample, PhysicalSample, PointCloudSample
 from .base import (
@@ -406,6 +405,6 @@ class L2Ingest(IngestAdapter):
             yield frame_from_l2(entry, message)
 
     def channels(self) -> tuple[Channel, ...]:
-        from parcel_robot.capture import CHANNELS
+        from parcel_robot.capture.channels import CHANNELS
 
         return tuple(entry for entry in CHANNELS if entry.transport is Transport.UNILIDAR_SDK2)

@@ -6,7 +6,8 @@ import math
 import random
 from dataclasses import dataclass
 
-from parcel_robot.contracts import SCHEMA_VERSION, EvidenceEnvelopeV1, expires_from_ttl
+from parcel_robot.contracts.freshness import expires_from_ttl
+from parcel_robot.contracts.v1 import SCHEMA_VERSION, EvidenceEnvelopeV1
 from parcel_robot.uwb.noise import UwbNoiseConfig
 from parcel_robot.uwb.sample import UwbSample
 

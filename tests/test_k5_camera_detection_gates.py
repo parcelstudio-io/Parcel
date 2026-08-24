@@ -8,26 +8,26 @@ from dataclasses import FrozenInstanceError
 
 import pytest
 
-from parcel_robot.camera_channel import (
-    CALIBRATION_ID_NOMINAL,
-    MOUNT_HEIGHT_M,
+from parcel_robot.camera_channel.channel import (
     CameraChannel,
     CameraChannelSpec,
-    CameraFrameEnvelope,
-    ColorFrameMeta,
     assert_nominal_d455_contract,
-    color_meta_from_mapping,
+)
+from parcel_robot.camera_channel.d455 import (
+    CALIBRATION_ID_NOMINAL,
+    MOUNT_HEIGHT_M,
     d455_color_intrinsics,
     go2_d455_mount,
 )
-from parcel_robot.contracts import SCHEMA_VERSION, DetectionMsg, EvidenceEnvelopeV1
-from parcel_robot.detection_adapter import (
-    DetectionNoiseAdapter,
-    DetectionNoiseConfig,
-    GroundTruthDetection,
-    default_person_confusion,
+from parcel_robot.camera_channel.frames import (
+    CameraFrameEnvelope,
+    ColorFrameMeta,
+    color_meta_from_mapping,
 )
-from parcel_robot.low_viewpoint import (
+from parcel_robot.contracts.v1 import SCHEMA_VERSION, DetectionMsg, EvidenceEnvelopeV1
+from parcel_robot.detection_adapter.adapter import DetectionNoiseAdapter, GroundTruthDetection
+from parcel_robot.detection_adapter.noise import DetectionNoiseConfig, default_person_confusion
+from parcel_robot.low_viewpoint.gates import (
     DOES_NOT_PROVE,
     GATE_CURB_HEIGHT_MAP_NO_D455,
     GATE_LEGS_FIRST_REID,

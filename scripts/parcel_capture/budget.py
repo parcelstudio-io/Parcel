@@ -67,15 +67,8 @@ for _entry in (str(_REPO_ROOT), str(_REPO_ROOT / "src")):
     if _entry not in sys.path:
         sys.path.insert(0, _entry)
 
-from parcel_robot.capture import (  # after the deploy-path bootstrap above
-    CHANNELS,
-    UNCALIBRATED,
-    CaptureEnvelope,
-    Channel,
-    ChannelHealth,
-    ChannelPresence,
-    channel,
-)
+from parcel_robot.capture.channels import CHANNELS, Channel, ChannelPresence, channel
+from parcel_robot.capture.envelope import UNCALIBRATED, CaptureEnvelope, ChannelHealth
 from parcel_robot.evidence_origin import EvidenceOrigin
 from scripts.parcel_capture.record import (
     MinimalMcapWriter,

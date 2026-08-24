@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import Any
 
 from parcel_robot.models import AgentDecision
-from parcel_robot.prompting import PromptLibrary
+from parcel_robot.prompting.loader import PromptLibrary
 from parcel_robot.providers import LanguageModel, LlamaCppProvider
 
 SUITE_ID = "parcel-conversation-quality-v1"

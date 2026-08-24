@@ -9,15 +9,12 @@ from pathlib import Path
 
 import pytest
 
-from parcel_robot.duplex import (
-    DuplexConfig,
-    DuplexCoordinator,
-    DuplexFrameConsumer,
-    FillerPolicy,
-    FillerPool,
-    default_twist_bins,
-)
-from parcel_robot.duplex.act_codec import ActTokenCodec
+from parcel_robot.duplex.act_codec import ActTokenCodec, default_twist_bins
+from parcel_robot.duplex.config import DuplexConfig
+from parcel_robot.duplex.consumer import DuplexFrameConsumer
+from parcel_robot.duplex.coordinator import DuplexCoordinator
+from parcel_robot.duplex.filler_policy import FillerPolicy
+from parcel_robot.duplex.fillers import FillerPool
 from parcel_robot.duplex.session_log import DuplexSessionLog
 from parcel_robot.providers import SentenceChunkedSynthesizer
 from parcel_robot.voice_pipeline import DuplexVoiceSession, VoiceStage

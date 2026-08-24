@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from parcel_robot.counterfactual import (
+from parcel_robot.counterfactual.oracle_replay import (
     COUNTERFACTUAL_REPORT_SCHEMA,
     replay_committed_choice,
 )

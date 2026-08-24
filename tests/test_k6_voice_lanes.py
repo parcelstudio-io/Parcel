@@ -13,10 +13,12 @@ from parcel_robot.agent import MOTION_TOOLS, VoiceAgent
 from parcel_robot.attention.stimuli import StimulusKind
 from parcel_robot.audio_io import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
-from parcel_robot.brain import DeterministicIntentRouter, PlanIR, PlanSketch
 from parcel_robot.brain.compiler import compile_plan_sketch
+from parcel_robot.brain.contracts import PlanIR
 from parcel_robot.brain.executive import VOICE_INTERRUPT_POLICY, _voice_interrupt_action
 from parcel_robot.brain.observations import build_observation_snapshot
+from parcel_robot.brain.plan_sketch import PlanSketch
+from parcel_robot.brain.router import DeterministicIntentRouter
 from parcel_robot.brain.validator import SkillContractRegistry
 from parcel_robot.contracts.v1 import ReactionProposalV1, SocialCueV1
 from parcel_robot.models import AgentDecision, SpatialIntent, ToolCall, VelocityCommand

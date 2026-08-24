@@ -12,29 +12,23 @@ from parcel_robot.instructnav.search_entity import (
     FrontierCandidate,
     select_frontier,
 )
-from parcel_robot.route_memory import (
-    CITYWALKER_PROPOSER_SOURCE,
-    DOES_NOT_PROVE,
-    EXTRAS_KEY,
-    PROPOSER_SOURCE,
+from parcel_robot.route_memory import DOES_NOT_PROVE
+from parcel_robot.route_memory.citywalker import (
+    PROPOSER_SOURCE as CITYWALKER_PROPOSER_SOURCE,
+)
+from parcel_robot.route_memory.citywalker import (
     CityWalkerAdapterConfig,
     CityWalkerInferenceAdapter,
     CityWalkerObservation,
-    HeuristicValueMap,
-    HeuristicVLFMScorer,
-    RouteKeyframe,
-    RouteMemoryProposer,
-    RouteMemoryRuntimeHook,
-    RouteMemoryStore,
-    StubVPREmbedder,
-    TeachRepeatSession,
-    ValueMapCell,
-    cosine_similarity,
-    goal_from_path_snapshot,
     load_cached_walk,
-    match_keyframe_index,
     resolve_citywalker_vendor,
 )
+from parcel_robot.route_memory.memory import PROPOSER_SOURCE, RouteKeyframe, RouteMemoryStore
+from parcel_robot.route_memory.proposer import RouteMemoryProposer, goal_from_path_snapshot
+from parcel_robot.route_memory.runtime_hook import EXTRAS_KEY, RouteMemoryRuntimeHook
+from parcel_robot.route_memory.teach_repeat import TeachRepeatSession
+from parcel_robot.route_memory.vlfm import HeuristicValueMap, HeuristicVLFMScorer, ValueMapCell
+from parcel_robot.route_memory.vpr import StubVPREmbedder, cosine_similarity, match_keyframe_index
 
 # --- Route memory store -----------------------------------------------------
 

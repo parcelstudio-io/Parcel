@@ -9,24 +9,24 @@ import numpy as np
 import pytest
 
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SemanticObjectTrack, SimObservation
-from parcel_robot.camera_channel import CameraChannel, CameraChannelSpec
-from parcel_robot.camera_channel.backends import (
-    SyntheticCameraBackend,
+from parcel_robot.camera_channel.backends.factory import (
     attach_preferred_backend,
     open_camera_backend,
     probe_mujoco_offscreen,
 )
-from parcel_robot.contracts import DetectionMsg
-from parcel_robot.detection_adapter import (
-    DetectionNoiseAdapter,
-    DetectionNoiseConfig,
+from parcel_robot.camera_channel.backends.synthetic import SyntheticCameraBackend
+from parcel_robot.camera_channel.channel import CameraChannel, CameraChannelSpec
+from parcel_robot.contracts.v1 import DetectionMsg
+from parcel_robot.detection_adapter.adapter import DetectionNoiseAdapter
+from parcel_robot.detection_adapter.noise import DetectionNoiseConfig
+from parcel_robot.detection_adapter.sim_bridge import (
     SimTrackObservation,
     detections_for_agent,
     detections_from_observation,
     label_embedding,
     privileged_gt_from_tracks,
 )
-from parcel_robot.low_viewpoint import (
+from parcel_robot.low_viewpoint.samples import (
     assert_pack_expectations,
     load_sample_pack,
     smoke_default_pack,

@@ -47,7 +47,7 @@ from pathlib import Path
 
 import yaml
 
-from parcel_robot.prompting import PromptLibrary
+from parcel_robot.prompting.loader import PromptLibrary
 from parcel_robot.realtime.prompting import (
     SI_DIGESTS,
     SI_VERSION,

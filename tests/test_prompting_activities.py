@@ -5,9 +5,10 @@ from pathlib import Path
 
 import pytest
 
-from parcel_robot.core import ActivityContext, ActivityCoordinator, VelocitySmoother
+from parcel_robot.core.activities import ActivityContext, ActivityCoordinator
+from parcel_robot.core.velocity_smoother import VelocitySmoother
 from parcel_robot.models import ActionProposal, VelocityCommand
-from parcel_robot.prompting import PromptLibrary
+from parcel_robot.prompting.loader import PromptLibrary
 from parcel_robot.providers import parse_model_decision
 
 REPO = Path(__file__).resolve().parents[1]

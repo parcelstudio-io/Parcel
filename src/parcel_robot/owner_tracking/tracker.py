@@ -52,12 +52,8 @@ from dataclasses import dataclass, field, replace
 from typing import Any
 
 from parcel_robot.camera_channel.ingress import CameraDetectionFrame, CameraDetectionRecord
-from parcel_robot.contracts import (
-    SCHEMA_VERSION,
-    DetectionMsg,
-    EvidenceEnvelopeV1,
-    expires_from_ttl,
-)
+from parcel_robot.contracts.freshness import expires_from_ttl
+from parcel_robot.contracts.v1 import SCHEMA_VERSION, DetectionMsg, EvidenceEnvelopeV1
 from parcel_robot.owner_tracking.gallery import AppearanceGallery, cosine, normalize
 
 #: Detector labels that mean "a human body". Whole-word match, matching

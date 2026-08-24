@@ -39,7 +39,7 @@ from pathlib import Path
 import pytest
 
 from parcel_robot.paths import packaged_assets_root, parcel_roots
-from parcel_robot.prompting import PromptLibrary
+from parcel_robot.prompting.loader import PromptLibrary
 from parcel_robot.realtime.prompting import (
     FROZEN_PERSONAS_DIRNAME,
     SI_DIGESTS,

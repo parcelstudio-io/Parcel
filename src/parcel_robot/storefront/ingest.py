@@ -5,13 +5,8 @@ from __future__ import annotations
 import math
 from collections.abc import Sequence
 
-from parcel_robot.contracts import (
-    SCHEMA_VERSION,
-    DetectionMsg,
-    EvidenceEnvelopeV1,
-    expires_from_ttl,
-)
-from parcel_robot.contracts.freshness import DEFAULT_DETECTION_TTL_NS
+from parcel_robot.contracts.freshness import DEFAULT_DETECTION_TTL_NS, expires_from_ttl
+from parcel_robot.contracts.v1 import SCHEMA_VERSION, DetectionMsg, EvidenceEnvelopeV1
 from parcel_robot.instructnav.memory import RememberedEntity, SemanticMemory2D
 from parcel_robot.storefront.ocr import OcrHit
 from parcel_robot.storefront.placards import normalize_sign_text

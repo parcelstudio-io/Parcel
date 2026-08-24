@@ -95,7 +95,7 @@ evals/external/                # research proxies (BARN / Habitat)
 The standalone API is:
 
 ```python
-from parcel_robot.navigation import DirectiveNavigator
+from parcel_robot.navigation.pipeline import DirectiveNavigator
 
 nav = DirectiveNavigator.from_config("configs/navigation/default.yaml")
 mission = nav.start("go to the crosswalk")

@@ -3,7 +3,7 @@ from dataclasses import replace
 
 import pytest
 
-from parcel_robot.brain import (
+from parcel_robot.brain.contracts import (
     BatteryStateSnapshot,
     GoalSpec,
     GoalTarget,
@@ -11,15 +11,13 @@ from parcel_robot.brain import (
     ObservedEntity,
     PlanIR,
     PlanStep,
-    PlanValidationError,
-    PlanValidator,
     RobotStateSnapshot,
     SafetyStateSnapshot,
     SensorSnapshot,
-    SkillContractRegistry,
     SuccessCondition,
     TaskStateSnapshot,
 )
+from parcel_robot.brain.validator import PlanValidationError, PlanValidator, SkillContractRegistry
 
 
 def _snapshot(

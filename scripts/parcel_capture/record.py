@@ -90,19 +90,15 @@ from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, BinaryIO
 
-from parcel_robot.capture import (
-    CHANNELS,
+from parcel_robot.capture.channels import CHANNELS, CaptureError, Channel, Transport, channel
+from parcel_robot.capture.envelope import (
     ENVELOPE_SCHEMA,
     UNCALIBRATED,
     CaptureEnvelope,
-    CaptureError,
-    Channel,
     ChannelHealth,
     ChannelSequenceBook,
     ChannelSequenceLedger,
-    Transport,
     canonical_json,
-    channel,
 )
 from parcel_robot.evidence_origin import EvidenceOrigin
 

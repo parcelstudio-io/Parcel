@@ -6,7 +6,16 @@ from dataclasses import FrozenInstanceError
 
 import pytest
 
-from parcel_robot.contracts import (
+from parcel_robot.contracts.freshness import (
+    age_ns,
+    check_freshness,
+    detect_clock_jump,
+    expires_from_ttl,
+    is_expired,
+    require_fresh,
+    speed_cap_from_staleness_m_s,
+)
+from parcel_robot.contracts.v1 import (
     SCHEMA_VERSION,
     DetectionMsg,
     DialogueActV1,
@@ -24,14 +33,7 @@ from parcel_robot.contracts import (
     SemanticRegionV1,
     SkillFeedbackV1,
     SocialCueV1,
-    age_ns,
-    check_freshness,
-    detect_clock_jump,
-    expires_from_ttl,
     identity_covariance,
-    is_expired,
-    require_fresh,
-    speed_cap_from_staleness_m_s,
 )
 
 

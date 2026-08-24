@@ -19,19 +19,11 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
-from parcel_robot.brain import (
-    DeterministicIntentRouter,
-    IntentFrame,
-    InterruptRequest,
-    ObservationSnapshot,
-    PlanIR,
-    PlanValidationError,
-    PlanValidator,
-    SemanticRuntimeState,
-    SemanticTaskRuntimeAdapter,
-    SkillContractRegistry,
-    TaskExecutive,
-)
+from parcel_robot.brain.contracts import IntentFrame, ObservationSnapshot, PlanIR
+from parcel_robot.brain.executive import InterruptRequest, TaskExecutive
+from parcel_robot.brain.router import DeterministicIntentRouter
+from parcel_robot.brain.runtime_adapter import SemanticRuntimeState, SemanticTaskRuntimeAdapter
+from parcel_robot.brain.validator import PlanValidationError, PlanValidator, SkillContractRegistry
 from parcel_robot.models import SpatialIntent
 
 SUITE_ID = "parcel-companion-brain-v1"

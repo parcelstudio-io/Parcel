@@ -1118,7 +1118,8 @@ def _ask_map(tmp_path: Any) -> tuple[Any, Any, Any]:
 
     import yaml
 
-    from parcel_robot.online_map import MapObservation, OnlineSemanticMap
+    from parcel_robot.online_map.entries import MapObservation
+    from parcel_robot.online_map.online_map import OnlineSemanticMap
     from parcel_robot.perception_abstention import AbstentionPolicy
 
     # The prototype operating point, minus the VLM seat: this test is about the

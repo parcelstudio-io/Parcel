@@ -3,21 +3,17 @@ from pathlib import Path
 
 import pytest
 
-from parcel_robot.brain import (
-    DeterministicIntentRouter,
-    PlanIR,
-    PlanSketch,
-    PlanValidationError,
-    PlanValidator,
-    SkillContractRegistry,
-    TaskStateSnapshot,
-    admitted_plan_sketch_schema,
-    compile_plan_sketch,
-    contextual_planner_schema,
-    materialize_planner_output,
-)
+from parcel_robot.brain.compiler import compile_plan_sketch, materialize_planner_output
+from parcel_robot.brain.contracts import PlanIR, TaskStateSnapshot
 from parcel_robot.brain.observations import build_observation_snapshot
-from parcel_robot.prompting import PromptLibrary
+from parcel_robot.brain.plan_sketch import PlanSketch
+from parcel_robot.brain.router import DeterministicIntentRouter
+from parcel_robot.brain.runtime_adapter import (
+    admitted_plan_sketch_schema,
+    contextual_planner_schema,
+)
+from parcel_robot.brain.validator import PlanValidationError, PlanValidator, SkillContractRegistry
+from parcel_robot.prompting.loader import PromptLibrary
 
 REPO = Path(__file__).resolve().parents[1]
 

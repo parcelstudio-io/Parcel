@@ -8,41 +8,32 @@ from dataclasses import FrozenInstanceError
 import pytest
 
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
-from parcel_robot.contracts import SCHEMA_VERSION, EvidenceEnvelopeV1, expires_from_ttl
-from parcel_robot.gnss import (
-    DEFAULT_GNSS_TTL_NS,
+from parcel_robot.contracts.freshness import expires_from_ttl
+from parcel_robot.contracts.v1 import SCHEMA_VERSION, EvidenceEnvelopeV1
+from parcel_robot.gnss.injector import DOES_NOT_PROVE as GNSS_DOES_NOT_PROVE
+from parcel_robot.gnss.injector import EXTRAS_KEY as GNSS_EXTRAS_KEY
+from parcel_robot.gnss.injector import SimGnssInjector, SimGnssPose, gnss_from_extras
+from parcel_robot.gnss.model import DEFAULT_GNSS_TTL_NS, GnssNoiseModel, GroundTruthGnss
+from parcel_robot.gnss.noise import (
     GnssDropoutSchedule,
     GnssDropoutWindow,
-    GnssFix,
     GnssNoiseConfig,
-    GnssNoiseModel,
-    GroundTruthGnss,
-    SimGnssInjector,
-    SimGnssPose,
-    gnss_from_extras,
     schedule_from_windows,
 )
-from parcel_robot.gnss import (
-    DOES_NOT_PROVE as GNSS_DOES_NOT_PROVE,
-)
-from parcel_robot.gnss import (
-    EXTRAS_KEY as GNSS_EXTRAS_KEY,
-)
+from parcel_robot.gnss.sample import GnssFix
 from parcel_robot.instructnav.arbiter import GoalArbiter, ProposerBus, SE2Goal
 from parcel_robot.maps import (
     DOES_NOT_PROVE as MAPS_DOES_NOT_PROVE,
 )
-from parcel_robot.maps import (
-    PROPOSER_SOURCE,
+from parcel_robot.maps.crossing import (
     CrossingModePolicy,
     CrossingPolicyConfig,
     CrossingState,
-    OsmWaypointProposer,
-    OvertureTileClient,
     decision_blocks_autonomous_road,
-    load_footway_crossing_graph,
-    load_overture_tile,
 )
+from parcel_robot.maps.graph import load_footway_crossing_graph
+from parcel_robot.maps.overture import OvertureTileClient, load_overture_tile
+from parcel_robot.maps.waypoints import PROPOSER_SOURCE, OsmWaypointProposer
 
 
 def _envelope(

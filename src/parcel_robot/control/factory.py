@@ -210,7 +210,7 @@ def build_unitree_sport_observer(
     Returns a ``parcel_robot.commissioning.CommissioningObserver``.
     """
 
-    from parcel_robot.commissioning import CommissioningObserver
+    from parcel_robot.commissioning.session import CommissioningObserver
 
     sport = _sport_section(config)
     seams = seams or UnitreeCommissioningSeams()
@@ -259,13 +259,12 @@ def build_unitree_sport_commissioning_session(
     autonomous runtime can consume.
     """
 
-    from parcel_robot.commissioning import (
+    from parcel_robot.commissioning.limits import (
         CommissioningArming,
-        CommissioningJournal,
         CommissioningRefusedError,
-        CommissioningSession,
         RefusalReason,
     )
+    from parcel_robot.commissioning.session import CommissioningJournal, CommissioningSession
 
     from .unitree_sport import UnitreeSportController
 

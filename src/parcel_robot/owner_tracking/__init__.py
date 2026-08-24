@@ -20,40 +20,6 @@ memory store, and nothing in it opens a camera.
 
 from __future__ import annotations
 
-from parcel_robot.owner_tracking.embedder import (
-    EmbedderResolution,
-    default_weights_dir,
-    resolve_embed_fn,
-    vision_model_sha256,
-)
-from parcel_robot.owner_tracking.gallery import (
-    GALLERY_NAME,
-    GALLERY_SCHEMA,
-    MIN_CROPS,
-    AppearanceGallery,
-    AppearanceGalleryError,
-    build_gallery,
-    cosine,
-    default_gallery_path,
-    load_gallery,
-    save_gallery,
-    self_consistency,
-)
-from parcel_robot.owner_tracking.tracker import (
-    STATE_AMBIGUOUS,
-    STATE_CONFIRMED,
-    STATE_LOST,
-    STATE_SEARCHING,
-    OwnerTracker,
-    OwnerTrackerConfig,
-    OwnerTrackerUpdate,
-    PersonObservation,
-    PixelOwnerTrack,
-    is_person_label,
-)
-
-#: What this package does NOT establish, kept next to the code that could be
-#: mistaken for establishing it (the house convention, cf. ``uwb.fusion``).
 DOES_NOT_PROVE = (
     "Measured on a SYNTHESIZED clip: recall and separation on real people are unmeasured.",
     (
@@ -70,29 +36,4 @@ DOES_NOT_PROVE = (
 
 __all__ = [
     "DOES_NOT_PROVE",
-    "GALLERY_NAME",
-    "GALLERY_SCHEMA",
-    "MIN_CROPS",
-    "STATE_AMBIGUOUS",
-    "STATE_CONFIRMED",
-    "STATE_LOST",
-    "STATE_SEARCHING",
-    "AppearanceGallery",
-    "AppearanceGalleryError",
-    "EmbedderResolution",
-    "OwnerTracker",
-    "OwnerTrackerConfig",
-    "OwnerTrackerUpdate",
-    "PersonObservation",
-    "PixelOwnerTrack",
-    "build_gallery",
-    "cosine",
-    "default_gallery_path",
-    "default_weights_dir",
-    "is_person_label",
-    "load_gallery",
-    "resolve_embed_fn",
-    "save_gallery",
-    "self_consistency",
-    "vision_model_sha256",
 ]

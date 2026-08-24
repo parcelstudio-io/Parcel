@@ -42,12 +42,8 @@ import pytest
 
 from parcel_robot.memory import FACT_OWNER_STATED, ConversationMemory
 from parcel_robot.models import ToolResult
-from parcel_robot.owner_model import (
-    CONSENT_GRANTED,
-    CONSENT_PENDING,
-    known_facts_answer,
-    owner_notes_from_facts,
-)
+from parcel_robot.owner_model.notes import known_facts_answer, owner_notes_from_facts
+from parcel_robot.owner_model.policy import CONSENT_GRANTED, CONSENT_PENDING
 from parcel_robot.realtime.config import RealtimeConfig
 from parcel_robot.realtime.fake_server import (
     FakeRealtimeServer,
@@ -298,7 +294,7 @@ def test_row2_a_stated_preference_comes_back_unprompted(tmp_path: Path, run: int
     it is in the next session's developer instruction with nothing asked for."""
 
     from parcel_robot.memory import FACT_MODEL_PROPOSED
-    from parcel_robot.owner_model import distil_session
+    from parcel_robot.owner_model.distiller import distil_session
 
     store = tmp_path / f"probe_row2_{run}.sqlite3"
     talking = ConversationMemory(store)

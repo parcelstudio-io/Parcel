@@ -253,7 +253,7 @@ proxies: [evals/external/README.md](evals/external/README.md).
 source .parcel/bin/activate
 # Public API
 python - <<'PY'
-from parcel_robot.skills import Dog
+from parcel_robot.skills.api import Dog
 dog = Dog.from_config("configs/robot.yaml")
 print(len(dog.list_skills()), "skills")
 print(dog.execute("jump"))
@@ -287,7 +287,7 @@ See also [Dynamic city and behavior architecture](docs/DYNAMIC_CITY_AND_BEHAVIOR
 # (scan_missing_fallback) to the point-goal stub if the scan is absent.
 
 python - <<'PY'
-from parcel_robot.skills import Dog
+from parcel_robot.skills.api import Dog
 dog = Dog.from_config("configs/robot.yaml")
 dog.set_nav_pose((0, 0, 0), 0)
 mission, cmd = dog.navigate("I want you to go to the coffee shop at 42nd street")

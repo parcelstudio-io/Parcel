@@ -29,7 +29,7 @@ import pytest
 from parcel_robot.audio_io import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
 from parcel_robot.models import VelocityCommand
-from parcel_robot.navigation.models import MidLevelCommand
+from parcel_robot.navigation.base import MidLevelCommand
 from parcel_robot.runtime import (
     POSE_LOST_HOLD_NOTE,
     POSE_LOST_UTTERANCE,

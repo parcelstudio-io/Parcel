@@ -811,7 +811,7 @@ def _semantic_source_state(runtime: Any) -> tuple[Any, Any, str]:
     bound: Any = None
     note = ""
     try:
-        from parcel_robot.perception_source import active_semantic_source
+        from parcel_robot.perception_source.selection import active_semantic_source
 
         bound = active_semantic_source()
     except ImportError:  # pragma: no cover - frozen bundle path
@@ -886,7 +886,7 @@ def capability_entries(
     )
     learned_map: Any = None
     try:
-        from parcel_robot.perception_source import active_learned_map
+        from parcel_robot.perception_source.selection import active_learned_map
 
         learned_map = active_learned_map()
     except ImportError:  # pragma: no cover - frozen bundle path

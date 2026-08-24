@@ -35,12 +35,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:  # pragma: no cover - import bootstrap
     sys.path.insert(0, str(REPO_ROOT))
 
-from parcel_robot.capture import (
-    CHANNELS,
-    CHANNELS_BY_ID,
-    RateKind,
-    UnknownChannelError,
-)
+from parcel_robot.capture.channels import CHANNELS, CHANNELS_BY_ID, RateKind, UnknownChannelError
 from parcel_robot.evidence_origin import EvidenceOrigin
 from scripts.parcel_capture import preflight as preflight_module
 from scripts.parcel_capture.budget import (
@@ -245,7 +240,7 @@ def test_framing_is_measured_against_ps_bs_own_writer_not_estimated():
     """35 bytes of record + message header, plus the envelope JSON itself."""
 
     entry = CHANNELS_BY_ID["go2.lowstate"]
-    from parcel_robot.capture import CaptureEnvelope, canonical_json
+    from parcel_robot.capture.envelope import CaptureEnvelope, canonical_json
 
     envelope = CaptureEnvelope(
         channel_id=entry.channel_id,

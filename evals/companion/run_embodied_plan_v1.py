@@ -20,15 +20,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from parcel_robot.brain import (
-    ObservationSnapshot,
-    PlanIR,
-    PlanValidator,
-    SemanticRuntimeState,
-    SemanticTaskRuntimeAdapter,
-    SkillContractRegistry,
-    TaskExecutive,
-)
+from parcel_robot.brain.contracts import ObservationSnapshot, PlanIR
+from parcel_robot.brain.executive import TaskExecutive
+from parcel_robot.brain.runtime_adapter import SemanticRuntimeState, SemanticTaskRuntimeAdapter
+from parcel_robot.brain.validator import PlanValidator, SkillContractRegistry
 from parcel_robot.headless_city import (
     DEFAULT_CITY_SCENE,
     DEFAULT_ROBOT_CONFIG,

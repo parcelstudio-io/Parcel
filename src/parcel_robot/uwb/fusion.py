@@ -48,13 +48,13 @@ import math
 from dataclasses import dataclass
 from typing import Literal
 
-from parcel_robot.contracts import (
+from parcel_robot.contracts.freshness import expires_from_ttl
+from parcel_robot.contracts.v1 import (
     SCHEMA_VERSION,
     DetectionMsg,
     EvidenceEnvelopeV1,
     OwnerTrackV1,
     PoseXYZYaw,
-    expires_from_ttl,
     identity_covariance,
 )
 from parcel_robot.uwb.sample import UwbSample

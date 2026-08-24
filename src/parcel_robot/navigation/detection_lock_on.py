@@ -22,8 +22,8 @@ import math
 from dataclasses import dataclass
 from typing import Any
 
-from parcel_robot.contracts import SCHEMA_VERSION, DetectionMsg, EvidenceEnvelopeV1
 from parcel_robot.contracts.freshness import expires_from_ttl
+from parcel_robot.contracts.v1 import SCHEMA_VERSION, DetectionMsg, EvidenceEnvelopeV1
 from parcel_robot.detection_adapter.metric_localizer import (
     MetricLocalizer,
     MetricMeasurement,

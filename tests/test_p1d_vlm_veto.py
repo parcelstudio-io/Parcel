@@ -60,17 +60,14 @@ from parcel_robot.perception_contention import (
     ContentionPolicyError,
     PerceptionContentionGuard,
 )
-from parcel_robot.vlm_veto import (
+from parcel_robot.vlm_veto.runner import (
     LOOP_FORBIDDEN_CALLS,
     ControlLoopViolation,
-    NullVerifier,
-    VetoAnswer,
-    VetoRequest,
     VetoRunner,
     clear_control_thread,
     mark_control_thread,
-    parse_yes_no,
 )
+from parcel_robot.vlm_veto.verifier import NullVerifier, VetoAnswer, VetoRequest, parse_yes_no
 
 REPO = Path(__file__).resolve().parents[1]
 PROTOTYPE_NAV_CONFIG = REPO / "configs/navigation/prototype.yaml"

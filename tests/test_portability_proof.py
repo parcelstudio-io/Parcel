@@ -13,12 +13,9 @@ import time
 import pytest
 
 import parcel_robot.control.mock_vendor  # noqa: F401 - registers the factory
-from parcel_robot.control import (
-    ControlLifecycle,
-    ControlNotReadyError,
-    controller_factory_names,
-    create_control_manager,
-)
+from parcel_robot.control.factory import controller_factory_names, create_control_manager
+from parcel_robot.control.manager import ControlNotReadyError
+from parcel_robot.control.models import ControlLifecycle
 from parcel_robot.models import VelocityCommand
 from parcel_robot.safety import SafetyLimits
 

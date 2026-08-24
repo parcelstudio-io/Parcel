@@ -47,7 +47,7 @@ def default_focal_lengths() -> tuple[float, float]:
     """``(fx, fy)`` from the shipped D455 calibration. Read-only."""
 
     if "d455" not in _INTRINSICS_CACHE:
-        from parcel_robot.camera_channel import d455_color_intrinsics
+        from parcel_robot.camera_channel.d455 import d455_color_intrinsics
 
         intr = d455_color_intrinsics()
         _INTRINSICS_CACHE["d455"] = (float(intr.fx), float(intr.fy))

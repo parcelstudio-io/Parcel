@@ -59,7 +59,7 @@ from parcel_robot.core.input_health import (
     requirements_requiring_physical_inputs,
 )
 from parcel_robot.evidence_origin import EvidenceOrigin
-from parcel_robot.lidar import build_point_frame
+from parcel_robot.lidar.livox_udp import build_point_frame
 from scripts.parcel_capture.preflight import (
     AbsenceReason,
     MountReadiness,

@@ -29,7 +29,7 @@ from evals.nav_instruct.cam_foundation import (
     render_scene,
 )
 from parcel_robot.camera_channel.d455 import d455_color_intrinsics
-from parcel_robot.contracts import DetectionMsg
+from parcel_robot.contracts.v1 import DetectionMsg
 from parcel_robot.detection_adapter.pixel_detections import (
     SegTruthDetector,
     localize_frame,

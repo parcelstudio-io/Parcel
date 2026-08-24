@@ -43,8 +43,8 @@ from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from parcel_robot.control import ControlLifecycle, ControlNotReadyError
-from parcel_robot.control.models import RobotMotionState
+from parcel_robot.control.manager import ControlNotReadyError
+from parcel_robot.control.models import ControlLifecycle, RobotMotionState
 
 from .limits import (
     COMMISSIONING_SOURCE,

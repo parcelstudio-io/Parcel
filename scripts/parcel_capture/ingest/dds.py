@@ -59,8 +59,13 @@ import struct
 from collections.abc import Iterator, Sequence
 from typing import Any, ClassVar
 
-from parcel_robot.capture import Channel, Transport
-from parcel_robot.capture.channels import SourceClock, WireNaming, subscribe_name
+from parcel_robot.capture.channels import (
+    Channel,
+    SourceClock,
+    Transport,
+    WireNaming,
+    subscribe_name,
+)
 
 from ..preflight import (
     AbsenceReason,
@@ -805,7 +810,7 @@ class DdsIngest(IngestAdapter):
             session.close()
 
     def channels(self) -> tuple[Channel, ...]:
-        from parcel_robot.capture import CHANNELS
+        from parcel_robot.capture.channels import CHANNELS
 
         entries = tuple(entry for entry in CHANNELS if entry.transport is Transport.DDS)
         if not entries:

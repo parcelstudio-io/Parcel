@@ -449,7 +449,7 @@ camera/LiDAR perception backend:
 
 ```python
 from parcel_robot.config import ConfigStore
-from parcel_robot.control import build_unitree_sport_control_manager
+from parcel_robot.control.factory import build_unitree_sport_control_manager
 from parcel_robot.runtime import RobotRuntime
 
 store = ConfigStore("configs/robot.yaml")

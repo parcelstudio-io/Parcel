@@ -29,7 +29,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 
-from parcel_robot.contracts import DetectionMsg
+from parcel_robot.contracts.v1 import DetectionMsg
 
 DOES_NOT_PROVE = (
     (

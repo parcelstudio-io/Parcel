@@ -17,7 +17,7 @@ from evals.companion.run_live_planner_v1 import (
     run_live_evaluation,
     write_result,
 )
-from parcel_robot.brain import PlanIR
+from parcel_robot.brain.contracts import PlanIR
 
 RECORDED_RUN = SUITE_ROOT / "results" / "live-planner-20260803-gemma4-run05.json"
 

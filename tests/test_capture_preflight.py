@@ -33,7 +33,7 @@ from pathlib import Path
 
 import pytest
 
-from parcel_robot.capture import CHANNELS, CHANNELS_BY_ID, channel, channel_ids
+from parcel_robot.capture.channels import CHANNELS, CHANNELS_BY_ID, channel, channel_ids
 from parcel_robot.evidence_origin import EvidenceOrigin
 from scripts.parcel_capture import attest as attest_mod
 from scripts.parcel_capture import preflight as pf

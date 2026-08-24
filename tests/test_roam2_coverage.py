@@ -30,14 +30,10 @@ import pytest
 from parcel_robot.audio_io import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
 from parcel_robot.models import AgentDecision
-from parcel_robot.online_map import (
-    STATUS_DECAYED,
-    MapObservation,
-    OnlineSemanticMap,
-    WriterProvenance,
-    prior_for,
-)
-from parcel_robot.patrol import (
+from parcel_robot.online_map.entries import STATUS_DECAYED, MapObservation, WriterProvenance
+from parcel_robot.online_map.hygiene import prior_for
+from parcel_robot.online_map.online_map import OnlineSemanticMap
+from parcel_robot.patrol.mission import (
     PatrolCommand,
     PatrolLimits,
     PatrolPolicy,

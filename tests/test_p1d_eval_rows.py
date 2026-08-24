@@ -34,12 +34,8 @@ from pathlib import Path
 
 import pytest
 
-from parcel_robot.online_map import (
-    EmbeddingStamp,
-    MapObservation,
-    OnlineSemanticMap,
-    WriterProvenance,
-)
+from parcel_robot.online_map.entries import EmbeddingStamp, MapObservation, WriterProvenance
+from parcel_robot.online_map.online_map import OnlineSemanticMap
 from parcel_robot.perception_abstention import (
     OUTCOME_ADMIT,
     OUTCOME_ASK,
@@ -272,7 +268,7 @@ def test_an_injected_present_veto_admits_through_the_product_path() -> None:
     SEED: delete the ``resolve_veto`` call in ``assess_place_query``.
     """
 
-    from parcel_robot.vlm_veto import VetoAnswer
+    from parcel_robot.vlm_veto.verifier import VetoAnswer
 
     policy = _prototype_policy()
     seen: list[str] = []
@@ -324,7 +320,7 @@ def test_the_config_names_the_seat_and_an_unknown_name_asks() -> None:
     SEED: fall back to a plugin lookup in ``_named_seat``.
     """
 
-    from parcel_robot.vlm_veto import NULL_SEAT_NAMES, clear_seats, runner_for
+    from parcel_robot.vlm_veto.runner import NULL_SEAT_NAMES, clear_seats, runner_for
 
     clear_seats()
     try:
@@ -356,7 +352,7 @@ def _gpu_reason() -> str:
         return "no torch in this environment"
     if not torch.cuda.is_available():
         return "no CUDA device"
-    from parcel_robot.vlm_veto import resolve_weights
+    from parcel_robot.vlm_veto.verifier import resolve_weights
 
     if not resolve_weights():
         return "no local Qwen3-VL-2B snapshot"

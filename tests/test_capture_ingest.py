@@ -61,8 +61,15 @@ if str(REPO) not in sys.path:
 # ends up trusting the weaker.
 from test_no_arm_pin import capture_stack_files, static_violations
 
-from parcel_robot.capture import CHANNELS, Transport, UnknownChannelError, channel
-from parcel_robot.capture.channels import SourceClock, WireNaming, subscribe_name
+from parcel_robot.capture.channels import (
+    CHANNELS,
+    SourceClock,
+    Transport,
+    UnknownChannelError,
+    WireNaming,
+    channel,
+    subscribe_name,
+)
 from parcel_robot.evidence_origin import EvidenceOrigin
 from scripts.parcel_capture import preflight as preflight_module
 from scripts.parcel_capture.ingest import (
@@ -421,7 +428,7 @@ def test_the_module_present_refusal_never_imported_the_vendor_sdk() -> None:
         "import sys;"
         f"sys.path.insert(0, {str(REPO)!r});"
         "from scripts.parcel_capture.ingest import RealSenseIngest, IngestUnavailableError;"
-        "from parcel_robot.capture import channel;"
+        "from parcel_robot.capture.channels import channel;"
         "adapter = RealSenseIngest();"
         "print('SATISFIED', adapter.dependency_report().satisfied);"
         "\ntry:\n"
@@ -2371,7 +2378,9 @@ def test_the_dds_adapter_refuses_rather_than_serving_nothing_if_the_matrix_loses
     channels and report success; it refuses instead.
     """
 
-    import parcel_robot.capture as capture_module
+    # DEC-IG-2: ``dds.py`` imports ``CHANNELS`` from the leaf, so the patch
+    # target is the leaf module's namespace, not the drained package barrel.
+    import parcel_robot.capture.channels as capture_module
 
     monkeypatch.setattr(capture_module, "CHANNELS", ())
     with pytest.raises(Exception) as caught:

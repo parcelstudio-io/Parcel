@@ -78,19 +78,16 @@ from parcel_robot.bags.schema import (
     default_frames,
     make_manifest,
 )
-from parcel_robot.capture import (
-    ENVELOPE_SCHEMA,
-    Channel,
-    ChannelSequenceReport,
-    RateKind,
-    channel,
-)
 from parcel_robot.capture.channels import (
     SUPPORT_ARTIFACTS,
+    Channel,
+    RateKind,
     SupportNeed,
     camera_info_topic_for,
     certified_optical_channel_ids,
+    channel,
 )
+from parcel_robot.capture.envelope import ENVELOPE_SCHEMA, ChannelSequenceReport
 from parcel_robot.evidence_origin import EvidenceOrigin
 
 from .record import (

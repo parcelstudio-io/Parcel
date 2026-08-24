@@ -420,7 +420,7 @@ def _navigability(active: Any, entry: Any) -> tuple[float, str]:
 
 def _default_visibility_range() -> float:
     try:
-        from parcel_robot.online_map import DEFAULT_VISIBILITY_RANGE_M
+        from parcel_robot.online_map.online_map import DEFAULT_VISIBILITY_RANGE_M
 
         return float(DEFAULT_VISIBILITY_RANGE_M)
     except (ImportError, TypeError, ValueError):  # pragma: no cover
@@ -437,7 +437,7 @@ def _active_source() -> Any:
     """
 
     try:
-        from parcel_robot.perception_source import active_semantic_source
+        from parcel_robot.perception_source.selection import active_semantic_source
     except ImportError:  # pragma: no cover — frozen BARN bundle path
         return None
     return active_semantic_source()

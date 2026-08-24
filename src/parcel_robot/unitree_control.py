@@ -45,7 +45,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from parcel_robot import __version__
-from parcel_robot.commissioning import (
+from parcel_robot.commissioning.limits import (
     DEFAULT_MAX_DURATION_S,
     MAX_LINEAR_MPS,
     MAX_YAW_RAD_S,
@@ -56,6 +56,8 @@ from parcel_robot.commissioning import (
     CommissioningArming,
     CommissioningAxis,
     CommissioningError,
+)
+from parcel_robot.commissioning.record import (
     CommissioningRecordV1,
     CommissioningReviewError,
     ObservationEvidence,

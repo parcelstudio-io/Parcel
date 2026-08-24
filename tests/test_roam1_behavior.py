@@ -30,7 +30,7 @@ from parcel_robot.audio_io import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
 from parcel_robot.config import PROFILE_ENV
 from parcel_robot.models import AgentDecision
-from parcel_robot.patrol import (
+from parcel_robot.patrol.mission import (
     FORWARD_CLEARANCE_MARGIN_M,
     PERSON_CLEARANCE_MARGIN_M,
     PatrolLimits,

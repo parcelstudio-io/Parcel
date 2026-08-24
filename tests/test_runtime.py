@@ -10,8 +10,9 @@ import pytest
 
 from parcel_robot.audio_io import AudioDeviceStatus
 from parcel_robot.backends.base import LidarObstacle, OwnerTrack, RobotPose, SimObservation
-from parcel_robot.control import build_backend_control_manager
-from parcel_robot.core import CommandArbiter, MotionIntent
+from parcel_robot.control.factory import build_backend_control_manager
+from parcel_robot.core.arbiter import CommandArbiter
+from parcel_robot.core.commands import MotionIntent
 from parcel_robot.core.resume import ResumeIntent
 from parcel_robot.expression import ReactionHooks
 from parcel_robot.models import (

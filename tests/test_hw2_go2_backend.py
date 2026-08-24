@@ -33,7 +33,6 @@ from typing import Any
 import pytest
 import yaml
 
-from parcel_robot.backends import MujocoSocketBackend
 from parcel_robot.backends.base import (
     OwnerTrack,
     RobotPose,
@@ -51,6 +50,7 @@ from parcel_robot.backends.go2 import (
     RecordedStage0Source,
     state_from_sport_mode_state,
 )
+from parcel_robot.backends.mujoco import MujocoSocketBackend
 from parcel_robot.bridge import timing
 from parcel_robot.control.adapters import BackendVelocityController
 from parcel_robot.core.input_health import (
@@ -330,7 +330,7 @@ def test_a2_reactive_safety_reads_the_band_across_the_whole_recording() -> None:
 def test_a2_the_travel_bearing_is_the_states_own_velocity() -> None:
     """Row A2, second half: `travel_bearing_rad(vx, vy)` is passed, not invented."""
 
-    from parcel_robot.lidar import travel_bearing_rad
+    from parcel_robot.lidar.band import travel_bearing_rad
 
     states, frames = _fixture_records()
     moving = dict(states[0])
@@ -345,7 +345,7 @@ def test_a2_the_travel_bearing_is_the_states_own_velocity() -> None:
             return state_from_sport_mode_state(moving, received_at=clock(), sequence=1).state
 
         def drain(self):
-            from parcel_robot.lidar import parse_point_frame
+            from parcel_robot.lidar.livox_udp import parse_point_frame
 
             return [parse_point_frame(frames[0])]
 
@@ -441,9 +441,12 @@ def test_a6_no_vendor_import_at_module_scope() -> None:
     3. `parcel_robot.control` stays out, which is why `RobotMotionState` is
        imported inside the one function that constructs one.
 
-    `socket` DOES arrive, from the sibling `backends.mujoco` -> `sim_ipc`, which
-    `backends/__init__.py` has always imported. It is recorded rather than
-    asserted away.
+    `socket` used to arrive, from the sibling `backends.mujoco` -> `sim_ipc`,
+    which `backends/__init__.py` imported for its re-export barrel. Card
+    DEC-IG-2 drained that barrel, so importing THIS backend no longer executes
+    the mujoco one and the row is now `[]`. It is still measured rather than
+    asserted away: if a future edit puts a socket back on go2's module scope,
+    this line says so.
     """
 
     code = (
@@ -465,7 +468,7 @@ def test_a6_no_vendor_import_at_module_scope() -> None:
     )
     lines = result.stdout.strip().splitlines()
     assert lines[0] == "[]", f"a vendor SDK or numpy reached module scope: {result.stdout}"
-    assert lines[1] == "['socket']", result.stdout
+    assert lines[1] == "[]", result.stdout
     assert lines[2] == "[]", f"the heavy packages crept back: {result.stdout}"
     assert lines[3] == "8"
 
@@ -1072,7 +1075,7 @@ class _Observer:
 
 
 def _evidence(**overrides: Any):
-    from parcel_robot.commissioning import ObservationEvidence
+    from parcel_robot.commissioning.record import ObservationEvidence
 
     values: dict[str, Any] = {
         "samples": 20,
@@ -1180,7 +1183,7 @@ def test_d3_observe_duration_propagates_a_refusal(
     fault, too few samples — keeps working.
     """
 
-    from parcel_robot.commissioning import CommissioningRefusedError, RefusalReason
+    from parcel_robot.commissioning.limits import CommissioningRefusedError, RefusalReason
 
     clock = FakeClock()
     observer = _Observer(

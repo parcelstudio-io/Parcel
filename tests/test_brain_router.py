@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from parcel_robot.brain import DeterministicIntentRouter
+from parcel_robot.brain.router import DeterministicIntentRouter
 
 REPO = Path(__file__).resolve().parents[1]
 SUITE = REPO / "evals" / "companion" / "brain_v1"

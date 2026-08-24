@@ -5,27 +5,27 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from parcel_robot.camera_channel import D455_HEIGHT_PX, D455_WIDTH_PX, assert_nominal_d455_contract
-from parcel_robot.contracts import DetectionMsg
+from parcel_robot.camera_channel.channel import assert_nominal_d455_contract
+from parcel_robot.camera_channel.d455 import D455_HEIGHT_PX, D455_WIDTH_PX
+from parcel_robot.contracts.v1 import DetectionMsg
 from parcel_robot.instructnav.memory import SemanticMemory2D
-from parcel_robot.storefront import (
-    DOES_NOT_PROVE,
+from parcel_robot.storefront import DOES_NOT_PROVE
+from parcel_robot.storefront.fixtures import load_manifest
+from parcel_robot.storefront.ingest import (
+    ingest_ocr_hits,
+    ocr_hits_to_detections,
+    recall_storefront,
+)
+from parcel_robot.storefront.ocr import (
     UNVERIFIED_PADDLE_OCR,
     FakeOcrEngine,
-    StorefrontSyntheticAdapter,
-    composite_storefront_frame,
-    ingest_ocr_hits,
-    load_manifest,
-    normalize_sign_text,
-    ocr_hits_to_detections,
+    PaddleOcrEngine,
     open_ocr_engine,
     paddleocr_available,
-    recall_storefront,
-    render_placard_rgb,
     texts_match,
-    write_png_rgb,
 )
-from parcel_robot.storefront.ocr import PaddleOcrEngine
+from parcel_robot.storefront.placards import normalize_sign_text, render_placard_rgb, write_png_rgb
+from parcel_robot.storefront.render import StorefrontSyntheticAdapter, composite_storefront_frame
 
 
 def test_manifest_loads_and_materializes_placards(tmp_path) -> None:

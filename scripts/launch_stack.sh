@@ -500,7 +500,7 @@ if [[ -n "$CAMERA" ]]; then
        hand to see why: scripts/launch_detector_daemon.sh --preload"
   fi
   export PARCEL_PERCEPTION_SOCKET="${PERCEPTION_SOCKET:-$("$PYTHON" -c \
-    'from parcel_robot.perception_daemon import default_socket_path; print(default_socket_path())')}"
+    'from parcel_robot.perception_daemon.protocol import default_socket_path; print(default_socket_path())')}"
   echo "Detector daemon socket: $PARCEL_PERCEPTION_SOCKET"
 fi
 

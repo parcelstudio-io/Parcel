@@ -129,10 +129,22 @@ from pathlib import Path
 from typing import Any
 
 try:  # pragma: no cover - exercised only on a checkout without an install
-    from parcel_robot.capture import CHANNELS, Channel, ChannelPresence, Criticality, RateKind
+    from parcel_robot.capture.channels import (
+        CHANNELS,
+        Channel,
+        ChannelPresence,
+        Criticality,
+        RateKind,
+    )
 except ImportError:  # pragma: no cover - Orin runs this straight from a checkout
     sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
-    from parcel_robot.capture import CHANNELS, Channel, ChannelPresence, Criticality, RateKind
+    from parcel_robot.capture.channels import (
+        CHANNELS,
+        Channel,
+        ChannelPresence,
+        Criticality,
+        RateKind,
+    )
 
 #: Wire identifier of the preflight report. A reader that does not know this
 #: string must refuse the record rather than guess at its shape.
@@ -3612,7 +3624,7 @@ def probe_mid360_udp(
 
     what = "bind the Livox point-data port and decode one datagram"
     try:
-        from parcel_robot.lidar import (
+        from parcel_robot.lidar.livox_udp import (
             HOST_POINT_DATA_PORT,
             LivoxDecodeError,
             build_point_frame,

@@ -5,12 +5,11 @@ from dataclasses import replace
 
 import pytest
 
-from parcel_robot.brain import (
-    DispatchRequest,
-    FrozenDict,
+from parcel_robot.brain.contracts import FrozenDict, SuccessCondition
+from parcel_robot.brain.executive import DispatchRequest
+from parcel_robot.brain.runtime_adapter import (
     SemanticRuntimeState,
     SemanticTaskRuntimeAdapter,
-    SuccessCondition,
     admitted_plan_schema,
     dispatch_key,
 )

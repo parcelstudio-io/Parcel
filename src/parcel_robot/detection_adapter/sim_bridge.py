@@ -14,7 +14,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from parcel_robot.contracts import DetectionMsg
+from parcel_robot.contracts.v1 import DetectionMsg
 from parcel_robot.detection_adapter.adapter import (
     DetectionNoiseAdapter,
     GroundTruthDetection,

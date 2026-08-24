@@ -320,7 +320,7 @@ def test_a_misspelling_of_each_new_key_refuses_by_name_at_the_real_loader(
 
 
 def _channel(channel_id: str) -> Any:
-    from parcel_robot.capture import CHANNELS
+    from parcel_robot.capture.channels import CHANNELS
 
     return next(entry for entry in CHANNELS if entry.channel_id == channel_id)
 
@@ -359,7 +359,7 @@ def test_with_no_profile_every_adapter_is_constructed_exactly_as_before(
 ) -> None:
     """R6. The flag-off path, which is every host in this tree today."""
 
-    from parcel_robot.capture import CHANNELS
+    from parcel_robot.capture.channels import CHANNELS
     from scripts.parcel_capture.ingest import IngestRefusedError
 
     monkeypatch.delenv("PARCEL_PROFILE", raising=False)
@@ -450,7 +450,7 @@ def _sandbox(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Iterator[None]:
     try:
         yield
     finally:
-        from parcel_robot.perception_source import use_learned_map, use_semantic_source
+        from parcel_robot.perception_source.selection import use_learned_map, use_semantic_source
 
         use_semantic_source(None)
         use_learned_map(None)

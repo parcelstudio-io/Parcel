@@ -33,12 +33,14 @@ import pytest
 from parcel_robot.audio_io import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
 from parcel_robot.models import AgentDecision, VelocityCommand
-from parcel_robot.online_map import MapObservation, OnlineSemanticMap, WriterProvenance
 from parcel_robot.online_map.entries import (
     NAME_PROMOTED,
     NAME_VLM_PROPOSED,
+    MapObservation,
     ProposedName,
+    WriterProvenance,
 )
+from parcel_robot.online_map.online_map import OnlineSemanticMap
 from parcel_robot.realtime.config import (
     CURIOSITY_ALLOWED_KEYS,
     REALTIME_CONFIG_ENV,

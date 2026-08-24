@@ -19,20 +19,17 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from parcel_robot.brain import (
-    DeterministicIntentRouter,
-    ObservationSnapshot,
-    PlanIR,
-    PlanValidationError,
-    PlanValidator,
+from parcel_robot.brain.compiler import compile_plan_contracts
+from parcel_robot.brain.contracts import ObservationSnapshot, PlanIR
+from parcel_robot.brain.router import DeterministicIntentRouter
+from parcel_robot.brain.runtime_adapter import (
     SemanticTaskRuntimeAdapter,
-    SkillContractRegistry,
     admitted_plan_schema,
     bind_plan_context,
-    compile_plan_contracts,
     contextual_plan_schema,
 )
-from parcel_robot.prompting import PromptLibrary
+from parcel_robot.brain.validator import PlanValidationError, PlanValidator, SkillContractRegistry
+from parcel_robot.prompting.loader import PromptLibrary
 from parcel_robot.providers import LlamaCppProvider, PlanningModel
 
 SUITE_ID = "parcel-planner-quality-v2"

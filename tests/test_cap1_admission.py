@@ -434,7 +434,7 @@ def _restore_process_globals(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     try:
         yield
     finally:
-        from parcel_robot.perception_source import use_learned_map, use_semantic_source
+        from parcel_robot.perception_source.selection import use_learned_map, use_semantic_source
 
         use_semantic_source(None)
         use_learned_map(None)
@@ -511,7 +511,7 @@ def test_g4_the_bound_candidate_source_is_the_one_the_yaml_names(
     as a startup defect to close, not a usable shadow/cutover mode."
     """
 
-    from parcel_robot.perception_source import active_semantic_source
+    from parcel_robot.perception_source.selection import active_semantic_source
 
     nav = _nav_config(tmp_path, semantic_source="learned_map")
     runtime = _runtime(_robot_config(tmp_path, nav), audio_status)
@@ -533,7 +533,7 @@ def test_g4_the_shipped_oracle_profile_binds_the_oracle(
 ) -> None:
     """The other direction, so the guard is not one-sided."""
 
-    from parcel_robot.perception_source import active_semantic_source
+    from parcel_robot.perception_source.selection import active_semantic_source
 
     nav = _nav_config(tmp_path, semantic_source="oracle")
     runtime = _runtime(_robot_config(tmp_path, nav), audio_status)
@@ -572,7 +572,7 @@ def test_the_source_binding_now_follows_the_config_in_both_directions(
     that could never report a failure would be furniture.
     """
 
-    from parcel_robot.perception_source import (
+    from parcel_robot.perception_source.selection import (
         SemanticSourcePolicy,
         active_semantic_source,
         use_semantic_source,

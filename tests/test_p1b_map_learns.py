@@ -48,23 +48,23 @@ from parcel_robot.camera_channel.ingress import (
     _encode_thumbnail,
 )
 from parcel_robot.evidence_origin import EvidenceOrigin
-from parcel_robot.online_map import (
+from parcel_robot.online_map import entries as entries_module
+from parcel_robot.online_map.entries import (
     MAP_SCHEMA,
     MIGRATABLE_SCHEMAS,
     EmbeddingStamp,
     MapEntry,
-    MapRefused,
-    MapStoreRefused,
-    OnlineMapStore,
-    OnlineSemanticMap,
     WriterProvenance,
-    embedding_stamp_from_record,
     normalize_origin,
-    observation_from_record,
-    observations_from_frame,
     origins_conflict,
 )
-from parcel_robot.online_map import entries as entries_module
+from parcel_robot.online_map.ingest import (
+    embedding_stamp_from_record,
+    observation_from_record,
+    observations_from_frame,
+)
+from parcel_robot.online_map.online_map import MapRefused, OnlineSemanticMap
+from parcel_robot.online_map.store import MapStoreRefused, OnlineMapStore
 
 REPO = Path(__file__).resolve().parents[1]
 
@@ -993,7 +993,7 @@ def test_the_shipped_navigation_default_builds_no_map() -> None:
 
     import yaml
 
-    from parcel_robot.perception_source import SemanticSourcePolicy
+    from parcel_robot.perception_source.selection import SemanticSourcePolicy
 
     raw = yaml.safe_load(
         (REPO / "configs" / "navigation" / "default.yaml").read_text(encoding="utf-8")

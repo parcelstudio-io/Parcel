@@ -65,7 +65,7 @@ class PlaceGrounder:
         """
 
         try:
-            from parcel_robot.perception_source import active_semantic_source
+            from parcel_robot.perception_source.selection import active_semantic_source
         except ImportError:  # pragma: no cover — frozen BARN bundle path
             return cls.from_yaml(path)
         candidates = [active_semantic_source()]

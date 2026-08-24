@@ -15,6 +15,7 @@ gates; the scene edit is written up as a one-act follow-up.
 
 from __future__ import annotations
 
+import ast
 import json
 import math
 import sqlite3
@@ -24,38 +25,38 @@ from pathlib import Path
 
 import pytest
 
-from parcel_robot.online_map import (
+from parcel_robot.online_map.entries import (
     CHANNEL_DETECTOR_LABEL,
     CHANNEL_EMBEDDING,
     CHANNEL_TEXT_NAME,
-    EMBEDDING_RERANKED,
-    EMBEDDING_UNAVAILABLE_VERSION,
     ENV_MAP_PATH,
     NAME_PROMOTION_VISITS,
+    STATUS_ACTIVE,
+    STATUS_DECAYED,
+    EmbeddingStamp,
+    MapObservation,
+    WriterProvenance,
+)
+from parcel_robot.online_map.hygiene import (
     NOTE_OK,
     NOTE_PLANAR,
     NOTE_RELIEF_UNVERIFIED,
     NOTE_TOO_SMALL,
     NOTE_VOLATILE,
-    STATUS_ACTIVE,
-    STATUS_DECAYED,
-    EmbeddingStamp,
-    MapObservation,
-    MapStoreRefused,
-    OnlineMapStore,
-    OnlineSemanticMap,
-    WriterProvenance,
     is_volatile_label,
     metric_extents,
-    observations_from_frame,
     relief_from_depth_patch,
-    resolve_map_store_path,
     screen_observation,
 )
+from parcel_robot.online_map.ingest import observations_from_frame
 from parcel_robot.online_map.online_map import (
+    EMBEDDING_RERANKED,
+    EMBEDDING_UNAVAILABLE_VERSION,
     GROUND_SOURCE_TRAVERSAL,
     GROUND_SOURCE_UNMEASURED,
+    OnlineSemanticMap,
 )
+from parcel_robot.online_map.store import MapStoreRefused, OnlineMapStore, resolve_map_store_path
 
 FIXTURE = Path(__file__).parent / "data" / "c2_online_map_frames.json"
 
@@ -594,8 +595,9 @@ def test_reload_survives_a_fresh_interpreter(tmp_path: Path) -> None:
 
     program = (
         "import json;"
-        "from parcel_robot.online_map import OnlineMapStore, OnlineSemanticMap, "
-        "WriterProvenance;"
+        "from parcel_robot.online_map.entries import WriterProvenance;"
+        "from parcel_robot.online_map.online_map import OnlineSemanticMap;"
+        "from parcel_robot.online_map.store import OnlineMapStore;"
         f"s=OnlineMapStore({str(path)!r});"
         "p=WriterProvenance(session_id='next-day', seat='in_loop_query',"
         " detector_name='owlv2-b16-int8', scene_id='city_block');"
@@ -843,16 +845,50 @@ def test_the_map_supplies_labels_through_the_graphs_own_parameter() -> None:
     assert set(m.semantic_labels_near(0.0, 0.0, radius_m=50.0)) == {"lamppost", "tree"}
 
 
-def test_route_memory_is_untouched_by_this_card() -> None:
-    """The smallest honest touch turned out to be no touch at all."""
+def test_route_memory_is_bound_to_never_forked_by_this_card() -> None:
+    """The smallest honest touch turned out to be no touch at all.
+
+    This was a ``git diff --name-only HEAD -- src/parcel_robot/route_memory``
+    emptiness pin. It stopped measuring what it meant, the same way its sibling
+    in ``test_c3_cutover.py`` did: a working-tree diff is a claim about whoever
+    runs the suite, it goes vacuously green the moment the change is committed,
+    and ANY later card chartered to touch ``route_memory/`` reddens it with
+    nothing about C-2 having changed. Card DEC-IG-2 (barrel thinning) was that
+    later card.
+
+    Replaced by the property it stood in for, which is strictly stronger than
+    "nobody has run git yet": C-2's own package binds to P-4's place graph
+    through the graph object it is HANDED, and re-declares none of P-4's types
+    and imports none of P-4's modules.
+    """
 
     root = Path(__file__).resolve().parents[1]
-    diff = subprocess.run(
-        ["git", "-C", str(root), "diff", "--name-only", "HEAD", "--",
-         "src/parcel_robot/route_memory"],
-        capture_output=True, text=True, check=True,
+    package = root / "src" / "parcel_robot" / "online_map"
+    forbidden_declarations = (
+        "class RouteKeyframe",
+        "class RoutePath",
+        "class RouteMemoryStore",
+        "class RoutePlaceGraph",
+        "class PlaceEdge",
     )
-    assert diff.stdout.strip() == ""
+    offenders: list[str] = []
+    for path in sorted(package.rglob("*.py")):
+        text = path.read_text(encoding="utf-8")
+        tree = ast.parse(text)
+        for node in ast.walk(tree):
+            module = None
+            if isinstance(node, ast.ImportFrom) and node.module:
+                module = node.module
+            elif isinstance(node, ast.Import):
+                module = ",".join(alias.name for alias in node.names)
+            if module and "route_memory" in module:
+                offenders.append(f"{path.name}: imports {module}")
+        for declaration in forbidden_declarations:
+            if declaration in text:
+                offenders.append(f"{path.name}: {declaration}")
+    assert offenders == [], (
+        "route memory is P-4's; C-2 binds to a graph it is handed:\n" + "\n".join(offenders)
+    )
 
 
 # --------------------------------------------------------------------------
@@ -893,7 +929,7 @@ def test_a_map_builds_from_the_real_stream_and_finds_one_lamppost() -> None:
 
 
 def test_the_real_stream_is_stale_and_the_map_says_so() -> None:
-    from parcel_robot.online_map import map_freshness_report
+    from parcel_robot.online_map.ingest import map_freshness_report
 
     frames = real_frames()
     report = map_freshness_report(frames)

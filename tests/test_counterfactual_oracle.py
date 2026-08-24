@@ -4,15 +4,17 @@ from __future__ import annotations
 
 import pytest
 
-from parcel_robot.counterfactual import (
+from parcel_robot.counterfactual.arbitration_log import (
     ARBITRATION_LOG_SCHEMA,
-    COUNTERFACTUAL_REPORT_SCHEMA,
     SELECTOR_ID,
     ArbitrationCandidateV1,
     ArbitrationLogRecordV1,
     build_arbitration_log,
-    counterfactual_report,
     record_digest,
+)
+from parcel_robot.counterfactual.oracle_replay import (
+    COUNTERFACTUAL_REPORT_SCHEMA,
+    counterfactual_report,
     replay_committed_choice,
     select_candidate_id,
 )

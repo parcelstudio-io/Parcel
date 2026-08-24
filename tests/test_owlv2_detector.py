@@ -15,26 +15,23 @@ import os
 import numpy as np
 import pytest
 
-from parcel_robot.detection_adapter import (
-    Detector,
-    OwlV2Detector,
-    load_owlv2_detector,
-    owlv2_weights_present,
-)
 from parcel_robot.detection_adapter.owlv2_onnx import (
     FAST_PREPROCESS_ENV,
     OWLV2_TEXT_SEQ_LEN,
     SAFETY_RELEVANT_LABELS,
     SOURCE_MAX_EDGE_ENV,
+    OwlV2Detector,
     _iou,
     _nms,
     _normalize_phrases,
     fast_preprocess_enabled,
+    load_owlv2_detector,
     onnx_enabled,
+    owlv2_weights_present,
     resolve_owlv2_provider,
     source_max_edge,
 )
-from parcel_robot.detection_adapter.pixel_detections import PixelDetection
+from parcel_robot.detection_adapter.pixel_detections import Detector, PixelDetection
 from parcel_robot.perception_contention import PerceptionContentionGuard
 from parcel_robot.perception_providers import PROVIDER_CPU_INT8, PROVIDER_CUDA_FP16
 

@@ -7,17 +7,16 @@ from types import SimpleNamespace
 
 import pytest
 
-from parcel_robot.control import (
-    BackendVelocityController,
+from parcel_robot.control.adapters import BackendVelocityController
+from parcel_robot.control.factory import build_unitree_sport_control_manager
+from parcel_robot.control.manager import ControlManager, ControlNotReadyError
+from parcel_robot.control.models import (
     ControllerCapabilities,
     ControlLifecycle,
     ControlLimits,
-    ControlManager,
-    ControlNotReadyError,
     ControlTiming,
     RobotMotionState,
     TimedVelocitySetpoint,
-    build_unitree_sport_control_manager,
 )
 from parcel_robot.control.unitree_sport import (
     UnitreeChannelContext,

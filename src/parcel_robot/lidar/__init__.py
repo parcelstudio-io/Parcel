@@ -17,7 +17,7 @@ wrong NIC, the unit off), and the ``SimObservation`` must then carry the
 zero measurements as clear space. **Never copy an empty ``BandScan`` across as
 if it were a scan.**::
 
-    from parcel_robot.lidar import nearest_obstacle_from_scan, scan_from_frames
+    from parcel_robot.lidar.band import nearest_obstacle_from_scan, scan_from_frames
 
     scan = scan_from_frames(drained_frames, self._band_profile)
     fix = nearest_obstacle_from_scan(
@@ -43,71 +43,3 @@ Nothing in this package imports mujoco, numpy, rclpy, a Livox SDK, or a socket
 module: it is the same code on the desktop and on the Orin's CPython 3.10 /
 aarch64 (design §5.1), and every test runs offline against synthesised frames.
 """
-
-from __future__ import annotations
-
-from .band import (
-    BAND_TUNING_STEP,
-    IDENTITY_EXTRINSIC,
-    BandProfile,
-    BandScan,
-    ObstacleFix,
-    band_scan,
-    nearest_obstacle_from_scan,
-    scan_from_frames,
-    travel_bearing_rad,
-)
-from .livox_udp import (
-    CMD_DATA_PORT,
-    HEADER_SIZE_BYTES,
-    HOST_POINT_DATA_PORT,
-    IMU_DATA_PORT,
-    LIDAR_SAMPLE_HOST_IP,
-    LOG_DATA_PORT,
-    MAX_POINTS_PER_FRAME,
-    POINT_DATA_PORT,
-    POINT_SIZE_BYTES,
-    PUSH_MSG_PORT,
-    SUPPORTED_PROTOCOL_VERSIONS,
-    FrameSequenceReport,
-    LivoxDataType,
-    LivoxDecodeError,
-    LivoxPointFrame,
-    LivoxTimeType,
-    build_point_frame,
-    parse_point_frame,
-    receive_frames,
-    sequence_report,
-)
-
-__all__ = [
-    "BAND_TUNING_STEP",
-    "CMD_DATA_PORT",
-    "HEADER_SIZE_BYTES",
-    "HOST_POINT_DATA_PORT",
-    "IDENTITY_EXTRINSIC",
-    "IMU_DATA_PORT",
-    "LIDAR_SAMPLE_HOST_IP",
-    "LOG_DATA_PORT",
-    "MAX_POINTS_PER_FRAME",
-    "POINT_DATA_PORT",
-    "POINT_SIZE_BYTES",
-    "PUSH_MSG_PORT",
-    "SUPPORTED_PROTOCOL_VERSIONS",
-    "BandProfile",
-    "BandScan",
-    "FrameSequenceReport",
-    "LivoxDataType",
-    "LivoxDecodeError",
-    "LivoxPointFrame",
-    "LivoxTimeType",
-    "ObstacleFix",
-    "band_scan",
-    "build_point_frame",
-    "nearest_obstacle_from_scan",
-    "parse_point_frame",
-    "receive_frames",
-    "scan_from_frames",
-    "sequence_report",
-    "travel_bearing_rad",
-]

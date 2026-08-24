@@ -2,8 +2,9 @@ import json
 from pathlib import Path
 
 from parcel_robot import providers
-from parcel_robot.brain import DeterministicIntentRouter, PlanSketch
 from parcel_robot.brain.observations import build_observation_snapshot
+from parcel_robot.brain.plan_sketch import PlanSketch
+from parcel_robot.brain.router import DeterministicIntentRouter
 from parcel_robot.providers import LlamaCppProvider
 
 REPO = Path(__file__).resolve().parents[1]

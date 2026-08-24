@@ -11,25 +11,22 @@ import yaml
 
 from parcel_robot.audio_io import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
-from parcel_robot.brain import (
-    GoalSpec,
-    GoalTarget,
-    PlanIR,
-    PlanStep,
-    PlanValidator,
-    SkillContractRegistry,
-    SuccessCondition,
-)
 from parcel_robot.brain.contracts import (
     BatteryStateSnapshot,
+    GoalSpec,
+    GoalTarget,
     ObservationSnapshot,
     ObservedEntity,
+    PlanIR,
+    PlanStep,
     RobotStateSnapshot,
     SafetyStateSnapshot,
     SensorSnapshot,
+    SuccessCondition,
     TaskStateSnapshot,
 )
 from parcel_robot.brain.executive import InterruptRequest
+from parcel_robot.brain.validator import PlanValidator, SkillContractRegistry
 from parcel_robot.core.resume import ResumeIntent, resume_rejection_reason
 from parcel_robot.models import VelocityCommand
 from parcel_robot.runtime import RobotRuntime

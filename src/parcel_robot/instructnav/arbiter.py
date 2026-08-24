@@ -12,13 +12,12 @@ from typing import Any
 # NOT ``parcel_robot.core.arbiter``: that runs ``parcel_robot/core/__init__.py``,
 # which reaches navigation.pipeline and silently disables the whole InstructNav
 # ladder when instructnav is imported first (see tests/test_import_order_no_cycle.py).
-from parcel_robot.counterfactual import (
+from parcel_robot.counterfactual.arbitration_log import (
     ArbitrationCandidateV1,
     ArbitrationLogRecordV1,
-    CounterfactualReportV1,
     build_arbitration_log,
-    counterfactual_report,
 )
+from parcel_robot.counterfactual.oracle_replay import CounterfactualReportV1, counterfactual_report
 from parcel_robot.lethal_veto import waypoints_trigger_lethal_veto
 from parcel_robot.revision import CommittedRevisions
 

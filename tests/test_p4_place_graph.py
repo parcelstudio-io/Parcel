@@ -42,25 +42,23 @@ import pytest
 
 from parcel_robot.navigation.grid_planner import GridPlannerConfig
 from parcel_robot.pose import Frame, PoseEstimate, PoseHealth
-from parcel_robot.route_memory import (
+from parcel_robot.route_memory import place_graph as place_graph_module
+from parcel_robot.route_memory.memory import RouteKeyframe
+from parcel_robot.route_memory.place_graph import (
     DEFAULT_ATTACH_RADIUS_M,
     DEFAULT_KEYFRAME_SPACING_M,
     DEFAULT_MAX_CONTIGUOUS_STEP_M,
-    PLACE_GRAPH_SCHEMA,
-    PlaceEdge,
-    RouteKeyframe,
-    RoutePlaceGraph,
-    stub_embed_image,
-)
-from parcel_robot.route_memory import place_graph as place_graph_module
-from parcel_robot.route_memory.place_graph import (
     GRID_GOAL_TOLERANCE_M,
     GRID_RESOLUTION_M,
     GRID_SIZE_CELLS,
     KEYFRAME_SPACING_CELLS,
     MAX_CONTIGUOUS_STEP_SPACINGS,
     NAV_CONTROL_DT_S,
+    PLACE_GRAPH_SCHEMA,
     PLATFORM_MAX_VX_MPS,
+    PlaceEdge,
+    RoutePlaceGraph,
+    stub_embed_image,
 )
 
 # ---------------------------------------------------------------------------

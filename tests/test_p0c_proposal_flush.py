@@ -14,18 +14,17 @@ existing TTL/lethal veto and suspend/resume semantics are unchanged.
 
 from __future__ import annotations
 
-from parcel_robot.brain import (
+from parcel_robot.brain.contracts import (
     ExecutionResult,
     GoalSpec,
     GoalTarget,
     PlanIR,
     PlanStep,
-    PlanValidator,
-    SkillContractRegistry,
     SuccessCondition,
-    TaskExecutive,
     VerifiedFact,
 )
+from parcel_robot.brain.executive import TaskExecutive
+from parcel_robot.brain.validator import PlanValidator, SkillContractRegistry
 from parcel_robot.instructnav.arbiter import GoalArbiter, ProposerBus, SE2Goal
 from parcel_robot.revision import CommittedRevisions
 

@@ -31,7 +31,7 @@ import yaml
 
 from parcel_robot.audio_io import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
-from parcel_robot.core import MotionShapingConfig
+from parcel_robot.core.motion_shaping import MotionShapingConfig
 from parcel_robot.models import AgentDecision, VelocityCommand
 from parcel_robot.runtime import RobotRuntime
 

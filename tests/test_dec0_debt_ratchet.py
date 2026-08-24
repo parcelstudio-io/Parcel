@@ -68,8 +68,10 @@ GRAPH_ROOT = "src"
 
 
 # --------------------------------------------------------------------------
-# frozen baseline — measured on the tree at DEC-0 authorship (2026-08-23,
-# HEAD 92245a1).  Regenerate from the repo root with:
+# frozen baseline — measured at DEC-0 authorship (2026-08-23, HEAD 92245a1) and
+# RE-FROZEN DOWNWARD by DEC-IG-2 (scrum/20260823/task_16): barrel thinning took
+# the package-edge model from 25 cycles / max SCC 81 to 8 / 5 and the leaf-only
+# model from 8 / 4 to 4 / 4.  Regenerate from the repo root with:
 #     .parcel/bin/python -c "import sys; sys.path.insert(0, 'tests'); \
 #         import test_dec0_debt_ratchet as t; t.print_measured_baseline()"
 # then paste the output over this dict and re-run `ruff format`.  Only ever
@@ -78,7 +80,7 @@ GRAPH_ROOT = "src"
 # --------------------------------------------------------------------------
 BASELINE: dict[str, object] = {
     "oversized_modules": frozenset(
-        {
+        [
             "scripts/ci_gate.py",
             "scripts/parcel_capture/attest.py",
             "scripts/parcel_capture/budget.py",
@@ -124,10 +126,10 @@ BASELINE: dict[str, object] = {
             "tools/bargein_through_air.py",
             "tools/run_voice_corpus.py",
             "tools/xvf3800_probe.py",
-        }
+        ]
     ),
     "long_function_names": frozenset(
-        {
+        [
             "__init__",
             "__post_init__",
             "_abstention_filtered",
@@ -268,7 +270,7 @@ BASELINE: dict[str, object] = {
             "verify_scorecard",
             "write_fixture_bag",
             "write_realtime_turn",
-        }
+        ]
     ),
     "long_function_count": 153,
     "long_function_duplicate_counts": {
@@ -280,11 +282,11 @@ BASELINE: dict[str, object] = {
         "snapshot": 2,
         "start": 2,
     },
-    "cycles_with_package_edges": 25,
-    "max_scc_with_package_edges": 81,
-    "cycles_leaf_only": 8,
+    "cycles_with_package_edges": 8,
+    "max_scc_with_package_edges": 5,
+    "cycles_leaf_only": 4,
     "max_scc_leaf_only": 4,
-    "card_markers": 178,
+    "card_markers": 176,
     "scoped_files": 364,
 }
 
@@ -297,126 +299,11 @@ BASELINE_CYCLE_COMPONENTS: dict[str, tuple[frozenset[str], ...]] = {
     "with_package_edges": (
         frozenset(
             [
-                "parcel_robot.backends",
-                "parcel_robot.backends.go2",
-                "parcel_robot.backends.mujoco",
-                "parcel_robot.brain",
-                "parcel_robot.brain.compiler",
-                "parcel_robot.brain.executive",
-                "parcel_robot.brain.plan_sketch",
-                "parcel_robot.brain.router",
-                "parcel_robot.brain.runtime_adapter",
-                "parcel_robot.brain.validator",
-                "parcel_robot.city_semantics",
-                "parcel_robot.commissioning",
-                "parcel_robot.commissioning.record",
-                "parcel_robot.commissioning.session",
-                "parcel_robot.control",
-                "parcel_robot.control.adapters",
-                "parcel_robot.control.base",
-                "parcel_robot.control.factory",
-                "parcel_robot.control.manager",
-                "parcel_robot.control.state",
-                "parcel_robot.control.unitree_sport",
-                "parcel_robot.core",
-                "parcel_robot.core.arbiter",
-                "parcel_robot.core.channels",
-                "parcel_robot.core.motion_shaping",
-                "parcel_robot.detection_adapter.false_positive_memory",
-                "parcel_robot.instructnav",
-                "parcel_robot.instructnav.grounding",
-                "parcel_robot.instructnav.near_arrival",
-                "parcel_robot.instructnav.scan",
-                "parcel_robot.instructnav.siglip",
-                "parcel_robot.navigation",
-                "parcel_robot.navigation.approach",
-                "parcel_robot.navigation.arrival_semantics",
-                "parcel_robot.navigation.base",
-                "parcel_robot.navigation.detection_lock_on",
-                "parcel_robot.navigation.dynamic_layer",
-                "parcel_robot.navigation.envs",
-                "parcel_robot.navigation.envs.metaurban_env",
-                "parcel_robot.navigation.follow",
-                "parcel_robot.navigation.goals",
-                "parcel_robot.navigation.grid_navigator",
-                "parcel_robot.navigation.grounder",
-                "parcel_robot.navigation.instructnav_recovery",
-                "parcel_robot.navigation.lock_on_verify",
-                "parcel_robot.navigation.models",
-                "parcel_robot.navigation.person_keepout",
-                "parcel_robot.navigation.pipeline",
-                "parcel_robot.navigation.proxemic_approach",
-                "parcel_robot.navigation.reactive_safety",
-                "parcel_robot.navigation.registry",
-                "parcel_robot.navigation.relation_registry",
-                "parcel_robot.navigation.search",
-                "parcel_robot.navigation.semantic_map",
-                "parcel_robot.navigation.spatial",
-                "parcel_robot.navigation.value_directed_scan",
-                "parcel_robot.navigation.value_evidence",
-                "parcel_robot.navigation.yield_aside",
-                "parcel_robot.online_map",
-                "parcel_robot.online_map.hygiene",
-                "parcel_robot.online_map.ingest",
-                "parcel_robot.online_map.online_map",
-                "parcel_robot.online_map.store",
-                "parcel_robot.perception_abstention",
                 "parcel_robot.route_memory",
-                "parcel_robot.route_memory.citywalker",
                 "parcel_robot.route_memory.place_graph",
                 "parcel_robot.route_memory.proposer",
                 "parcel_robot.route_memory.runtime_hook",
                 "parcel_robot.route_memory.teach_repeat",
-                "parcel_robot.route_memory.vlfm",
-                "parcel_robot.scene_semantics",
-                "parcel_robot.vlm_veto",
-                "parcel_robot.vlm_veto.bureau",
-                "parcel_robot.vlm_veto.judge",
-                "parcel_robot.vlm_veto.runner",
-                "parcel_robot.vlm_veto.verifier",
-                "parcel_robot.voice",
-                "parcel_robot.voice.amendment",
-                "parcel_robot.voice.executive_caps",
-                "parcel_robot.voice.local_plans",
-            ]
-        ),
-        frozenset(
-            [
-                "parcel_robot.realtime",
-                "parcel_robot.realtime.config",
-                "parcel_robot.realtime.lane",
-                "parcel_robot.realtime.spend_ledger",
-                "parcel_robot.realtime.tool_broker",
-                "parcel_robot.realtime.transport",
-                "parcel_robot.realtime.voice_identity",
-            ]
-        ),
-        frozenset(
-            [
-                "parcel_robot.detection_adapter",
-                "parcel_robot.detection_adapter.adapter",
-                "parcel_robot.detection_adapter.owlv2_onnx",
-                "parcel_robot.detection_adapter.perception_chain",
-                "parcel_robot.detection_adapter.pixel_detections",
-                "parcel_robot.detection_adapter.sim_bridge",
-            ]
-        ),
-        frozenset(
-            [
-                "parcel_robot.config",
-                "parcel_robot.skills",
-                "parcel_robot.skills.api",
-                "parcel_robot.skills.catalog",
-                "parcel_robot.skills.executor",
-            ]
-        ),
-        frozenset(
-            [
-                "parcel_robot.storefront",
-                "parcel_robot.storefront.fixtures",
-                "parcel_robot.storefront.ingest",
-                "parcel_robot.storefront.ocr",
-                "parcel_robot.storefront.render",
             ]
         ),
         frozenset(
@@ -429,10 +316,18 @@ BASELINE_CYCLE_COMPONENTS: dict[str, tuple[frozenset[str], ...]] = {
         ),
         frozenset(
             [
-                "parcel_robot.duplex",
-                "parcel_robot.duplex.consumer",
-                "parcel_robot.duplex.coordinator",
-                "parcel_robot.duplex.filler_policy",
+                "parcel_robot.perception_abstention",
+                "parcel_robot.vlm_veto.bureau",
+                "parcel_robot.vlm_veto.runner",
+                "parcel_robot.vlm_veto.verifier",
+            ]
+        ),
+        frozenset(
+            [
+                "parcel_robot.storefront",
+                "parcel_robot.storefront.fixtures",
+                "parcel_robot.storefront.ingest",
+                "parcel_robot.storefront.ocr",
             ]
         ),
         frozenset(
@@ -444,56 +339,24 @@ BASELINE_CYCLE_COMPONENTS: dict[str, tuple[frozenset[str], ...]] = {
             ]
         ),
         frozenset(
-            ["parcel_robot.bags", "parcel_robot.bags.recorder", "parcel_robot.bags.replayer"]
-        ),
-        frozenset(
             [
-                "parcel_robot.camera_channel",
-                "parcel_robot.camera_channel.channel",
-                "parcel_robot.camera_channel.frames",
+                "parcel_robot.maps",
+                "parcel_robot.maps.crossing",
+                "parcel_robot.maps.waypoints",
             ]
         ),
         frozenset(
             [
-                "parcel_robot.camera_channel.backends",
-                "parcel_robot.camera_channel.backends.factory",
-                "parcel_robot.camera_channel.backends.mujoco_egl",
+                "parcel_robot.navigation.arrival_semantics",
+                "parcel_robot.navigation.goals",
             ]
         ),
         frozenset(
             [
-                "parcel_robot.context",
-                "parcel_robot.context.builder",
-                "parcel_robot.context.providers",
+                "parcel_robot.navigation.grid_navigator",
+                "parcel_robot.navigation.models",
             ]
         ),
-        frozenset(["parcel_robot.gnss", "parcel_robot.gnss.injector", "parcel_robot.gnss.model"]),
-        frozenset(
-            ["parcel_robot.maps", "parcel_robot.maps.crossing", "parcel_robot.maps.waypoints"]
-        ),
-        frozenset(
-            [
-                "parcel_robot.owner_model",
-                "parcel_robot.owner_model.distiller",
-                "parcel_robot.owner_model.notes",
-            ]
-        ),
-        frozenset(
-            [
-                "parcel_robot.perception_daemon",
-                "parcel_robot.perception_daemon.client",
-                "parcel_robot.perception_daemon.server",
-            ]
-        ),
-        frozenset(["parcel_robot.attention", "parcel_robot.attention.arbiter"]),
-        frozenset(["parcel_robot.capture", "parcel_robot.capture.envelope"]),
-        frozenset(["parcel_robot.contracts", "parcel_robot.contracts.v1"]),
-        frozenset(["parcel_robot.counterfactual", "parcel_robot.counterfactual.oracle_replay"]),
-        frozenset(["parcel_robot.lidar", "parcel_robot.lidar.band"]),
-        frozenset(["parcel_robot.low_viewpoint", "parcel_robot.low_viewpoint.samples"]),
-        frozenset(["parcel_robot.owner_tracking", "parcel_robot.owner_tracking.tracker"]),
-        frozenset(["parcel_robot.rl", "parcel_robot.rl.env"]),
-        frozenset(["parcel_robot.runtime", "parcel_robot.runtime_channels"]),
     ),
     "leaf_only": (
         frozenset(
@@ -506,32 +369,24 @@ BASELINE_CYCLE_COMPONENTS: dict[str, tuple[frozenset[str], ...]] = {
         ),
         frozenset(
             [
-                "parcel_robot.commissioning",
-                "parcel_robot.commissioning.session",
-                "parcel_robot.control",
-                "parcel_robot.control.factory",
-            ]
-        ),
-        frozenset(
-            [
-                "parcel_robot.navigation",
-                "parcel_robot.navigation.envs",
-                "parcel_robot.navigation.envs.metaurban_env",
-                "parcel_robot.navigation.pipeline",
-            ]
-        ),
-        frozenset(
-            [
                 "parcel_robot.perception_abstention",
                 "parcel_robot.vlm_veto.bureau",
                 "parcel_robot.vlm_veto.runner",
                 "parcel_robot.vlm_veto.verifier",
             ]
         ),
-        frozenset(["parcel_robot.navigation.arrival_semantics", "parcel_robot.navigation.goals"]),
-        frozenset(["parcel_robot.navigation.grid_navigator", "parcel_robot.navigation.models"]),
-        frozenset(["parcel_robot.owner_model", "parcel_robot.owner_model.distiller"]),
-        frozenset(["parcel_robot.runtime", "parcel_robot.runtime_channels"]),
+        frozenset(
+            [
+                "parcel_robot.navigation.arrival_semantics",
+                "parcel_robot.navigation.goals",
+            ]
+        ),
+        frozenset(
+            [
+                "parcel_robot.navigation.grid_navigator",
+                "parcel_robot.navigation.models",
+            ]
+        ),
     ),
 }
 
@@ -635,6 +490,34 @@ def _resolve_relative(
     return ".".join([*base, module]) if module else ".".join(base)
 
 
+def _is_type_checking_test(test: ast.expr) -> bool:
+    """True for ``TYPE_CHECKING`` / ``typing.TYPE_CHECKING`` guard tests."""
+    if isinstance(test, ast.Name):
+        return test.id == "TYPE_CHECKING"
+    if isinstance(test, ast.Attribute):
+        return test.attr == "TYPE_CHECKING"
+    return False
+
+
+def _type_checking_import_ids(tree: ast.Module) -> frozenset[int]:
+    """Ids of import nodes nested under an ``if TYPE_CHECKING:`` body.
+
+    Such imports never execute, so they cannot create a real import cycle
+    (DEC-IG-2's one authorised measurement refinement).  Only the guard's
+    ``body`` is skipped — an ``else:`` branch runs at import time and keeps
+    its edges.
+    """
+    skipped: set[int] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.If) or not _is_type_checking_test(node.test):
+            continue
+        for guarded in node.body:
+            for inner in ast.walk(guarded):
+                if isinstance(inner, (ast.Import, ast.ImportFrom)):
+                    skipped.add(id(inner))
+    return frozenset(skipped)
+
+
 def build_import_graph(*, include_package_edges: bool) -> dict[str, set[str]]:
     """Intra-package import edges.
 
@@ -643,6 +526,9 @@ def build_import_graph(*, include_package_edges: bool) -> dict[str, set[str]]:
     by which re-exporting barrels manufacture large multi-domain cycles.
     With it off, only direct module-to-module edges are kept, exposing the
     true cycles that survive barrel bypass.
+
+    Imports nested under ``if TYPE_CHECKING:`` are excluded from BOTH models:
+    they never execute, so they are annotations, not import-time edges.
     """
     known: dict[str, str] = {}
     for rel, _, _ in _parsed():
@@ -676,7 +562,10 @@ def build_import_graph(*, include_package_edges: bool) -> dict[str, set[str]]:
         if src is None:
             continue
         is_pkg_init = rel.endswith("/__init__.py")
+        type_checking_only = _type_checking_import_ids(tree)
         for node in ast.walk(tree):
+            if id(node) in type_checking_only:
+                continue
             targets: list[str] = []
             if isinstance(node, ast.Import):
                 targets = [a.name for a in node.names]

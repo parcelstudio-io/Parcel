@@ -15,7 +15,7 @@ from evals.companion.run_planner_quality_sketch_v1 import (
     run_suite,
     write_report,
 )
-from parcel_robot.brain import PlanSketch
+from parcel_robot.brain.plan_sketch import PlanSketch
 
 PAIRED_RESULT = (
     REPO_ROOT / "evals/companion/planner_quality_v2/results/"

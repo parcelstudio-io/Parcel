@@ -81,13 +81,7 @@ from pathlib import Path
 from typing import Any, ClassVar
 from weakref import WeakKeyDictionary
 
-from parcel_robot.capture import (
-    Channel,
-    SourceDevice,
-    Transport,
-    channel,
-)
-from parcel_robot.capture.channels import SourceClock
+from parcel_robot.capture.channels import Channel, SourceClock, SourceDevice, Transport, channel
 
 from ..preflight import (
     AbsenceReason,
@@ -735,7 +729,7 @@ class IngestAdapter(ABC):
     def channels(self) -> tuple[Channel, ...]:
         """Matrix rows this adapter serves. Overridden where a subset applies."""
 
-        from parcel_robot.capture import CHANNELS
+        from parcel_robot.capture.channels import CHANNELS
 
         return tuple(entry for entry in CHANNELS if entry.transport in self.transports)
 

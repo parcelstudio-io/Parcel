@@ -35,18 +35,20 @@ import pytest
 from parcel_robot.camera_channel.backends.physical import camera_ingress_kwargs
 from parcel_robot.camera_channel.backends.recorded import RecordedCameraBackend
 from parcel_robot.detection_adapter.pixel_detections import Detector, PixelDetection
-from parcel_robot.perception_daemon import (
-    MAX_QUERY_PHRASES,
-    PROTOCOL_VERSION,
+from parcel_robot.perception_daemon import protocol as proto
+from parcel_robot.perception_daemon.client import (
     DaemonClient,
     DaemonDetector,
     DaemonEmbedder,
     DaemonRequestFailed,
+)
+from parcel_robot.perception_daemon.protocol import (
+    MAX_QUERY_PHRASES,
+    PROTOCOL_VERSION,
     DaemonUnavailable,
-    PerceptionDaemon,
     ProtocolError,
 )
-from parcel_robot.perception_daemon import protocol as proto
+from parcel_robot.perception_daemon.server import PerceptionDaemon
 
 CLIP = Path(__file__).parent / "data" / "p1a_desk_clip.npz"
 

@@ -22,11 +22,9 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-from parcel_robot.duplex import (
-    DuplexConfig,
-    DuplexCoordinator,
-    FillerPool,
-)
+from parcel_robot.duplex.config import DuplexConfig
+from parcel_robot.duplex.coordinator import DuplexCoordinator
+from parcel_robot.duplex.fillers import FillerPool
 from parcel_robot.providers import SentenceChunkedSynthesizer
 from parcel_robot.voice_pipeline import DuplexVoiceSession, VoiceStage
 

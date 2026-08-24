@@ -566,13 +566,15 @@ def test_the_replay_report_carries_both_candidate_origins_and_can_tell_them_apar
 
 
 # ============================================================ R7 — docstring
-def test_the_offline_modes_reach_lane_and_never_reach_ws_transport() -> None:
+def test_the_offline_modes_reach_neither_lane_nor_ws_transport() -> None:
     """R7. The tool's claim, measured in a subprocess instead of asserted in prose.
 
     The docstring used to say ``--arms`` / ``--check`` / ``--plan`` could not
-    reach ``lane`` even by accident. They all reach it — the realtime package's
-    ``__init__`` imports it — so the claim was false and made a TRUE, checkable
-    property (``ws_transport`` is the module that opens a socket) look broken.
+    reach ``lane`` even by accident. When TRUTH-1 measured it they all did —
+    the realtime package's ``__init__`` imported it — so the claim was false and
+    made a TRUE, checkable property (``ws_transport`` is the module that opens a
+    socket) look broken. Card DEC-IG-2 drained that barrel, so the offline modes
+    now reach NEITHER module, and this cell pins both halves.
     A fresh interpreter is the only place this is observable: pytest has already
     imported half the tree.
     """
@@ -595,7 +597,10 @@ def test_the_offline_modes_reach_lane_and_never_reach_ws_transport() -> None:
     # hides the child's stderr, which is the only thing that says WHY.
     assert proc.returncode == 0, proc.stderr[-2000:]
     assert "RC 0" in proc.stdout
-    assert "lane True" in proc.stdout, "the offline modes DO import lane; saying otherwise is false"
+    assert "lane False" in proc.stdout, (
+        "DEC-IG-2 drained the realtime barrel, so the offline modes no longer reach "
+        "lane at all — the stronger claim TRUTH-1's docstring originally tried to make"
+    )
     assert "ws False" in proc.stdout, (
         "importing ws_transport is what puts a websocket client in the process; "
         "that is the property this file guarantees"

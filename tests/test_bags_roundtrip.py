@@ -6,13 +6,9 @@ from pathlib import Path
 
 import pytest
 
-from parcel_robot.bags import (
-    SCHEMA_VERSION,
-    BagRecorder,
-    BagReplayer,
-    BagSchemaError,
-    reject_privileged_fields,
-)
+from parcel_robot.bags.recorder import BagRecorder
+from parcel_robot.bags.replayer import BagReplayer
+from parcel_robot.bags.schema import SCHEMA_VERSION, BagSchemaError, reject_privileged_fields
 
 
 def _record_sample(bag_dir: Path) -> BagRecorder:

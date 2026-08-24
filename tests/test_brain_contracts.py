@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from parcel_robot.brain import (
+from parcel_robot.brain.contracts import (
     BatteryStateSnapshot,
     ExecutionResult,
     GoalSpec,

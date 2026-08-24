@@ -73,7 +73,7 @@ from pathlib import Path
 from typing import Any
 
 try:  # pragma: no cover - exercised only on a checkout without an install
-    from parcel_robot.capture import (
+    from parcel_robot.capture.channels import (
         CHANNELS,
         CHANNELS_BY_ID,
         Channel,
@@ -83,7 +83,7 @@ try:  # pragma: no cover - exercised only on a checkout without an install
     from parcel_robot.evidence_origin import EvidenceOrigin
 except ImportError:  # pragma: no cover - Orin runs this straight from a checkout
     sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
-    from parcel_robot.capture import (
+    from parcel_robot.capture.channels import (
         CHANNELS,
         CHANNELS_BY_ID,
         Channel,

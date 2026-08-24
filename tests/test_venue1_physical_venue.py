@@ -945,12 +945,9 @@ def test_a_recorded_venue_stamps_its_map_replay(
 def _seed_store(path: Path, origin: str, *, entries: int = 2) -> None:
     """A store of places from ONE world, written through the public API."""
 
-    from parcel_robot.online_map import (
-        MapObservation,
-        OnlineMapStore,
-        OnlineSemanticMap,
-        WriterProvenance,
-    )
+    from parcel_robot.online_map.entries import MapObservation, WriterProvenance
+    from parcel_robot.online_map.online_map import OnlineSemanticMap
+    from parcel_robot.online_map.store import OnlineMapStore
 
     os.environ["PARCEL_ONLINE_MAP_PATH"] = str(path)
     store = OnlineMapStore()
@@ -1103,7 +1100,7 @@ def test_a_replay_venue_over_simulation_rows_is_admitted_and_rewrites_the_meta(
     finally:
         runtime.close()
 
-    from parcel_robot.online_map import OnlineMapStore
+    from parcel_robot.online_map.store import OnlineMapStore
 
     reopened = OnlineMapStore(store)
     try:
@@ -1467,7 +1464,8 @@ def _save_rows_directly(path: Path, origin: str, *, entries: int = 2) -> None:
     does not.
     """
 
-    from parcel_robot.online_map import MapEntry, OnlineMapStore, WriterProvenance
+    from parcel_robot.online_map.entries import MapEntry, WriterProvenance
+    from parcel_robot.online_map.store import OnlineMapStore
 
     store = OnlineMapStore(path)
     try:
@@ -1597,7 +1595,7 @@ def test_the_semantic_source_binding_now_follows_the_config_in_both_directions(
     which is why seam 1a sits above C-1's early return.
     """
 
-    from parcel_robot.perception_source import (
+    from parcel_robot.perception_source.selection import (
         SemanticSourcePolicy,
         active_semantic_source,
         use_semantic_source,

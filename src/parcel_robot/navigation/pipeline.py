@@ -448,7 +448,7 @@ def _semantic_source_policy(data: Any) -> Any:
     """
 
     try:
-        from parcel_robot.perception_source import SemanticSourcePolicy
+        from parcel_robot.perception_source.selection import SemanticSourcePolicy
     except ImportError:  # pragma: no cover — frozen BARN bundle path
         return None
     section = (data or {}).get("perception") if isinstance(data, dict) else None

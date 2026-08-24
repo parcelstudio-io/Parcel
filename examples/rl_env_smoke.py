@@ -6,7 +6,7 @@ from pathlib import Path
 
 import numpy as np
 
-from parcel_robot.rl import Go2Env
+from parcel_robot.rl.env import Go2Env
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "configs" / "robot.yaml"

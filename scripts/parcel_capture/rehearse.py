@@ -82,14 +82,8 @@ for _entry in (str(_REPO_ROOT), str(_REPO_ROOT / "src")):
     if _entry not in sys.path:
         sys.path.insert(0, _entry)
 
-from parcel_robot.capture import (  # after the deploy-path bootstrap above
-    CHANNELS_BY_ID,
-    Channel,
-    ChannelHealth,
-    RateKind,
-    SourceDevice,
-    channel,
-)
+from parcel_robot.capture.channels import CHANNELS_BY_ID, Channel, RateKind, SourceDevice, channel
+from parcel_robot.capture.envelope import ChannelHealth
 from parcel_robot.evidence_origin import EvidenceOrigin
 from scripts.parcel_capture.attest import HardwareAttestationV1, attest
 from scripts.parcel_capture.budget import (

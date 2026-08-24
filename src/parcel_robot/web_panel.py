@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
-from parcel_robot.backends import MujocoSocketBackend
+from parcel_robot.backends.mujoco import MujocoSocketBackend
 from parcel_robot.config import ConfigStore
 from parcel_robot.providers import LlamaCppProvider
 from parcel_robot.runtime import RobotRuntime

@@ -33,43 +33,42 @@ from parcel_robot.backends.base import (
     SimObservation,
     SimulatorBackend,
 )
-from parcel_robot.brain import (
+from parcel_robot.brain.compiler import compile_plan_contracts, materialize_planner_output
+from parcel_robot.brain.contracts import (
+    BatteryStateSnapshot,
     FrozenDict,
     GoalSpec,
     GoalTarget,
     IntentFrame,
-    InterruptRequest,
     ObservationSnapshot,
     PlanIR,
-    PlanSketch,
     PlanStep,
-    PlanValidationError,
-    PlanValidator,
-    SemanticRuntimeState,
-    SemanticTaskRuntimeAdapter,
-    SkillContractRegistry,
     SuccessCondition,
-    TaskExecutive,
-    admitted_plan_schema,
-    admitted_plan_sketch_schema,
-    compile_plan_contracts,
-    materialize_planner_output,
 )
-from parcel_robot.brain.contracts import BatteryStateSnapshot
 from parcel_robot.brain.executive import (
     CLOSED_INTENT_PAUSE_REASON,
     CLOSED_INTENT_RESUME_REASON,
+    InterruptRequest,
+    TaskExecutive,
 )
 from parcel_robot.brain.observations import (
     build_observation_snapshot,
     task_state_from_executive,
 )
+from parcel_robot.brain.plan_sketch import PlanSketch
 
 # Card P0-B. The SAME reviewed explicit-affect grammar the legacy voice agent
 # uses (``agent._detect_explicit_affect``), imported rather than re-expressed so
 # the two lanes cannot drift onto different regexes for "I'm feeling sad".
 from parcel_robot.brain.router import explicit_affect_from_text, lane_affect_from_evidence
-from parcel_robot.brain.runtime_adapter import PAUSABLE_SKILL_CHANNELS
+from parcel_robot.brain.runtime_adapter import (
+    PAUSABLE_SKILL_CHANNELS,
+    SemanticRuntimeState,
+    SemanticTaskRuntimeAdapter,
+    admitted_plan_schema,
+    admitted_plan_sketch_schema,
+)
+from parcel_robot.brain.validator import PlanValidationError, PlanValidator, SkillContractRegistry
 
 # Card C-1. Pure-python types only: ``ingress`` defers numpy/mujoco/onnxruntime
 # to call time, so importing it here costs nothing and pulls in no render or
@@ -80,20 +79,10 @@ from parcel_robot.camera_channel.ingress import (
     CameraDetectionFrame,
 )
 from parcel_robot.config import ConfigStore
-from parcel_robot.context import (
-    CallableContextProvider,
-    ClockContextProvider,
-    ContextBuildConfig,
-    ContextBuilder,
-    ContextField,
-)
+from parcel_robot.context.builder import ContextBuilder
+from parcel_robot.context.models import ContextBuildConfig, ContextField
+from parcel_robot.context.providers import CallableContextProvider, ClockContextProvider
 from parcel_robot.contracts.v1 import DialogueActV1
-from parcel_robot.control import (
-    ControlManager,
-    ControlNotReadyError,
-    FaultReason,
-    build_backend_control_manager,
-)
 from parcel_robot.control.base import (
     ObservationSink,
     RobotStateSource,
@@ -101,16 +90,13 @@ from parcel_robot.control.base import (
     declared_origin,
     is_robot_state_source,
 )
-from parcel_robot.core import (
-    ActivityContext,
-    ActivityCoordinator,
-    ActivityRecord,
-    CommandArbiter,
-    MotionIntent,
-    MotionShapingConfig,
-    VelocitySmoother,
-)
+from parcel_robot.control.factory import build_backend_control_manager
+from parcel_robot.control.manager import ControlManager, ControlNotReadyError
+from parcel_robot.control.models import FaultReason
+from parcel_robot.core.activities import ActivityContext, ActivityCoordinator, ActivityRecord
+from parcel_robot.core.arbiter import CommandArbiter
 from parcel_robot.core.channels import BehaviorChannelRegistry
+from parcel_robot.core.commands import MotionIntent
 from parcel_robot.core.details import (
     FollowDetail,
     NavigationDetail,
@@ -133,6 +119,7 @@ from parcel_robot.core.input_health import (
     requirements_allowing_sim_fixtures,
     requirements_requiring_physical_inputs,
 )
+from parcel_robot.core.motion_shaping import MotionShapingConfig
 from parcel_robot.core.preemption import PreemptionTable
 from parcel_robot.core.resume import (
     GenerationTokens,
@@ -141,6 +128,7 @@ from parcel_robot.core.resume import (
     resume_rejection_reason,
 )
 from parcel_robot.core.stop_ramp import nominal_stop_step
+from parcel_robot.core.velocity_smoother import VelocitySmoother
 from parcel_robot.core.yield_policy import (
     YIELD_ACTION_ASK,
     YIELD_ACTION_GIVE_UP,
@@ -150,7 +138,8 @@ from parcel_robot.core.yield_policy import (
     load_personality_policy_config,
     person_blocked_from_note,
 )
-from parcel_robot.duplex import DuplexConfig, DuplexCoordinator
+from parcel_robot.duplex.config import DuplexConfig
+from parcel_robot.duplex.coordinator import DuplexCoordinator
 from parcel_robot.dynamic_prompting import (
     CallableContextSource,
     EmotePolicySource,
@@ -249,13 +238,9 @@ from parcel_robot.observability import (
     latency_ledger_row,
     resolve_latency_ledger_path,
 )
-from parcel_robot.owner_model import (
-    CONSENT_GRANTED,
-    CONSENT_PENDING,
-    known_facts_answer,
-    owner_notes_from_facts,
-)
-from parcel_robot.patrol import (  # card ROAM-1: MOVE-1's patrol, now product
+from parcel_robot.owner_model.notes import known_facts_answer, owner_notes_from_facts
+from parcel_robot.owner_model.policy import CONSENT_GRANTED, CONSENT_PENDING
+from parcel_robot.patrol.mission import (
     DEFAULT_ROAM_TETHER_M,
     PatrolCommand,
     PatrolLimits,
@@ -270,7 +255,7 @@ from parcel_robot.pose import (
     TruthPoseProvider,
     update_provider_from_sim,
 )
-from parcel_robot.prompting import PromptLibrary
+from parcel_robot.prompting.loader import PromptLibrary
 from parcel_robot.prosody import analyze_wav_chunk
 from parcel_robot.providers import (
     LanguageModel,
@@ -8990,7 +8975,7 @@ class RobotRuntime:
         """The map ``scene_report`` should describe, or ``None`` for the oracle."""
 
         try:
-            from parcel_robot.perception_source import (
+            from parcel_robot.perception_source.selection import (
                 active_learned_map,
                 active_semantic_source,
             )
@@ -9412,7 +9397,7 @@ class RobotRuntime:
         """
 
         try:
-            from parcel_robot.perception_source import (
+            from parcel_robot.perception_source.selection import (
                 active_learned_map,
                 active_semantic_source,
             )
@@ -10076,7 +10061,7 @@ class RobotRuntime:
         """
 
         try:
-            from parcel_robot.perception_source import (
+            from parcel_robot.perception_source.selection import (
                 active_learned_map,
                 active_semantic_source,
             )
@@ -12254,7 +12239,7 @@ class RobotRuntime:
         """
 
         try:
-            from parcel_robot.perception_source import use_semantic_source
+            from parcel_robot.perception_source.selection import use_semantic_source
         except ImportError:  # pragma: no cover - frozen bundle path
             return
         policy = self._p1b_semantic_source()
@@ -12516,7 +12501,7 @@ class RobotRuntime:
         choice = detector_choice or self._venue1_detector_choice()
         socket_path = os.environ.get("PARCEL_PERCEPTION_SOCKET", "").strip()
         if choice == "daemon" or (not choice and socket_path):
-            from parcel_robot.perception_daemon import DaemonDetector
+            from parcel_robot.perception_daemon.client import DaemonDetector
 
             detector = DaemonDetector(socket_path or None)
             health = detector.health()
@@ -12694,7 +12679,7 @@ class RobotRuntime:
             self._p1b_close_learned_map(learned)
         self._p1b_learned_map = None
         try:
-            from parcel_robot.perception_source import use_learned_map
+            from parcel_robot.perception_source.selection import use_learned_map
 
             use_learned_map(None)
         except Exception:  # noqa: BLE001, S110 - teardown best-effort
@@ -12869,7 +12854,7 @@ class RobotRuntime:
         """
 
         try:
-            from parcel_robot.perception_source import SemanticSourcePolicy
+            from parcel_robot.perception_source.selection import SemanticSourcePolicy
         except ImportError:  # pragma: no cover - frozen bundle path
             return None
         section: Any = {}
@@ -13004,12 +12989,10 @@ class RobotRuntime:
         if policy is None or not policy.reads_learned_map:
             return
 
-        from parcel_robot.online_map import (
-            OnlineMapStore,
-            OnlineSemanticMap,
-            WriterProvenance,
-        )
-        from parcel_robot.perception_source import use_learned_map, use_semantic_source
+        from parcel_robot.online_map.entries import WriterProvenance
+        from parcel_robot.online_map.online_map import OnlineSemanticMap
+        from parcel_robot.online_map.store import OnlineMapStore
+        from parcel_robot.perception_source.selection import use_learned_map, use_semantic_source
 
         settings = self._p1b_map_settings()
         origin = (
@@ -13150,7 +13133,8 @@ class RobotRuntime:
         learned = self._p1b_learned_map
         if learned is None:
             return
-        from parcel_robot.online_map import MapRefused, observations_from_frame
+        from parcel_robot.online_map.ingest import observations_from_frame
+        from parcel_robot.online_map.online_map import MapRefused
 
         try:
             with self._p1b_map_lock:

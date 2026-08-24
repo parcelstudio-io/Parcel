@@ -38,12 +38,14 @@ if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
 from parcel_robot.bags.schema import SCHEMA_VERSION, validate_manifest, validate_topic
-from parcel_robot.capture import CHANNELS, Transport, channel
 from parcel_robot.capture.channels import (
+    CHANNELS,
     SUPPORT_ARTIFACTS_BY_ID,
     Confidence,
+    Transport,
     WireNaming,
     camera_info_topic_for,
+    channel,
     subscribe_name,
 )
 from parcel_robot.evidence_origin import EvidenceOrigin
@@ -2136,7 +2138,7 @@ def test_the_rtp_video_path_needs_a_media_stack_never_the_motion_sdk() -> None:
     H.264 stream. Its declared dependency is a media tool; the vendor motion
     SDK must never be the printed remedy for a capture path."""
 
-    from parcel_robot.capture import Transport as T
+    from parcel_robot.capture.channels import Transport as T
     from scripts.parcel_capture.record import (
         INSTALL_HINTS,
         TRANSPORT_DEPENDENCIES,

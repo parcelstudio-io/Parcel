@@ -1,12 +1,8 @@
 import pytest
 
-from parcel_robot.brain import (
-    PlanIR,
-    PlanValidationError,
-    PlanValidator,
-    SkillContractRegistry,
-    compile_plan_contracts,
-)
+from parcel_robot.brain.compiler import compile_plan_contracts
+from parcel_robot.brain.contracts import PlanIR
+from parcel_robot.brain.validator import PlanValidationError, PlanValidator, SkillContractRegistry
 
 
 def _relative_plan(direction: str = "away_from_owner") -> PlanIR:

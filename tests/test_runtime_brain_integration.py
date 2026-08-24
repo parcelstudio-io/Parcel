@@ -5,7 +5,8 @@ from pathlib import Path
 
 from parcel_robot.audio_io import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
-from parcel_robot.brain import PlanIR, PlanSketch
+from parcel_robot.brain.contracts import PlanIR
+from parcel_robot.brain.plan_sketch import PlanSketch
 from parcel_robot.models import AgentDecision, VelocityCommand
 from parcel_robot.runtime import RobotRuntime
 

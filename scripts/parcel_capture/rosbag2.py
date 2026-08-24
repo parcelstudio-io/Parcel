@@ -92,13 +92,14 @@ for _entry in (str(_REPO_ROOT), str(_REPO_ROOT / "src")):
     if _entry not in sys.path:
         sys.path.insert(0, _entry)
 
-from parcel_robot.capture import CHANNELS, Transport
 from parcel_robot.capture.channels import (
+    CHANNELS,
     SUPPORT_ARTIFACTS,
     SUPPORT_ARTIFACTS_BY_ID,
     Confidence,
     SupportArtifactKind,
     SupportNeed,
+    Transport,
     WireNaming,
     camera_info_topic_for,
     subscribe_name,

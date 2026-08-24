@@ -18,40 +18,10 @@ Start it::
 
 Use it::
 
-    from parcel_robot.perception_daemon import DaemonDetector
+    from parcel_robot.perception_daemon.client import DaemonDetector
     ingress.detector = DaemonDetector("/run/user/1000/parcel_perception.sock")
 
 ``ingress.py`` is NOT modified by this card: ``CameraIngress`` already accepts
 any object satisfying the detector protocol, so the daemon plugs into the seam
 that was already there (P1-B owns the ingress).
 """
-
-from __future__ import annotations
-
-from parcel_robot.perception_daemon.client import (
-    DaemonClient,
-    DaemonDetector,
-    DaemonEmbedder,
-    DaemonRequestFailed,
-)
-from parcel_robot.perception_daemon.protocol import (
-    MAX_QUERY_PHRASES,
-    PROTOCOL_VERSION,
-    DaemonUnavailable,
-    ProtocolError,
-    default_socket_path,
-)
-from parcel_robot.perception_daemon.server import PerceptionDaemon
-
-__all__ = [
-    "MAX_QUERY_PHRASES",
-    "PROTOCOL_VERSION",
-    "DaemonClient",
-    "DaemonDetector",
-    "DaemonEmbedder",
-    "DaemonRequestFailed",
-    "DaemonUnavailable",
-    "PerceptionDaemon",
-    "ProtocolError",
-    "default_socket_path",
-]

@@ -31,14 +31,11 @@ from parcel_robot import runtime as runtime_module
 from parcel_robot.audio_io import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
 from parcel_robot.camera_channel.ingress import SAFETY_LEASE_QUERY, CameraIngress
-from parcel_robot.core import VelocitySmoother
+from parcel_robot.core.velocity_smoother import VelocitySmoother
 from parcel_robot.models import AgentDecision, VelocityCommand
 from parcel_robot.navigation.reactive_safety import apply_reactive_safety
-from parcel_robot.online_map import (
-    MapObservation,
-    OnlineSemanticMap,
-    WriterProvenance,
-)
+from parcel_robot.online_map.entries import MapObservation, WriterProvenance
+from parcel_robot.online_map.online_map import OnlineSemanticMap
 from parcel_robot.perception_abstention import (
     DEFAULT_SIGNALS,
     RANKING_MARGIN_LABEL_STRENGTH,
@@ -549,7 +546,7 @@ def test_the_c3_mission_path_admits_under_the_prototype_signal_set(
         ObservationSemanticMap,
         semantic_candidates_from_observation,
     )
-    from parcel_robot.perception_source import (
+    from parcel_robot.perception_source.selection import (
         SOURCE_LEARNED_MAP,
         SemanticSourcePolicy,
         use_learned_map,

@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from parcel_robot.context import ContextBuildConfig, ContextBuilder, ContextField
+from parcel_robot.context.builder import ContextBuilder
+from parcel_robot.context.models import ContextBuildConfig, ContextField
 
 
 class CountingProvider:

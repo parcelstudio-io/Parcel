@@ -3,7 +3,7 @@ from pathlib import Path
 from parcel_robot.agent import VoiceAgent
 from parcel_robot.config import ConfigStore
 from parcel_robot.models import Pose
-from parcel_robot.skills import Dog
+from parcel_robot.skills.api import Dog
 
 
 def test_pose_command_publishes_pose():

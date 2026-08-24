@@ -49,10 +49,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from parcel_robot.commissioning import (
+from parcel_robot.commissioning.limits import (
     ARMING_TTL_S,
     FOOTPRINT_RADIUS_M,
-    FRAME_DISCRIMINATION_YAW_RAD,
     MAX_LINEAR_MPS,
     MAX_TTL_S,
     MAX_YAW_RAD_S,
@@ -61,31 +60,35 @@ from parcel_robot.commissioning import (
     REQUIRED_ACKNOWLEDGEMENTS,
     SETTLED_LINEAR_MPS,
     SETTLED_YAW_RAD_S,
-    AxisSignEvidence,
     CommissioningArming,
     CommissioningAxis,
-    CommissioningJournal,
     CommissioningLatchedError,
     CommissioningLimits,
-    CommissioningObserver,
-    CommissioningRecordV1,
     CommissioningRefusedError,
-    CommissioningReviewError,
-    CommissioningSession,
-    JournalState,
     LatchReason,
-    ObservationEvidence,
-    ObservedDirection,
-    RecordOutcome,
     RefusalReason,
-    StopEvidence,
     assert_commissioning_command,
     assert_commissioning_duration,
     assert_commissioning_ttl,
-    commissioned_control_config,
     single_axis_command,
 )
-from parcel_robot.control import ControlManager
+from parcel_robot.commissioning.record import (
+    FRAME_DISCRIMINATION_YAW_RAD,
+    AxisSignEvidence,
+    CommissioningRecordV1,
+    CommissioningReviewError,
+    ObservationEvidence,
+    ObservedDirection,
+    RecordOutcome,
+    StopEvidence,
+    commissioned_control_config,
+)
+from parcel_robot.commissioning.session import (
+    CommissioningJournal,
+    CommissioningObserver,
+    CommissioningSession,
+    JournalState,
+)
 from parcel_robot.control.factory import (
     _CONTROLLER_FACTORIES,
     UnitreeCommissioningSeams,
@@ -94,6 +97,7 @@ from parcel_robot.control.factory import (
     build_unitree_sport_observer,
     controller_factory_names,
 )
+from parcel_robot.control.manager import ControlManager
 from parcel_robot.control.models import (
     ControllerCapabilities,
     ControlLimits,
@@ -856,7 +860,7 @@ def test_latches_when_a_previous_process_exited_mid_session(tmp_path) -> None:
     journal = tmp_path / "killed.jsonl"
     child = (
         "import os\n"
-        "from parcel_robot.commissioning import CommissioningJournal, JournalState\n"
+        "from parcel_robot.commissioning.session import CommissioningJournal, JournalState\n"
         f"journal = CommissioningJournal.begin({str(journal)!r}, session_id='killed')\n"
         "journal.append(JournalState.MOVING, axis='vx', speed=0.03)\n"
         "os._exit(9)\n"

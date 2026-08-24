@@ -34,7 +34,7 @@ import pytest
 from parcel_robot.audio_io import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
 from parcel_robot.models import AgentDecision, VelocityCommand
-from parcel_robot.prompting import PromptLibrary
+from parcel_robot.prompting.loader import PromptLibrary
 from parcel_robot.realtime import lane as lane_module
 from parcel_robot.realtime.config import REALTIME_CONFIG_ENV, RealtimeConfig
 from parcel_robot.realtime.fake_server import FakeRealtimeServer, Step, handshake, pcm_tone

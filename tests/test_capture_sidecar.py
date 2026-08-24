@@ -51,12 +51,8 @@ from parcel_robot.bags.schema import (
     validate_manifest,
     validate_topic,
 )
-from parcel_robot.capture import (
-    CHANNELS,
-    CaptureEnvelope,
-    ChannelHealth,
-    channel,
-)
+from parcel_robot.capture.channels import CHANNELS, channel
+from parcel_robot.capture.envelope import CaptureEnvelope, ChannelHealth
 from parcel_robot.evidence_origin import EvidenceOrigin
 from scripts.parcel_capture.record import (
     CHANNEL_ID_METADATA_KEY,
@@ -411,7 +407,7 @@ _CRASH_CHILD = '''
 import sys
 sys.path.insert(0, {repo!r})
 from pathlib import Path
-from parcel_robot.capture import channel
+from parcel_robot.capture.channels import channel
 from parcel_robot.evidence_origin import EvidenceOrigin
 from scripts.parcel_capture.record import CaptureRecorder, SpaceBudget
 
@@ -1269,7 +1265,7 @@ def test_no_live_reader_can_run_here_and_the_report_says_which_half_is_missing(t
 def test_every_transport_declares_what_a_live_reader_would_need():
     """An unmapped transport must never read as 'nothing required'."""
 
-    from parcel_robot.capture import Transport
+    from parcel_robot.capture.channels import Transport
 
     assert set(TRANSPORT_DEPENDENCIES) == set(Transport)
     assert set(TRANSPORT_EXECUTABLES) == set(Transport)

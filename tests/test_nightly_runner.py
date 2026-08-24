@@ -20,6 +20,7 @@ purpose of having tiers.
 from __future__ import annotations
 
 import json
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -253,6 +254,21 @@ def test_the_dirty_path_list_keeps_whole_paths() -> None:
     repo = Path(__file__).resolve().parents[1]
     for relpath in env["git_dirty_paths"]:
         assert not relpath.startswith(" "), relpath
-        assert (repo / relpath).exists(), (
-            f"{relpath!r} is not a path in this tree — the porcelain column offset is wrong"
-        )
+        # "exists on disk" was the original proxy for "the first column was not
+        # eaten", and it is wrong for a DELETED tracked file: that path is dirty,
+        # is spelled correctly, and is gone. So the check is "git can name it" —
+        # on disk, in the index, or at HEAD. A path whose first character was
+        # eaten ("onfigs/realtime.yaml.example") is none of the three.
+        known = (repo / relpath).exists()
+        if not known:
+            for probe in (
+                ["git", "ls-files", "--error-unmatch", "--", relpath],
+                ["git", "cat-file", "-e", f"HEAD:{relpath}"],
+            ):
+                result = subprocess.run(
+                    probe, cwd=str(repo), capture_output=True, text=True, check=False
+                )
+                if result.returncode == 0:
+                    known = True
+                    break
+        assert known, f"{relpath!r} is not a path git knows — the porcelain column offset is wrong"

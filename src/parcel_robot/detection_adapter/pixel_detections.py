@@ -59,13 +59,8 @@ from parcel_robot.camera_channel.d455 import (
     d455_color_intrinsics,
     go2_d455_mount,
 )
-from parcel_robot.contracts import (
-    SCHEMA_VERSION,
-    DetectionMsg,
-    EvidenceEnvelopeV1,
-    expires_from_ttl,
-)
-from parcel_robot.contracts.freshness import DEFAULT_DETECTION_TTL_NS
+from parcel_robot.contracts.freshness import DEFAULT_DETECTION_TTL_NS, expires_from_ttl
+from parcel_robot.contracts.v1 import SCHEMA_VERSION, DetectionMsg, EvidenceEnvelopeV1
 from parcel_robot.detection_adapter.perception_chain import (
     D455_DEPTH_SIGMA_COEFF_PER_M,
 )

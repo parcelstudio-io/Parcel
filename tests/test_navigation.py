@@ -23,7 +23,7 @@ from parcel_robot.navigation.grounder import PlaceGrounder
 from parcel_robot.navigation.models import StubNavigator, build_navigator
 from parcel_robot.navigation.pipeline import DirectiveNavigator
 from parcel_robot.navigation.registry import ModelRegistry
-from parcel_robot.skills import Dog
+from parcel_robot.skills.api import Dog
 
 REPO = Path(__file__).resolve().parents[1]
 NAV_CFG = REPO / "configs" / "navigation" / "default.yaml"

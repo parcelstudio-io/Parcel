@@ -672,15 +672,17 @@ def _build_live_lane(arm: str, *, port_note: str = "") -> Any:
     never import it, which is the same rule ``voice_tier_ab.py`` states as
     "there is no provider client in this file".
 
-    **Card TRUTH-1 corrects the older, wider claim.** This docstring used to
-    extend the guarantee to ``lane`` as well, and that half was false — the
-    claim is described rather than reproduced here, because the way a stale
-    claim is kept dead is a grep for it. Every mode does reach ``lane``:
-    the module-level ``from parcel_robot.realtime.config import ...`` executes
-    ``parcel_robot.realtime.__init__``, which imports ``lane``, so
-    ``parcel_robot.realtime.lane`` is in ``sys.modules`` for every mode
-    (measured 2026-08-22: ``--arms`` → lane True, ws_transport False).
-    ``ws_transport`` is the property that matters and the only one claimed here:
+    **Card TRUTH-1 corrected the older, wider claim; card DEC-IG-2 made the
+    corrected claim true again.** This docstring used to extend the guarantee
+    to ``lane`` as well; TRUTH-1 measured that half FALSE, because the
+    module-level ``from parcel_robot.realtime.config import ...`` executed
+    ``parcel_robot.realtime.__init__``, which imported ``lane``. That barrel is
+    now import-free (DEC-IG-2), so the offline modes reach neither ``lane`` nor
+    ``ws_transport`` (measured: ``--arms`` → lane False, ws_transport False),
+    and ~6.8k lines of ``lane``/``tool_broker`` leave the import path of every
+    process that only wants ``realtime.config``. The retracted wording is
+    described rather than reproduced, because the way a stale claim is kept
+    dead is a grep for it. ``ws_transport`` remains the property that matters:
     importing ``lane`` opens nothing; importing ``ws_transport`` is what puts a
     websocket client in the process.
     """

@@ -8,7 +8,8 @@ import msgpack
 import pytest
 
 from parcel_robot import providers
-from parcel_robot.brain import DeterministicIntentRouter, ObservationSnapshot
+from parcel_robot.brain.contracts import ObservationSnapshot
+from parcel_robot.brain.router import DeterministicIntentRouter
 from parcel_robot.providers import (
     FishSpeechProvider,
     LlamaCppProvider,

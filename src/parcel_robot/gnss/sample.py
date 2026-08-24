@@ -10,7 +10,7 @@ import math
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from parcel_robot.contracts import SCHEMA_VERSION, EvidenceEnvelopeV1
+from parcel_robot.contracts.v1 import SCHEMA_VERSION, EvidenceEnvelopeV1
 
 
 def _number(value: object, name: str) -> float:

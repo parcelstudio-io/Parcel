@@ -34,53 +34,53 @@ import pytest
 
 from parcel_robot.bags.recorder import BagRecorder
 from parcel_robot.bags.schema import is_privileged_key, validate_topic
-from parcel_robot.capture import (
-    CHANNEL_MATRIX_ROWS,
-    CHANNELS,
-    CHANNELS_BY_ID,
-    ENVELOPE_SCHEMA,
-    MATRIX_ROW_TITLES,
-    NON_SPATIAL_FRAME,
-    UNCALIBRATED,
-    CaptureEnvelope,
-    CaptureError,
-    CaptureRefusedError,
-    Channel,
-    ChannelHealth,
-    ChannelPresence,
-    ChannelSequenceBook,
-    ChannelSequenceLedger,
-    Criticality,
-    RateKind,
-    RefusalReason,
-    SourceDevice,
-    Transport,
-    UnknownChannelError,
-    canonical_json,
-    channel,
-    channel_ids,
-    envelope_digest,
-    select_channels,
-)
 
 # PS-H's additions live on the module rather than the package root: the package
 # ``__init__`` is PS-A's surface and this card does not own it.
 from parcel_robot.capture.channels import (
+    CHANNEL_MATRIX_ROWS,
+    CHANNELS,
+    CHANNELS_BY_ID,
     DDS_ROS_TOPIC_PREFIX,
     DECLARATION_BASIS,
     FIELD_ROW_TITLES,
+    MATRIX_ROW_TITLES,
     MEASUREMENT_WINDOW,
+    NON_SPATIAL_FRAME,
     PAYLOAD_FIELD_ROWS,
     PAYLOAD_FIELDS,
     PAYLOAD_FIELDS_BY_ID,
+    CaptureError,
+    Channel,
+    ChannelPresence,
     Confidence,
+    Criticality,
     PayloadField,
+    RateKind,
     SourceClock,
+    SourceDevice,
+    Transport,
+    UnknownChannelError,
     UnknownPayloadFieldError,
     WireNaming,
+    channel,
+    channel_ids,
     payload_field,
     payload_fields_of,
+    select_channels,
     subscribe_name,
+)
+from parcel_robot.capture.envelope import (
+    ENVELOPE_SCHEMA,
+    UNCALIBRATED,
+    CaptureEnvelope,
+    CaptureRefusedError,
+    ChannelHealth,
+    ChannelSequenceBook,
+    ChannelSequenceLedger,
+    RefusalReason,
+    canonical_json,
+    envelope_digest,
 )
 from parcel_robot.evidence_origin import EvidenceOrigin
 
@@ -1201,7 +1201,10 @@ def test_importing_the_capture_package_pulls_in_nothing_else() -> None:
         return set(json.loads(probe.stdout))
 
     control = _modules("pass")
-    loaded = _modules("import parcel_robot.capture")
+    # DEC-IG-2 drained ``capture/__init__.py``, so importing the PACKAGE no
+    # longer executes its submodules. The consumer path is what this cell is
+    # about, so it now probes the two leaf modules every caller imports.
+    loaded = _modules("import parcel_robot.capture.channels, parcel_robot.capture.envelope")
     added = loaded - control
 
     assert {name for name in added if name.startswith("parcel_robot")} == {
@@ -1211,6 +1214,10 @@ def test_importing_the_capture_package_pulls_in_nothing_else() -> None:
         "parcel_robot.capture.envelope",
         "parcel_robot.evidence_origin",
     }, f"importing capture pulled in extra parcel_robot modules: {sorted(added)}"
+
+    # And the package itself is now a pure marker: importing it executes nothing.
+    assert {name for name in _modules("import parcel_robot.capture") - control
+            if name.startswith("parcel_robot")} == {"parcel_robot", "parcel_robot.capture"}
 
     non_stdlib = {
         name

@@ -27,8 +27,7 @@ import time
 from collections.abc import Iterator, Mapping, Sequence
 from typing import Any, ClassVar
 
-from parcel_robot.capture import CHANNELS, Channel, RateKind, Transport
-from parcel_robot.capture.channels import SourceClock
+from parcel_robot.capture.channels import CHANNELS, Channel, RateKind, SourceClock, Transport
 
 from ..preflight import FootForceSample, ImuSample, PhysicalSample, PointCloudSample, PowerSample
 from .base import (

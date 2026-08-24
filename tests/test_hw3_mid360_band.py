@@ -60,24 +60,26 @@ from parcel_robot.core.input_health import (
     evaluate_input_health,
 )
 from parcel_robot.evidence_origin import EvidenceOrigin
-from parcel_robot.lidar import (
+from parcel_robot.lidar.band import (
+    BandProfile,
+    band_scan,
+    nearest_obstacle_from_scan,
+    scan_from_frames,
+    travel_bearing_rad,
+)
+from parcel_robot.lidar.livox_udp import (
     HEADER_SIZE_BYTES,
     IMU_DATA_PORT,
     MAX_POINTS_PER_FRAME,
     POINT_DATA_PORT,
     POINT_SIZE_BYTES,
-    BandProfile,
     LivoxDataType,
     LivoxDecodeError,
     LivoxTimeType,
-    band_scan,
     build_point_frame,
-    nearest_obstacle_from_scan,
     parse_point_frame,
     receive_frames,
-    scan_from_frames,
     sequence_report,
-    travel_bearing_rad,
 )
 from parcel_robot.navigation.reactive_safety import (
     scan_evidence_from_observation,
@@ -999,7 +1001,7 @@ def test_the_documented_ports_are_the_mid360_ports() -> None:
     """Transcribed from ``mid360_config.json``; the runtime reader binds the
     host side (+1), and which NIC it binds is UNKNOWN until the box (Q-wire)."""
 
-    from parcel_robot.lidar import (
+    from parcel_robot.lidar.livox_udp import (
         CMD_DATA_PORT,
         HOST_POINT_DATA_PORT,
         LIDAR_SAMPLE_HOST_IP,

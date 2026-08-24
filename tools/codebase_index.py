@@ -76,7 +76,9 @@ def tracked_files() -> list[Path]:
     out = subprocess.run(
         ["git", "ls-files", "-z"], cwd=REPO, capture_output=True, check=True
     ).stdout
-    return [Path(p) for p in out.decode().split("\0") if p]
+    # A tracked file deleted in the working tree (a decomposition card mid-flight)
+    # is still listed by ``git ls-files``; index what exists on disk.
+    return [Path(p) for p in out.decode().split("\0") if p and (REPO / p).exists()]
 
 
 def first_line(doc: str | None) -> str:

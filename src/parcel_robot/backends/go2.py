@@ -101,15 +101,13 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from parcel_robot.evidence_origin import EvidenceOrigin
-from parcel_robot.lidar import (
+from parcel_robot.lidar.band import (
     BandProfile,
-    LivoxDecodeError,
-    LivoxPointFrame,
     nearest_obstacle_from_scan,
-    parse_point_frame,
     scan_from_frames,
     travel_bearing_rad,
 )
+from parcel_robot.lidar.livox_udp import LivoxDecodeError, LivoxPointFrame, parse_point_frame
 from parcel_robot.models import Pose, VelocityCommand
 
 from .base import OwnerTrack, RobotPose, SimObservation
@@ -620,7 +618,7 @@ class LiveGo2Sources:
 
         import socket as socket_module
 
-        from parcel_robot.lidar import HOST_POINT_DATA_PORT
+        from parcel_robot.lidar.livox_udp import HOST_POINT_DATA_PORT
 
         bind_port = int(port) if port else int(HOST_POINT_DATA_PORT)
         if not 0 < bind_port < 65536:
@@ -729,7 +727,7 @@ class LiveGo2Sources:
         clock does not advance between reads.
         """
 
-        from parcel_robot.lidar import receive_frames
+        from parcel_robot.lidar.livox_udp import receive_frames
 
         deadline = float(self._clock()) + self.drain_budget_s
 

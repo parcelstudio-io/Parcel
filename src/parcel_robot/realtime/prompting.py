@@ -91,7 +91,7 @@ from pathlib import Path
 from typing import Any, Protocol
 
 from parcel_robot.paths import resolve_prompts_root
-from parcel_robot.prompting import PromptLibrary
+from parcel_robot.prompting.loader import PromptLibrary
 
 from .lane import GUARDRAILS, build_instructions
 

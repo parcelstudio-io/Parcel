@@ -1,24 +1,21 @@
-from parcel_robot.brain import (
+from parcel_robot.brain.contracts import (
     BatteryStateSnapshot,
     ExecutionResult,
     GoalSpec,
     GoalTarget,
-    InterruptRequest,
     ObservationSnapshot,
     ObservedEntity,
     PlanIR,
     PlanStep,
-    PlanValidator,
-    ResourceLocks,
     RobotStateSnapshot,
     SafetyStateSnapshot,
     SensorSnapshot,
-    SkillContractRegistry,
     SuccessCondition,
-    TaskExecutive,
     TaskStateSnapshot,
     VerifiedFact,
 )
+from parcel_robot.brain.executive import InterruptRequest, ResourceLocks, TaskExecutive
+from parcel_robot.brain.validator import PlanValidator, SkillContractRegistry
 
 
 def _snapshot(

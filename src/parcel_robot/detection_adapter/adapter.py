@@ -10,13 +10,8 @@ import random
 from collections.abc import Sequence
 from dataclasses import dataclass, replace
 
-from parcel_robot.contracts import (
-    SCHEMA_VERSION,
-    DetectionMsg,
-    EvidenceEnvelopeV1,
-    expires_from_ttl,
-)
-from parcel_robot.contracts.freshness import DEFAULT_DETECTION_TTL_NS
+from parcel_robot.contracts.freshness import DEFAULT_DETECTION_TTL_NS, expires_from_ttl
+from parcel_robot.contracts.v1 import SCHEMA_VERSION, DetectionMsg, EvidenceEnvelopeV1
 from parcel_robot.detection_adapter.noise import (
     DetectionNoiseConfig,
     default_person_confusion,

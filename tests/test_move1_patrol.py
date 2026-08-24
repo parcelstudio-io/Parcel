@@ -12,7 +12,7 @@ import math
 
 import pytest
 
-from parcel_robot.patrol import (
+from parcel_robot.patrol.mission import (
     DEFAULT_MAP_SWEEP_VOCABULARY,
     SAFETY_LEASE_QUERY,
     MapGrowthSample,
@@ -351,7 +351,7 @@ def test_runner_ends_early_when_boxed_in():
 def test_sweep_vocabulary_carries_no_volatile_class():
     """T1 has no sidecar; the batch must still never spend budget on people."""
 
-    from parcel_robot.online_map import is_volatile_label
+    from parcel_robot.online_map.hygiene import is_volatile_label
 
     assert DEFAULT_MAP_SWEEP_VOCABULARY
     volatile = [
@@ -412,7 +412,7 @@ def test_ingress_batch_always_takes_the_person_safety_lease():
 def test_ingress_batch_is_the_query_set_not_the_map_set():
     """Asking about people is safety; keeping them as places is not allowed."""
 
-    from parcel_robot.online_map import is_volatile_label
+    from parcel_robot.online_map.hygiene import is_volatile_label
 
     batch = ingress_queries()
     assert is_volatile_label(SAFETY_LEASE_QUERY), "the lease query IS volatile"

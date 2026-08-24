@@ -48,31 +48,33 @@ from parcel_robot.navigation.semantic_map import (
     semantic_candidates_from_observation,
 )
 from parcel_robot.perception_abstention import ABSTENTION_REASONS
-from parcel_robot.perception_source import (
+from parcel_robot.perception_source.selection import (
+    REGISTERED_SOURCES,
+    SOURCE_LEARNED_MAP,
+    SOURCE_ORACLE,
+    SOURCE_SHADOW,
+    SemanticSourcePolicy,
+    SemanticSourceRefused,
+    active_semantic_source,
+    normalize_source,
+    use_learned_map,
+    use_semantic_source,
+)
+from parcel_robot.perception_source.shadow import (
     ADMISSION_FLIP,
     BENIGN_MISS,
     DIVERGENCE_CLASSES,
     HARD_GATE_CLASSES,
     LOCALIZATION_DELTA,
     REFUSAL_FLIP,
-    REGISTERED_SOURCES,
-    SOURCE_LEARNED_MAP,
-    SOURCE_ORACLE,
-    SOURCE_SHADOW,
     AgreementRow,
     ArmVerdict,
     Divergence,
-    SemanticSourcePolicy,
-    SemanticSourceRefused,
     SensingEnvelope,
     ShadowLedger,
     ShadowRefused,
-    active_semantic_source,
     classify,
     envelope_comparability,
-    normalize_source,
-    use_learned_map,
-    use_semantic_source,
 )
 
 REPO = Path(__file__).resolve().parents[1]
@@ -1147,7 +1149,10 @@ def test_the_online_map_package_is_consumed_never_forked() -> None:
     semantic_map = (REPO / "src/parcel_robot/navigation/semantic_map.py").read_text(
         encoding="utf-8"
     )
-    assert "from parcel_robot.online_map import" in semantic_map
+    # DEC-IG-2: the consumer reaches the map's LEAF modules now that
+    # ``online_map/__init__.py`` re-exports nothing. Keyed on the package
+    # prefix so it cannot go vacuously green on the next import rewrite.
+    assert "from parcel_robot.online_map." in semantic_map
     assert "active_learned_map" in semantic_map
     selection = (REPO / "src/parcel_robot/perception_source/selection.py").read_text(
         encoding="utf-8"
@@ -1164,7 +1169,7 @@ def test_a_fresh_interpreter_starts_on_the_oracle() -> None:
     """Import order must not be able to install a source."""
 
     code = (
-        "from parcel_robot.perception_source import active_semantic_source;"
+        "from parcel_robot.perception_source.selection import active_semantic_source;"
         "import parcel_robot.navigation.semantic_map;"
         "import parcel_robot.navigation.pipeline;"
         "p = active_semantic_source();"

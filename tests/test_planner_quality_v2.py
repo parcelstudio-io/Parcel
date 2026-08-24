@@ -15,7 +15,7 @@ from evals.companion.run_planner_quality_v2 import (
     run_suite,
     write_report,
 )
-from parcel_robot.brain import PlanIR
+from parcel_robot.brain.contracts import PlanIR
 
 
 def _success(

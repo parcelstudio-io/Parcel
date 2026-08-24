@@ -47,29 +47,30 @@ from parcel_robot.memory import (
 )
 from parcel_robot.memory_path import MemoryPathRefused, owner_store_paths
 from parcel_robot.models import ToolCall, ToolResult
-from parcel_robot.owner_model import (
+from parcel_robot.owner_model import policy as privacy
+from parcel_robot.owner_model.distiller import (
+    DeterministicFactProposer,
+    OwnerFactDistiller,
+    distil_session,
+    distil_turns,
+)
+from parcel_robot.owner_model.guard import (
+    QUARANTINE_TABLE,
+    SYNTHETIC_ID_RANGE,
+    SYNTHETIC_WINDOWS,
+    SyntheticRowsUnquarantined,
+    assert_store_is_distillable,
+    survey,
+)
+from parcel_robot.owner_model.notes import known_facts_answer, owner_notes_from_facts
+from parcel_robot.owner_model.policy import (
     CONSENT_DENIED,
     CONSENT_GRANTED,
     CONSENT_PENDING,
     DISPOSITION_ASK,
     DISPOSITION_KEEP,
     DISPOSITION_REFUSE,
-    DeterministicFactProposer,
-    OwnerFactDistiller,
-    SyntheticRowsUnquarantined,
     decide,
-    distil_session,
-    distil_turns,
-    known_facts_answer,
-    owner_notes_from_facts,
-)
-from parcel_robot.owner_model import policy as privacy
-from parcel_robot.owner_model.guard import (
-    QUARANTINE_TABLE,
-    SYNTHETIC_ID_RANGE,
-    SYNTHETIC_WINDOWS,
-    assert_store_is_distillable,
-    survey,
 )
 from parcel_robot.realtime.tool_broker import (
     ANSWER_TOOLS,

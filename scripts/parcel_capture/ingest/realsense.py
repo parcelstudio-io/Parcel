@@ -39,7 +39,7 @@ from collections.abc import Callable, Iterator, Mapping
 from functools import partial
 from typing import Any, ClassVar
 
-from parcel_robot.capture import Channel, Transport
+from parcel_robot.capture.channels import Channel, Transport
 
 from ..preflight import AbsenceReason, ImuSample, PhysicalSample
 from .base import (
@@ -499,6 +499,6 @@ class RealSenseIngest(IngestAdapter):
                 handle.stop()
 
     def channels(self) -> tuple[Channel, ...]:
-        from parcel_robot.capture import CHANNELS
+        from parcel_robot.capture.channels import CHANNELS
 
         return tuple(entry for entry in CHANNELS if entry.channel_id in STREAM_PROFILES)

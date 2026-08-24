@@ -20,14 +20,16 @@ from pathlib import Path
 import pytest
 
 from parcel_robot import unitree_control
-from parcel_robot.commissioning import (
+from parcel_robot.commissioning.limits import (
     SETTLED_LINEAR_MPS,
     SETTLED_YAW_RAD_S,
-    AxisSignEvidence,
     CommissioningAxis,
     CommissioningLatchedError,
-    CommissioningRecordV1,
     LatchReason,
+)
+from parcel_robot.commissioning.record import (
+    AxisSignEvidence,
+    CommissioningRecordV1,
     ObservationEvidence,
     ObservedDirection,
     RecordOutcome,
