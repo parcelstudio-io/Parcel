@@ -47,7 +47,7 @@ Early-exit every study at its decision. Sol's RTP-1 card
   **CONNECTED-PLANNER**: a hosted structured-output PlanSketch through an
   explicit provider adapter, compiled/validated locally; corpus reused;
   parcel-6c authors an independent adversarial intent-gate set (C7).
-- **H2: CLOSED** (VERDICT in its folder): deterministic drives own the tick,
+- **H2: closed** (offline arms of H9: dropped/superseded; the CONNECTED-PLANNER acceptance probe remains pending). H2 verdict: deterministic drives own the tick,
   LLM phrases, hosted converses/compiles. No more model comparisons.
 - **New top card: NAV-CORE** — non-oracle known-place navigation topology
   decision (pre-registration in CLAUDE_REVIEW §NAV-CORE).

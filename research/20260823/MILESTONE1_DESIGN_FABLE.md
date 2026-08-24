@@ -1,8 +1,10 @@
 # Milestone 1 — "the desk dog" · detailed design (Fable) · 2026-08-23 (draft; evidence sections fill from H1–H7 verdicts)
 
-Status: DRAFT v2 (2026-08-24) — §2, §4.1–4.6 grounded in the H1/H3/H4/H5/H6/H7
-verdicts; **[pending H2/H8/H9]** sections complete when those land; re-scoped
-to what mounts (`research/20260824/README.md`). Nothing here authorizes physical
+Status: v3 (2026-08-24, reconciled per scrum/20260824/task_2/CLAUDE_RESPONSE.md
++ addenda; owner chose Follow IN M1). H2 closed (drives own the tick; LLM
+phrases); H9 offline arms dropped/superseded, CONNECTED-PLANNER probe pending
+(gates connected compounds only, never the freeze). Build order:
+scrum/20260824/task_2/IMPLEMENTATION_PLAN.md. Nothing here authorizes physical
 motion; §9 gates do.
 
 ## 0. The milestone in one paragraph
@@ -40,11 +42,24 @@ stairs, crowds, public spaces: excluded by ODD.
 ## 2. Compute topology (decision) and the link-loss ladder
 **Platform (H10 memo, `research/20260824/platform-and-connectivity/`):** keep
 the Go2 EDU Plus (companion mass, Orin NX 16 GB, Wi-Fi 6, 4G eSIM — no 5G);
-add a 5G router/hotspot on the payload rail; decide on-body compute after
-H9 (Orin NX + 8B floor if the compound grammar meets its bar; else an AGX
-Orin 64 GB payload for the 26B). The X30 Pro (AGX Orin, IP67, 56 kg, 4 m/s,
+add a 5G router/hotspot on the payload rail; **compute decision: Orin NX +
+hosted (AGX only if a box-day soak forces it)**. Per-process interpreters by
+dependency set; final pins wait for the vendor's written JetPack answer
+(`requires-python >=3.10` already true and Jetson-tested). The X30 Pro (AGX Orin, IP67, 56 kg, 4 m/s,
 resellers list 4G/5G) is an inspection platform in the wrong mass and price
-class; its two advantages are Go2 payloads. **Ladder (owner-simplified, 2026-08-24):** L0 cloud+desk (full) → L1 desk
+class; its two advantages are Go2 payloads. **Follow decision (owner, 2026-08-24): option (a) — Follow is IN M1.**
+FOLLOW-COMPOSE (production tracker install — `install_owner_tracker` has no
+product caller today — pixel/range sync, UWB-or-out-of-BOM, follow-speed
+avoidance), owner-loss HOLD, reacquisition, identity continuity, and the
+box-day identity gate are M1 blockers; UWB is accepted BOM risk. Until the
+identity gate passes, the shipped floor degrades to STOP + HOLD + the line.
+Loss classes are distinct: cloud loss ⇒ commissioned local behaviors only,
+never partial compound plans; sensor/localizer/owner-track loss ⇒ HOLD;
+STOP available in every rung — noting (lane.py:47) spoken STOP is
+cloud-transcribed TODAY, so the cloud-independent stops are the panel,
+remote, and watchdogs until card A3 STOP-LOCAL lands (tail bar p95 ≤ 800 ms,
+n ≥ 60 all ≤ 1.0 s, false triggers ≤ 1/24 h).
+**Ladder (owner-simplified, 2026-08-24):** L0 cloud+desk (full) → L1 desk
 only → **L2 body only = the canned line ("Sorry — I'm offline; all I can do
 is follow you until we're connected") + follow-with-obstacle-avoidance
 (identity-gated, HOLD on ambiguity) + spoken/panel STOP — nothing else.**
@@ -170,9 +185,15 @@ DEGRADED within 0.4 s of dropout and LOST on a teleport, recovery ≤ 0.4 s,
 `localization_jump_m` measurable (5–9 cm nominal, 7–10 m on kidnapping),
 2.25 ms p95, 0 false arrivals across the drift ladder (SR loss is entirely
 refusals), and a second odometry through the same provider with 0 provider
-diff. Refuted: covariance calibration (ANEES 100–230×) — health thresholds
-must not trust the covariance until a calibrated LIO (FAST-LIO2/Point-LIO
-on real Mid-360 bags) replaces the ICP proxy. Design as drafted.
+diff. Refuted: covariance calibration (ANEES 100–230×), and — RTP-2 F3 — the
+pre-registered kidnap stayed HEALTHY while 7 m wrong (false-healthy).
+Binding rule: motion LATCHES DISARMED on any discontinuity signal
+(boot-epoch change, power-cycle, IMU/foot-contact carried signature,
+global-match ambiguity below the margin, localization jump above bound,
+operator pickup latch — each journaled); re-arm ONLY via globally
+discriminative relocalization (whole-map second-best margin) or a
+journaled operator pose-reset-and-validate transaction. HEALTHY +
+covariance never re-arm anything.
 FAST-LIO2 first (Point-LIO second) in the Orin's capture venv, publishing
 `LocalizationUpdate` over the existing AF_UNIX seqpacket pattern; Parcel
 owns MAP/ODOM/health/jump; `localization_jump_m` feeds the stopping

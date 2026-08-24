@@ -1,4 +1,15 @@
-# VOICE-GATE — who may open the dog's mouth and ears · DESIGN (Fable) · 2026-08-24
+# VOICE-GATE — who may open the dog's mouth and ears · DESIGN v2 (Fable) · 2026-08-24
+V2 (RTP-2 F4/A6/A9, binding over v1 where they differ): playback through the
+**XVF3800 DAC → JST amp → CQRobot speaker** (desk speaker only as a labeled
+control); live second person; STOP on an explicit always-local path bypassing
+every gate, tail bar p95 ≤ 800 ms AND n ≥ 60 all ≤ 1.0 s, false triggers
+≤ 1/24 h; added rows: barge-in stop p50 ≤ 0.52 s (p95 reported vs envelope),
+cancel p95 ≤ 700 ms, AEC ≥ 20 dB, critical-slot ≥ 0.95, cost ≤ $0.50/day,
+owner-recording REPLAY row (acceptance measured per arm; wake+ID does NOT
+defeat a replay containing both — accepted-risk disposition documented),
+limited wind, and a defined restricted-listening arm. Arms run SEQUENTIALLY
+with early stop; ONE consolidated pass rule — an arm passes only if every
+row passes.
 
 ## The one decision (RTP-1 C9; H1's C5 refutation is the motivating number)
 Choose the activation policy for the all-day ear: **owner-voice gating**,

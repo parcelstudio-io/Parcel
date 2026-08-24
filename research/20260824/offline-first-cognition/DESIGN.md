@@ -1,3 +1,5 @@
+# [SUPERSEDED 2026-08-24: offline grammar/8B arms DROPPED per the owner's simplified floor and RTP-2 F6; the folder's live contract is DESIGN_v2_CONNECTED_PLANNER.md as amended by CLAUDE_RESPONSE Addenda (hosted-only arms; grammar arm removed). This file is kept for the record.]
+
 # H9 — offline-first cognition and compound instructions without gemma · DESIGN (Fable) · 2026-08-24
 
 ## Owner's ask

@@ -35,6 +35,12 @@ known-place case has never been measured separately.)
    place's stored coordinate, semantic resolution bypassed); C only if A
    and B both fail their bars — a scoping note on delegation (Nav2-class),
    not an integration.
+4b. **False-healthy refuter (v2, RTP-2 F3/A4/A10)** — one wrong-place
+   episode per seed: kidnap into an aliased corridor mid-episode; the bar is
+   that NO motion resumes on HEALTHY alone — re-arm requires the globally
+   discriminative relocalization margin or the journaled operator
+   pose-reset transaction; a false arrival after the kidnap fails the arm
+   outright. Pickup/restart latch disarmed (A10 signal list).
 4. **Refuters** (one episode each per seed): scan dropout mid-leg ⇒ HOLD;
    pose DEGRADED ⇒ refusal not arrival; moved obstacle ⇒ replan or typed
    failure; goal place removed from the map ⇒ honest `not_found`-class
