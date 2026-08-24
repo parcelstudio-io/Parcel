@@ -86,7 +86,7 @@ Ground truth for everything that follows: physics, morphology, power, and sensin
 | 49 | [day-49-open-weight-model-deployment.md](day-49-open-weight-model-deployment.md) | Open-weight model deployment |
 | 50 | [day-50-synthesis-voice-to-safe-motion.md](day-50-synthesis-voice-to-safe-motion.md) | Synthesis: voice to safe motion |
 
-**Codebase touchstones for Module 5:** `docs/VOICE_AI_MODELS.md`, `docs/AUDIO_LATENCY_AND_SPATIAL_INTELLIGENCE.md`, `docs/DUPLEX_DUAL_STREAM_DESIGN.md`, `src/parcel_robot/agent.py`, `src/parcel_robot/voice_pipeline.py`, `src/parcel_robot/voice_audio.py`, `src/parcel_robot/audio_io.py`, `src/parcel_robot/duplex/`, `src/parcel_robot/brain/` (`router.py`, `contracts.py`, `executive.py`, `runtime_adapter.py`), `src/parcel_robot/navigation/follow.py`, `prompts/personalities/`, `prompts/system/`.
+**Codebase touchstones for Module 5:** `docs/VOICE_AI_MODELS.md`, `docs/AUDIO_LATENCY_AND_SPATIAL_INTELLIGENCE.md`, `docs/DUPLEX_DUAL_STREAM_DESIGN.md`, `src/parcel_robot/voice/agent.py`, `src/parcel_robot/voice/pipeline.py`, `src/parcel_robot/audio/voice_loop.py`, `src/parcel_robot/audio/devices.py`, `src/parcel_robot/duplex/`, `src/parcel_robot/brain/` (`router.py`, `contracts.py`, `executive.py`, `runtime_adapter.py`), `src/parcel_robot/navigation/follow.py`, `prompts/personalities/`, `prompts/system/`.
 
 ### Module 5 checklist
 

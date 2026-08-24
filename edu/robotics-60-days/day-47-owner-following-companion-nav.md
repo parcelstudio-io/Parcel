@@ -60,7 +60,7 @@ From `navigation/follow.py`, `navigation/spatial.py`, `navigation/search_owner.p
 
 Parcel’s brain updates follow intents on the order of ~10 Hz; Sport closes balance faster. Do not put LLM calls inside the follow update.
 
-Deterministic follow grammar in `headless_city.py` calls `parse_follow_intent` before engaging the controller—useful regression harness when tuning standoff without invoking the GPU stack. Orbit and follow share owner tracks but differ in success geometry; do not reuse orbit “done” heuristics when verifying `FollowFormation`.
+Deterministic follow grammar in `simulation/headless_city.py` calls `parse_follow_intent` before engaging the controller—useful regression harness when tuning standoff without invoking the GPU stack. Orbit and follow share owner tracks but differ in success geometry; do not reuse orbit “done” heuristics when verifying `FollowFormation`.
 
 **Codebase anchors (follow / spatial / search / shields):**
 

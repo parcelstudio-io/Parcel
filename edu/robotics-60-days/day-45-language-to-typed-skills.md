@@ -63,7 +63,7 @@ Bounded defaults belong in skill contracts and validators, not in free prose. If
 - `brain/contracts.py` → `IntentFrame`, `PlanIR`, `PlanStep`, `GoalSpec`.
 - `brain/runtime_adapter.py` → `SemanticTaskRuntimeAdapter`, `SUPPORTED_SKILLS`, `SYSTEM_SKILLS`, `_verifier_table`.
 - `brain/router.py` → `DeterministicIntentRouter` (routes compound physical language to plan mode).
-- `agent.py` → validation of conversation `next_action`, plan handoff to semantic task runtime.
+- `voice/agent.py` → validation of conversation `next_action`, plan handoff to semantic task runtime.
 - `providers.py` → decision JSON parsing, affect gating, `strip_emote_tags` (gesture markers separate from motion skills).
 - `runtime.py` → `SemanticTaskRuntimeAdapter` wiring, configured brain skills vs system-only intersection.
 

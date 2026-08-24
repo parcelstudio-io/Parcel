@@ -57,7 +57,7 @@ Porting robots should mean a new profile plus pose YAMLs under `configs/skills/`
 ## Map to Parcel / Go2
 
 - Defaults: legs `FL, FR, RL, RR`; suffixes `hip_joint`, `thigh_joint`, `calf_joint`; stand angles `(0.0, 0.9, -1.8)` rad; link lengths `0.213 m`; `stance_z_m=-0.265`.
-- `gait.py` imports `RobotProfile.go2().stand_joints()` so stand posture is not a second hand-maintained table.
+- `motion/gait.py` imports `RobotProfile.go2().stand_joints()` so stand posture is not a second hand-maintained table.
 - Skill trajectories such as `configs/skills/trajectories/hop.yaml` list all twelve `*_joint` keys with radian targets; `Pose` in `src/parcel_robot/models.py` carries `joints: dict[str, float]`.
 - `SafetyLimits.max_abs_joint_position` in `src/parcel_robot/safety.py` rejects absurd pose tool arguments before they reach a backend.
 - Production path: typed body-velocity / pose intents → validation → Unitree Sport → joint controllers. Python must not own 1 kHz joint torque loops (`edu/INTRO.md`, `docs/MOTION.md`).

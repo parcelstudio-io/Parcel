@@ -46,7 +46,7 @@ Parcel’s default is **split contracts over one Gemma backbone** via llama.cpp 
 
 ## Map to Parcel / Go2
 
-From `src/parcel_robot/agent.py` and `brain/`:
+From `src/parcel_robot/voice/agent.py` and `brain/`:
 
 - **`VoiceAgent.planner_model`** defaults to `language_model` but remains a separate constructor slot—replacement without dual paraphrase hops.
 - **`_handle_text` routing:** `frame.route == "deliberative_plan"` (when `_planning_ready()`) goes to `_handle_plan`; ordinary language uses the conversation decision schema (`reply`, `tool_calls`, `intent`, `affect`, `next_action`).
@@ -58,7 +58,7 @@ Fast intent paths stay deterministic: stop, follow, bounded spatial grammar, cat
 
 **Codebase anchors (dual contracts):**
 
-- `agent.py` → `VoiceAgent`, `planner_model` fallback, `_handle_text`, `_handle_plan`, `_planning_ready`, `_emit_slow_path`.
+- `voice/agent.py` → `VoiceAgent`, `planner_model` fallback, `_handle_text`, `_handle_plan`, `_planning_ready`, `_emit_slow_path`.
 - `brain/router.py` → routes `conversation_only`, `direct_skill`, `deliberative_plan`, `clarify_or_abstain`; `_COMPOUND` regex for multi-step language.
 - `brain/contracts.py` → `IntentFrame`, `PlanIR`, `PlanStep`, `GoalSpec`.
 - `providers.py` → `LlamaCppProvider` (separate prompt/schema paths per call site).
@@ -77,4 +77,4 @@ A deployment used conversation quality win-rate to promote a smaller, snappier m
 
 ## Optional 10-minute exercise
 
-Open `VoiceAgent.__init__` in `src/parcel_robot/agent.py` and find where `planner_model` falls back to `language_model`. Skim `_handle_text` for the `deliberative_plan` branch. Write two bullet evaluation criteria you would never mix between lanes.
+Open `VoiceAgent.__init__` in `src/parcel_robot/voice/agent.py` and find where `planner_model` falls back to `language_model`. Skim `_handle_text` for the `deliberative_plan` branch. Write two bullet evaluation criteria you would never mix between lanes.

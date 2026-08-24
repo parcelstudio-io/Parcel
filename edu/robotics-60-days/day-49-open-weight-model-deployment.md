@@ -44,7 +44,7 @@ This is canarying a new query planner in a database. You do not promote on micro
 From `docs/VOICE_AI_MODELS.md` (workstation audit) and runtime wiring:
 
 - **Incumbent:** Gemma-family GGUF via **`LlamaCppProvider`** (`providers.py`) → OpenAI-compatible HTTP (`language_model.base_url`, canonical `127.0.0.1:8080`). **`RobotRuntime`** never mmaps weights directly; launchers own artifacts (`scripts/launch_reasoner.sh`, GPU profile scripts).
-- **`VoiceAgent.planner_model`** — separate constructor slot defaulting to `language_model`; enables split endpoints without rewriting conversation code (`agent.py`).
+- **`VoiceAgent.planner_model`** — separate constructor slot defaulting to `language_model`; enables split endpoints without rewriting conversation code (`voice/agent.py`).
 - **Split interfaces:** conversation vs planner providers may diverge; default shares one backbone—measure TTFT *and* time-to-valid PlanIR under duplex + follow load.
 - **Rejected challenger lesson (documented):** Ministral-class 8B showed faster median TTFT but weaker conversation acceptance and PlanIR scores—not promoted. A “reasoning” checkpoint failed PlanSketch gates by exhausting tokens on malformed output.
 - **Quantization / memory:** Q4 is an explicit VRAM trade; GPU profile admission pins provenance hashes and layer offload. Mobile dog power ≠ workstation dock—budget idle VRAM plus peaks during deliberative ~1k-token plans.
@@ -58,7 +58,7 @@ Eval harnesses should stress *compound* utterances—the kind that force PlanIR 
 **Codebase anchors (providers / agent / runtime / doc):**
 
 - `providers.py` → `LlamaCppProvider` (HTTP client to llama-server); conversation JSON parse helpers alongside TTS `SpeechChunk` paths.
-- `agent.py` → `VoiceAgent` with `language_model`, optional `planner_model`, `plan_publisher` hook to runtime PlanIR admission.
+- `voice/agent.py` → `VoiceAgent` with `language_model`, optional `planner_model`, `plan_publisher` hook to runtime PlanIR admission.
 - `runtime.py` → constructs agent/providers from config; brain enablement gates `TaskExecutive` + adapter without loading GGUF in-process.
 - `brain/runtime_adapter.py` → skill surface the planner must respect—eval suites should mirror `SUPPORTED_SKILLS`, not generic JSON beauty.
 - `docs/VOICE_AI_MODELS.md` → incumbent vs rejected tables, ASR/TTS pins, expression/duplex research boundaries.

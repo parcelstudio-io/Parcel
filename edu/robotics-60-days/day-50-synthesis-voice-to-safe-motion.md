@@ -69,9 +69,9 @@ Native speech-to-speech or model-produced ACT frames remain research/prototype b
 
 **Codebase anchors (full-path touchpoints):**
 
-- `voice_audio.py` / `voice_pipeline.py` — capture, ASR, session wiring into agent.
+- `audio/voice_loop.py` / `voice/pipeline.py` — capture, ASR, session wiring into agent.
 - `brain/router.py` — deterministic routing; complements `parse_follow_intent` for follow-only utterances.
-- `agent.py` → `VoiceAgent`, **`CommitGuard`**, `handle_text_guarded`, `plan_publisher`.
+- `voice/agent.py` → `VoiceAgent`, **`CommitGuard`**, `handle_text_guarded`, `plan_publisher`.
 - `brain/executive.py` → `TaskExecutive`; `brain/runtime_adapter.py` → `SUPPORTED_SKILLS` / `SYSTEM_SKILLS` (`SearchOwner`).
 - `navigation/follow.py` → `FollowOwnerController`, `FollowConfig`; `navigation/spatial.py` → `parse_follow_intent`.
 - `navigation/reactive_safety.py` → `ReactiveSafetyPolicy`, `apply_reactive_safety`.
@@ -95,4 +95,4 @@ Outdoor demo: ASR heard “circle the owner” as “hurdle the owner.” Router
 
 ## Optional 10-minute exercise
 
-Pick the module path below and draw an 8-box sequence diagram on paper for the example utterance: `voice_pipeline.py` → `brain/router.py` → `agent.py` → `brain/executive.py` → `navigation/follow.py` → `safety.py` → `duplex/coordinator.py` → `docs/VOICE_AI_MODELS.md` (boundary checklist). Mark the first box that may touch motors and one box that must remain LLM-free at 10 Hz.
+Pick the module path below and draw an 8-box sequence diagram on paper for the example utterance: `voice/pipeline.py` → `brain/router.py` → `voice/agent.py` → `brain/executive.py` → `navigation/follow.py` → `safety.py` → `duplex/coordinator.py` → `docs/VOICE_AI_MODELS.md` (boundary checklist). Mark the first box that may touch motors and one box that must remain LLM-free at 10 Hz.

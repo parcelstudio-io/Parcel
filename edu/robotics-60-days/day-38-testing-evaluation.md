@@ -72,7 +72,7 @@ Unit and property tests remain the cheapest place to lock Module 4 invariants: f
 
 - `tests/test_brain_executive.py` — `ResourceLocks`, preemption/voice policy.
 - `tests/test_*` around control/arbiter/safety — contract walls for TTL/E-stop/clamps.
-- `headless_city.py` → `HeadlessCityQualityHarness.run` — product-shaped city tasks.
+- `simulation/headless_city.py` → `HeadlessCityQualityHarness.run` — product-shaped city tasks.
 - `evals/companion_nav/runner.py` → `FollowBenchRunner`, `_DispatchReplica`; comments + report `does_not_prove`.
 - `evals/companion_nav/metrics.py` → `EpisodeMetrics` / `StepRecord`.
 - `evals/companion/` / `evals/external/` — planner quality, duplex, BARN proxies; schemas require `proves` / `does_not_prove` in several report types.

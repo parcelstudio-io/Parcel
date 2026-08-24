@@ -79,7 +79,7 @@ From `safety.py`, `navigation/reactive_safety.py`, `ControlManager`, `CommandArb
 
 - `safety.py` → `SafetyLimits` (tool/velocity clamps), `SafetySupervisor.validate` (fail-closed tools), `engage_emergency_stop` / `clear_emergency_stop`.
 - `core/arbiter.py` → E-stop latch empties active `MotionIntent`; `runtime.py` engages both `agent.safety` and `arbiter` on hard stops.
-- `navigation/reactive_safety.py` → `ReactiveSafetyPolicy` + `apply_reactive_safety` (runtime-wide veto; used from `runtime.py`, follow, search, `headless_city.py`).
+- `navigation/reactive_safety.py` → `ReactiveSafetyPolicy` + `apply_reactive_safety` (runtime-wide veto; used from `runtime.py`, follow, search, `simulation/headless_city.py`).
 - `control/manager.py` → lifecycle `EMERGENCY_STOPPED`, stop confirmation via settled samples / sequence; `ControlLimits` last-line clamps.
 - `backends/mujoco.py` → `emergency_stop` / `clear_emergency_stop` over the sim socket; `sim.py` latches `emergency_stopped` independently of the UI.
 - D2 honesty: software latch ≠ independent hardware E-stop — still required before unsupervised people-space ops.

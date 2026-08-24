@@ -61,7 +61,7 @@ Latency you feel is the *sum* of hangover, ASR, model TTFT, first-sentence TTS, 
 Concrete behavior from `docs/AUDIO_LATENCY_AND_SPATIAL_INTELLIGENCE.md` and voice modules:
 
 - **`audio_io.detect_audio_devices()`** — advisory health (`AudioDeviceStatus`); PipeWire/Bluetooth capability ≠ connected usable endpoint. Live capture still uses PortAudio via `sounddevice`; `PipeWireAudioIO` / `AlsaAudioIO` are standalone bounded-utterance adapters.
-- **`EnergyVad`** in `voice_audio.py` — adaptive noise floor, hangover smoothing. Energy ≠ speech semantics; machinery can look like voice.
+- **`EnergyVad`** in `audio/voice_loop.py` — adaptive noise floor, hangover smoothing. Energy ≠ speech semantics; machinery can look like voice.
 - **`MicrophoneVoiceLoop`** — buffers a complete utterance, then blocking whisper.cpp inference. **No ASR partials** from the mic path today; browser partials can interrupt but never execute.
 - **`WhisperCppProvider`** — utterance-level STT (`base.en` prototype). Server-side whisper VAD trim ≠ Parcel’s live endpoint decision.
 - **TTS:** Piper is the intended CPU default; Fish S2 is the expressive docked option. `FishSpeechProvider` keeps RVQ/audio tokens inside the service (text in / audio bytes out). Runtime wraps synthesizers in `SentenceChunkedSynthesizer`; `strip_emote_tags` in `providers.py` splits spoken text from `[emote:…]` markers before synthesis.
@@ -71,10 +71,10 @@ On Go2 deployments, treat speaker placement and array reference paths as commiss
 
 **Codebase anchors (capture → text):**
 
-- `audio_io.py` → `detect_audio_devices`, `AudioDeviceStatus`.
-- `voice_audio.py` → `EnergyVad`, `MicrophoneVoiceLoop` (`echo_guard_scale`, `echo_guard_suppressions`), `SpeakerSink`.
+- `audio/devices.py` → `detect_audio_devices`, `AudioDeviceStatus`.
+- `audio/voice_loop.py` → `EnergyVad`, `MicrophoneVoiceLoop` (`echo_guard_scale`, `echo_guard_suppressions`), `SpeakerSink`.
 - `providers.py` → `WhisperCppProvider`, `SentenceChunkedSynthesizer`, `strip_emote_tags`.
-- `voice_pipeline.py` → `DuplexVoiceSession.submit_text` (final-only into agent).
+- `voice/pipeline.py` → `DuplexVoiceSession.submit_text` (final-only into agent).
 - `runtime.py` → speech stack wiring, `echo_guard_scale` from speech config, periodic `detect_audio_devices` refresh.
 - `docs/AUDIO_LATENCY_AND_SPATIAL_INTELLIGENCE.md`, `docs/VOICE_AI_MODELS.md` → cascade rationale and latency budgets.
 
@@ -90,4 +90,4 @@ A demo used a Bluetooth speaker for “richer” TTS while the XVF3800-class arr
 
 ## Optional 10-minute exercise
 
-Run the advisory check from the audio doc (or read `detect_audio_devices` in `src/parcel_robot/audio_io.py`). Note whether the host reports connected input/output. Then skim `EnergyVad.__init__` defaults and compute hangover seconds at 30 ms/frame.
+Run the advisory check from the audio doc (or read `detect_audio_devices` in `src/parcel_robot/audio/devices.py`). Note whether the host reports connected input/output. Then skim `EnergyVad.__init__` defaults and compute hangover seconds at 30 ms/frame.

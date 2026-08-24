@@ -51,7 +51,7 @@ Closed-loop execution spans the brain executive, runtime adapter verification, a
 
 - **`TaskExecutive`** (`brain/executive.py`) — deterministic PlanIR runner: `ResourceLocks`, `DispatchRequest`, interrupt policies, progress/timeouts. LLM-free at control rate.
 - **`SemanticTaskRuntimeAdapter`** (`brain/runtime_adapter.py`) — dispatches allowlisted skills and *verifies* completion from controller snapshots; `SearchOwner` uses perception-backed predicates, not RPC ack alone.
-- **`VoiceAgent` + `plan_publisher`** (`agent.py`, wired in `runtime.py`) — admit deliberative plans after validation; execution proceeds without further model calls per tick.
+- **`VoiceAgent` + `plan_publisher`** (`voice/agent.py`, wired in `runtime.py`) — admit deliberative plans after validation; execution proceeds without further model calls per tick.
 - **`CommitGuard` / speech epochs** — cancel *admission* of stale turns (`handle_text_guarded`); the executive must still cancel *in-flight* skills when the owner says stop after commit.
 - **`AskClarification` / `Hold` / `ReturnToSafePose`** — typed recovery in `SUPPORTED_SKILLS`, not decorative prose.
 - **Follow as continuous task:** `FollowOwnerController` states (`following`, `holding`, `holding_behind`, `stale`, `lost`) are progress observations. Headless regression treats stable follow/hold as success with a reason—not “commands drained.”
@@ -69,7 +69,7 @@ Stall detection belongs in the adapter’s verify pass: if `FollowOwnerControlle
 - `core/activities.py` → `ActivityCoordinator` — queues `ActionProposal` gestures with TTL/cooldown; docstring: no model motor authority.
 - `navigation/follow.py` → `FollowOwnerController` state machine for continuous follow progress.
 - `navigation/search_owner.py` → `SearchOwnerController` — runtime recovery when owner track expires (executive may dispatch without LLM authorship).
-- `agent.py` → `VoiceAgent.plan_publisher`, `CommitGuard` type alias, `handle_text_guarded`.
+- `voice/agent.py` → `VoiceAgent.plan_publisher`, `CommitGuard` type alias, `handle_text_guarded`.
 
 ## Failure story
 

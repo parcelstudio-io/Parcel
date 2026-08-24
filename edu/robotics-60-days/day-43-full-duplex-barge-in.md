@@ -47,7 +47,7 @@ Systems such as [Moshi](https://github.com/kyutai-labs/moshi) show native full-d
 
 ## Map to Parcel / Go2
 
-From `src/parcel_robot/voice_pipeline.py`, `duplex/`, and `docs/DUPLEX_DUAL_STREAM_DESIGN.md`:
+From `src/parcel_robot/voice/pipeline.py`, `duplex/`, and `docs/DUPLEX_DUAL_STREAM_DESIGN.md`:
 
 - **`DuplexVoiceSession`** — text-first coordinator. Partials interrupt and update `on_partial` but **never** call `VoiceAgent.handle_text`. Finals enqueue; only the newest final wins. `speech_epoch` increments on new input; active output’s `cancel_event` is set.
 - **`CommitGuard` path in `VoiceAgent.handle_text_guarded`** — model work may finish after cancellation; `_commit` must fail closed if the turn is stale (`runtime.py` wraps guarded calls from the voice session).
@@ -59,12 +59,12 @@ Industry aside: many “duplex” demos are turn-taking with fast TTFT. True bar
 
 **Codebase anchors (duplex + fencing):**
 
-- `voice_pipeline.py` → `DuplexVoiceSession`, `submit_text`, guarded agent dispatch.
-- `agent.py` → `CommitGuard`, `handle_text_guarded`, `_commit`.
+- `voice/pipeline.py` → `DuplexVoiceSession`, `submit_text`, guarded agent dispatch.
+- `voice/agent.py` → `CommitGuard`, `handle_text_guarded`, `_commit`.
 - `duplex/coordinator.py` → `DuplexCoordinator`, `set_epoch`.
 - `duplex/frames.py` → `FrameInterleaver`, `DuplexFrame`, `TEXT_SILENCE`, `ACT_IDLE`.
 - `duplex/__init__.py` → public duplex exports wired from `runtime.py` (`DuplexConfig`, coordinator construction).
-- `voice_audio.py` → `SpeakerSink`, echo guard counters during playback.
+- `audio/voice_loop.py` → `SpeakerSink`, echo guard counters during playback.
 - `docs/DUPLEX_DUAL_STREAM_DESIGN.md` → shadow ACT stream, epoch semantics.
 
 ## Failure story
@@ -79,4 +79,4 @@ During a planning pause the filler said “one second—” while PlanIR generat
 
 ## Optional 10-minute exercise
 
-Open `DuplexVoiceSession.submit_text` in `src/parcel_robot/voice_pipeline.py` and trace what happens when `is_final=False` versus `True`. Then read `DuplexCoordinator.set_epoch` in `duplex/coordinator.py` and note how stale frames are rejected.
+Open `DuplexVoiceSession.submit_text` in `src/parcel_robot/voice/pipeline.py` and trace what happens when `is_final=False` versus `True`. Then read `DuplexCoordinator.set_epoch` in `duplex/coordinator.py` and note how stale frames are rejected.

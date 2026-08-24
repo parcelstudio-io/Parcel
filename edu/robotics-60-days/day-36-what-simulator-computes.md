@@ -64,11 +64,11 @@ What the Parcel sim *does* compute usefully: repeatable owner/obstacle layouts, 
 
 **Codebase anchors (sim vs observation):**
 
-- `backends/base.py` → `SimObservation`, `SimulatorBackend.observe/move/stop`; `perception.py` advertises `"simulator_ground_truth": False` in reasoning visibility.
+- `backends/base.py` → `SimObservation`, `SimulatorBackend.observe/move/stop`; `perception/contract.py` advertises `"simulator_ground_truth": False` in reasoning visibility.
 - `backends/mujoco.py` → `MujocoSocketBackend` parses socket telemetry into typed tracks/scans.
 - `sim.py` → `model.opt.timestep`, `mujoco.mj_step`, `dynamic_city_seed`, independent motion watchdog (~0.65 s), transport `emergency_stopped`.
 - `navigation/grid_planner.py` docstring forbids privileged simulator map / evaluator path as planning authority.
-- `headless_city.py` → `HeadlessCityWorld` / `HeadlessCityQualityHarness` — deterministic scenario runner on the same observation seam.
+- `simulation/headless_city.py` → `HeadlessCityWorld` / `HeadlessCityQualityHarness` — deterministic scenario runner on the same observation seam.
 - Expression overlays (`SimulatorBackend.expression`) are decorative capability, not locomotion proof.
 
 Timestep choice is a design knob: smaller `Δt` can change contact chatter and CPU cost without magically adding missing actuator delay. If your CI only runs the kinematic base path, say so in the eval ledger—do not imply contact-rich Sport dynamics were validated.

@@ -6,7 +6,7 @@
 
 Sensors do not deliver truth; they deliver **partial, delayed, modality-specific measurements** that become tracks, obstacles, and semantic beliefs only after estimation. A confident label with a wrong metre is still a bad follow target.
 
-In Parcel, the application-visible world sample is largely `SimObservation` in `src/parcel_robot/backends/base.py`, fed by simulator LiDAR (`src/parcel_robot/mujoco_lidar.py`) or future hardware drivers — declared via `perception.spatial_sensors: [camera, lidar]` in `configs/robot.yaml`.
+In Parcel, the application-visible world sample is largely `SimObservation` in `src/parcel_robot/backends/base.py`, fed by simulator LiDAR (`src/parcel_robot/simulation/mujoco_lidar.py`) or future hardware drivers — declared via `perception.spatial_sensors: [camera, lidar]` in `configs/robot.yaml`.
 
 ## Software-engineering analogy
 

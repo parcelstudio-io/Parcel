@@ -50,7 +50,7 @@ Industry aside (light): robot “voice agents” in 2025–2026 demos often stre
 
 ## Map to Parcel / Go2
 
-From `docs/VOICE_AI_MODELS.md` and `src/parcel_robot/agent.py`:
+From `docs/VOICE_AI_MODELS.md` and `src/parcel_robot/voice/agent.py`:
 
 - **Cascade, not native S2S.** Audio becomes text before action authority. Raw mic frames, Whisper features, and Fish codec tokens never become motor commands.
 - **`VoiceAgent.handle_text` / `handle_text_guarded`.** Planning may run while a `CommitGuard` tracks whether the voice turn is still current; stale model results must not commit motion after barge-in.
@@ -62,7 +62,7 @@ On Go2, Unitree Sport remains the actuator API behind clamps; the LLM’s job en
 
 **Codebase anchors (untrusted planner boundary):**
 
-- `agent.py` → `VoiceAgent`, `CommitGuard`, `handle_text_guarded`, `_handle_text` (route switch to `_handle_plan` when `deliberative_plan`).
+- `voice/agent.py` → `VoiceAgent`, `CommitGuard`, `handle_text_guarded`, `_handle_text` (route switch to `_handle_plan` when `deliberative_plan`).
 - `brain/router.py` → `DeterministicIntentRouter.route`, `ROUTER_VERSION`, emergency `_EMERGENCY_STOP` set, `clarify_or_abstain` for `is_final=False`.
 - `brain/contracts.py` → `IntentFrame` (`INTENT_ROUTES`, transcript SHA-256), `PlanIR` (1..12 `PlanStep`, `requested_interrupt`).
 - `providers.py` → `LlamaCppProvider` (schema JSON); comment that `SafetySupervisor` is a second validation boundary after parsing.

@@ -51,7 +51,7 @@ Personality is prompt policy and catalog mapping; admission remains Python-side.
 - **Personality YAML** — `prompts/personalities/gentle_companion.yaml`, `playful_companion.yaml`, `calm_guardian.yaml`: `instruction`, `reply_style`, `affect_actions` (e.g. `gentle_companion`: `sad: play_bow`, `happy: paw_wave`). Loaded via prompting loader into structures consumed by `VoiceAgent(affect_actions=...)`.
 - **`affect_minimum_confidence`** (default 0.75) — affect-driven actions must clear this and match the active personality mapping (`providers.py` conversation parse path).
 - **`strip_emote_tags`** (`providers.py`) — removes `[emote:name]` / `[emote:name:0.8]` before TTS; returns parsed emote tuples for validated gesture timing. With audio, emotes attach to **`SpeechChunk`** and fire from chunk-start in the speaker worker—not a true acoustic presentation timestamp.
-- **`DynamicPromptComposer`** (`dynamic_prompting.py`) — assembles bounded prompt sections; personality injects style, not capability bits.
+- **`DynamicPromptComposer`** (`prompting/dynamic.py`) — assembles bounded prompt sections; personality injects style, not capability bits.
 - **Priority:** INTRO’s stack places emotion-driven and idle personality behavior *below* navigation, explicit safety, collision, and E-stop. `docs/VOICE_AI_MODELS.md` documents expression turning off or head-only under hazards/skills/locomotion.
 - **Go2 embodiment limit:** no neck actuator—prosody-timed head nods may be metric/state output rather than physical motion; body height/pitch offsets are what currently actuate in sim.
 - **Duplex fillers:** `FillerPolicy` / `DuplexCoordinator` use Python filler pools; personality must not silently couple filler phrases to motion without the same gates as explicit skills.
@@ -60,9 +60,9 @@ Personality is prompt policy and catalog mapping; admission remains Python-side.
 **Codebase anchors (personality / speech / activities / safety):**
 
 - `prompts/personalities/*.yaml` → `affect_actions`, `reply_style` (three shipped profiles).
-- `dynamic_prompting.py` → `DynamicPromptComposer`, context source registration.
+- `prompting/dynamic.py` → `DynamicPromptComposer`, context source registration.
 - `providers.py` → `strip_emote_tags`, `SpeechChunk`, `LlamaCppProvider` (conversation lane).
-- `agent.py` → `VoiceAgent` personality/affect wiring, `affect_actions` parameter.
+- `voice/agent.py` → `VoiceAgent` personality/affect wiring, `affect_actions` parameter.
 - `core/activities.py` → `ActivityCoordinator.submit` — TTL, cooldown, `ActivityContext.busy_reason` defers during follow/nav/E-stop.
 - `safety.py` → `SafetySupervisor.validate` — fail-closed tool/backend checks independent of tone.
 - `duplex/coordinator.py` → `DuplexCoordinator`, `FillerPolicy`, `FrameInterleaver` — shadow duplex frames must not outrank arbiter motion.
