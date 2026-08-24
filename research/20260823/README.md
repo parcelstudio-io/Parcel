@@ -19,10 +19,11 @@ perception, memory/learning, lifelike behavior, portability seams, the design
 corpus) plus the owner's real spend ledger, the pricing page, and the host
 inventory. The decisive facts:
 
-1. **Money.** gpt-realtime-mini audio is $10/M tokens in (600 tokens per
-   minute of listening) and $20/M out, cached audio $0.30/M. A hosted ear
-   left open 12 h/day costs ≈ $130/month *in silence* — the hosted lane can
-   never be the always-on ear. The owner's ledger (`recordings/spend.jsonl`,
+1. **Money.** gpt-realtime-mini audio is $10/M tokens in and $20/M out,
+   cached audio $0.30/M. **Correction (H1, 2026-08-24): streamed silence is
+   NOT billed** — the "$130/month silence floor" written here on 08-23 was
+   wrong; cost is driven by answering, and a VAD-only gate opens on any
+   speech (TV: 960×/h). The owner's ledger (`recordings/spend.jsonl`,
    18 responses ≈ $0.19 at the module's ASSUMED rates) counts tokens without
    an audio/text split and prices them at the FULL model's text rates; the
    true per-turn cost is unknown until the split is recorded.
@@ -63,14 +64,14 @@ inventory. The decisive facts:
 
 | # | folder | hypothesis in one line | tier | headline metric | verdict |
 |---|---|---|---|---|---|
-| H1 | `ambient-ear-cost-ladder/` | A $0 local ear + local engagement triage + hosted-only-when-engaged keeps a 12 h/day companion under $200/month with hosted quality on the turns that matter | replay + hosted-live (≤ $2) | projected $/month at 3 policies; audio/text token split measured | pending |
-| H2 | `local-cognition-gpu/` | A GPU-resident local model can run a continuous inner-monologue tick (notice → decide to speak/look/ignore) at ≤ 300 ms p50 while sharing the GPU with perception | desktop | tick p50/p95 under contention; decision quality vs judge | pending |
-| H3 | `drives-and-initiative/` | A persistent drive model over the existing stimulus/attention seams produces self-initiated look/approach/remark/go-check behaviors at a tunable rate that leaves the doorstep, yields to the owner within one tick, and stays under an annoyance budget | desktop-sim | initiations/h by kind; max radius; preemption latency | pending |
-| H4 | `continuous-body-intent/` | One body-neutral `BodyIntentV1` stream (gaze, posture, breathing, locomotion, hold) at ≥ 20 Hz with jerk bounds and instant preemption can be implemented by Go2 Sport primitives *and* a fake custom quadruped from the same capability manifest | desktop-sim | emission rate; jerk; preemption; adapter LOC | pending |
+| H1 | `ambient-ear-cost-ladder/` | A $0 local ear + local engagement triage + hosted-only-when-engaged keeps a 12 h/day companion under $200/month with hosted quality on the turns that matter | replay + hosted-live (≤ $2) | projected $/month at 3 policies; audio/text token split measured | REFUTED as a ladder / CONFIRMED economically — silence not billed; P2 $0.53–$6.87/mo; VAD opens 960×/h on TV speech; local −27 pts vs hosted |
+| H2 | `local-cognition-gpu/` | A GPU-resident local model can run a continuous inner-monologue tick (notice → decide to speak/look/ignore) at ≤ 300 ms p50 while sharing the GPU with perception | desktop | tick p50/p95 under contention; decision quality vs judge | executor alive (re-measuring latency); partial: agreement 0.40, talker TTFT 126 ms, VRAM 26.2 GB |
+| H3 | `drives-and-initiative/` | A persistent drive model over the existing stimulus/attention seams produces self-initiated look/approach/remark/go-check behaviors at a tunable rate that leaves the doorstep, yields to the owner within one tick, and stays under an annoyance budget | desktop-sim | initiations/h by kind; max radius; preemption latency | CONFIRMED-WITH-NOTES; D4 REFUTED with mechanism (no return leg) |
+| H4 | `continuous-body-intent/` | One body-neutral `BodyIntentV1` stream (gaze, posture, breathing, locomotion, hold) at ≥ 20 Hz with jerk bounds and instant preemption can be implemented by Go2 Sport primitives *and* a fake custom quadruped from the same capability manifest | desktop-sim | emission rate; jerk; preemption; adapter LOC | CONFIRMED (harness-only): all B1–B9 |
 | H5 | `governed-continual-memory/` | Scheduled distillation + persisted tiers + an episodic layer + a `query_world` path raise held-out memory probes to 13/13 with a live summarizer, fact precision ≥ 0.9, zero revoked facts resurfacing, and answer "where is X" from the learned map | replay / synthetic | probe pass rate; precision; revocation leaks; world-query top-1 | **REFUTED as pre-registered** (M1 4/13 live; M3 1 miss); mechanisms CONFIRMED-WITH-NOTES; 4 product defects verified — see VERDICT.md |
-| H6 | `noticing-loop-perception/` | Continuous open-vocab noticing with novelty scoring runs ≥ 10 Hz on fp16 CUDA with ≤ 1 false noticing/min and closes the 562 ms→300 ms freshness violation; the real-photo vs render operating point is found through the repo's own detector | desktop (recorded/EGL; real webcam if present) | FPS, p95, FP/min, novelty AUC, TTL compliance | pending |
-| H7 | `localization-delegation-bench/` | A delegated scan-matching localizer (KISS-ICP class) behind `PoseProvider`'s MAP role satisfies the T_map_odom/covariance/health/jump contract on simulated Mid-360 scans, and the navigation consumers survive the calibrated drift ladder | desktop-sim | ATE/RPE vs truth; jump magnitude; SR across the pose ladder | pending |
-| H8 | `search-before-refuse/` | When `navigate_to` names an entity the map lacks, a bounded search mission (set detector query → scan in place → the navigator's existing SearchEntity ladder → ground on detection/OCR → honest `not_found` with what was seen) finds ≥ 70 % of visible-within-12 m entities in the headless city with 0 false arrivals — the owner's live `city books` refusal is the motivating case | desktop-sim | find rate; wrong-grounding; false arrivals; preemption; typed disposition | pending |
+| H6 | `noticing-loop-perception/` | Continuous open-vocab noticing with novelty scoring runs ≥ 10 Hz on fp16 CUDA with ≤ 1 false noticing/min and closes the 562 ms→300 ms freshness violation; the real-photo vs render operating point is found through the repo's own detector | desktop (recorded/EGL; real webcam if present) | FPS, p95, FP/min, novelty AUC, TTL compliance | CONFIRMED-WITH-NOTES; P5 REFUTED; P1/P2/P7 INCONCLUSIVE (contended host) |
+| H7 | `localization-delegation-bench/` | A delegated scan-matching localizer (KISS-ICP class) behind `PoseProvider`'s MAP role satisfies the T_map_odom/covariance/health/jump contract on simulated Mid-360 scans, and the navigation consumers survive the calibrated drift ladder | desktop-sim | ATE/RPE vs truth; jump magnitude; SR across the pose ladder | CONFIRMED-WITH-NOTES; L5 covariance REFUTED |
+| H8 | `search-before-refuse/` | When `navigate_to` names an entity the map lacks, a bounded search mission (set detector query → scan in place → the navigator's existing SearchEntity ladder → ground on detection/OCR → honest `not_found` with what was seen) finds ≥ 70 % of visible-within-12 m entities in the headless city with 0 false arrivals — the owner's live `city books` refusal is the motivating case | desktop-sim | find rate; wrong-grounding; false arrivals; preemption; typed disposition | not started (executor killed by the weekly limit) |
 
 Deliberately NOT hypotheses (design decisions, not experiments): the native
 sole-writer gateway (bench exists; build is a milestone card), box-day

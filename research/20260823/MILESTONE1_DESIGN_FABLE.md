@@ -1,8 +1,8 @@
 # Milestone 1 — "the desk dog" · detailed design (Fable) · 2026-08-23 (draft; evidence sections fill from H1–H7 verdicts)
 
-Status: DRAFT — structure and decisions fixed from the assessment
-(`ASSESSMENT_FABLE.md`); every section marked **[pending H#]** is completed
-only from that hypothesis's `VERDICT.md`. Nothing here authorizes physical
+Status: DRAFT v2 (2026-08-24) — §2, §4.1–4.6 grounded in the H1/H3/H4/H5/H6/H7
+verdicts; **[pending H2/H8/H9]** sections complete when those land; re-scoped
+to what mounts (`research/20260824/README.md`). Nothing here authorizes physical
 motion; §9 gates do.
 
 ## 0. The milestone in one paragraph
@@ -37,7 +37,18 @@ stairs, crowds, public spaces: excluded by ODD.
   $200 (guard rail at $150 with owner notice), audio never uploaded in
   silence.
 
-## 2. Compute topology (decision)
+## 2. Compute topology (decision) and the link-loss ladder
+**Platform (H10 memo, `research/20260824/platform-and-connectivity/`):** keep
+the Go2 EDU Plus (companion mass, Orin NX 16 GB, Wi-Fi 6, 4G eSIM — no 5G);
+add a 5G router/hotspot on the payload rail; decide on-body compute after
+H9 (Orin NX + 8B floor if the compound grammar meets its bar; else an AGX
+Orin 64 GB payload for the 26B). The X30 Pro (AGX Orin, IP67, 56 kg, 4 m/s,
+resellers list 4G/5G) is an inspection platform in the wrong mass and price
+class; its two advantages are Go2 payloads. **Ladder:** L0 cloud+desk (full)
+→ L1 desk only → L2 body only (8B + grammar: listen, answer simply, stop,
+follow, go-to-known, remember, search-by-looking, honest refusal) → L3 no
+LLM (closed intents, follow, hold). Transitions on link health, never
+mid-motion; each rung is a typed manifest the conversation narrates.
 **The desk GPU is part of the dog for M1.** The Orin NX (16 GB, no ORT
 aarch64 wheel, JetPack CPython 3.10) runs what must be local to the body:
 the ear (XVF3800 → Silero VAD → endpointing), the capture rail, the LIO
@@ -73,7 +84,22 @@ split-priced spend rows (H5, H1). Authority remains exactly where it is:
 reactive gate, and — new for the body — the native governor/gateway.
 
 ## 4. Subsystem designs
-### 4.1 Conversation and cost **[pending H1]**
+### 4.1 Conversation and cost — grounded by H1 (VERDICT: ladder REFUTED, economics CONFIRMED)
+Measured: streamed silence is not billed; a VAD-gated hosted-mini session
+costs **$0.53–$6.87/month** on the 174-turn corpus duty cycle (C8), the
+ledger now prices the audio/text/cached split to 0.000 % of live usage
+(C9), pre-roll ≥ 500 ms gives 0 % first-word truncation (C3), endpoint p50
+0.52 s (C4). Refuted: a VAD alone opens 960×/hour on television speech
+(C5) and the local-first answer ladder loses 27 quality points to hosted
+mini (C7) with 22 % escalation (C6). Design consequences: (i) ONLINE the
+answerer is hosted mini — it is both better and cheap — opened per exchange
+by VAD **and** owner-voice identity (`realtime/voice_identity.py`, the
+unmeasured half of C5) **and** in-exchange engagement triage
+(`voice/engagement.py`, `triage_in_exchange`); (ii) OFFLINE the local lane
+is the floor (H9), not a cost lever; (iii) `runtime.py` builds `SpendLedger`
+with the rate card (one line) and the $200 ceiling is enforced on real
+prices with a $150 owner notice; (iv) Smart Turn v3 is wired to stop
+mid-sentence splits (3/20 in H1).
 Local ear always on; Silero gate + pre-roll buffer opens the hosted socket
 only on speech and closes it at endpoint + idle; engagement triage decides
 hear-only / acknowledge (local, one clause) / answer (local 8B talker for
@@ -81,7 +107,22 @@ simple turns; hosted mini on typed escalation: needs-tool, needs-memory,
 long-form, uncertainty). Ledger records the audio/text/cached split and
 prices with the dated rate card; the budget gate reads it. Persona is
 prompt text (owner directive). Narration off-thread (NARR-1's FIFO).
-### 4.2 The mind **[pending H2, H3]**
+### 4.2 The mind — grounded by H3 (CONFIRMED-WITH-NOTES) and H2 (partial)
+H3 measured: 5.3 initiations/hour in the radius-6 arm, 90 % admitted at
+the existing doors, max radius 7.2 m, preemption in 0 ticks, 0 initiations
+in quiet/night windows, 100 % attribution to a named drive — and a
+mechanism-level refutation of D4: an initiated errand had **no return leg**
+(the dog stopped inside a pedestrian route; 1,213 of 1,222 contacts were
+agents walking into a stationary dog) and the `_toward` gate misses people
+closing from the side. H2 (partial): the 8B's monologue decisions agree
+with gold only 0.40 and the 26B 0.42 — the **LLM-as-tick idea is refuted**;
+the tick is the deterministic drive model, and an LLM only *phrases*
+(8B talker TTFT 126 ms). Design: `mind/` = drives (H3's `attention/drives.py`)
++ digest + proposal routing; every initiated leg carries a terminal
+(return home or stand aside off the walking routes); a side-closing person
+gate joins the proximity ladder; consent knob `initiative.travel_radius_m`
+default 0; drives log features → decision → outcome for the later
+trainable core.
 `mind/` package (new, ≤ 5 modules): digest assembly, drives, the tick,
 proposal routing. Drives: curiosity (rises on novelty, decays), social
 (rises when a person is present and unengaged), comfort (battery, posture
@@ -89,17 +130,42 @@ time), duty (owner requests pending). The tick's decisions map to the
 existing doors (curiosity admission, `_accept_plan` with the radius
 policy, awareness yaw, whisperer events). Every tick logs features →
 decision → outcome (the future Stage-B training corpus).
-### 4.3 Body **[pending H4]**
+### 4.3 Body — grounded by H4 (CONFIRMED, harness-only)
+Measured: 50 Hz continuous `BodyIntentV1` with HOLD as a command, 0
+envelope violations and 0 IPC rejections over 10 min, e-stop→HOLD in 0.88
+tick, locomotion byte-identical to today's finalized path, and a second
+body (no posture, yaw-only gaze) driven from the same stream by a 124-line
+adapter with zero product edits. Design as drafted; the Go2 adapter's
+`Euler`/`Move`/`StopMove` mapping is commissioned one primitive at a time
+on the body (M1-3), and jerk bounds are re-tuned on the real body.
 The composer and adapters from H4; the Go2 adapter maps HOLD→`StopMove`,
 velocity→`Move`, posture→`Euler`, gestures→`Hello`/`Sit`/`Stretch` (each
 commissioned individually, default OFF). Breathing is posture `dz` at
 0.25 Hz/4 mm; gaze is body yaw within the sweep limits (no neck).
-### 4.4 Perception **[pending H6]**
+### 4.4 Perception — grounded by H6 (CONFIRMED-WITH-NOTES; P5 REFUTED; latency INCONCLUSIVE)
+Measured: the real-photo operating point is threshold 0.10 (person recall
+0.775 instance / 0.987 image, render FP 0.00); false noticings 0.4/min; TTL
+compliance 0/443 on a quiet host; RGB-only produces zero map writes
+(silent blindness). Refuted: gallery-cosine novelty (AUC 0.72) — noticing
+needs a spatial prior (map cell + label). Inconclusive: 7.4 fps and p95
+133 ms were measured under host load 100–207; the loop is CPU-bound, and
+640×360 costs MORE CPU than 1280×720 because the preprocessing fast path
+switches off below a 960 source edge — fix that first, then re-measure.
+Design: desk daemon fp16 at 960-wide, novelty = spatial-prior model,
+depth required for map writes (D455) with a monocular fallback card.
 Desk daemon, fp16, 640×360, novelty-scored noticings at ≤ 1 FP/min,
 freshness inside TTL; D455 depth feeds the learned map; a monocular-depth
 fallback is a later card if H6 shows RGB-only is otherwise useless.
 Person detection operating point from real photos, not renders.
-### 4.5 Localization **[pending H7]**
+### 4.5 Localization — grounded by H7 (CONFIRMED-WITH-NOTES; L5 REFUTED)
+Measured on sim scans: the contract works end-to-end — ATE 1–1.6 cm, health
+DEGRADED within 0.4 s of dropout and LOST on a teleport, recovery ≤ 0.4 s,
+`localization_jump_m` measurable (5–9 cm nominal, 7–10 m on kidnapping),
+2.25 ms p95, 0 false arrivals across the drift ladder (SR loss is entirely
+refusals), and a second odometry through the same provider with 0 provider
+diff. Refuted: covariance calibration (ANEES 100–230×) — health thresholds
+must not trust the covariance until a calibrated LIO (FAST-LIO2/Point-LIO
+on real Mid-360 bags) replaces the ICP proxy. Design as drafted.
 FAST-LIO2 first (Point-LIO second) in the Orin's capture venv, publishing
 `LocalizationUpdate` over the existing AF_UNIX seqpacket pattern; Parcel
 owns MAP/ODOM/health/jump; `localization_jump_m` feeds the stopping
