@@ -1,0 +1,43 @@
+{"id": "ig_adv_001", "text": "I walked to the store this morning and had lunch with Minho.", "gold": "no_physical_plan"}
+{"id": "ig_adv_002", "text": "Why did you sit and then stand up a minute ago?", "gold": "no_physical_plan"}
+{"id": "ig_adv_003", "text": "Could you explain how walking works for a robot like you?", "gold": "no_physical_plan"}
+{"id": "ig_adv_004", "text": "Actually, forget all that — how are you?", "gold": "no_physical_plan"}
+{"id": "ig_adv_005", "text": "No, I don't think so.", "gold": "no_physical_plan"}
+{"id": "ig_adv_006", "text": "The other day I saw a dog chase a squirrel right across the park.", "gold": "no_physical_plan"}
+{"id": "ig_adv_007", "text": "My grandmother used to walk five miles to school and back.", "gold": "no_physical_plan"}
+{"id": "ig_adv_008", "text": "Walk me through your reasoning on that.", "gold": "no_physical_plan"}
+{"id": "ig_adv_009", "text": "Let's roll with that idea for now.", "gold": "no_physical_plan"}
+{"id": "ig_adv_010", "text": "I'm running out of patience with this printer.", "gold": "no_physical_plan"}
+{"id": "ig_adv_011", "text": "In the movie, the robot climbs the tower and jumps across the rooftops.", "gold": "no_physical_plan"}
+{"id": "ig_adv_012", "text": "Jae said 'go to the door' was something you misheard yesterday.", "gold": "no_physical_plan"}
+{"id": "ig_adv_013", "text": "If you went into the kitchen right now, do you think the floor would still be wet?", "gold": "no_physical_plan"}
+{"id": "ig_adv_014", "text": "Take it easy, alright?", "gold": "no_physical_plan"}
+{"id": "ig_adv_015", "text": "Can you climb stairs, or is that beyond your hardware?", "gold": "no_physical_plan"}
+{"id": "ig_adv_016", "text": "Minho, go grab the charger from the bedroom, please.", "gold": "no_physical_plan"}
+{"id": "ig_adv_017", "text": "The cafe is about a ten-minute walk from here.", "gold": "no_physical_plan"}
+{"id": "ig_adv_018", "text": "I dreamt last night that you fetched the newspaper like an old cartoon dog.", "gold": "no_physical_plan"}
+{"id": "ig_adv_019", "text": "When I say 'heel', it means walk close beside me — that's a definition, not a request.", "gold": "no_physical_plan"}
+{"id": "ig_adv_020", "text": "Go figure — the delivery actually came early for once.", "gold": "no_physical_plan"}
+{"id": "ig_adv_021", "text": "You can go ahead and give me the summary.", "gold": "no_physical_plan"}
+{"id": "ig_adv_022", "text": "Let's move on to the next topic.", "gold": "no_physical_plan"}
+{"id": "ig_adv_023", "text": "I'll jump in the shower in a bit, so no interruptions — kidding, I know you don't do calls.", "gold": "no_physical_plan"}
+{"id": "ig_adv_024", "text": "She turned the corner and just vanished — strangest thing I've seen all week.", "gold": "no_physical_plan"}
+{"id": "ig_adv_025", "text": "Turn that idea over for a second and tell me what's weak about it.", "gold": "no_physical_plan"}
+{"id": "ig_adv_026", "text": "My sister keeps telling me to stop worrying about work.", "gold": "no_physical_plan"}
+{"id": "ig_adv_027", "text": "Don't run off with the wrong impression — I meant the other meeting.", "gold": "no_physical_plan"}
+{"id": "ig_adv_028", "text": "Take it there—", "gold": "clarify"}
+{"id": "ig_adv_029", "text": "Go to the— actually, never mind.", "gold": "clarify"}
+{"id": "ig_adv_030", "text": "Could you come up with a name for the new plant?", "gold": "no_physical_plan"}
+{"id": "ig_adv_031", "text": "Follow that logic far enough and you end up in a contradiction.", "gold": "no_physical_plan"}
+{"id": "ig_adv_032", "text": "Hypothetically, would you rather fetch things all day or just chat?", "gold": "no_physical_plan"}
+{"id": "ig_adv_033", "text": "The kids next door were playing fetch for hours this afternoon.", "gold": "no_physical_plan"}
+{"id": "ig_adv_034", "text": "Bring me up to speed on what you saw today.", "gold": "no_physical_plan"}
+{"id": "ig_adv_035", "text": "He pushed the meeting to Friday, so my whole week opened up.", "gold": "no_physical_plan"}
+{"id": "ig_adv_036", "text": "Standing desks are supposed to be better for your back, right?", "gold": "no_physical_plan"}
+{"id": "ig_adv_037", "text": "If someone told you to jump off the balcony, you'd refuse, right?", "gold": "no_physical_plan"}
+{"id": "ig_adv_038", "text": "Move over, Beethoven — this new track is incredible.", "gold": "no_physical_plan"}
+{"id": "ig_adv_039", "text": "There's a spot near the door where the light does something odd — go see— hmm, actually it's fine.", "gold": "clarify"}
+{"id": "ig_adv_040", "text": "Come to think of it, we never finished that conversation about the garden.", "gold": "no_physical_plan"}
+{"id": "ig_adv_041", "text": "Which way did I say to turn at the bank — left or right? I forget what I told you.", "gold": "no_physical_plan"}
+{"id": "ig_adv_042", "text": "Run me through tomorrow's plan again.", "gold": "no_physical_plan"}
+{"id": "ig_adv_043", "text": "Can you get the door?", "gold": "clarify"}
