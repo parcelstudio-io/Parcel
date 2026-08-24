@@ -393,6 +393,16 @@ def test_introducible_keys_are_exactly_the_three_documented_families() -> None:
                 # a looser join with `false`.
                 "venue",
                 "backend",
+                # ---- CARD A6 (integrator follow-up): the eighth family ------
+                # `stop_hotword:` — the always-local spoken STOP's grammar
+                # policy (mode + name). The SHA-locked base omits the section,
+                # and A6 added it to `OVERLAY_INTRODUCIBLE_KEYS` (81dfd34)
+                # without extending this verdict — caught by A8's sweep. The
+                # typo guard is at the read site, the `roam` pattern exactly:
+                # `audio.stop_hotword.StopHotwordConfig.from_mapping` refuses
+                # an unknown key and an unknown mode BY NAME
+                # (`tests/test_a6_stop_local.py` exercises both).
+                "stop_hotword",
                 "safety.require_physical_inputs",
                 # ---- END CARD HW-5 -----------------------------------------
                 # ---- CARD SENSE-1 (scrum/20260823/task_3): the eighth -------
