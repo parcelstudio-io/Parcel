@@ -313,6 +313,13 @@ except ImportError as _exc:  # pragma: no cover — frozen BARN bundle path
     SemanticValueMap2D = None  # type: ignore[misc, assignment]
     _HAS_INSTRUCTNAV = False
 
+#: Card A3 / NAV-CORE fix 5.  The typed non-arrival a chance-constrained claim
+#: gets when no detector confirmed it: the pose is inexact, its covariance has
+#: never been calibrated on any host, and an uncalibrated probability is not
+#: allowed to become an arrival.  A REFUSAL, so it belongs in the same family
+#: as ``target_not_resighted`` and ``outside_arrival_region``.
+ARRIVAL_UNCALIBRATED_CONFIDENCE_REASON = "arrival_confidence_uncalibrated"
+
 # D3 lock-on is a separate soft import (same pattern as value_directed_scan):
 # keep it out of the instructnav try so a detection_adapter miss cannot disable
 # the whole GrounderV2 / ScanBehavior ladder.
@@ -5851,10 +5858,15 @@ class DirectiveNavigator:
             if not polygon:
                 return False
             clearance = float(self.mission.metadata.get("terminal_clearance_m", 0.32))
+            # Card A3 fix 5: nothing was re-sighted on this tick, so an inexact
+            # pose has only its own covariance to argue with -- and that is the
+            # R3 mechanism. Geometry on an exact pose still decides; a
+            # chance-constrained claim without a detector does not.
             return self._inside_polygon_verified(
                 robot_map,
                 tuple((float(px), float(py)) for px, py in polygon),
                 clearance,
+                detector_confirmed=False,
             )
         # Card A2 fix 2 kept this check for EVERY target, oracle or not. The
         # off-oracle path below replaces only what is unsatisfiABLE off-oracle
@@ -6131,6 +6143,8 @@ class DirectiveNavigator:
         robot_map: Any,
         polygon: tuple[tuple[float, float], ...],
         clearance_m: float,
+        *,
+        detector_confirmed: bool = True,
     ) -> bool:
         """Inside-relation membership, chance-constrained when pose is uncertain.
 
@@ -6143,6 +6157,21 @@ class DirectiveNavigator:
         ``P(inside | pose covariance) >= inside_probability_threshold`` under
         the half-space Gaussian approximation. A polygon predicate evaluated on
         a point estimate silently claims certainty the estimate does not have.
+
+        **Card A3 / NAV-CORE fix 5 -- the calibration floor.** The chance
+        constraint is only as honest as the covariance feeding it, and no
+        covariance in this tree has ever been calibrated: H7 row L5 never
+        measured NEES, H7's teleport moved the published sigma 1.00 -> 3.10 mm
+        while the pose was 7 m wrong, and NAV-CORE refuter R3 turned exactly
+        that into a WRONG ANSWER -- an arrival declared at ``p = 0.9922`` with
+        the body 0.534 m outside a 0.5 m band. So a probability may REFUSE an
+        arrival and may never MANUFACTURE one: when the pose is inexact, the
+        claim additionally needs the detector confirmation card A2 made the
+        rule for its off-oracle path ("no covariance and no probability
+        threshold may verify anything here -- they may only refuse"). The one
+        caller that had no detector in hand is the committed-region branch of
+        :meth:`_semantic_arrival_verified`, which is why the parameter exists
+        and defaults to the confirmed case.
         """
 
         if not _HAS_POSE or getattr(robot_map, "is_exact", True):
@@ -6155,6 +6184,12 @@ class DirectiveNavigator:
             self.mission.metadata["inside_probability_threshold"] = (
                 self.inside_probability_threshold
             )
+        if not detector_confirmed:
+            if self.mission is not None:
+                self.mission.metadata["arrival_not_verified_reason"] = (
+                    ARRIVAL_UNCALIBRATED_CONFIDENCE_REASON
+                )
+            return False
         return probability >= self.inside_probability_threshold
 
     def _arrival_goal_region(self) -> Any:

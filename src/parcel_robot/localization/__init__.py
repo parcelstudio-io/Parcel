@@ -22,7 +22,25 @@ Leaves, in dependency order:
     A scan-to-map matcher delegated to ``small-gicp`` (see the module docstring
     for why it is not ``kiss-icp``).
 
+``global_match.py``
+    Card A3 / NAV-CORE fix 4.  The whole-map second-best margin: coarse grid,
+    two-finalist refinement, exact yaw sweep by circular shift.  The number
+    addendum A4's re-arm path (a) is expressed in, which existed nowhere in the
+    product before this card.
+
+``discontinuity.py``
+    Card A3.  Addendum A10's six signals, the latch they set, and addendum A4's
+    two re-arm paths — the whole-map margin and the ONE-SHOT operator
+    pose-reset transaction.  Latched motion is a motion authority, never a
+    health level: ``HEALTHY`` + covariance re-arms nothing.
+
+``jump_journal.py``
+    Card A3.  ``localization_jump_m`` written down at last, in the exact entry
+    shape ``bridge/timing.load_stopping_envelope_record`` consumes.
+
 ``pose_adapter.py``
     Composes a ``LocalizerProvider`` (MAP) with ``pose.DriftingOdomProvider``
-    (ODOM) into one object that satisfies ``pose.PoseProvider``.
+    (ODOM) into one object that satisfies ``pose.PoseProvider``.  Optionally
+    feeds the latch and the jump journal; with neither supplied its behaviour
+    is unchanged by A3.
 """

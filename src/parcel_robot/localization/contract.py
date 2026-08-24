@@ -20,6 +20,18 @@ covariance, a negative variance or a negative jump raises at construction
 rather than reaching an arrival check.  The validation is deliberately the same
 shape as ``pose.PoseEstimate.__post_init__`` so the two cannot drift apart in
 what they consider a legal covariance.
+
+**The fourth type: :class:`RelocalizationMatch` (card A3).**  A relocalization
+that reports only where it decided it is cannot answer the question the
+milestone's re-arm rule asks — CLAUDE_RESPONSE addendum A4 path (a) wants "a
+relocalization match whose second-best candidate is worse by a pre-registered
+margin across the whole map, not a local residual gate".  NAV-CORE measured
+that the shipped provider could not answer it at all
+(``research/20260824/nav-core/RESULTS.md`` fix 4: "``_relocalize`` scores
+keyframes, keeps the best and never reports a runner-up"), so the update now
+carries the *pair* and the gap between them.  A localizer that finds no rival
+publishes ``runner_up_residual_m = inf`` and an infinite margin, which is the
+honest reading of "nothing else in the map looked like this".
 """
 
 from __future__ import annotations
@@ -34,6 +46,7 @@ __all__ = [
     "IDENTITY_SE2",
     "LocalizationUpdate",
     "LocalizerProvider",
+    "RelocalizationMatch",
     "ScanFrame",
     "compose_se2",
     "invert_se2",
@@ -89,6 +102,90 @@ def _finite(value: object, name: str) -> float:
     return out
 
 
+def _residual(value: object, name: str) -> float:
+    """Like :func:`_finite` but ``inf`` is legal: it means "nothing matched"."""
+
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise TypeError(f"localization {name} must be a real number")
+    out = float(value)
+    if math.isnan(out):
+        raise ValueError(f"localization {name} must not be NaN")
+    if out < 0.0:
+        raise ValueError(f"localization {name} is a magnitude and must be non-negative")
+    return out
+
+
+@dataclass(frozen=True)
+class RelocalizationMatch:
+    """Where a relocalization decided it is, and how alone that answer was.
+
+    ``pose`` / ``residual_m`` are the winning hypothesis and its scan residual;
+    ``runner_up`` / ``runner_up_residual_m`` are the best *competing* hypothesis
+    at least ``separation_m`` away from it — a candidate nearer than that is the
+    same hypothesis re-scored, not a rival.  ``hypotheses`` is how many were
+    scored, so a reader can tell a whole-map answer from a two-candidate one.
+
+    :attr:`margin` is the pre-registered quantity A4 path (a) gates on: the
+    runner-up's residual excess as a FRACTION of the winner's.  Relative rather
+    than absolute because the residual scale is set by the sensor and the room,
+    and a fixed metre threshold would mean something different in every venue.
+
+    A negative margin is legal and is the strongest possible refusal: it says
+    the competitor fitted BETTER than the pose the provider committed to.
+    """
+
+    pose: tuple[float, float, float]
+    residual_m: float
+    runner_up: tuple[float, float, float]
+    runner_up_residual_m: float
+    separation_m: float
+    hypotheses: int
+    source: str
+
+    def __post_init__(self) -> None:
+        for name in ("pose", "runner_up"):
+            raw = tuple(getattr(self, name))
+            if len(raw) != 3:
+                raise ValueError(f"RelocalizationMatch.{name} must be (x, y, yaw)")
+            object.__setattr__(
+                self, name, tuple(_finite(value, name) for value in raw)
+            )
+        object.__setattr__(self, "residual_m", _residual(self.residual_m, "residual_m"))
+        object.__setattr__(
+            self,
+            "runner_up_residual_m",
+            _residual(self.runner_up_residual_m, "runner_up_residual_m"),
+        )
+        object.__setattr__(
+            self, "separation_m", _residual(self.separation_m, "separation_m")
+        )
+        if int(self.hypotheses) < 1:
+            raise ValueError("a match must have scored at least one hypothesis")
+        object.__setattr__(self, "hypotheses", int(self.hypotheses))
+        object.__setattr__(self, "source", str(self.source))
+
+    @property
+    def margin(self) -> float:
+        """``(runner_up_residual - residual) / residual``.
+
+        The degenerate cases are spelled out rather than left to float
+        arithmetic: a perfect fit (zero residual) against any finite rival is
+        infinitely discriminative, and two infinities mean nothing matched at
+        all, which is not evidence of anything and scores 0.
+        """
+
+        if not math.isfinite(self.residual_m) or self.residual_m <= 0.0:
+            return math.inf if math.isfinite(self.runner_up_residual_m) else 0.0
+        if not math.isfinite(self.runner_up_residual_m):
+            return math.inf
+        return (self.runner_up_residual_m - self.residual_m) / self.residual_m
+
+    def is_discriminative(self, minimum_margin: float) -> bool:
+        """Is this answer globally alone enough to re-arm on (A4 path (a))?"""
+
+        return self.margin >= float(minimum_margin)
+
+
 @dataclass(frozen=True)
 class ScanFrame:
     """One body-frame planar scan and the monotonic nanoseconds it was taken.
@@ -134,6 +231,11 @@ class LocalizationUpdate:
     jump_m: float
     stamp_ns: int
     source: str
+    #: Card A3 / fix 4.  The whole-map second-best evidence, on the ticks that
+    #: produced a relocalization; ``None`` on ordinary tracking ticks, where
+    #: there was no global question to answer.  Optional and defaulted so the
+    #: field is additive: every construction that predates A3 still validates.
+    match: RelocalizationMatch | None = None
 
     def __post_init__(self) -> None:
         raw_transform = tuple(self.T_map_odom)
@@ -149,6 +251,8 @@ class LocalizationUpdate:
         object.__setattr__(self, "stamp_ns", int(self.stamp_ns))
         object.__setattr__(self, "source", str(self.source))
         object.__setattr__(self, "cov", _validated_covariance(self.cov))
+        if self.match is not None and not isinstance(self.match, RelocalizationMatch):
+            raise TypeError("LocalizationUpdate.match must be a RelocalizationMatch")
 
     @property
     def position_sigma_m(self) -> float:

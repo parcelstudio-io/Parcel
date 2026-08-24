@@ -51,6 +51,7 @@ import numpy as np
 from parcel_robot.localization.contract import (
     IDENTITY_SE2,
     LocalizationUpdate,
+    RelocalizationMatch,
     ScanFrame,
     compose_se2,
     invert_se2,
@@ -114,6 +115,21 @@ class ScanMatchConfig:
     lost_failure_streak: int = 3
     recover_streak: int = 2
     relocalize_candidates: int = 24
+    # Card A3, NAV-CORE fix 4: the whole-map second-best margin.
+    #: A runner-up whose committed pose is nearer than this to the winner is
+    #: the same hypothesis re-scored, not a competitor.  Matches
+    #: ``global_match.HYPOTHESIS_SEPARATION_M``.
+    relocalize_separation_m: float = 1.00
+    #: PRE-REGISTERED re-arm margin (``global_match.GLOBAL_MATCH_MARGIN_MIN``).
+    #: NAV-CORE measured 2.2-30.7 in a normal layout against 0.002-0.03 in a
+    #: C2-aliased one.
+    relocalize_margin_min: float = 0.25
+    #: OFF by default, and the default is the shipped behaviour to the digit:
+    #: with this False the runner-up is COMPUTED and PUBLISHED but decides
+    #: nothing, so installing A3 changes no localizer output.  With it True an
+    #: ambiguous relocalization is REFUSED — the provider stays LOST rather
+    #: than committing to a place it cannot tell from another one.
+    require_relocalization_margin: bool = False
 
     def __post_init__(self) -> None:
         if self.registration_type not in {"ICP", "PLANE_ICP", "GICP", "VGICP"}:
@@ -159,6 +175,8 @@ class ScanMatchLocalizer:
         self._good_streak = 0
         self._last_scan_ns: int | None = None
         self._diagnostics: dict[str, Any] = {}
+        self._match: RelocalizationMatch | None = None
+        self._match_fresh = False
         self.reset()
 
     @staticmethod
@@ -187,6 +205,8 @@ class ScanMatchLocalizer:
         self._failures = 0
         self._good_streak = 0
         self._last_scan_ns = None
+        self._match = None
+        self._match_fresh = False
         self._diagnostics = {"event": "reset"}
 
     @property
@@ -198,6 +218,17 @@ class ScanMatchLocalizer:
     @property
     def keyframe_count(self) -> int:
         return len(self._keyframes)
+
+    @property
+    def last_match(self) -> RelocalizationMatch | None:
+        """The most recent relocalization's best/runner-up pair (card A3).
+
+        ``None`` until a relocalization has been attempted: an ordinary
+        tracking tick asks no global question, and answering one it did not ask
+        would be inventing evidence.
+        """
+
+        return self._match
 
     # -- the contract ------------------------------------------------------
 
@@ -229,6 +260,8 @@ class ScanMatchLocalizer:
         self._diagnostics["t_map_odom_delta_m"] = math.hypot(
             self._T_map_odom[0] - previous[0], self._T_map_odom[1] - previous[1]
         )
+        published = self._match if self._match_fresh else None
+        self._match_fresh = False
         return LocalizationUpdate(
             T_map_odom=self._T_map_odom,
             cov=self._cov,
@@ -236,6 +269,7 @@ class ScanMatchLocalizer:
             jump_m=jump,
             stamp_ns=int(stamp_ns),
             source=self.name,
+            match=published,
         )
 
     # -- the two tick shapes ----------------------------------------------
@@ -366,12 +400,80 @@ class ScanMatchLocalizer:
         odom: tuple[float, float, float],
         predicted: tuple[float, float, float],
     ) -> None:
-        """Brute search over stored keyframes.  Only mapped ground is findable."""
+        """Brute search over stored keyframes.  Only mapped ground is findable.
 
-        best = None
-        best_score = -1.0
+        **Card A3 / NAV-CORE fix 4.**  This used to keep the winner and throw
+        every other candidate away, which made A4's re-arm rule uncomputable:
+        "a relocalization match whose second-best candidate is worse by a
+        pre-registered margin **across the whole map**".  It now keeps the best
+        RIVAL as well — the next-best candidate whose committed pose is at
+        least ``relocalize_separation_m`` from the winner's, because a
+        candidate nearer than that is the same hypothesis re-scored — and
+        publishes both as a :class:`RelocalizationMatch` on the tick's update.
+
+        Two honest limits, stated rather than implied.  The hypothesis set is
+        the KEYFRAME CHAIN sampled at ``relocalize_candidates``, so "whole map"
+        here means "everywhere this map has been", not every pose in the venue;
+        a venue-wide grid is what
+        :class:`~parcel_robot.localization.global_match.WholeMapMatcher` is for.
+        And the winner is still chosen by the shipped ``inliers / (1 + rms)``
+        score while the margin is computed from the two residuals, so the
+        selection is byte-identical to the pre-A3 provider and only the
+        reporting is new.
+        """
+
+        scored, candidates = self._score_relocalization_candidates(cloud)
+        if not scored:
+            self._match = self._empty_match(candidates)
+            self._match_fresh = True
+            self._diagnostics = {"event": "relocalize_failed", "candidates": candidates}
+            return
+        _score, best_pose, best_rms, best = max(scored, key=lambda row: row[0])
+        match = self._match_from(scored, best_pose, best_rms, candidates)
+        self._match = match
+        self._match_fresh = True
+        if self.config.require_relocalization_margin and not match.is_discriminative(
+            self.config.relocalize_margin_min
+        ):
+            # The map cannot tell this place from another one.  Committing here
+            # is exactly the false-healthy the milestone forbids, so the
+            # provider stays LOST and says why.
+            self._diagnostics = {
+                "event": "relocalize_ambiguous",
+                "candidates": candidates,
+                "margin": match.margin,
+                "margin_min": self.config.relocalize_margin_min,
+            }
+            return
+        pose = best_pose
+        self._pose_map_base = pose
+        self._T_map_odom = compose_se2(pose, invert_se2(odom))
+        self._cov = self._covariance(np.asarray(best.H))
+        self._failures = 0
+        self._good_streak = 1
+        self._health = PoseHealth.DEGRADED
+        self._maybe_keyframe(cloud, pose)
+        self._diagnostics = {
+            "event": "relocalized",
+            "candidates": candidates,
+            "shift_m": math.hypot(pose[0] - predicted[0], pose[1] - predicted[1]),
+            "margin": match.margin,
+        }
+
+    def _score_relocalization_candidates(
+        self, cloud: Any
+    ) -> tuple[list[tuple[float, tuple[float, float, float], float, Any]], int]:
+        """Register the scan against each sampled keyframe; keep what passed.
+
+        Returns ``(rows, candidates_tried)`` where each row is
+        ``(score, pose, rms, result)``.  The acceptance gates and the score are
+        the shipped ones, unchanged: A3 keeps every survivor instead of only
+        the leader, and changes nothing about who leads.
+        """
+
         stride = max(1, len(self._keyframes) // max(1, self.config.relocalize_candidates))
         candidates = self._keyframes[::stride]
+        rows: list[tuple[float, tuple[float, float, float], float, Any]] = []
         for keyframe in candidates:
             target, tree = self._gicp.preprocess_points(
                 keyframe.cloud,
@@ -385,25 +487,84 @@ class ScanMatchLocalizer:
             rms = math.sqrt(max(0.0, 2.0 * float(result.error) / inliers))
             if rms > self.config.max_residual_m:
                 continue
-            score = inliers / (1.0 + rms)
-            if score > best_score:
-                best_score, best = score, result
-        if best is None:
-            self._diagnostics = {"event": "relocalize_failed", "candidates": len(candidates)}
-            return
-        pose = _se2(np.asarray(best.T_target_source))
-        self._pose_map_base = pose
-        self._T_map_odom = compose_se2(pose, invert_se2(odom))
-        self._cov = self._covariance(np.asarray(best.H))
-        self._failures = 0
-        self._good_streak = 1
-        self._health = PoseHealth.DEGRADED
-        self._maybe_keyframe(cloud, pose)
-        self._diagnostics = {
-            "event": "relocalized",
-            "candidates": len(candidates),
-            "shift_m": math.hypot(pose[0] - predicted[0], pose[1] - predicted[1]),
-        }
+            rows.append(
+                (inliers / (1.0 + rms), _se2(np.asarray(result.T_target_source)), rms, result)
+            )
+        return rows, len(candidates)
+
+    def _match_from(
+        self,
+        scored: list[tuple[float, tuple[float, float, float], float, Any]],
+        best_pose: tuple[float, float, float],
+        best_rms: float,
+        candidates: int,
+    ) -> RelocalizationMatch:
+        """Pair the winner with the best hypothesis that is genuinely elsewhere."""
+
+        rival_score = -1.0
+        rival_pose: tuple[float, float, float] | None = None
+        rival_rms = math.inf
+        for score, pose, rms, _result in scored:
+            if math.dist(pose[:2], best_pose[:2]) < self.config.relocalize_separation_m:
+                continue
+            if score > rival_score:
+                rival_score, rival_pose, rival_rms = score, pose, rms
+        return RelocalizationMatch(
+            pose=best_pose,
+            residual_m=best_rms,
+            runner_up=best_pose if rival_pose is None else rival_pose,
+            runner_up_residual_m=math.inf if rival_pose is None else rival_rms,
+            separation_m=(
+                self.config.relocalize_separation_m
+                if rival_pose is None
+                else math.dist(best_pose[:2], rival_pose[:2])
+            ),
+            hypotheses=candidates,
+            source=self.name,
+        )
+
+    def _empty_match(self, candidates: int) -> RelocalizationMatch:
+        """The match a failed relocalization publishes: nothing fitted at all."""
+
+        return RelocalizationMatch(
+            pose=self._pose_map_base,
+            residual_m=math.inf,
+            runner_up=self._pose_map_base,
+            runner_up_residual_m=math.inf,
+            separation_m=self.config.relocalize_separation_m,
+            hypotheses=max(1, candidates),
+            source=self.name,
+        )
+
+    def reanchor(
+        self,
+        pose: tuple[float, float, float],
+        odom_pose: tuple[float, float, float],
+    ) -> None:
+        """Re-bind MAP to a VERIFIED pose without disturbing the ODOM integrator.
+
+        The one operation A4's two re-arm paths need and the provider did not
+        expose: a whole-map margin or an operator pose-reset transaction
+        establishes where the body actually is, and the correction has to move
+        to match it.  ODOM is untouched by construction — only ``T_map_odom``
+        moves, which is REP-105's whole point and keeps the jump measurable on
+        the next update.
+
+        This is NOT a recovery mechanism and must never be called on the
+        strength of health or covariance; the caller has to have earned the
+        pose.  ``localization/discontinuity.ArmingLatch`` is the object that
+        does, and it journals the evidence before it calls.
+        """
+
+        verified = tuple(float(value) for value in pose)
+        odom = tuple(float(value) for value in odom_pose)
+        if len(verified) != 3 or len(odom) != 3:
+            raise ValueError("reanchor takes (x, y, yaw) poses")
+        if not all(math.isfinite(value) for value in verified + odom):
+            raise ValueError("reanchor poses must be finite")
+        self._pose_map_base = verified  # type: ignore[assignment]
+        self._T_map_odom = compose_se2(verified, invert_se2(odom))  # type: ignore[arg-type]
+        self._diagnostics = {"event": "reanchored", "pose": verified}
 
     # -- map ---------------------------------------------------------------
 
