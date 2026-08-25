@@ -4,9 +4,16 @@
 #   Design   research/20260824/PORTABLE_LIVING_DOG_HLD.md §3, §12 Gate 2
 #   Install  a box-day step, not a commit. See README.md in this directory.
 #
+# PARITY EDIT 1 (card DEPLOYABLE-MOTION-SEAM, scrum/20260824/task_3): the
+# executable below is no longer a TODO. `gateway/pyproject.toml` publishes a
+# console script named exactly `parcel-gateway` (`gateway.seam.cli:main`), it
+# accepts `--disarmed`, it implements the Type=notify contract for real
+# (READY=1 only after the socket is listening AND a bounded probe of the core
+# lock answers; WATCHDOG=1 only after another such probe), and
+# `tests/test_motion_seam.py` reads THIS FILE and proves the agreement.
+# Installing it to /opt/parcel/bin remains a box-day image step, not a commit.
+#
 # TODO before this unit can start anything (each is a card, none is this one):
-#   * /opt/parcel/bin/parcel-gateway does not exist — card A1 M1-0 GATEWAY owns
-#     the process; this file owns only its supervision contract.
 #   * the `parcel-gateway` system user, /var/lib/parcel/gateway and
 #     /var/log/parcel/gateway must be created by the image build.
 #   * credentials: the vendor DDS/SDK credential lives ONLY in this unit's
@@ -37,6 +44,14 @@ Group=parcel-gateway
 # operator transaction the runtime performs against a running gateway.
 Environment=PARCEL_ARMED=0
 Environment=PARCEL_ROLE=gateway
+# PARITY EDIT 2 (card DEPLOYABLE-MOTION-SEAM): the console script has NO
+# default body, deliberately — a gateway that picks its own could serve a
+# simulated one on a real robot and report healthy. This unit therefore names
+# the real one. `--sport vendor` refuses to start today, with a named reason,
+# because no vendor SDK is present in the tree: an honest refusal that
+# Restart=on-failure + StartLimitBurst=5 turns into a reported fault. Nothing
+# here can ever start a fake body on the dog.
+Environment=PARCEL_GATEWAY_SPORT=vendor
 EnvironmentFile=-/etc/parcel/gateway.env
 ExecStartPre=/usr/bin/test -x /opt/parcel/bin/parcel-gateway
 ExecStart=/opt/parcel/bin/parcel-gateway --disarmed
@@ -49,6 +64,13 @@ RestartSec=2
 StartLimitIntervalSec=300
 StartLimitBurst=5
 WatchdogSec=2
+# PARITY EDIT 3 (card DEPLOYABLE-MOTION-SEAM): these two are the console
+# script's socket and audit-log defaults. With no PARCEL_GATEWAY_SOCKET /
+# PARCEL_GATEWAY_AUDIT_LOG in the environment file it uses
+# $STATE_DIRECTORY/gateway.sock and $LOGS_DIRECTORY/audit.jsonl, which are
+# exactly the directories these lines create. A deployment whose clients must
+# find the socket should still set PARCEL_GATEWAY_SOCKET explicitly in
+# /etc/parcel/gateway.env, because $STATE_DIRECTORY exists only inside the unit.
 StateDirectory=parcel/gateway
 LogsDirectory=parcel/gateway
 NoNewPrivileges=true

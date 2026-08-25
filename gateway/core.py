@@ -33,6 +33,42 @@ usual shape: a cause latches unless it appears in the short, named
 disconnect, lease loss, stale feedback, a compensated late Move, shutdown,
 boot).  A cause nobody has classified yet therefore latches, which is the
 direction a safety gateway should fail in when a future card adds one.
+
+**Locks, and the order they are taken in** (card ``DEPLOYABLE-MOTION-SEAM``).
+This process has exactly three locks and one legal order:
+
+1.  ``GatewayCoreV1._lock`` — the core ``RLock``.  Everything named
+    ``*_locked`` runs under it.  It is the *outermost* lock: a thread that
+    holds it may take either of the two below, and neither of them ever takes
+    it back.
+2.  ``VendorWriterV1``'s lock (:mod:`gateway.writer`) — a leaf, held only
+    around the one-slot mailbox.  ``submit`` never blocks on I/O, which is why
+    it is safe to call while holding the core lock; the writer thread calls
+    *back* into the core (``_on_refused`` / ``_on_completed``) only after it
+    has released its own lock, so the order there is still core → writer.
+3.  ``BoundedCallLaneV1``'s condition (:mod:`gateway.seam.vendor_io`) — a
+    leaf.  The lane thread takes it and nothing else, runs the vendor call
+    with **no lock held**, and never calls back into this module.
+
+There is therefore no cycle, and no path on which two non-leaf locks are held
+at once.
+
+**No vendor call is unbounded any more.**  ``Move`` has been isolated on the
+writer thread since M1-0.  ``state()`` and ``stop_move()`` were not: they ran
+synchronously under the core lock, including inside
+``_stop_and_witness_locked``'s retry/settle loop, so a vendor that *never
+returned* — as opposed to one that raised or returned ``False``, which the
+M1-0 corpus did seed — held the core lock forever and took the watchdog and
+every independent stop down with it.  Both now go through
+:class:`~gateway.seam.vendor_io.VendorIoSeamV1`, one bounded lane each.  A
+timed-out ``state()`` is treated exactly like an unreadable one
+(``sport_state_unreadable``, latched) and a timed-out ``stop_move()`` exactly
+like a failed one (``stop_rpc_completed=False``, retried, unconfirmed,
+latched) — the classification a hang deserves — with a distinct audit event
+(``sport_state_timed_out`` / ``stop_move_timed_out``) so the two are still
+told apart in evidence.  The guarantee is a *bound*, not cancellation: with
+both calls permanently hung one stop still completes inside
+``stop_timeout_s``, latches, and hands the core lock back.
 """
 
 from __future__ import annotations
@@ -65,7 +101,8 @@ from .governor import (
     MotionCandidateV1,
 )
 from .limits import GovernorLimitsV1, default_limits
-from .ports import SportPort, SportSampleV1, read_sport_sample
+from .ports import SportPort, SportSampleV1
+from .seam.vendor_io import VendorIoSeamV1
 from .writer import VendorWriterV1, VendorWriteV1
 
 #: The only stop causes that leave the gateway merely DISARMED.  Everything
@@ -160,6 +197,10 @@ class GatewayCoreV1:
             clock=clock,
             idle_poll_s=self._limits.watchdog_period_s,
         )
+        # The bounded seam for the two synchronous vendor calls.  Built before
+        # the boot StopMove below, because that stop is itself the first thing
+        # that reaches the vendor and it must already be contained.
+        self._vendor_io = VendorIoSeamV1(sport)
         self._watch_stop = threading.Event()
         self._watchdog: threading.Thread | None = None
         self._audit.record(
@@ -272,6 +313,7 @@ class GatewayCoreV1:
         if watchdog is not None:
             watchdog.join(timeout=1.0)
         self._writer.close()
+        self._vendor_io.close()
         self._sport.close()
 
     def _watch(self) -> None:
@@ -709,7 +751,13 @@ class GatewayCoreV1:
             lease_active=False,
         )
         while True:
-            sample = self._safe_sample()
+            # Never let one feedback read outlive the stop it belongs to.
+            sample = self._safe_sample(
+                timeout_s=min(
+                    self._limits.state_timeout_s,
+                    max(0.0, deadline - self._clock()),
+                )
+            )
             if sample is not None:
                 latest = sample
                 now = self._clock()
@@ -732,11 +780,31 @@ class GatewayCoreV1:
             self._sleep(0.002)
 
     def _safe_stop_move(self, reason: str) -> bool:
-        try:
-            return bool(self._sport.stop_move(reason=reason))
-        except BaseException as caught:
+        """Issue ``StopMove`` with a bound. A hang is a failure, not a wedge.
+
+        The budget is ``stop_retry_s`` on purpose: if the stop RPC has not
+        come back by the time the next retry is due, waiting longer buys
+        nothing — the right move is to stop waiting, go look at the feedback,
+        and retry when the retry is due.  A stop RPC that returns inside that
+        budget is unaffected; one that habitually overruns it reads as a
+        *failed* stop — unconfirmed, retried, latched — which is the safe
+        direction to be wrong in.
+        """
+
+        outcome = self._vendor_io.stop_move(reason, self._limits.stop_retry_s)
+        if outcome.timed_out:
+            self._audit.record(
+                "stop_move_timed_out",
+                boot_epoch=self.boot_epoch,
+                phase=self.phase.value,
+                budget_s=round(self._limits.stop_retry_s, 6),
+                in_flight_s=round(outcome.in_flight_s, 6),
+            )
+            return False
+        caught = outcome.error
+        if caught is not None:
             if not isinstance(caught, Exception):
-                raise
+                raise caught
             self._audit.record(
                 "stop_move_raised",
                 boot_epoch=self.boot_epoch,
@@ -744,13 +812,33 @@ class GatewayCoreV1:
                 detail=repr(caught),
             )
             return False
+        return bool(outcome.value)
 
-    def _safe_sample(self) -> SportSampleV1 | None:
-        try:
-            return read_sport_sample(self._sport)
-        except BaseException as caught:
+    def _safe_sample(self, timeout_s: float | None = None) -> SportSampleV1 | None:
+        """Read one vendor sample with a bound. A hang reads as unreadable.
+
+        ``timeout_s`` defaults to ``state_timeout_s`` — a sample that took
+        longer than the freshness window to arrive could not have been fresh
+        evidence anyway.  ``_stop_and_witness_locked`` passes what is left of
+        the stop budget instead, so a hung feedback stream can never make one
+        stop overrun ``stop_timeout_s``.
+        """
+
+        budget = self._limits.state_timeout_s if timeout_s is None else timeout_s
+        outcome = self._vendor_io.sample(budget)
+        if outcome.timed_out:
+            self._audit.record(
+                "sport_state_timed_out",
+                boot_epoch=self.boot_epoch,
+                phase=self.phase.value,
+                budget_s=round(max(0.0, budget), 6),
+                in_flight_s=round(outcome.in_flight_s, 6),
+            )
+            return None
+        caught = outcome.error
+        if caught is not None:
             if not isinstance(caught, Exception):
-                raise
+                raise caught
             self._audit.record(
                 "sport_state_unreadable",
                 boot_epoch=self.boot_epoch,
@@ -758,6 +846,8 @@ class GatewayCoreV1:
                 detail=repr(caught),
             )
             return None
+        sample = outcome.value
+        return sample if isinstance(sample, SportSampleV1) else None
 
     def _on_write_refused(self, write: VendorWriteV1, cause: str) -> None:
         """The writer declined to reach the vendor. No Move was issued."""

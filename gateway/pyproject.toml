@@ -1,0 +1,60 @@
+# ``parcel-gateway`` — the installable distribution for the motion gateway.
+#
+#   Card     DEPLOYABLE-MOTION-SEAM (scrum/20260824/task_3/ROBOT_READY_PLAN.md §4)
+#   Unit     deploy/orin/services/parcel-gateway.service
+#   Proof    tests/test_motion_seam.py
+#
+# WHY THIS FILE IS HERE AND NOT AT THE REPOSITORY ROOT. The root
+# ``pyproject.toml`` builds ``parcel-robot-dog``: the product, ~28 MB of
+# ``src/parcel_robot`` plus mujoco/numpy/PyYAML. The gateway is deliberately
+# the opposite of that — its own systemd unit, its own principal, its own
+# interpreter, holding the one robot-network credential and the one vendor
+# command writer (``gateway/__init__.py``, HLD §8.8). Two processes with two
+# jobs and two dependency sets are two distributions; folding the gateway into
+# the product's wheel would put the product's dependency set inside the
+# vendor's venv, which is the thing the whole package boundary exists to
+# prevent.
+#
+# THE ONE DEPENDENCY IS REAL, NOT A PLACEHOLDER. Every deployable gateway
+# module imports exactly one non-stdlib name, ``parcel_robot.bridge.protocol``
+# — the frozen V1 wire contract both sides of the socket must agree on, itself
+# pure stdlib. That module ships inside ``parcel-robot-dog``, so that is what
+# is declared. Neither distribution is published to an index; the install
+# proof resolves both from locally built artifacts
+# (``pip install --no-index --find-links <dist>``), and the gateway's venv
+# deliberately does NOT carry the product's mujoco/numpy/PyYAML — see
+# ``scrum/20260824/task_3/SEAM_STATUS.md`` for the recorded transcript and the
+# ``pip check`` consequence.
+#
+# THE 3.10 FLOOR IS MEASURED, NOT ASPIRATIONAL. The dog's Orin NX runs
+# JetPack's system CPython 3.10 (card HW-1). ``tests/test_m1_0_gateway.py
+# ::test_every_gateway_module_is_python_310_clean`` and its recursive
+# counterpart in ``tests/test_motion_seam.py`` parse every module in this
+# package with ``feature_version=(3, 10)`` and scan for post-3.10 symbols, and
+# the clean-install proof runs the built artifact on a real CPython 3.10.
+
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "parcel-gateway"
+version = "0.1.0"
+description = "Parcel motion gateway: sole vendor writer, lease/TTL/stop latch, bounded vendor I/O"
+requires-python = ">=3.10"
+dependencies = [
+  # The frozen V1 wire contract (``parcel_robot.bridge.protocol``) lives here.
+  "parcel-robot-dog>=0.1",
+]
+
+[project.scripts]
+# The name is load-bearing: it must equal the basename of the unit's
+# ``ExecStart=/opt/parcel/bin/parcel-gateway``. ``tests/test_motion_seam.py``
+# reads both files and proves the agreement rather than trusting this comment.
+parcel-gateway = "gateway.seam.cli:main"
+
+[tool.setuptools]
+# This project's root IS the ``gateway`` package directory, so the package name
+# is mapped onto ``.`` and the subpackage falls out of it.
+packages = ["gateway", "gateway.seam"]
+package-dir = { "gateway" = "." }
