@@ -30,9 +30,17 @@ residual risk (owner: Jae).
    Post-fix corpus: arm A 0.10 (its `near` stand-off is outside the 0.5 m
    band by construction), arm B 0.483 (byte-identical by design — legacy
    inflation in the harness). M1 ships the metric point-goal shape + typed
-   refusal; the semantic ladder returns post-M1. **M1 nav acceptance row:
-   the SHIPPED configuration (commissioned inflation) re-measured on this
-   exact corpus ≥ 0.80 before the first physical point-goal session.** The
+   refusal; the semantic ladder returns post-M1. **M1 nav acceptance row —
+   MEASURED, CLEARED (NAV-ACCEPT, research/20260824/nav-accept/): shipped
+   N1 = 1.000 (60/60) vs ≥ 0.80, N2/N3 = 0, attribution exact via the
+   frozen-arm-B control; ROOM-SCALE only — R3 shows the silent-stall class
+   alive in tighter geometry (N4 vacuous), and R4b under the shipped
+   clearance spends the kidnap luck (3/3 false arrivals at 5.2 m; the
+   product discontinuity latch is LOAD-BEARING before any physical
+   point-goal — driving the product installer path against R4b is on the
+   pre-physical checklist). `require_relocalization_margin` stays OFF
+   (zero opportunities to refuse — unmeasured, not disproven; decision owed
+   to the NAV-CORE v3 normal-layout kidnap row).** The
    `near` stand-off family re-derivation ("what does 'arrived at the desk'
    mean") is flagged as a milestone design decision. A4 SPINE gains: range
    conventions stamped by the observation SOURCE (body-surface vs centre

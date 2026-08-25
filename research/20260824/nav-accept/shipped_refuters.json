@@ -1,0 +1,2179 @@
+{
+ "environment": {
+  "generated_utc": "2026-08-25T00:31:33+00:00",
+  "host": "jaewoo-jang-parcel",
+  "python": "3.14.4",
+  "obstacle_stop_m": 0.65,
+  "obstacle_slow_m": 1.2,
+  "reaction_time_s": 0.12,
+  "planner_inflation_m": 0.5932965611693387,
+  "gate_demand_at_cruise_m": 0.752,
+  "room_worst_clearance_m": 0.88,
+  "alias_scan_max_disagreement_m": 8.881784197001252e-15,
+  "commissioning": {
+   "model_id": "grid_v1",
+   "active_model": "grid_v1",
+   "owner_1_pipeline": {
+    "site": "navigation/pipeline.py::DirectiveNavigator._create_navigator",
+    "brake_m": 0.8,
+    "planner_gate_ring_m": 0.8,
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835
+   },
+   "owner_2_search_owner": {
+    "site": "navigation/search_owner.py::SearchOwnerController",
+    "brake_m": 0.65,
+    "planner_gate_ring_m": 0.97,
+    "applied_to_this_corpus": false,
+    "why": "builds the frontier searcher, not the point-goal controller the corpus drives; recorded, not applied"
+   },
+   "legacy_arm_b": {
+    "site": "ModelRegistry.create (un-commissioned)",
+    "planner_gate_clearance_m": 0.4601408770378502,
+    "planner_inflation_radius_m": 0.42000000000000004
+   }
+  }
+ },
+ "wall_s": 265.9,
+ "rows": [
+  {
+   "arm": "shipped",
+   "episode": 100,
+   "seed": 101,
+   "layout": "1",
+   "goal_id": "place_counter",
+   "declared_arrival": true,
+   "truth_distance_m": 0.48288846098809435,
+   "arrived": true,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 177,
+   "time_to_goal_s": 17.6,
+   "path_m": 6.10062793575392,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "",
+   "note": "align_terminal err=54.5",
+   "status": "arrived",
+   "hold_ticks": 0,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.01922435150735982,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.19303201506591336,
+   "detector_jitter_rms_m": 0.20765820800397594,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": false,
+    "arrival_confidence": 1.0,
+    "localizer_events": {
+     "tracked": 156,
+     "no_scan": 20,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 18,
+     "healthy": 159
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R1_scan_dropout"
+  },
+  {
+   "arm": "shipped_margin_on",
+   "episode": 100,
+   "seed": 101,
+   "layout": "1",
+   "goal_id": "place_counter",
+   "declared_arrival": true,
+   "truth_distance_m": 0.48288846098809435,
+   "arrived": true,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 177,
+   "time_to_goal_s": 17.6,
+   "path_m": 6.10062793575392,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "",
+   "note": "align_terminal err=54.5",
+   "status": "arrived",
+   "hold_ticks": 0,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.01922435150735982,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.19303201506591336,
+   "detector_jitter_rms_m": 0.20765820800397594,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": true,
+    "arrival_confidence": 1.0,
+    "localizer_events": {
+     "tracked": 156,
+     "no_scan": 20,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 18,
+     "healthy": 159
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R1_scan_dropout"
+  },
+  {
+   "arm": "shipped",
+   "episode": 101,
+   "seed": 101,
+   "layout": "0",
+   "goal_id": "place_bowl",
+   "declared_arrival": true,
+   "truth_distance_m": 0.49426106673957204,
+   "arrived": true,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 170,
+   "time_to_goal_s": 16.900000000000002,
+   "path_m": 5.2421405671559524,
+   "optimal_m": 5.727128425310541,
+   "failure_type": "",
+   "note": "align_terminal err=112.0",
+   "status": "arrived",
+   "hold_ticks": 0,
+   "gap_ticks": 45,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 40,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.010101960597753444,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.17941176470588235,
+   "detector_jitter_rms_m": 0.21368035311510503,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     -2.4,
+     -2.4
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": false,
+    "arrival_confidence": 1.0,
+    "localizer_events": {
+     "tracked": 124,
+     "no_scan": 45,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 40,
+     "healthy": 130
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R2_pose_degraded"
+  },
+  {
+   "arm": "shipped_margin_on",
+   "episode": 101,
+   "seed": 101,
+   "layout": "0",
+   "goal_id": "place_bowl",
+   "declared_arrival": true,
+   "truth_distance_m": 0.49426106673957204,
+   "arrived": true,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 170,
+   "time_to_goal_s": 16.900000000000002,
+   "path_m": 5.2421405671559524,
+   "optimal_m": 5.727128425310541,
+   "failure_type": "",
+   "note": "align_terminal err=112.0",
+   "status": "arrived",
+   "hold_ticks": 0,
+   "gap_ticks": 45,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 40,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.010101960597753444,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.17941176470588235,
+   "detector_jitter_rms_m": 0.21368035311510503,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     -2.4,
+     -2.4
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": true,
+    "arrival_confidence": 1.0,
+    "localizer_events": {
+     "tracked": 124,
+     "no_scan": 45,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 40,
+     "healthy": 130
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R2_pose_degraded"
+  },
+  {
+   "arm": "shipped",
+   "episode": 102,
+   "seed": 101,
+   "layout": "0",
+   "goal_id": "place_desk",
+   "declared_arrival": false,
+   "truth_distance_m": 4.502615593883877,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 1.59948178905767,
+   "optimal_m": 5.727128425310541,
+   "failure_type": "silent_stall_step_limit",
+   "note": "grid_recover_scan status=no_path",
+   "status": "running",
+   "hold_ticks": 0,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.03057389500674993,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.19425925925925927,
+   "detector_jitter_rms_m": 0.21070391434803318,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     2.4
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": false,
+    "arrival_confidence": 0.0,
+    "moved_obstacle_xy": [
+     2.052,
+     -1.117
+    ],
+    "localizer_events": {
+     "tracked": 879,
+     "no_scan": 20,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 18,
+     "healthy": 882
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R3_moved_obstacle"
+  },
+  {
+   "arm": "shipped_margin_on",
+   "episode": 102,
+   "seed": 101,
+   "layout": "0",
+   "goal_id": "place_desk",
+   "declared_arrival": false,
+   "truth_distance_m": 4.502615593883877,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 1.59948178905767,
+   "optimal_m": 5.727128425310541,
+   "failure_type": "silent_stall_step_limit",
+   "note": "grid_recover_scan status=no_path",
+   "status": "running",
+   "hold_ticks": 0,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.03057389500674993,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.19425925925925927,
+   "detector_jitter_rms_m": 0.21070391434803318,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     2.4
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": true,
+    "arrival_confidence": 0.0,
+    "moved_obstacle_xy": [
+     2.052,
+     -1.117
+    ],
+    "localizer_events": {
+     "tracked": 879,
+     "no_scan": 20,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 18,
+     "healthy": 882
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R3_moved_obstacle"
+  },
+  {
+   "arm": "shipped",
+   "episode": 103,
+   "seed": 101,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": true,
+   "truth_distance_m": 5.2094907833215975,
+   "arrived": false,
+   "false_arrival": true,
+   "contacts": 0,
+   "steps": 214,
+   "time_to_goal_s": 21.3,
+   "path_m": 6.66530740660204,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "",
+   "note": "align_terminal err=57.4",
+   "status": "arrived",
+   "hold_ticks": 0,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 4.482720123956227,
+   "post_kidnap_healthy_ticks": 154,
+   "post_kidnap_ticks": 154,
+   "max_jump_m": 0.012958731639741674,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.17601246105919002,
+   "detector_jitter_rms_m": 0.20944976632480194,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": false,
+    "arrival_confidence": 0.9977,
+    "kidnap_displacement_m": 3.843322482543315,
+    "localizer_events": {
+     "tracked": 193,
+     "no_scan": 20,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 18,
+     "healthy": 196
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R4b_kidnap_shipped"
+  },
+  {
+   "arm": "shipped_margin_on",
+   "episode": 103,
+   "seed": 101,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": true,
+   "truth_distance_m": 5.2094907833215975,
+   "arrived": false,
+   "false_arrival": true,
+   "contacts": 0,
+   "steps": 214,
+   "time_to_goal_s": 21.3,
+   "path_m": 6.66530740660204,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "",
+   "note": "align_terminal err=57.4",
+   "status": "arrived",
+   "hold_ticks": 0,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 4.482720123956227,
+   "post_kidnap_healthy_ticks": 154,
+   "post_kidnap_ticks": 154,
+   "max_jump_m": 0.012958731639741674,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.17601246105919002,
+   "detector_jitter_rms_m": 0.20944976632480194,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": true,
+    "arrival_confidence": 0.9977,
+    "kidnap_displacement_m": 3.843322482543315,
+    "localizer_events": {
+     "tracked": 193,
+     "no_scan": 20,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 18,
+     "healthy": 196
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R4b_kidnap_shipped"
+  },
+  {
+   "arm": "shipped",
+   "episode": 103,
+   "seed": 101,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 1.5901310842812395,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 0.32897252096193247,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "arming_latched",
+   "note": "arming_latched",
+   "status": "running",
+   "hold_ticks": 891,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 840,
+   "post_kidnap_ticks": 840,
+   "max_jump_m": 0.010277325256400759,
+   "final_health": "healthy",
+   "latched": true,
+   "detector_dropout": 0.19166666666666668,
+   "detector_jitter_rms_m": 0.21371821018603698,
+   "journal": [
+    {
+     "t_s": 0.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.008524028891303928
+    }
+   ],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": false,
+    "arrival_confidence": 0.0,
+    "kidnap_displacement_m": 5.080887423848979,
+    "localizer_events": {
+     "tracked": 879,
+     "no_scan": 20,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 18,
+     "healthy": 882
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R4b_kidnap_gated"
+  },
+  {
+   "arm": "shipped_margin_on",
+   "episode": 103,
+   "seed": 101,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 1.5901310842812395,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 0.32897252096193247,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "arming_latched",
+   "note": "arming_latched",
+   "status": "running",
+   "hold_ticks": 891,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 840,
+   "post_kidnap_ticks": 840,
+   "max_jump_m": 0.010277325256400759,
+   "final_health": "healthy",
+   "latched": true,
+   "detector_dropout": 0.19166666666666668,
+   "detector_jitter_rms_m": 0.21371821018603698,
+   "journal": [
+    {
+     "t_s": 0.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.008524028891303928
+    }
+   ],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": true,
+    "arrival_confidence": 0.0,
+    "kidnap_displacement_m": 5.080887423848979,
+    "localizer_events": {
+     "tracked": 879,
+     "no_scan": 20,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 18,
+     "healthy": 882
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R4b_kidnap_gated"
+  },
+  {
+   "arm": "shipped",
+   "episode": 103,
+   "seed": 101,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 1.8093461756659248,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 0.8422510960722871,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "arming_latched",
+   "note": "arming_latched",
+   "status": "running",
+   "hold_ticks": 882,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.5132785751103546,
+   "post_kidnap_healthy_ticks": 840,
+   "post_kidnap_ticks": 840,
+   "max_jump_m": 0.2677407124919072,
+   "final_health": "healthy",
+   "latched": true,
+   "detector_dropout": 0.19166666666666668,
+   "detector_jitter_rms_m": 0.21371821018603698,
+   "journal": [
+    {
+     "t_s": 0.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.008524028891303928
+    },
+    {
+     "t_s": 12.0,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011365271798234426
+    },
+    {
+     "t_s": 12.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0026193603088878873
+    }
+   ],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": false,
+    "arrival_confidence": 0.0,
+    "kidnap_displacement_m": 5.080887423848979,
+    "localizer_events": {
+     "tracked": 879,
+     "no_scan": 20,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 18,
+     "healthy": 882
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R4b_kidnap_gated_operator"
+  },
+  {
+   "arm": "shipped_margin_on",
+   "episode": 103,
+   "seed": 101,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 1.8093461756659248,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 0.8422510960722871,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "arming_latched",
+   "note": "arming_latched",
+   "status": "running",
+   "hold_ticks": 882,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.5132785751103546,
+   "post_kidnap_healthy_ticks": 840,
+   "post_kidnap_ticks": 840,
+   "max_jump_m": 0.2677407124919072,
+   "final_health": "healthy",
+   "latched": true,
+   "detector_dropout": 0.19166666666666668,
+   "detector_jitter_rms_m": 0.21371821018603698,
+   "journal": [
+    {
+     "t_s": 0.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.008524028891303928
+    },
+    {
+     "t_s": 12.0,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011365271798234426
+    },
+    {
+     "t_s": 12.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0026193603088878873
+    }
+   ],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": true,
+    "arrival_confidence": 0.0,
+    "kidnap_displacement_m": 5.080887423848979,
+    "localizer_events": {
+     "tracked": 879,
+     "no_scan": 20,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 18,
+     "healthy": 882
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R4b_kidnap_gated_operator"
+  },
+  {
+   "refuter": "R4_place_absent",
+   "arm": "door",
+   "seed": 101,
+   "door_status": "rejected",
+   "admitted": false,
+   "detail": "not started: the robot's map has no place called 'kitchen counter'; the places it does know nearby are the bookshelf, the bed and the couch; ask the owner which of those they mean, or which real place",
+   "declared_arrival": false,
+   "false_arrival": false,
+   "failure_type": "door_refused"
+  },
+  {
+   "arm": "shipped",
+   "episode": 100,
+   "seed": 202,
+   "layout": "1",
+   "goal_id": "place_counter",
+   "declared_arrival": true,
+   "truth_distance_m": 0.461917032787486,
+   "arrived": true,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 176,
+   "time_to_goal_s": 17.5,
+   "path_m": 6.086668030233705,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "",
+   "note": "grid_track err=-0.1 goal=0.5 route=2 status=planned",
+   "status": "arrived",
+   "hold_ticks": 0,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.02054730156091009,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.20170454545454544,
+   "detector_jitter_rms_m": 0.21174208832693178,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": false,
+    "arrival_confidence": 1.0,
+    "localizer_events": {
+     "tracked": 155,
+     "no_scan": 20,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 18,
+     "healthy": 158
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R1_scan_dropout"
+  },
+  {
+   "arm": "shipped_margin_on",
+   "episode": 100,
+   "seed": 202,
+   "layout": "1",
+   "goal_id": "place_counter",
+   "declared_arrival": true,
+   "truth_distance_m": 0.461917032787486,
+   "arrived": true,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 176,
+   "time_to_goal_s": 17.5,
+   "path_m": 6.086668030233705,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "",
+   "note": "grid_track err=-0.1 goal=0.5 route=2 status=planned",
+   "status": "arrived",
+   "hold_ticks": 0,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.02054730156091009,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.20170454545454544,
+   "detector_jitter_rms_m": 0.21174208832693178,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": true,
+    "arrival_confidence": 1.0,
+    "localizer_events": {
+     "tracked": 155,
+     "no_scan": 20,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 18,
+     "healthy": 158
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R1_scan_dropout"
+  },
+  {
+   "arm": "shipped",
+   "episode": 101,
+   "seed": 202,
+   "layout": "0",
+   "goal_id": "place_bowl",
+   "declared_arrival": true,
+   "truth_distance_m": 0.4893159873543928,
+   "arrived": true,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 168,
+   "time_to_goal_s": 16.7,
+   "path_m": 5.2658153834177925,
+   "optimal_m": 5.727128425310541,
+   "failure_type": "",
+   "note": "align_terminal err=116.1",
+   "status": "arrived",
+   "hold_ticks": 0,
+   "gap_ticks": 45,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 40,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.013078203236730082,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.19940476190476192,
+   "detector_jitter_rms_m": 0.21413170076227875,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     -2.4,
+     -2.4
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": false,
+    "arrival_confidence": 1.0,
+    "localizer_events": {
+     "tracked": 122,
+     "no_scan": 45,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 40,
+     "healthy": 128
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R2_pose_degraded"
+  },
+  {
+   "arm": "shipped_margin_on",
+   "episode": 101,
+   "seed": 202,
+   "layout": "0",
+   "goal_id": "place_bowl",
+   "declared_arrival": true,
+   "truth_distance_m": 0.4893159873543928,
+   "arrived": true,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 168,
+   "time_to_goal_s": 16.7,
+   "path_m": 5.2658153834177925,
+   "optimal_m": 5.727128425310541,
+   "failure_type": "",
+   "note": "align_terminal err=116.1",
+   "status": "arrived",
+   "hold_ticks": 0,
+   "gap_ticks": 45,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 40,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.013078203236730082,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.19940476190476192,
+   "detector_jitter_rms_m": 0.21413170076227875,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     -2.4,
+     -2.4
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": true,
+    "arrival_confidence": 1.0,
+    "localizer_events": {
+     "tracked": 122,
+     "no_scan": 45,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 40,
+     "healthy": 128
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R2_pose_degraded"
+  },
+  {
+   "arm": "shipped",
+   "episode": 102,
+   "seed": 202,
+   "layout": "0",
+   "goal_id": "place_desk",
+   "declared_arrival": false,
+   "truth_distance_m": 4.2955678698162,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 1.8705880713668452,
+   "optimal_m": 5.727128425310541,
+   "failure_type": "silent_stall_step_limit",
+   "note": "grid_recover_scan status=no_path",
+   "status": "running",
+   "hold_ticks": 0,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.008814600250460927,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.20685185185185184,
+   "detector_jitter_rms_m": 0.21208358760391965,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     2.4
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": false,
+    "arrival_confidence": 0.0,
+    "moved_obstacle_xy": [
+     2.434,
+     -1.115
+    ],
+    "localizer_events": {
+     "tracked": 879,
+     "no_scan": 20,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 18,
+     "healthy": 882
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R3_moved_obstacle"
+  },
+  {
+   "arm": "shipped_margin_on",
+   "episode": 102,
+   "seed": 202,
+   "layout": "0",
+   "goal_id": "place_desk",
+   "declared_arrival": false,
+   "truth_distance_m": 4.2955678698162,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 1.8705880713668452,
+   "optimal_m": 5.727128425310541,
+   "failure_type": "silent_stall_step_limit",
+   "note": "grid_recover_scan status=no_path",
+   "status": "running",
+   "hold_ticks": 0,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.008814600250460927,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.20685185185185184,
+   "detector_jitter_rms_m": 0.21208358760391965,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     2.4
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": true,
+    "arrival_confidence": 0.0,
+    "moved_obstacle_xy": [
+     2.434,
+     -1.115
+    ],
+    "localizer_events": {
+     "tracked": 879,
+     "no_scan": 20,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 18,
+     "healthy": 882
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R3_moved_obstacle"
+  },
+  {
+   "arm": "shipped",
+   "episode": 103,
+   "seed": 202,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": true,
+   "truth_distance_m": 5.264679546563691,
+   "arrived": false,
+   "false_arrival": true,
+   "contacts": 0,
+   "steps": 194,
+   "time_to_goal_s": 19.3,
+   "path_m": 6.636899077348433,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "",
+   "note": "grid_track err=-0.6 goal=0.6 route=2 status=planned",
+   "status": "arrived",
+   "hold_ticks": 0,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 4.35691004791166,
+   "post_kidnap_healthy_ticks": 128,
+   "post_kidnap_ticks": 134,
+   "max_jump_m": 0.023076696520082214,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.20876288659793815,
+   "detector_jitter_rms_m": 0.21048889247656147,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": false,
+    "arrival_confidence": 0.9877,
+    "kidnap_displacement_m": 4.25651071414838,
+    "localizer_events": {
+     "tracked": 173,
+     "no_scan": 20,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 18,
+     "healthy": 176
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R4b_kidnap_shipped"
+  },
+  {
+   "arm": "shipped_margin_on",
+   "episode": 103,
+   "seed": 202,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": true,
+   "truth_distance_m": 5.264679546563691,
+   "arrived": false,
+   "false_arrival": true,
+   "contacts": 0,
+   "steps": 194,
+   "time_to_goal_s": 19.3,
+   "path_m": 6.636899077348433,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "",
+   "note": "grid_track err=-0.6 goal=0.6 route=2 status=planned",
+   "status": "arrived",
+   "hold_ticks": 0,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 4.35691004791166,
+   "post_kidnap_healthy_ticks": 128,
+   "post_kidnap_ticks": 134,
+   "max_jump_m": 0.023076696520082214,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.20876288659793815,
+   "detector_jitter_rms_m": 0.21048889247656147,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": true,
+    "arrival_confidence": 0.9877,
+    "kidnap_displacement_m": 4.25651071414838,
+    "localizer_events": {
+     "tracked": 173,
+     "no_scan": 20,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 18,
+     "healthy": 176
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R4b_kidnap_shipped"
+  },
+  {
+   "arm": "shipped",
+   "episode": 103,
+   "seed": 202,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 1.6492422502470643,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 0.0,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "arming_latched",
+   "note": "arming_latched",
+   "status": "running",
+   "hold_ticks": 891,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 834,
+   "post_kidnap_ticks": 840,
+   "max_jump_m": 0.0058363769655168495,
+   "final_health": "healthy",
+   "latched": true,
+   "detector_dropout": 0.20203703703703704,
+   "detector_jitter_rms_m": 0.20991217571742526,
+   "journal": [
+    {
+     "t_s": 0.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0011473734812217785
+    }
+   ],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": false,
+    "arrival_confidence": 0.0,
+    "kidnap_displacement_m": 5.727128425310541,
+    "localizer_events": {
+     "tracked": 879,
+     "no_scan": 20,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 18,
+     "healthy": 882
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R4b_kidnap_gated"
+  },
+  {
+   "arm": "shipped_margin_on",
+   "episode": 103,
+   "seed": 202,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 1.6492422502470643,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 0.0,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "arming_latched",
+   "note": "arming_latched",
+   "status": "running",
+   "hold_ticks": 891,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 834,
+   "post_kidnap_ticks": 840,
+   "max_jump_m": 0.0058363769655168495,
+   "final_health": "healthy",
+   "latched": true,
+   "detector_dropout": 0.20203703703703704,
+   "detector_jitter_rms_m": 0.20991217571742526,
+   "journal": [
+    {
+     "t_s": 0.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0011473734812217785
+    }
+   ],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": true,
+    "arrival_confidence": 0.0,
+    "kidnap_displacement_m": 5.727128425310541,
+    "localizer_events": {
+     "tracked": 879,
+     "no_scan": 20,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 18,
+     "healthy": 882
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R4b_kidnap_gated"
+  },
+  {
+   "arm": "shipped",
+   "episode": 103,
+   "seed": 202,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 1.694619073260242,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 0.135,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "arming_latched",
+   "note": "arming_latched",
+   "status": "running",
+   "hold_ticks": 882,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.135,
+   "post_kidnap_healthy_ticks": 834,
+   "post_kidnap_ticks": 840,
+   "max_jump_m": 0.25976014230007854,
+   "final_health": "healthy",
+   "latched": true,
+   "detector_dropout": 0.20203703703703704,
+   "detector_jitter_rms_m": 0.20991217571742526,
+   "journal": [
+    {
+     "t_s": 0.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0011473734812217785
+    },
+    {
+     "t_s": 12.0,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011145425051660487
+    },
+    {
+     "t_s": 12.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.00022745089040580394
+    }
+   ],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": false,
+    "arrival_confidence": 0.0,
+    "kidnap_displacement_m": 5.727128425310541,
+    "localizer_events": {
+     "tracked": 879,
+     "no_scan": 20,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 18,
+     "healthy": 882
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R4b_kidnap_gated_operator"
+  },
+  {
+   "arm": "shipped_margin_on",
+   "episode": 103,
+   "seed": 202,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 1.694619073260242,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 0.135,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "arming_latched",
+   "note": "arming_latched",
+   "status": "running",
+   "hold_ticks": 882,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.135,
+   "post_kidnap_healthy_ticks": 834,
+   "post_kidnap_ticks": 840,
+   "max_jump_m": 0.25976014230007854,
+   "final_health": "healthy",
+   "latched": true,
+   "detector_dropout": 0.20203703703703704,
+   "detector_jitter_rms_m": 0.20991217571742526,
+   "journal": [
+    {
+     "t_s": 0.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0011473734812217785
+    },
+    {
+     "t_s": 12.0,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011145425051660487
+    },
+    {
+     "t_s": 12.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.00022745089040580394
+    }
+   ],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": true,
+    "arrival_confidence": 0.0,
+    "kidnap_displacement_m": 5.727128425310541,
+    "localizer_events": {
+     "tracked": 879,
+     "no_scan": 20,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 18,
+     "healthy": 882
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R4b_kidnap_gated_operator"
+  },
+  {
+   "refuter": "R4_place_absent",
+   "arm": "door",
+   "seed": 202,
+   "door_status": "rejected",
+   "admitted": false,
+   "detail": "not started: the robot's map has no place called 'kitchen counter'; the places it does know nearby are the bookshelf, the bed and the water bowl; ask the owner which of those they mean, or which real ",
+   "declared_arrival": false,
+   "false_arrival": false,
+   "failure_type": "door_refused"
+  },
+  {
+   "arm": "shipped",
+   "episode": 100,
+   "seed": 303,
+   "layout": "1",
+   "goal_id": "place_counter",
+   "declared_arrival": true,
+   "truth_distance_m": 0.48127717465497677,
+   "arrived": true,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 189,
+   "time_to_goal_s": 18.8,
+   "path_m": 5.981932417792037,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "",
+   "note": "align_terminal err=61.7",
+   "status": "arrived",
+   "hold_ticks": 0,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.023156261713789525,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.18871252204585537,
+   "detector_jitter_rms_m": 0.21384944665940944,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": false,
+    "arrival_confidence": 0.9985,
+    "localizer_events": {
+     "tracked": 168,
+     "no_scan": 20,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 18,
+     "healthy": 171
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R1_scan_dropout"
+  },
+  {
+   "arm": "shipped_margin_on",
+   "episode": 100,
+   "seed": 303,
+   "layout": "1",
+   "goal_id": "place_counter",
+   "declared_arrival": true,
+   "truth_distance_m": 0.48127717465497677,
+   "arrived": true,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 189,
+   "time_to_goal_s": 18.8,
+   "path_m": 5.981932417792037,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "",
+   "note": "align_terminal err=61.7",
+   "status": "arrived",
+   "hold_ticks": 0,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.023156261713789525,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.18871252204585537,
+   "detector_jitter_rms_m": 0.21384944665940944,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": true,
+    "arrival_confidence": 0.9985,
+    "localizer_events": {
+     "tracked": 168,
+     "no_scan": 20,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 18,
+     "healthy": 171
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R1_scan_dropout"
+  },
+  {
+   "arm": "shipped",
+   "episode": 101,
+   "seed": 303,
+   "layout": "0",
+   "goal_id": "place_bowl",
+   "declared_arrival": true,
+   "truth_distance_m": 0.4844861906491833,
+   "arrived": true,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 213,
+   "time_to_goal_s": 21.200000000000003,
+   "path_m": 5.268862671617931,
+   "optimal_m": 5.727128425310541,
+   "failure_type": "",
+   "note": "align_terminal err=113.9",
+   "status": "arrived",
+   "hold_ticks": 0,
+   "gap_ticks": 46,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 41,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.011428620325736591,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.1729264475743349,
+   "detector_jitter_rms_m": 0.2117374346845918,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     -2.4,
+     -2.4
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": false,
+    "arrival_confidence": 1.0,
+    "localizer_events": {
+     "tracked": 166,
+     "no_scan": 46,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 41,
+     "healthy": 172
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R2_pose_degraded"
+  },
+  {
+   "arm": "shipped_margin_on",
+   "episode": 101,
+   "seed": 303,
+   "layout": "0",
+   "goal_id": "place_bowl",
+   "declared_arrival": true,
+   "truth_distance_m": 0.4844861906491833,
+   "arrived": true,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 213,
+   "time_to_goal_s": 21.200000000000003,
+   "path_m": 5.268862671617931,
+   "optimal_m": 5.727128425310541,
+   "failure_type": "",
+   "note": "align_terminal err=113.9",
+   "status": "arrived",
+   "hold_ticks": 0,
+   "gap_ticks": 46,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 41,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.011428620325736591,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.1729264475743349,
+   "detector_jitter_rms_m": 0.2117374346845918,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     -2.4,
+     -2.4
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": true,
+    "arrival_confidence": 1.0,
+    "localizer_events": {
+     "tracked": 166,
+     "no_scan": 46,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 41,
+     "healthy": 172
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R2_pose_degraded"
+  },
+  {
+   "arm": "shipped",
+   "episode": 102,
+   "seed": 303,
+   "layout": "0",
+   "goal_id": "place_desk",
+   "declared_arrival": false,
+   "truth_distance_m": 4.262887747103868,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 1.9083116571401835,
+   "optimal_m": 5.727128425310541,
+   "failure_type": "silent_stall_step_limit",
+   "note": "grid_recover_scan status=no_path",
+   "status": "running",
+   "hold_ticks": 0,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.009061688381507295,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.20185185185185187,
+   "detector_jitter_rms_m": 0.20998183870137443,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     2.4
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": false,
+    "arrival_confidence": 0.0,
+    "moved_obstacle_xy": [
+     2.331,
+     -0.957
+    ],
+    "localizer_events": {
+     "tracked": 879,
+     "no_scan": 20,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 18,
+     "healthy": 882
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R3_moved_obstacle"
+  },
+  {
+   "arm": "shipped_margin_on",
+   "episode": 102,
+   "seed": 303,
+   "layout": "0",
+   "goal_id": "place_desk",
+   "declared_arrival": false,
+   "truth_distance_m": 4.262887747103868,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 1.9083116571401835,
+   "optimal_m": 5.727128425310541,
+   "failure_type": "silent_stall_step_limit",
+   "note": "grid_recover_scan status=no_path",
+   "status": "running",
+   "hold_ticks": 0,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.009061688381507295,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.20185185185185187,
+   "detector_jitter_rms_m": 0.20998183870137443,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     2.4
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": true,
+    "arrival_confidence": 0.0,
+    "moved_obstacle_xy": [
+     2.331,
+     -0.957
+    ],
+    "localizer_events": {
+     "tracked": 879,
+     "no_scan": 20,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 18,
+     "healthy": 882
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R3_moved_obstacle"
+  },
+  {
+   "arm": "shipped",
+   "episode": 103,
+   "seed": 303,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": true,
+   "truth_distance_m": 5.235587895897995,
+   "arrived": false,
+   "false_arrival": true,
+   "contacts": 0,
+   "steps": 231,
+   "time_to_goal_s": 23.0,
+   "path_m": 6.59471028959783,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "",
+   "note": "align_terminal err=68.4",
+   "status": "arrived",
+   "hold_ticks": 0,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 3.716786822389796,
+   "post_kidnap_healthy_ticks": 155,
+   "post_kidnap_ticks": 171,
+   "max_jump_m": 0.021929391154744942,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.20274170274170275,
+   "detector_jitter_rms_m": 0.21381699949027555,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": false,
+    "arrival_confidence": 0.9942,
+    "kidnap_displacement_m": 4.719112788740861,
+    "localizer_events": {
+     "tracked": 210,
+     "no_scan": 20,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 18,
+     "healthy": 213
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R4b_kidnap_shipped"
+  },
+  {
+   "arm": "shipped_margin_on",
+   "episode": 103,
+   "seed": 303,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": true,
+   "truth_distance_m": 5.235587895897995,
+   "arrived": false,
+   "false_arrival": true,
+   "contacts": 0,
+   "steps": 231,
+   "time_to_goal_s": 23.0,
+   "path_m": 6.59471028959783,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "",
+   "note": "align_terminal err=68.4",
+   "status": "arrived",
+   "hold_ticks": 0,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 3.716786822389796,
+   "post_kidnap_healthy_ticks": 155,
+   "post_kidnap_ticks": 171,
+   "max_jump_m": 0.021929391154744942,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.20274170274170275,
+   "detector_jitter_rms_m": 0.21381699949027555,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": true,
+    "arrival_confidence": 0.9942,
+    "kidnap_displacement_m": 4.719112788740861,
+    "localizer_events": {
+     "tracked": 210,
+     "no_scan": 20,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 18,
+     "healthy": 213
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R4b_kidnap_shipped"
+  },
+  {
+   "arm": "shipped",
+   "episode": 103,
+   "seed": 303,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 1.6492422502470643,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 0.0,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "arming_latched",
+   "note": "arming_latched",
+   "status": "running",
+   "hold_ticks": 891,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 824,
+   "post_kidnap_ticks": 840,
+   "max_jump_m": 0.005241183714823278,
+   "final_health": "healthy",
+   "latched": true,
+   "detector_dropout": 0.1937037037037037,
+   "detector_jitter_rms_m": 0.21162748050122687,
+   "journal": [
+    {
+     "t_s": 0.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0010571611377383865
+    }
+   ],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": false,
+    "arrival_confidence": 0.0,
+    "kidnap_displacement_m": 5.727128425310541,
+    "localizer_events": {
+     "tracked": 879,
+     "no_scan": 20,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 18,
+     "healthy": 882
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R4b_kidnap_gated"
+  },
+  {
+   "arm": "shipped_margin_on",
+   "episode": 103,
+   "seed": 303,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 1.6492422502470643,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 0.0,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "arming_latched",
+   "note": "arming_latched",
+   "status": "running",
+   "hold_ticks": 891,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 824,
+   "post_kidnap_ticks": 840,
+   "max_jump_m": 0.005241183714823278,
+   "final_health": "healthy",
+   "latched": true,
+   "detector_dropout": 0.1937037037037037,
+   "detector_jitter_rms_m": 0.21162748050122687,
+   "journal": [
+    {
+     "t_s": 0.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0010571611377383865
+    }
+   ],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": true,
+    "arrival_confidence": 0.0,
+    "kidnap_displacement_m": 5.727128425310541,
+    "localizer_events": {
+     "tracked": 879,
+     "no_scan": 20,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 18,
+     "healthy": 882
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R4b_kidnap_gated"
+  },
+  {
+   "arm": "shipped",
+   "episode": 103,
+   "seed": 303,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 1.6946998495175276,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 0.135,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "arming_latched",
+   "note": "arming_latched",
+   "status": "running",
+   "hold_ticks": 882,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.135,
+   "post_kidnap_healthy_ticks": 824,
+   "post_kidnap_ticks": 840,
+   "max_jump_m": 0.27163902264168066,
+   "final_health": "healthy",
+   "latched": true,
+   "detector_dropout": 0.1937037037037037,
+   "detector_jitter_rms_m": 0.21162748050122687,
+   "journal": [
+    {
+     "t_s": 0.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0010571611377383865
+    },
+    {
+     "t_s": 12.0,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01156846796942592
+    },
+    {
+     "t_s": 12.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0003407287252257481
+    }
+   ],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": false,
+    "arrival_confidence": 0.0,
+    "kidnap_displacement_m": 5.727128425310541,
+    "localizer_events": {
+     "tracked": 879,
+     "no_scan": 20,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 18,
+     "healthy": 882
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R4b_kidnap_gated_operator"
+  },
+  {
+   "arm": "shipped_margin_on",
+   "episode": 103,
+   "seed": 303,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 1.6946998495175276,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 0.135,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "arming_latched",
+   "note": "arming_latched",
+   "status": "running",
+   "hold_ticks": 882,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.135,
+   "post_kidnap_healthy_ticks": 824,
+   "post_kidnap_ticks": 840,
+   "max_jump_m": 0.27163902264168066,
+   "final_health": "healthy",
+   "latched": true,
+   "detector_dropout": 0.1937037037037037,
+   "detector_jitter_rms_m": 0.21162748050122687,
+   "journal": [
+    {
+     "t_s": 0.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0010571611377383865
+    },
+    {
+     "t_s": 12.0,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01156846796942592
+    },
+    {
+     "t_s": 12.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0003407287252257481
+    }
+   ],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "planner_gate_clearance_m": 1.12,
+    "planner_inflation_radius_m": 1.0222956130917835,
+    "require_relocalization_margin": true,
+    "arrival_confidence": 0.0,
+    "kidnap_displacement_m": 5.727128425310541,
+    "localizer_events": {
+     "tracked": 879,
+     "no_scan": 20,
+     "anchor": 1
+    },
+    "map_health_ticks": {
+     "degraded": 18,
+     "healthy": 882
+    },
+    "relocalization_margins": []
+   },
+   "refuter": "R4b_kidnap_gated_operator"
+  },
+  {
+   "refuter": "R4_place_absent",
+   "arm": "door",
+   "seed": 303,
+   "door_status": "rejected",
+   "admitted": false,
+   "detail": "not started: the robot's map has no place called 'kitchen counter'; the places it does know nearby are the bookshelf, the desk and the couch; ask the owner which of those they mean, or which real plac",
+   "declared_arrival": false,
+   "false_arrival": false,
+   "failure_type": "door_refused"
+  }
+ ]
+}
