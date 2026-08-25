@@ -46,6 +46,7 @@ from evals.companion.personal_convo_v1.fixture_provider import (
 )
 from evals.companion.personal_convo_v1.judge import (
     JUDGE_ID,
+    JUDGE_KIND,
     calibrate,
     judge_probe_turns,
 )
@@ -540,7 +541,13 @@ def run_pack(
             "text_tier_only": True,
             "audio_tier_executed": False,
             "human_recording_executed": False,
-            "judge_model_used": True,
+            # PC-4's "local judge" is a deterministic lexical heuristic, not
+            # an inference model.  Keep the legacy boolean explicit and add
+            # positive typed provenance so report readers cannot mistake a
+            # calibrated rule bank for an LLM or human adjudicator.
+            "judge_model_used": False,
+            "judge_kind": JUDGE_KIND,
+            "heuristic_judge_used": True,
             "judge_report_only": True,
             "judge_calibration_qualified": calibration["status"] == "qualified",
             "machine_checks_prove_conversational_quality": False,

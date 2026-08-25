@@ -48,6 +48,7 @@ import subprocess
 import sys
 import threading
 import time
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -435,7 +436,7 @@ def run_bargein(rig: rig_mod.AcousticRig, corpus: dict[str, dict]) -> list[dict]
             echo_guard_scale=2.5,
         )
 
-        with rig.record_monitor(rig.sink_monitor_name, monitor_raw):
+        with rig.record_monitor(rig.sink_name, monitor_raw):
             loop.start()
             time.sleep(0.5)
             speaker.begin_utterance()
@@ -597,7 +598,7 @@ def run_duplex(rig: rig_mod.AcousticRig, corpus: dict[str, dict]) -> list[dict]:
             endpointer=TurnEndpointer(str(TURN_MODEL)),
         )
 
-        with rig.record_monitor(rig.sink_monitor_name, monitor_raw):
+        with rig.record_monitor(rig.sink_name, monitor_raw):
             loop.start()
             time.sleep(0.5)
             rig.play_file(fixture_path(entry))
@@ -699,7 +700,7 @@ def run_prosody(rig: rig_mod.AcousticRig, corpus: dict[str, dict]) -> list[dict]
         on_chunk_start=lambda _t: chunk_started.append(time.monotonic()),
     )
 
-    with rig.record_monitor(rig.sink_monitor_name, monitor_raw):
+    with rig.record_monitor(rig.sink_name, monitor_raw):
         time.sleep(0.3)
         speaker.begin_utterance()
         speaker.enqueue(pcm, token="prosody")
@@ -902,13 +903,19 @@ def evaluate_gates(metrics: dict[str, Any]) -> dict[str, Any]:
     return results
 
 
+def quality_exit_code(report: Mapping[str, Any]) -> int:
+    """Translate a completed acoustic report into an automation-safe status."""
+
+    return 0 if report.get("gates_passed") is True and report.get("teardown_clean") is True else 1
+
+
 DOES_NOT_PROVE = [
     "room acoustics: this rig has no air, no reverberation and no room",
     "real microphone or loudspeaker behaviour: both endpoints are null sinks",
     "acoustic echo cancellation: there is no acoustic coupling to cancel",
     "human speech: the corpus is Piper-synthesized, not recorded from a person",
     "the sub-700ms ack bar end to end: the reply here is scripted, not generated",
-    "hardware AEC (XVF3800) performance: no device has ever been enumerated",
+    "hardware AEC (XVF3800) performance: this null-sink run exercises no physical device",
 ]
 
 
@@ -939,6 +946,7 @@ def main(argv: list[str] | None = None) -> int:
     started = time.time()
     cases: list[dict] = []
     orphans: list[str] = []
+    orphan_processes: list[str] = []
 
     with rig_mod.AcousticRig(prefix=prefix) as rig:
         # One recording, one clock: everything the virtual mic hears is also
@@ -958,6 +966,7 @@ def main(argv: list[str] | None = None) -> int:
     # carrying our prefix may survive.
     time.sleep(0.5)
     orphans = rig_mod.orphan_nodes(prefix)
+    orphan_processes = rig.live_child_processes()
     # Raw monitor recordings are scratch, not evidence; the report carries the
     # derived timestamps. Leaving hundreds of MB of PCM behind would make the
     # results directory unusable as a committed artifact.
@@ -986,7 +995,8 @@ def main(argv: list[str] | None = None) -> int:
             "pipewire": _pipewire_version(),
         },
         "orphan_nodes_after_teardown": orphans,
-        "teardown_clean": not orphans,
+        "orphan_processes_after_teardown": orphan_processes,
+        "teardown_clean": not orphans and not orphan_processes,
         "case_count": len(cases),
         "cases": cases,
         "case_verdicts": verdicts,
@@ -1005,9 +1015,15 @@ def main(argv: list[str] | None = None) -> int:
     output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
 
     print(json.dumps({"metrics": metrics, "gates": gates,
-                      "teardown_clean": not orphans}, indent=2))
+                      "teardown_clean": not orphans and not orphan_processes}, indent=2))
     print(f"\nreport: {output}")
-    return 0
+    # A quality runner must communicate its frozen gates to automation.  The
+    # historical implementation always returned zero after successfully
+    # writing a report, even when five of the nine gates were red.  That made
+    # a shell/CI invocation indistinguishable from a passing measurement unless
+    # a second program happened to reopen and interpret the JSON.  Preserve 2
+    # above for an unavailable rig; use 1 for a completed but red/invalid run.
+    return quality_exit_code(report)
 
 
 def _pipewire_version() -> str:

@@ -49,11 +49,20 @@ destroyed in teardown):
 | `<prefix>_sink` | the robot's speaker. `SpeakerSink` opens it through the ordinary `sounddevice` path, so the real player, the real ~50 ms block loop and the real interrupt latch are exercised. Its `.monitor` is recorded. |
 | `<prefix>_mic` | the owner's mouth. `pw-play` injects frozen corpus utterances; `pw-record` on its monitor feeds `MicrophoneVoiceLoop` through its `frames` iterable seam. |
 
-`pw-link <mic> <sink>` routes everything the microphone hears into the
-speaker's monitor, so **one recording contains both sides on one
+The rig does not delegate capture routing to WirePlumber. Every `pw-record`
+starts with `--target 0` and a unique owned node name; the rig resolves the
+exact source monitor output and recorder input from `pw-dump`, links their
+global port IDs with `pw-link`, and verifies the exact link object. The
+microphone-monitor → speaker-input route is owned the same way. This makes
+**one recording contain both sides on one
 sample-accurate clock**. Acoustic intervals are then a subtraction inside a
 single file rather than a comparison across two processes with no shared time
 base. It is not an echo path — the robot is never fed back into the mic.
+
+Capture reads are nonblocking and observe their stop event every 100 ms. A
+recorder that exits early or produces no first frame within its deadline fails
+loudly with bounded stderr context. Teardown must reap all owned players and
+recorders as well as destroy every owned node/link.
 
 Nothing in the audio code was modified to make this work. Every entry point is
 a seam that already existed: `MicrophoneVoiceLoop(frames=...)`,
@@ -169,4 +178,7 @@ the plan and are not built.
 `case_verdicts` (name → verdict) is the determinism contract: two consecutive
 runs on the frozen pack must produce an identical object. Latency *values*
 jitter run to run and are not part of that contract. Teardown must leave zero
-nodes carrying the run's prefix; `teardown_clean: false` invalidates a run.
+nodes carrying the run's prefix and zero tracked child processes;
+`teardown_clean: false` invalidates a run. The CLI exits 0 only when every
+frozen gate and teardown pass, 1 for a completed red/invalid report, and 2 when
+the rig is unavailable.

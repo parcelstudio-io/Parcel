@@ -4,13 +4,20 @@ WHY THIS PACK IS NOT FROZEN
 ---------------------------
 ``tests/test_ci_gate.py`` scans ``evals/`` for manifests carrying
 ``"frozen": true`` and pins that exact set, so that freezing a suite is always
-a deliberate, reviewed act rather than a side effect. This corpus has **three
-hand-authored seed fixtures and no captured threads** — the live scrape is
-blocked on account credit — so freezing it now would immortalise a placeholder.
-:data:`FROZEN_NOTE` says so inside the manifest itself, and
-:func:`build_manifest` will not emit a ``frozen`` key at all.
+a deliberate, reviewed act rather than a side effect. This corpus has 25 live
+text captures from 2026-08-18 and one unblinded AI review from 2026-08-24, but
+it still has no blinded, calibrated human review. :data:`FROZEN_NOTE` says so
+inside the manifest itself, and :func:`build_manifest` will not emit a
+``frozen`` key at all.
 
-Freezing is a later owner decision, taken after a real scrape lands.
+Freezing is a later owner decision, taken after the required human review.
+
+The committed manifest intentionally records the capture-time SI v1 pins.
+The product now ships a later SI version, so ``--check`` is expected to return
+non-zero for exactly ``si_version`` and ``si_digests``. The corpus replay tests
+pin that exact, provenance-preserving drift while requiring every other field
+to match. Do not regenerate the manifest merely to make ``--check`` green;
+that would relabel historical outputs as if the current prompt produced them.
 
 USAGE
 -----
@@ -18,7 +25,7 @@ Run as a module from the repository root, so that ``evals`` imports::
 
     .parcel/bin/python -m evals.companion.realtime_convo_v1.build_manifest [FLAG]
 
-``--check``              recompute and diff against the committed manifest
+``--check``              recompute and diff (expected SI-only drift; see above)
 ``--print-si-digests``   the block to paste into ``prompting.SI_DIGESTS``
 (no flag)                rewrite the manifest in place
 """

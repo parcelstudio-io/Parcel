@@ -105,7 +105,9 @@ def test_known_good_and_known_bad_polarity() -> None:
 
 def test_fixture_run_embeds_qualified_report_only_judge() -> None:
     result = _run()
-    assert result["claims"]["judge_model_used"] is True
+    assert result["claims"]["judge_model_used"] is False
+    assert result["claims"]["judge_kind"] == "heuristic_local"
+    assert result["claims"]["heuristic_judge_used"] is True
     assert result["claims"]["judge_report_only"] is True
     assert result["claims"]["judge_calibration_qualified"] is True
     assert result["judge"]["report_only"] is True

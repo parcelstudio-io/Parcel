@@ -7,13 +7,11 @@ a mechanical conversion into ``FakeRealtimeServer`` steps, and a real
 ``RealtimeLane`` driving them into ledger rows, usage rows and tool refusals —
 entirely offline, with no credential and no socket.
 
-It does not prove anything about the model. The three fixtures committed today
-are **hand-authored seeds**, not captures: the live scrape is blocked on account
-credit (HTTP 429 ``credit_balance_exhausted``, re-checked 2026-08-17). Their
-robot side is written by a human and their usage is zero everywhere, because
-inventing plausible token counts would put fabricated billing data in an
-evidence pack. When the scrape unblocks, the captured 25 land in the same
-directory and this file needs no edit — which is the property being defended.
+It does not prove anything about the current model. The 25 fixtures are the
+historical live captures from 2026-08-18, with provider usage and prompt-plane
+provenance preserved. Replay proves that those stored outputs still traverse
+the real lane; response quality is evaluated separately by
+``score_corpus.py`` and its explicitly unblinded, uncalibrated review artifact.
 
 WHY THE FROZEN-SCAN GUARD IS HERE AND NOT ONLY IN test_ci_gate.py
 ------------------------------------------------------------------

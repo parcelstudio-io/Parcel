@@ -2,9 +2,11 @@
 
 **Card:** R2-C (`scrum/20260817/task_3`) · **Suite id:** `parcel-realtime-convo-v1`
 **Model targeted:** `gpt-realtime-2.1-mini` · **Modality:** text
-**Status: captured, NOT frozen.** The 2026-08-18 live scrape produced 25/25
-threads and 174/174 non-empty owner turns on its second full run. The successful
-run recorded $0.50 of provider usage; corpus quality still requires human review.
+**Status: captured and reviewed once by an unblinded AI, NOT frozen.** The
+2026-08-18 live scrape produced 25/25 threads and 174/174 non-empty owner turns
+on its second full run. The successful run recorded $0.50 of provider usage.
+The 2026-08-24 review found 6 PASS / 8 MIXED / 11 FAIL threads; calibrated,
+blinded human review is still absent.
 
 ## What this pack is
 
@@ -56,6 +58,8 @@ earlier thread, which is what makes the memory probes real rather than notional.
 | `schema.py` | typed, fail-closed loaders + `fixture_to_script` + `verify_prompt_plane` |
 | `scrape_realtime_convo.py` | the live scraper. Env-gated, budget-guarded, never a test |
 | `build_manifest.py` | regenerates `corpus.manifest.json`; `--check` diffs it against the tree |
+| `score_corpus.py` | hard structural/tool checks, report-only lexical risks and punts, and exact reviewer-coverage validation |
+| `reviews/*.json` | explicit expectation-by-expectation semantic reviews with reviewer kind/blinding/calibration stated |
 | `fixtures/*.json` | captured live conversation threads |
 | `corpus.manifest.json` | digests, versions, usage totals, and the scrape's honest state |
 
@@ -69,7 +73,12 @@ imports:
 # offline, safe, free
 .parcel/bin/python -m evals.companion.realtime_convo_v1.scrape_realtime_convo --self-test
 .parcel/bin/python -m evals.companion.realtime_convo_v1.scrape_realtime_convo --dry-run
+# Expected to report only si_version + si_digests while this SI-v1 capture is
+# replayed by a tree shipping a later SI. The replay tests pin that exact drift.
 .parcel/bin/python -m evals.companion.realtime_convo_v1.build_manifest --check
+.parcel/bin/python -m evals.companion.realtime_convo_v1.score_corpus \
+  --review evals/companion/realtime_convo_v1/reviews/20260824-unblinded-ai-review.json \
+  --require-review --output /tmp/realtime-convo-quality.json
 
 # the live scrape: costs money, needs BOTH the flag and a key
 set -a; . ~/.config/parcel/realtime.env; set +a
@@ -108,18 +117,20 @@ owner freezes this pack, rename the manifest to `manifest.json`, add it to
 
 ## does_not_prove
 
-* **Capture is not quality.** The 25 fixtures came from
-  `gpt-realtime-2.1-mini`, but no human review or automated scorer has judged
-  their conversational or tool-selection quality.
+* **One AI review is not human preference.** The checked-in unblinded review
+  judges all authored expectations and exposes 11 failing threads, but it is
+  neither human, blinded nor calibrated. The machine checks prove corpus/tool
+  contracts and surface lexical risks; they do not prove warmth or naturalness.
 * **Usage is provenance, not an invoice audit.** The successful second full run
   records $0.50 from provider usage blocks (164,446 input and 18,730 output
   tokens); total spend across failed/retried attempts was about $0.79.
 * **There is no captured audio**, so the fixtures store none. The
   `synthetic_audio_ms` option in `fixture_to_script` emits a deterministic tone
   for one playback-bridge test and is never written into a fixture.
-* **The `expect` blocks are authored expectations, not scorers.** No judge, no
-  rubric and no pass/fail scoring exists in this pack yet; they are the notes a
-  future scorer would be built from.
+* **The `expect` blocks remain authored expectations, not an AutoRater.** The
+  semantic review records a verdict for each one, while the executable layer
+  verifies complete coverage. It does not infer those semantic verdicts with
+  keyword rules or silently treat the reviewer as ground truth.
 * **Tool calls are proposals only.** The credential-free replay deliberately
   runs without the product broker and asserts refusal. It does not score the
   current broker's tool correctness, admission, navigation, or execution.

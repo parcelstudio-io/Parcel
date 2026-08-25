@@ -60,7 +60,11 @@ Every run re-scores `calibration/` known-good and known-bad transcripts. If any
 case drifts from its frozen `expected_pass`, `judge.calibration.status` becomes
 `disqualified` and probe judged scores are omitted (`scores_valid=false`) —
 never silently shifted. Judge output never gates `family_status` /
-`case_verdicts`.
+`case_verdicts`. This judge is a deterministic lexical heuristic
+(`judge_kind=heuristic_local`), not a model or human reviewer; current reports
+state that provenance explicitly. Historical result files are retained as
+immutable evidence and may still contain the former misleading
+`judge_model_used=true` claim.
 
 ## What the Tier-D bank checks (deterministic, CI-gating)
 
