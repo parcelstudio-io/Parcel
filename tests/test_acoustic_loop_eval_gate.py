@@ -109,6 +109,31 @@ def test_rig_close_kills_a_capture_process_that_ignores_terminate() -> None:
     assert rig.live_child_processes() == []
 
 
+def test_rig_entry_failure_after_node_creation_runs_teardown(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    rig = AcousticRig(prefix="parcel_test")
+    closed = False
+
+    def close() -> None:
+        nonlocal closed
+        closed = True
+
+    def unavailable() -> None:
+        raise OSError("PortAudio unavailable")
+
+    monkeypatch.setattr(rig_mod, "rig_available", lambda: (True, "ok"))
+    monkeypatch.setattr(rig_mod, "orphan_nodes", lambda prefix: [])
+    monkeypatch.setattr(rig, "_create", lambda name, description: None)
+    monkeypatch.setattr(rig, "_await_visible", unavailable)
+    monkeypatch.setattr(rig, "close", close)
+
+    with pytest.raises(OSError, match="PortAudio unavailable"):
+        rig.__enter__()
+
+    assert closed is True
+
+
 def _node(node_id: int, name: str) -> dict:
     return {
         "id": node_id,

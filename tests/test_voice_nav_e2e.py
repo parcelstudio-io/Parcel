@@ -258,7 +258,12 @@ class _LiveRuntime:
 
 
 @pytest.fixture()
-def live(tmp_path: Path):
+def live(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    # Card R27's owner-store guard refuses configs/robot.yaml's relative
+    # `memory.path` under pytest, which errored every case in this file at
+    # SETUP since e5d4956 (2026-08-21). Same idiom as every sibling suite that
+    # builds a runtime from the shipped config: point the store at scratch.
+    monkeypatch.setenv("PARCEL_MEMORY_PATH", str(tmp_path / "memory.sqlite3"))
     session = _LiveRuntime(tmp_path)
     try:
         yield session
@@ -461,7 +466,8 @@ def test_walk_towards_the_lamppost_grounds_plans_and_arrives(
 
 
 @pytest.fixture()
-def live_dynamic(tmp_path: Path):
+def live_dynamic(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("PARCEL_MEMORY_PATH", str(tmp_path / "memory.sqlite3"))
     session = _LiveRuntime(tmp_path, static_city=False)
     try:
         yield session

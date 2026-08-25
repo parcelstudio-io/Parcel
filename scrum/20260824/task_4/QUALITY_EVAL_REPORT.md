@@ -3,6 +3,7 @@
 **Local evaluation date:** 2026-08-24, America/New_York  
 **UTC artifact date:** 2026-08-25  
 **Reviewed commit:** `2ce919a1d49ba55224ae7c6cd66f3a99255a8ca5`  
+**Final verification base:** `d2988421dd2a4d28cf57438001ad58a6eaa40cb0` plus the recorded acoustic hardening overlay
 **Scratch root:** `/tmp/parcel-quality-20260824.VYhnnR`  
 **Physical hardware used:** none
 
@@ -109,7 +110,7 @@ Therefore the Claude work earns **bench seam accepted**, not robot-ready.
 | suite | result | interpretation |
 |---|---|---|
 | Conversation-focused pytest campaign | **318 passed, 1 skipped, 2 deselected** | Strong deterministic mechanics; the skip/deselections retain their declared environment/tier limits. |
-| Final post-change focused rerun | **179 passed** | New scorer, provenance and explicit acoustic routing/process tests green. |
+| Final post-change focused rerun | **180 passed** | New scorer, provenance and explicit acoustic routing/process tests green. |
 | Offline brain task corpus | **15/15 passed**, including **7/7 fail-closed** | Task compilation/executive boundaries work; physical navigation count is zero. |
 | Scripted duplex | **7/7 hard gates passed**, TTFT p50 ≈ **35.7 ms** | Software clock/queue regression only; no real microphone, model speech or mounted speaker. |
 | Realtime captured-corpus machine contract | **25/25 threads**, 174 turns, **0 hard failures**, 66 review flags | Artifacts are structurally replayable; this does not establish good dialogue. |
@@ -272,6 +273,22 @@ The following were not silently treated as passes:
   controller that already fails the early admission/liveness gate; it belongs
   after the systemic issue is fixed.
 
+## Repository close verification
+
+The final focused conversation/acoustic regression selection passed
+**180/180** tests. Targeted Ruff checks passed with no findings, the generated
+codebase index reached a fixed point, and `git diff --check` was clean.
+
+The integrator's commit gate was then run once and passed every hard gate. Its
+default suite reported **10,506 passed, 22 skipped and 5 xfailed** in the
+parallel lane, plus **12 passed and 1 skipped** in the serial lane. The gate's
+Ruff debt ratchet reported four existing baseline findings, seven allowed and
+zero new. Most importantly, the same successful gate explicitly reported the
+stopping envelope as **UNMEASURED** because gateway period, physical
+command-to-standstill time, scan age and localization jump are not yet
+measured. Repository green therefore confirms desktop/bench integrity; it
+does not promote physical motion.
+
 ## Overall recommendation
 
 Do not mount this software for motion. Preserve Claude's gateway seam, close
@@ -287,9 +304,12 @@ The actionable task and acceptance criteria are in `README.md` under
 
 ## Evidence limitations
 
-- All new reports were produced on a desktop at a dirty overlay over the exact
-  reviewed commit; the report records that boundary rather than presenting the
-  overlay as committed product code.
+- The campaign began from the exact reviewed Claude commit. During the
+  campaign, the conversation/task evaluation layer was integrated as
+  `d2988421dd2a4d28cf57438001ad58a6eaa40cb0`; the final acoustic lifecycle
+  hardening remains a working-tree overlay on that base. Neither layer is
+  presented as physical-product evidence or as part of Claude's original
+  motion-seam change.
 - The local-model run uses one pinned model/configuration and one pass through
   small frozen sets. It does not estimate population-level conversational
   quality.

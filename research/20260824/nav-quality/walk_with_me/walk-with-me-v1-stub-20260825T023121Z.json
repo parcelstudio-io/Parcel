@@ -1,0 +1,586 @@
+{
+  "aggregate": {
+    "arrival_epsilon_m": 0.05,
+    "attribution_histogram": {
+      "L1_parse": 0,
+      "L2a_vocabulary": 1,
+      "L2b_visibility_gated": 0,
+      "L3_exploration": 0,
+      "L4_planning": 0,
+      "L5_control": 0,
+      "L6_termination": 0,
+      "none": 9
+    },
+    "authority_histogram": {
+      "agreement": 0,
+      "authority_disagreement": 0,
+      "false_arrival": 0,
+      "tolerated_boundary": 0,
+      "unknown": 10
+    },
+    "by_theme": [
+      {
+        "n": 1,
+        "sr": 1.0,
+        "successes": 1,
+        "theme": "absent_target"
+      },
+      {
+        "n": 1,
+        "sr": 1.0,
+        "successes": 1,
+        "theme": "barge_in"
+      },
+      {
+        "n": 1,
+        "sr": 1.0,
+        "successes": 1,
+        "theme": "curb_stop"
+      },
+      {
+        "n": 1,
+        "sr": 1.0,
+        "successes": 1,
+        "theme": "follow"
+      },
+      {
+        "n": 1,
+        "sr": 1.0,
+        "successes": 1,
+        "theme": "lamppost"
+      },
+      {
+        "n": 1,
+        "sr": 1.0,
+        "successes": 1,
+        "theme": "orbit"
+      },
+      {
+        "n": 1,
+        "sr": 1.0,
+        "successes": 1,
+        "theme": "owner_search"
+      },
+      {
+        "n": 1,
+        "sr": 1.0,
+        "successes": 1,
+        "theme": "pause_resume"
+      },
+      {
+        "n": 1,
+        "sr": 1.0,
+        "successes": 1,
+        "theme": "sidewalk"
+      },
+      {
+        "n": 1,
+        "sr": 1.0,
+        "successes": 1,
+        "theme": "wait"
+      }
+    ],
+    "collision_total": 0,
+    "does_not_prove": [
+      "real-sensor or real-robot performance (stub/headless kinematic base; oracle owner track when used)",
+      "acoustic barge-in / AEC under motion (barge-in scripts exercise arbitration stubs only \u2014 no mic array, no TTS playback clock)",
+      "owner re-identification or enrolled gallery (search/reacquire scripts use identity-perfect scripted tracks)",
+      "curb/crossing physics or road-entry legality under real perception (curb-stop is a companion-moment stub on scripted polygon events)",
+      "camera-grounded semantics (sidewalk/lamppost goals use sim ground-truth polygons, not OCR or open-vocab detectors)",
+      "full voice\u2192PlanIR\u2192executive path (pause/resume hooks ResumeStore; utterance parsing is fixture-level, not ASR)",
+      "hardware commissioning or Orin budgets (evidence ladder \u2264 L2 sim)"
+    ],
+    "failure_histogram": {
+      "control_error": 0,
+      "false_arrival": 0,
+      "grounding_error": 0,
+      "none": 9,
+      "planning_error": 0,
+      "refusal": 1,
+      "search_error": 0,
+      "termination": 0
+    },
+    "hard_collision_total": 0,
+    "n": 10,
+    "pack_version": "walk-with-me-v1.0-k8",
+    "runner_version": "walk-with-me-v1.0-k8",
+    "sr": 1.0
+  },
+  "does_not_prove": [
+    "real-sensor or real-robot performance (stub/headless kinematic base; oracle owner track when used)",
+    "acoustic barge-in / AEC under motion (barge-in scripts exercise arbitration stubs only \u2014 no mic array, no TTS playback clock)",
+    "owner re-identification or enrolled gallery (search/reacquire scripts use identity-perfect scripted tracks)",
+    "curb/crossing physics or road-entry legality under real perception (curb-stop is a companion-moment stub on scripted polygon events)",
+    "camera-grounded semantics (sidewalk/lamppost goals use sim ground-truth polygons, not OCR or open-vocab detectors)",
+    "full voice\u2192PlanIR\u2192executive path (pause/resume hooks ResumeStore; utterance parsing is fixture-level, not ASR)",
+    "hardware commissioning or Orin budgets (evidence ladder \u2264 L2 sim)"
+  ],
+  "elapsed_s": 0.00024949602084234357,
+  "episode_digest": "d9487ce70602d69d117ef90e937546120c1c81fb03cb6908c623f18c6ff401da",
+  "freeze_seed": 20260805,
+  "mode": "stub",
+  "pose_profile": "truth",
+  "report_id": "walk-with-me-v1-stub-20260825T023121Z",
+  "runner_version": "walk-with-me-v1.0-k8",
+  "scripts": [
+    {
+      "arrival_epsilon_m": 0.05,
+      "attribution_layer": "none",
+      "authority_category": "unknown",
+      "collision_count": 0,
+      "detail": "stub_placeholder:follow_band_hold",
+      "failure": "none",
+      "harness_used": "stub_placeholder",
+      "instruction": "follow behind me",
+      "mode": "stub",
+      "score": {
+        "attribution_layer": "none",
+        "authority_category": "unknown",
+        "detail": "success",
+        "distance_to_goal_m": 0.0,
+        "failure": "none",
+        "oracle_sr_gap": 0.0,
+        "oracle_success": true,
+        "scorer_arrival": true,
+        "spl": 1.0,
+        "success": true,
+        "system_arrival": null,
+        "time_to_goal_s": 5.0
+      },
+      "scorer_arrival": true,
+      "script_id": "wwm-follow-behind",
+      "success": true,
+      "system_arrival": null,
+      "theme": "follow",
+      "trace": [
+        {
+          "attempted": true,
+          "note": "stub_placeholder_start",
+          "stopped": false,
+          "t_s": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "stub_placeholder_goal",
+          "stopped": true,
+          "t_s": 5.0,
+          "x": 2.0,
+          "y": -0.5
+        }
+      ],
+      "trace_len": 2
+    },
+    {
+      "arrival_epsilon_m": 0.05,
+      "attribution_layer": "none",
+      "authority_category": "unknown",
+      "collision_count": 0,
+      "detail": "hold_stopped",
+      "failure": "none",
+      "harness_used": "stub",
+      "instruction": "wait here",
+      "mode": "stub",
+      "score": {
+        "attribution_layer": "none",
+        "authority_category": "unknown",
+        "detail": "success",
+        "distance_to_goal_m": 0.0,
+        "failure": "none",
+        "oracle_sr_gap": 0.0,
+        "oracle_success": true,
+        "scorer_arrival": true,
+        "spl": 1.0,
+        "success": true,
+        "system_arrival": null,
+        "time_to_goal_s": 8.0
+      },
+      "scorer_arrival": true,
+      "script_id": "wwm-wait-hold",
+      "success": true,
+      "system_arrival": null,
+      "theme": "wait",
+      "trace": [
+        {
+          "attempted": true,
+          "note": "wait_hold",
+          "stopped": true,
+          "t_s": 0.0,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 1.0,
+          "y": 0.5
+        },
+        {
+          "attempted": true,
+          "note": "wait_hold",
+          "stopped": true,
+          "t_s": 8.0,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 1.0,
+          "y": 0.5
+        }
+      ],
+      "trace_len": 2
+    },
+    {
+      "arrival_epsilon_m": 0.05,
+      "attribution_layer": "none",
+      "authority_category": "unknown",
+      "collision_count": 0,
+      "detail": "stub_placeholder:orbit_once",
+      "failure": "none",
+      "harness_used": "stub_placeholder",
+      "instruction": "circle me once",
+      "mode": "stub",
+      "score": {
+        "attribution_layer": "none",
+        "authority_category": "unknown",
+        "detail": "success",
+        "distance_to_goal_m": 0.0,
+        "failure": "none",
+        "oracle_sr_gap": 0.0,
+        "oracle_success": true,
+        "scorer_arrival": true,
+        "spl": 1.0,
+        "success": true,
+        "system_arrival": null,
+        "time_to_goal_s": 5.0
+      },
+      "scorer_arrival": true,
+      "script_id": "wwm-orbit-once",
+      "success": true,
+      "system_arrival": null,
+      "theme": "orbit",
+      "trace": [
+        {
+          "attempted": true,
+          "note": "stub_placeholder_start",
+          "stopped": false,
+          "t_s": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "stub_placeholder_goal",
+          "stopped": true,
+          "t_s": 5.0,
+          "x": 2.0,
+          "y": -0.5
+        }
+      ],
+      "trace_len": 2
+    },
+    {
+      "arrival_epsilon_m": 0.05,
+      "attribution_layer": "none",
+      "authority_category": "unknown",
+      "collision_count": 0,
+      "detail": "stub_placeholder:inside_goal_stopped",
+      "failure": "none",
+      "harness_used": "stub_placeholder",
+      "instruction": "go to the sidewalk",
+      "mode": "stub",
+      "score": {
+        "attribution_layer": "none",
+        "authority_category": "unknown",
+        "detail": "success",
+        "distance_to_goal_m": 0.0,
+        "failure": "none",
+        "oracle_sr_gap": 0.0,
+        "oracle_success": true,
+        "scorer_arrival": true,
+        "spl": 1.0,
+        "success": true,
+        "system_arrival": null,
+        "time_to_goal_s": 5.0
+      },
+      "scorer_arrival": true,
+      "script_id": "wwm-sidewalk-from-road",
+      "success": true,
+      "system_arrival": null,
+      "theme": "sidewalk",
+      "trace": [
+        {
+          "attempted": true,
+          "note": "stub_placeholder_start",
+          "stopped": false,
+          "t_s": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "stub_placeholder_goal",
+          "stopped": true,
+          "t_s": 5.0,
+          "x": 0.0,
+          "y": 3.0
+        }
+      ],
+      "trace_len": 2
+    },
+    {
+      "arrival_epsilon_m": 0.05,
+      "attribution_layer": "none",
+      "authority_category": "unknown",
+      "collision_count": 0,
+      "detail": "stub_placeholder:inside_goal_stopped",
+      "failure": "none",
+      "harness_used": "stub_placeholder",
+      "instruction": "wait by the lamppost",
+      "mode": "stub",
+      "score": {
+        "attribution_layer": "none",
+        "authority_category": "unknown",
+        "detail": "success",
+        "distance_to_goal_m": 0.0,
+        "failure": "none",
+        "oracle_sr_gap": 0.0,
+        "oracle_success": true,
+        "scorer_arrival": true,
+        "spl": 1.0,
+        "success": true,
+        "system_arrival": null,
+        "time_to_goal_s": 5.0
+      },
+      "scorer_arrival": true,
+      "script_id": "wwm-lamppost-standoff",
+      "success": true,
+      "system_arrival": null,
+      "theme": "lamppost",
+      "trace": [
+        {
+          "attempted": true,
+          "note": "stub_placeholder_start",
+          "stopped": false,
+          "t_s": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "stub_placeholder_goal",
+          "stopped": true,
+          "t_s": 5.0,
+          "x": 0.2,
+          "y": 4.16
+        }
+      ],
+      "trace_len": 2
+    },
+    {
+      "arrival_epsilon_m": 0.05,
+      "attribution_layer": "none",
+      "authority_category": "unknown",
+      "collision_count": 0,
+      "detail": "resume_fresh_ok",
+      "failure": "none",
+      "harness_used": "resume_store",
+      "instruction": "follow me",
+      "mode": "stub",
+      "score": null,
+      "scorer_arrival": false,
+      "script_id": "wwm-pause-resume",
+      "success": true,
+      "system_arrival": null,
+      "theme": "pause_resume",
+      "trace": [
+        {
+          "note": "pause",
+          "paused": true,
+          "stopped": true,
+          "t_s": 3.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "resume",
+          "requires_fresh_observation": true,
+          "resumed": true,
+          "stale_dropped": true,
+          "stopped": false,
+          "t_s": 5.0,
+          "x": 0.0,
+          "y": 0.0
+        }
+      ],
+      "trace_len": 2
+    },
+    {
+      "arrival_epsilon_m": 0.05,
+      "attribution_layer": "none",
+      "authority_category": "unknown",
+      "collision_count": 0,
+      "detail": "barge_in_tts_only",
+      "failure": "none",
+      "harness_used": "behavior_stub",
+      "instruction": "follow me",
+      "mode": "stub",
+      "score": null,
+      "scorer_arrival": null,
+      "script_id": "wwm-barge-in-tts",
+      "success": true,
+      "system_arrival": null,
+      "theme": "barge_in",
+      "trace": [
+        {
+          "attempted": true,
+          "stopped": false,
+          "t_s": 0.0,
+          "tts_playing": true,
+          "vx": 0.4
+        },
+        {
+          "attempted": true,
+          "motion_intent": false,
+          "note": "barge_in",
+          "stopped": false,
+          "t_s": 2.0,
+          "tts_interrupted": true,
+          "tts_playing": false,
+          "vx": 0.4
+        }
+      ],
+      "trace_len": 2
+    },
+    {
+      "arrival_epsilon_m": 0.05,
+      "attribution_layer": "L2a_vocabulary",
+      "authority_category": "unknown",
+      "collision_count": 0,
+      "detail": "honest_not_found",
+      "failure": "refusal",
+      "harness_used": "stub",
+      "instruction": "walk towards the purple hydrant",
+      "mode": "stub",
+      "score": {
+        "attribution_layer": "L1_parse",
+        "authority_category": "unknown",
+        "detail": "absent_target_honesty",
+        "distance_to_goal_m": 56.068542494923804,
+        "failure": "refusal",
+        "oracle_sr_gap": 0.0,
+        "oracle_success": false,
+        "scorer_arrival": false,
+        "spl": 0.0,
+        "success": false,
+        "system_arrival": null,
+        "time_to_goal_s": null
+      },
+      "scorer_arrival": false,
+      "script_id": "wwm-absent-target",
+      "success": true,
+      "system_arrival": null,
+      "theme": "absent_target",
+      "trace": [
+        {
+          "attempted": true,
+          "grounding_outcome": "NOT_FOUND",
+          "note": "absent_target_honesty",
+          "refusal": true,
+          "reply": "I don't see that target.",
+          "stopped": true,
+          "t_s": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        }
+      ],
+      "trace_len": 1
+    },
+    {
+      "arrival_epsilon_m": 0.05,
+      "attribution_layer": "none",
+      "authority_category": "unknown",
+      "collision_count": 0,
+      "detail": "bounded_search_or_stop",
+      "failure": "none",
+      "harness_used": "behavior_stub",
+      "instruction": "find me",
+      "mode": "stub",
+      "score": null,
+      "scorer_arrival": false,
+      "script_id": "wwm-owner-search",
+      "success": true,
+      "system_arrival": null,
+      "theme": "owner_search",
+      "trace": [
+        {
+          "attempted": true,
+          "owner_visible": true,
+          "stopped": false,
+          "t_s": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attached_nearest": false,
+          "attempted": true,
+          "note": "lose_owner",
+          "owner_visible": false,
+          "searching": true,
+          "stopped": false,
+          "t_s": 1.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attached_nearest": false,
+          "attempted": true,
+          "note": "bounded_search_stop",
+          "owner_visible": false,
+          "searching": false,
+          "stopped": true,
+          "t_s": 15.0,
+          "x": 0.0,
+          "y": 0.0
+        }
+      ],
+      "trace_len": 3
+    },
+    {
+      "arrival_epsilon_m": 0.05,
+      "attribution_layer": "none",
+      "authority_category": "unknown",
+      "collision_count": 0,
+      "detail": "curb_stop_hold",
+      "failure": "none",
+      "harness_used": "behavior_stub",
+      "instruction": "cross with me",
+      "mode": "stub",
+      "score": null,
+      "scorer_arrival": null,
+      "script_id": "wwm-curb-stop",
+      "success": true,
+      "system_arrival": null,
+      "theme": "curb_stop",
+      "trace": [
+        {
+          "attempted": true,
+          "stopped": false,
+          "t_s": 0.0,
+          "vx": 0.3,
+          "x": 2.5,
+          "y": 1.0
+        },
+        {
+          "attempted": true,
+          "awaiting_voice": true,
+          "curb_edge": true,
+          "note": "curb_stop",
+          "stopped": true,
+          "t_s": 2.0,
+          "vx": 0.0,
+          "x": 2.5,
+          "y": 1.0
+        }
+      ],
+      "trace_len": 2
+    }
+  ],
+  "smoke": false
+}

@@ -39,9 +39,12 @@ no Orin service has run, and no physical stop envelope has been measured.
 This quality task does not reinterpret fake-Sport evidence as robot evidence.
 
 The working overlay created for this evaluation consists of conversation
-scoring/provenance changes, acoustic-eval fail-closed teardown changes, their
-tests, and this task record. Generated reports and ledgers were directed to
-`/tmp/parcel-quality-20260824.VYhnnR`; no tracked result ledger was retained.
+scoring/provenance changes, acoustic-eval explicit-routing and fail-closed
+lifecycle changes, their tests, and this task record. Primary QEV reports were
+directed to `/tmp/parcel-quality-20260824.VYhnnR`; a concurrent integrator
+verification also emitted untracked artifacts under
+`research/20260824/nav-quality/`. No pre-existing tracked result ledger was
+modified.
 
 ## Decision
 
@@ -110,11 +113,13 @@ tranche in this order:
    perception, arrival, durable memory or monitoring without the matching
    verified result. Re-run the ten-case live quality set and the 13-turn
    personal set; set a release bar before tuning.
-5. **Repair the acoustic evaluator before using its numbers.** Give the
-   PipeWire rig explicit port ownership/routing, cancellable reads, a bounded
-   first-frame deadline and zero-process/node teardown proof. Then run the
-   frozen endpointing, barge-in, duplex and prosody families. Mounted AEC and
-   human-voice acceptance still belong to Stage 0/box day.
+5. **Close the four red virtual-acoustic gates.** The evaluator repair in
+   QEV-1 now gives the PipeWire rig explicit port ownership/routing,
+   cancellable reads, a bounded first-frame deadline and zero-process/node
+   teardown proof. Preserve those regressions while bringing endpointing
+   ep50, acoustic-stop p50, duplex-ack p50 and prosody timing inside their
+   frozen limits. Mounted AEC and human-voice acceptance still belong to
+   Stage 0/box day.
 6. **Keep Follow disabled.** Do not promote Follow from scripted/oracle-owner
    simulation. Fix its red jerk/predictive/yield cases and later require real
    owner identity, crossing, occlusion and reacquisition evidence.
@@ -139,6 +144,7 @@ The tranche is complete only when:
   unsupported world-state claims;
 - the acoustic rig captures nonzero samples and leaves zero matching nodes and
   child processes, including when no samples ever arrive;
+- all four currently red virtual-acoustic gates meet their frozen limits;
 - Follow remains default-off and every existing collision/contact gate is
   green before any enable discussion;
 - the focused suites pass three consecutive guarded runs, Ruff adds no debt,

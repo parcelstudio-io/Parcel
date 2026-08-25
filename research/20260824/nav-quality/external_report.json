@@ -1,0 +1,3077 @@
+{
+  "generated_at": "2026-08-25T02:57:48.026765+00:00",
+  "seed": 7,
+  "episodes_per_task": 20,
+  "agent": "GoalSeekingAgent",
+  "compatibility": [
+    {
+      "id": "habitat2020_pointnav",
+      "name": "Habitat Challenge 2020 PointNav",
+      "url": "https://aihabitat.org/challenge/2020/",
+      "official_possible_today": false,
+      "offline_proxy_available": true,
+      "task_shapes": [
+        "pointnav"
+      ],
+      "success_criteria": "Issue STOP within success radius of the relative goal (Habitat used 0.36 m for LoCoBot-sized agent).",
+      "primary_metrics": [
+        "success_rate",
+        "spl",
+        "soft_spl",
+        "distance_to_goal"
+      ],
+      "blockers": [
+        "No Habitat-Sim / Gibson dataset integration",
+        "No RGB-D observation stream in Parcel runtime",
+        "GPS-free visual localization not implemented (Habitat 2020 PointNav removes GPS+compass)",
+        "Embodiment and action noise model differ from LoCoBot"
+      ],
+      "parcel_bridge": "Map relative goal \u2192 NavObservation + GoalPose; mid-level vx/vy/vyaw; score with metrics.spl using Euclidean or grid shortest path.",
+      "recommendation": "Use offline PointNav proxy for formula regression. Pursue Habitat only if adding a visual stack is an explicit product goal."
+    },
+    {
+      "id": "habitat2020_objectnav",
+      "name": "Habitat Challenge 2020 ObjectNav",
+      "url": "https://aihabitat.org/challenge/2020/",
+      "official_possible_today": false,
+      "offline_proxy_available": true,
+      "task_shapes": [
+        "objectnav"
+      ],
+      "success_criteria": "STOP within 1.0 m of any target-category instance with oracle visibility from the stop pose (turn/look allowed, no translation).",
+      "primary_metrics": [
+        "success_rate",
+        "spl",
+        "soft_spl",
+        "distance_to_goal"
+      ],
+      "blockers": [
+        "No Matterport3D scenes",
+        "No RGB-D category recognition pipeline",
+        "Sim semantic polygons are diagnostics_only, not production perception"
+      ],
+      "parcel_bridge": "SemanticGoal + ObservationSemanticMap / synthetic labeled objects; SPL to closest instance from start.",
+      "recommendation": "Offline ObjectNav proxy is useful for goal-verification logic. Do not report Habitat ObjectNav numbers from sim-truth labels alone."
+    },
+    {
+      "id": "barn",
+      "name": "BARN / BARN Challenge (metric ground navigation)",
+      "url": "https://www.cs.utexas.edu/~xiao/BARN/BARN.html",
+      "official_possible_today": false,
+      "offline_proxy_available": true,
+      "task_shapes": [
+        "barn_clutter"
+      ],
+      "success_criteria": "Reach goal with zero collisions; score uses OT/AT clip formula from BARN Challenge.",
+      "primary_metrics": [
+        "success_rate",
+        "barn_score",
+        "collision_rate",
+        "traversal_time_s"
+      ],
+      "blockers": [
+        "The pinned source works in a cache-only Bubblewrap/PRoot diagnostic rootfs, but the upstream-tested SingularityCE/SIF path remains unavailable",
+        "Parcel's content-addressed world-0 hook is classified policy_no_translation before the evaluator starts a trial",
+        "An official result requires organizer-attested 50-hidden-world x 10-trial execution",
+        "The 2026 deadline has passed and post-event organizer evaluation is not confirmed",
+        "Go2 footprint and max speed differ from the standardized Jackal 2 m/s protocol"
+      ],
+      "parcel_bridge": "Synthetic narrow corridors + cylinder clutter; LiDAR/proximity extras; BARN score with Go2 vmax from robot.yaml.",
+      "recommendation": "Use the pinned ROS 2 Jazzy Singularity route for public compatibility and keep the native sensor-only runner for fast regression. Never promote either to an official score without the organizer's hidden evaluation and attestation."
+    },
+    {
+      "id": "threewe",
+      "name": "3WE standardized embodied benchmarks",
+      "url": "https://3we.org/benchmarks",
+      "official_possible_today": false,
+      "offline_proxy_available": true,
+      "task_shapes": [
+        "pointnav",
+        "objectnav",
+        "exploration"
+      ],
+      "success_criteria": "PointNav/ObjectNav: SR + SPL over \u2265100 episodes for official submits; Exploration: coverage within time budget + efficiency.",
+      "primary_metrics": [
+        "success_rate",
+        "spl",
+        "coverage",
+        "efficiency"
+      ],
+      "blockers": [
+        "Pinned runner has no immutable external-agent observation/action hook",
+        "Seed/reset/timeouts, PointNav success/SPL, ObjectNav, and Exploration semantics conflict with documentation",
+        "Isaac is a no-op stub and the office pose/world/bridge coordinate contract is inconsistent",
+        "Documented, runner, validator, and static leaderboard schemas/results diverge",
+        "Shipped simulator is a holonomic mecanum robot, not a Unitree Go2",
+        "No backend-specific cohort is large or authoritative enough to freeze a percentile"
+      ],
+      "parcel_bridge": "Mirror only generic task shapes and metric formulas in explicitly synthetic, rank-ineligible local tests; no adapter is admitted against the audited revision.",
+      "recommendation": "Keep all three targets unresolved. Wait for an organizer-confirmed, task-correct, backend-specific evaluator with a neutral agent hook before building an adapter."
+    },
+    {
+      "id": "social_hm3d",
+      "name": "Social-HM3D / Falcon SocialNav",
+      "url": "https://zeying-gong.github.io/projects/falcon/",
+      "official_possible_today": false,
+      "offline_proxy_available": true,
+      "task_shapes": [
+        "socialnav"
+      ],
+      "success_criteria": "Reach goal while measuring human collisions and personal-space compliance.",
+      "primary_metrics": [
+        "success_rate",
+        "spl",
+        "psc",
+        "human_collision_rate"
+      ],
+      "blockers": [
+        "Requires Habitat + HM3D/MP3D + ORCA humanoids",
+        "Parcel living city uses seeded routes, not full reciprocal ORCA crowds"
+      ],
+      "parcel_bridge": "Synthetic pedestrians in kinematic episodes; reuse proximity thresholds aligned with Parcel safety config.",
+      "recommendation": "Use offline SocialNav metrics beside the MuJoCo living-city harness. Official Social-HM3D remains a research-only dependency."
+    }
+  ],
+  "aggregate": {
+    "episodes": 100.0,
+    "success_rate": 0.52,
+    "spl": 0.52,
+    "soft_spl": 0.709683137256338,
+    "barn_score": 0.26,
+    "collision_rate": 0.44,
+    "human_collision_rate": 0.08,
+    "psc": 0.9615127148477258,
+    "mean_distance_to_goal_m": 0.633851303946366,
+    "mean_coverage": 0.008753907345007163
+  },
+  "by_task": {
+    "pointnav": {
+      "episodes": 20.0,
+      "success_rate": 1.0,
+      "spl": 1.0,
+      "soft_spl": 0.855911992543442,
+      "barn_score": 0.5,
+      "collision_rate": 0.0,
+      "human_collision_rate": 0.0,
+      "psc": 1.0,
+      "mean_distance_to_goal_m": 0.7922260089221534,
+      "mean_coverage": 0.0
+    },
+    "barn_clutter": {
+      "episodes": 20.0,
+      "success_rate": 0.0,
+      "spl": 0.0,
+      "soft_spl": 0.9452415620137323,
+      "barn_score": 0.0,
+      "collision_rate": 1.0,
+      "human_collision_rate": 0.0,
+      "psc": 1.0,
+      "mean_distance_to_goal_m": 0.5955177113577544,
+      "mean_coverage": 0.0
+    },
+    "socialnav": {
+      "episodes": 20.0,
+      "success_rate": 0.6,
+      "spl": 0.6,
+      "soft_spl": 0.8991202486899489,
+      "barn_score": 0.3,
+      "collision_rate": 0.4,
+      "human_collision_rate": 0.4,
+      "psc": 0.8075635742386289,
+      "mean_distance_to_goal_m": 0.7900515342721973,
+      "mean_coverage": 0.0
+    },
+    "objectnav": {
+      "episodes": 20.0,
+      "success_rate": 1.0,
+      "spl": 1.0,
+      "soft_spl": 0.8064566099631044,
+      "barn_score": 0.5,
+      "collision_rate": 0.0,
+      "human_collision_rate": 0.0,
+      "psc": 1.0,
+      "mean_distance_to_goal_m": 0.9914612651797249,
+      "mean_coverage": 0.0
+    },
+    "exploration": {
+      "episodes": 20.0,
+      "success_rate": 0.0,
+      "spl": 0.0,
+      "soft_spl": 0.04168527307146255,
+      "barn_score": 0.0,
+      "collision_rate": 0.8,
+      "human_collision_rate": 0.0,
+      "psc": 1.0,
+      "mean_distance_to_goal_m": 0.0,
+      "mean_coverage": 0.04376953672503582
+    }
+  },
+  "episodes": [
+    {
+      "episode_id": "pointnav-0000",
+      "task": "pointnav",
+      "benchmark_id": "habitat2020_pointnav",
+      "stopped": true,
+      "final_xy": [
+        -1.319353201554885,
+        2.2533998949430383
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.768175799816333,
+        "distance_to_goal_m": 0.7876247820320764,
+        "agent_path_m": 2.6243528055410574,
+        "shortest_path_m": 3.39750889427448,
+        "collision_count": 0,
+        "traversal_time_s": 8.1,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "habitat_success_radius_m": 0.36,
+        "parcel_default_radius_m": 0.8
+      }
+    },
+    {
+      "episode_id": "pointnav-0001",
+      "task": "pointnav",
+      "benchmark_id": "habitat2020_pointnav",
+      "stopped": true,
+      "final_xy": [
+        1.879624696797656,
+        6.289849650799394
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.8928699620561771,
+        "distance_to_goal_m": 0.7876326695933853,
+        "agent_path_m": 6.580483718405372,
+        "shortest_path_m": 7.352117899989972,
+        "collision_count": 0,
+        "traversal_time_s": 18.7,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "habitat_success_radius_m": 0.36,
+        "parcel_default_radius_m": 0.8
+      }
+    },
+    {
+      "episode_id": "pointnav-0002",
+      "task": "pointnav",
+      "benchmark_id": "habitat2020_pointnav",
+      "stopped": true,
+      "final_xy": [
+        -0.9636001044696955,
+        2.6252175273011518
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.7792026179438067,
+        "distance_to_goal_m": 0.7920810711301457,
+        "agent_path_m": 2.8101181898155643,
+        "shortest_path_m": 3.58736622578505,
+        "collision_count": 0,
+        "traversal_time_s": 9.600000000000001,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "habitat_success_radius_m": 0.36,
+        "parcel_default_radius_m": 0.8
+      }
+    },
+    {
+      "episode_id": "pointnav-0003",
+      "task": "pointnav",
+      "benchmark_id": "habitat2020_pointnav",
+      "stopped": true,
+      "final_xy": [
+        0.6627605333931768,
+        2.4619087131988695
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.7642540062647704,
+        "distance_to_goal_m": 0.785892182269672,
+        "agent_path_m": 2.5666459272091817,
+        "shortest_path_m": 3.3336396085369784,
+        "collision_count": 0,
+        "traversal_time_s": 7.2,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "habitat_success_radius_m": 0.36,
+        "parcel_default_radius_m": 0.8
+      }
+    },
+    {
+      "episode_id": "pointnav-0004",
+      "task": "pointnav",
+      "benchmark_id": "habitat2020_pointnav",
+      "stopped": true,
+      "final_xy": [
+        -0.43835488514213505,
+        3.8343339411413617
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.8305601419521895,
+        "distance_to_goal_m": 0.7871828060534841,
+        "agent_path_m": 3.8762508058352405,
+        "shortest_path_m": 4.645794768261469,
+        "collision_count": 0,
+        "traversal_time_s": 11.4,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "habitat_success_radius_m": 0.36,
+        "parcel_default_radius_m": 0.8
+      }
+    },
+    {
+      "episode_id": "pointnav-0005",
+      "task": "pointnav",
+      "benchmark_id": "habitat2020_pointnav",
+      "stopped": true,
+      "final_xy": [
+        -0.6526853729511984,
+        4.605816861536569
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.8539505222837266,
+        "distance_to_goal_m": 0.7955338013650014,
+        "agent_path_m": 4.664370453118051,
+        "shortest_path_m": 5.44701572237365,
+        "collision_count": 0,
+        "traversal_time_s": 12.8,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "habitat_success_radius_m": 0.36,
+        "parcel_default_radius_m": 0.8
+      }
+    },
+    {
+      "episode_id": "pointnav-0006",
+      "task": "pointnav",
+      "benchmark_id": "habitat2020_pointnav",
+      "stopped": true,
+      "final_xy": [
+        -1.8494295213228713,
+        4.0502554373748065
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.8493616541445452,
+        "distance_to_goal_m": 0.7895920873082486,
+        "agent_path_m": 4.468197840551956,
+        "shortest_path_m": 5.241640717868098,
+        "collision_count": 0,
+        "traversal_time_s": 12.700000000000001,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "habitat_success_radius_m": 0.36,
+        "parcel_default_radius_m": 0.8
+      }
+    },
+    {
+      "episode_id": "pointnav-0007",
+      "task": "pointnav",
+      "benchmark_id": "habitat2020_pointnav",
+      "stopped": true,
+      "final_xy": [
+        0.6454630636327485,
+        4.680582942114323
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.8564476751417778,
+        "distance_to_goal_m": 0.7918827548504199,
+        "agent_path_m": 4.740895712077837,
+        "shortest_path_m": 5.51633528493888,
+        "collision_count": 0,
+        "traversal_time_s": 13.3,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "habitat_success_radius_m": 0.36,
+        "parcel_default_radius_m": 0.8
+      }
+    },
+    {
+      "episode_id": "pointnav-0008",
+      "task": "pointnav",
+      "benchmark_id": "habitat2020_pointnav",
+      "stopped": true,
+      "final_xy": [
+        3.6565276437672742,
+        6.425154613247285
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.9028603827787635,
+        "distance_to_goal_m": 0.7953779409054663,
+        "agent_path_m": 7.406581213134144,
+        "shortest_path_m": 8.187987184404736,
+        "collision_count": 0,
+        "traversal_time_s": 19.900000000000002,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "habitat_success_radius_m": 0.36,
+        "parcel_default_radius_m": 0.8
+      }
+    },
+    {
+      "episode_id": "pointnav-0009",
+      "task": "pointnav",
+      "benchmark_id": "habitat2020_pointnav",
+      "stopped": true,
+      "final_xy": [
+        -3.2578659849330456,
+        3.4682818549834087
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.8583921419667055,
+        "distance_to_goal_m": 0.7849224036156663,
+        "agent_path_m": 4.774753720854045,
+        "shortest_path_m": 5.542929711083669,
+        "collision_count": 0,
+        "traversal_time_s": 13.600000000000001,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "habitat_success_radius_m": 0.36,
+        "parcel_default_radius_m": 0.8
+      }
+    },
+    {
+      "episode_id": "pointnav-0010",
+      "task": "pointnav",
+      "benchmark_id": "habitat2020_pointnav",
+      "stopped": true,
+      "final_xy": [
+        4.148410742111312,
+        4.405269142642653
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.8845086474127183,
+        "distance_to_goal_m": 0.790079854811311,
+        "agent_path_m": 6.059873184075361,
+        "shortest_path_m": 6.84103040713991,
+        "collision_count": 0,
+        "traversal_time_s": 14.9,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "habitat_success_radius_m": 0.36,
+        "parcel_default_radius_m": 0.8
+      }
+    },
+    {
+      "episode_id": "pointnav-0011",
+      "task": "pointnav",
+      "benchmark_id": "habitat2020_pointnav",
+      "stopped": true,
+      "final_xy": [
+        2.5486068557989925,
+        1.898024569025651
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.8019210517005846,
+        "distance_to_goal_m": 0.7846388255817621,
+        "agent_path_m": 3.1952149115664144,
+        "shortest_path_m": 3.961242889858769,
+        "collision_count": 0,
+        "traversal_time_s": 11.0,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "habitat_success_radius_m": 0.36,
+        "parcel_default_radius_m": 0.8
+      }
+    },
+    {
+      "episode_id": "pointnav-0012",
+      "task": "pointnav",
+      "benchmark_id": "habitat2020_pointnav",
+      "stopped": true,
+      "final_xy": [
+        0.5495554111456482,
+        5.653744016461501
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.8769299264687801,
+        "distance_to_goal_m": 0.79715834472554,
+        "agent_path_m": 5.695677693743392,
+        "shortest_path_m": 6.477272027657644,
+        "collision_count": 0,
+        "traversal_time_s": 15.5,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "habitat_success_radius_m": 0.36,
+        "parcel_default_radius_m": 0.8
+      }
+    },
+    {
+      "episode_id": "pointnav-0013",
+      "task": "pointnav",
+      "benchmark_id": "habitat2020_pointnav",
+      "stopped": true,
+      "final_xy": [
+        3.762198052374654,
+        5.502629530097052
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.8930552853533136,
+        "distance_to_goal_m": 0.7982147555893953,
+        "agent_path_m": 6.682974661611713,
+        "shortest_path_m": 7.46380742822551,
+        "collision_count": 0,
+        "traversal_time_s": 18.6,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "habitat_success_radius_m": 0.36,
+        "parcel_default_radius_m": 0.8
+      }
+    },
+    {
+      "episode_id": "pointnav-0014",
+      "task": "pointnav",
+      "benchmark_id": "habitat2020_pointnav",
+      "stopped": true,
+      "final_xy": [
+        -3.2366774757593073,
+        4.2102526176157395
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.8696839801218723,
+        "distance_to_goal_m": 0.7956993720926386,
+        "agent_path_m": 5.328120937067858,
+        "shortest_path_m": 6.105921381245231,
+        "collision_count": 0,
+        "traversal_time_s": 15.4,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "habitat_success_radius_m": 0.36,
+        "parcel_default_radius_m": 0.8
+      }
+    },
+    {
+      "episode_id": "pointnav-0015",
+      "task": "pointnav",
+      "benchmark_id": "habitat2020_pointnav",
+      "stopped": true,
+      "final_xy": [
+        -1.5752088814373146,
+        4.462903506056832
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.8555941474037881,
+        "distance_to_goal_m": 0.7987087999905107,
+        "agent_path_m": 4.749427231047626,
+        "shortest_path_m": 5.531000202767842,
+        "collision_count": 0,
+        "traversal_time_s": 13.700000000000001,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "habitat_success_radius_m": 0.36,
+        "parcel_default_radius_m": 0.8
+      }
+    },
+    {
+      "episode_id": "pointnav-0016",
+      "task": "pointnav",
+      "benchmark_id": "habitat2020_pointnav",
+      "stopped": true,
+      "final_xy": [
+        -0.8083502661603825,
+        5.937696661430521
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.8834343972573393,
+        "distance_to_goal_m": 0.7906536915554594,
+        "agent_path_m": 6.005732034910643,
+        "shortest_path_m": 6.782907418245572,
+        "collision_count": 0,
+        "traversal_time_s": 16.2,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "habitat_success_radius_m": 0.36,
+        "parcel_default_radius_m": 0.8
+      }
+    },
+    {
+      "episode_id": "pointnav-0017",
+      "task": "pointnav",
+      "benchmark_id": "habitat2020_pointnav",
+      "stopped": true,
+      "final_xy": [
+        -3.864633275932477,
+        6.879604606041389
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.9080307866252878,
+        "distance_to_goal_m": 0.7991977731734725,
+        "agent_path_m": 7.905416149227451,
+        "shortest_path_m": 8.689840261189179,
+        "collision_count": 0,
+        "traversal_time_s": 21.5,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "habitat_success_radius_m": 0.36,
+        "parcel_default_radius_m": 0.8
+      }
+    },
+    {
+      "episode_id": "pointnav-0018",
+      "task": "pointnav",
+      "benchmark_id": "habitat2020_pointnav",
+      "stopped": true,
+      "final_xy": [
+        0.5945136865214932,
+        7.0183442016267215
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.8980807403048264,
+        "distance_to_goal_m": 0.7993173968982012,
+        "agent_path_m": 7.055807576799238,
+        "shortest_path_m": 7.8426530892085475,
+        "collision_count": 0,
+        "traversal_time_s": 18.7,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "habitat_success_radius_m": 0.36,
+        "parcel_default_radius_m": 0.8
+      }
+    },
+    {
+      "episode_id": "pointnav-0019",
+      "task": "pointnav",
+      "benchmark_id": "habitat2020_pointnav",
+      "stopped": true,
+      "final_xy": [
+        4.004505180147373,
+        5.0927294034809725
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.8909259838715343,
+        "distance_to_goal_m": 0.7931288649012119,
+        "agent_path_m": 6.495639054424493,
+        "shortest_path_m": 7.271473931674773,
+        "collision_count": 0,
+        "traversal_time_s": 17.3,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "habitat_success_radius_m": 0.36,
+        "parcel_default_radius_m": 0.8
+      }
+    },
+    {
+      "episode_id": "barn-0000",
+      "task": "barn_clutter",
+      "benchmark_id": "barn",
+      "stopped": true,
+      "final_xy": [
+        -0.005576073806375385,
+        8.317960085251165
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.9340645514656291,
+        "distance_to_goal_m": 0.5871614359374754,
+        "agent_path_m": 8.324520559963759,
+        "shortest_path_m": 8.90509504354701,
+        "collision_count": 236,
+        "traversal_time_s": 46.2,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "corridor_width_m": 1.85906621186653,
+        "corridor_length_m": 8.90509504354701,
+        "note": "Synthetic BARN-like clutter; not an official BARN world id"
+      }
+    },
+    {
+      "episode_id": "barn-0001",
+      "task": "barn_clutter",
+      "benchmark_id": "barn",
+      "stopped": true,
+      "final_xy": [
+        -0.0069535605789158034,
+        10.87277622080595
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.9481143365717242,
+        "distance_to_goal_m": 0.5950116747711561,
+        "agent_path_m": 10.878859291351882,
+        "shortest_path_m": 11.467747263050235,
+        "collision_count": 220,
+        "traversal_time_s": 50.0,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "corridor_width_m": 1.846245403787022,
+        "corridor_length_m": 11.467747263050235,
+        "note": "Synthetic BARN-like clutter; not an official BARN world id"
+      }
+    },
+    {
+      "episode_id": "barn-0002",
+      "task": "barn_clutter",
+      "benchmark_id": "barn",
+      "stopped": true,
+      "final_xy": [
+        0.0026680262531672168,
+        12.615758644918984
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.9553257118038749,
+        "distance_to_goal_m": 0.5899556151711135,
+        "agent_path_m": 12.62344928673591,
+        "shortest_path_m": 13.20570822709346,
+        "collision_count": 257,
+        "traversal_time_s": 57.2,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "corridor_width_m": 1.6244442561498993,
+        "corridor_length_m": 13.20570822709346,
+        "note": "Synthetic BARN-like clutter; not an official BARN world id"
+      }
+    },
+    {
+      "episode_id": "barn-0003",
+      "task": "barn_clutter",
+      "benchmark_id": "barn",
+      "stopped": true,
+      "final_xy": [
+        0.014013998982824145,
+        11.022904817631725
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.9486431563202423,
+        "distance_to_goal_m": 0.5967398211763179,
+        "agent_path_m": 11.029729739607783,
+        "shortest_path_m": 11.619480061846613,
+        "collision_count": 235,
+        "traversal_time_s": 53.7,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "corridor_width_m": 1.7429714836622003,
+        "corridor_length_m": 11.619480061846613,
+        "note": "Synthetic BARN-like clutter; not an official BARN world id"
+      }
+    },
+    {
+      "episode_id": "barn-0004",
+      "task": "barn_clutter",
+      "benchmark_id": "barn",
+      "stopped": true,
+      "final_xy": [
+        -0.014717652751763623,
+        9.449068960016294
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.9409872227811495,
+        "distance_to_goal_m": 0.5925744798153321,
+        "agent_path_m": 9.45386624114038,
+        "shortest_path_m": 10.041460641951389,
+        "collision_count": 121,
+        "traversal_time_s": 40.1,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "corridor_width_m": 2.1585787095870415,
+        "corridor_length_m": 10.041460641951389,
+        "note": "Synthetic BARN-like clutter; not an official BARN world id"
+      }
+    },
+    {
+      "episode_id": "barn-0005",
+      "task": "barn_clutter",
+      "benchmark_id": "barn",
+      "stopped": true,
+      "final_xy": [
+        -0.012211187287034535,
+        9.55740367568412
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.941299616950927,
+        "distance_to_goal_m": 0.5960014247790988,
+        "agent_path_m": 9.566119700900218,
+        "shortest_path_m": 10.153279992753154,
+        "collision_count": 416,
+        "traversal_time_s": 59.1,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "corridor_width_m": 2.383082952957424,
+        "corridor_length_m": 10.153279992753154,
+        "note": "Synthetic BARN-like clutter; not an official BARN world id"
+      }
+    },
+    {
+      "episode_id": "barn-0006",
+      "task": "barn_clutter",
+      "benchmark_id": "barn",
+      "stopped": true,
+      "final_xy": [
+        -0.002982307032936426,
+        8.156804309585933
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.9317828012240782,
+        "distance_to_goal_m": 0.5971711778990789,
+        "agent_path_m": 8.159977039792519,
+        "shortest_path_m": 8.753968040532593,
+        "collision_count": 34,
+        "traversal_time_s": 28.400000000000002,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "corridor_width_m": 2.0406030526948293,
+        "corridor_length_m": 8.753968040532593,
+        "note": "Synthetic BARN-like clutter; not an official BARN world id"
+      }
+    },
+    {
+      "episode_id": "barn-0007",
+      "task": "barn_clutter",
+      "benchmark_id": "barn",
+      "stopped": false,
+      "final_xy": [
+        0.009627033443243588,
+        11.621147052031967
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.9485510791941957,
+        "distance_to_goal_m": 0.6303210283863979,
+        "agent_path_m": 11.62915325009443,
+        "shortest_path_m": 12.251394558217568,
+        "collision_count": 300,
+        "traversal_time_s": 60.0,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "corridor_width_m": 1.6181854205717034,
+        "corridor_length_m": 12.251394558217568,
+        "note": "Synthetic BARN-like clutter; not an official BARN world id"
+      }
+    },
+    {
+      "episode_id": "barn-0008",
+      "task": "barn_clutter",
+      "benchmark_id": "barn",
+      "stopped": true,
+      "final_xy": [
+        -0.016777971488707282,
+        12.075521590099331
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.9535347114289782,
+        "distance_to_goal_m": 0.588422709620117,
+        "agent_path_m": 12.084377232409103,
+        "shortest_path_m": 12.663705052013558,
+        "collision_count": 211,
+        "traversal_time_s": 58.0,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "corridor_width_m": 2.374125875785357,
+        "corridor_length_m": 12.663705052013558,
+        "note": "Synthetic BARN-like clutter; not an official BARN world id"
+      }
+    },
+    {
+      "episode_id": "barn-0009",
+      "task": "barn_clutter",
+      "benchmark_id": "barn",
+      "stopped": true,
+      "final_xy": [
+        -0.005112618969918092,
+        10.060138340711394
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.943785454826026,
+        "distance_to_goal_m": 0.5992091446130553,
+        "agent_path_m": 10.06198916977884,
+        "shortest_path_m": 10.65932567378443,
+        "collision_count": 57,
+        "traversal_time_s": 32.1,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "corridor_width_m": 2.0575222799600454,
+        "corridor_length_m": 10.65932567378443,
+        "note": "Synthetic BARN-like clutter; not an official BARN world id"
+      }
+    },
+    {
+      "episode_id": "barn-0010",
+      "task": "barn_clutter",
+      "benchmark_id": "barn",
+      "stopped": true,
+      "final_xy": [
+        -0.007413044205752252,
+        13.353622102128556
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.957001620807371,
+        "distance_to_goal_m": 0.5999803187744412,
+        "agent_path_m": 13.361078679685766,
+        "shortest_path_m": 13.953556623299228,
+        "collision_count": 115,
+        "traversal_time_s": 54.1,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "corridor_width_m": 2.181431254412031,
+        "corridor_length_m": 13.953556623299228,
+        "note": "Synthetic BARN-like clutter; not an official BARN world id"
+      }
+    },
+    {
+      "episode_id": "barn-0011",
+      "task": "barn_clutter",
+      "benchmark_id": "barn",
+      "stopped": true,
+      "final_xy": [
+        -0.01423350992783614,
+        7.700055438214546
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.9282184001729573,
+        "distance_to_goal_m": 0.595452627333502,
+        "agent_path_m": 7.70689849101651,
+        "shortest_path_m": 8.295337924596856,
+        "collision_count": 284,
+        "traversal_time_s": 43.900000000000006,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "corridor_width_m": 1.620088320881957,
+        "corridor_length_m": 8.295337924596856,
+        "note": "Synthetic BARN-like clutter; not an official BARN world id"
+      }
+    },
+    {
+      "episode_id": "barn-0012",
+      "task": "barn_clutter",
+      "benchmark_id": "barn",
+      "stopped": true,
+      "final_xy": [
+        0.005792600189981569,
+        9.739371510261773
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.9431518950487493,
+        "distance_to_goal_m": 0.5870350173252765,
+        "agent_path_m": 9.744188960177599,
+        "shortest_path_m": 10.32637794749149,
+        "collision_count": 151,
+        "traversal_time_s": 41.800000000000004,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "corridor_width_m": 2.0404948587880463,
+        "corridor_length_m": 10.32637794749149,
+        "note": "Synthetic BARN-like clutter; not an official BARN world id"
+      }
+    },
+    {
+      "episode_id": "barn-0013",
+      "task": "barn_clutter",
+      "benchmark_id": "barn",
+      "stopped": true,
+      "final_xy": [
+        0.011410872148113349,
+        8.821041585470676
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.9371128617267045,
+        "distance_to_goal_m": 0.5919491316714816,
+        "agent_path_m": 8.82695383642973,
+        "shortest_path_m": 9.412880724497017,
+        "collision_count": 216,
+        "traversal_time_s": 47.800000000000004,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "corridor_width_m": 1.7341557254670936,
+        "corridor_length_m": 9.412880724497017,
+        "note": "Synthetic BARN-like clutter; not an official BARN world id"
+      }
+    },
+    {
+      "episode_id": "barn-0014",
+      "task": "barn_clutter",
+      "benchmark_id": "barn",
+      "stopped": true,
+      "final_xy": [
+        0.0004188017879751586,
+        11.461298629212786
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.9508575722801871,
+        "distance_to_goal_m": 0.5923453192206523,
+        "agent_path_m": 11.465760120790547,
+        "shortest_path_m": 12.053643800382163,
+        "collision_count": 114,
+        "traversal_time_s": 42.300000000000004,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "corridor_width_m": 2.208343431090791,
+        "corridor_length_m": 12.053643800382163,
+        "note": "Synthetic BARN-like clutter; not an official BARN world id"
+      }
+    },
+    {
+      "episode_id": "barn-0015",
+      "task": "barn_clutter",
+      "benchmark_id": "barn",
+      "stopped": true,
+      "final_xy": [
+        -0.019252853688663106,
+        10.707432659955709
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.9472085730767266,
+        "distance_to_goal_m": 0.5967473952234943,
+        "agent_path_m": 10.71147876578068,
+        "shortest_path_m": 11.303869397029196,
+        "collision_count": 123,
+        "traversal_time_s": 41.7,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "corridor_width_m": 2.0389164695482163,
+        "corridor_length_m": 11.303869397029196,
+        "note": "Synthetic BARN-like clutter; not an official BARN world id"
+      }
+    },
+    {
+      "episode_id": "barn-0016",
+      "task": "barn_clutter",
+      "benchmark_id": "barn",
+      "stopped": true,
+      "final_xy": [
+        -0.01764245934043565,
+        13.079715230812702
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.9561509403594585,
+        "distance_to_goal_m": 0.5998235316603631,
+        "agent_path_m": 13.085810962846796,
+        "shortest_path_m": 13.679279249714714,
+        "collision_count": 212,
+        "traversal_time_s": 55.1,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "corridor_width_m": 1.7992810837102813,
+        "corridor_length_m": 13.679279249714714,
+        "note": "Synthetic BARN-like clutter; not an official BARN world id"
+      }
+    },
+    {
+      "episode_id": "barn-0017",
+      "task": "barn_clutter",
+      "benchmark_id": "barn",
+      "stopped": true,
+      "final_xy": [
+        0.0011151981351927964,
+        12.475176719584331
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.9547182523493333,
+        "distance_to_goal_m": 0.5916905381613916,
+        "agent_path_m": 12.480660548419985,
+        "shortest_path_m": 13.066866206801095,
+        "collision_count": 64,
+        "traversal_time_s": 45.0,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "corridor_width_m": 2.117221898048766,
+        "corridor_length_m": 13.066866206801095,
+        "note": "Synthetic BARN-like clutter; not an official BARN world id"
+      }
+    },
+    {
+      "episode_id": "barn-0018",
+      "task": "barn_clutter",
+      "benchmark_id": "barn",
+      "stopped": true,
+      "final_xy": [
+        0.010785238798681271,
+        10.587872703516545
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.9475057783279855,
+        "distance_to_goal_m": 0.5865894901894837,
+        "agent_path_m": 10.593322859946639,
+        "shortest_path_m": 11.1743630347453,
+        "collision_count": 146,
+        "traversal_time_s": 44.2,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "corridor_width_m": 2.112676499914165,
+        "corridor_length_m": 11.1743630347453,
+        "note": "Synthetic BARN-like clutter; not an official BARN world id"
+      }
+    },
+    {
+      "episode_id": "barn-0019",
+      "task": "barn_clutter",
+      "benchmark_id": "barn",
+      "stopped": true,
+      "final_xy": [
+        0.014198402113647623,
+        8.839597283205922
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.9368167035583486,
+        "distance_to_goal_m": 0.5961723454258594,
+        "agent_path_m": 8.844142047131863,
+        "shortest_path_m": 9.435600530535993,
+        "collision_count": 71,
+        "traversal_time_s": 35.5,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "corridor_width_m": 2.012432652745852,
+        "corridor_length_m": 9.435600530535993,
+        "note": "Synthetic BARN-like clutter; not an official BARN world id"
+      }
+    },
+    {
+      "episode_id": "socialnav-0000",
+      "task": "socialnav",
+      "benchmark_id": "social_hm3d",
+      "stopped": true,
+      "final_xy": [
+        -0.3071779033886879,
+        5.808429834705872
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.8795896465231299,
+        "distance_to_goal_m": 0.7962483441828605,
+        "agent_path_m": 5.816842826936052,
+        "shortest_path_m": 6.6127896911772925,
+        "collision_count": 0,
+        "traversal_time_s": 14.3,
+        "barn_score": 0.5,
+        "psc": 0.7762237762237763,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "psc_threshold_m": 1.0
+      }
+    },
+    {
+      "episode_id": "socialnav-0001",
+      "task": "socialnav",
+      "benchmark_id": "social_hm3d",
+      "stopped": true,
+      "final_xy": [
+        0.5463700552499635,
+        5.59846421837683
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.8768579071995896,
+        "distance_to_goal_m": 0.789956417721819,
+        "agent_path_m": 5.626063500201049,
+        "shortest_path_m": 6.414999126271031,
+        "collision_count": 0,
+        "traversal_time_s": 13.9,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "psc_threshold_m": 1.0
+      }
+    },
+    {
+      "episode_id": "socialnav-0002",
+      "task": "socialnav",
+      "benchmark_id": "social_hm3d",
+      "stopped": true,
+      "final_xy": [
+        -0.7552983400718609,
+        6.217189635779531
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.8871944768970987,
+        "distance_to_goal_m": 0.7963159456258843,
+        "agent_path_m": 6.26443245241452,
+        "shortest_path_m": 7.059192881003571,
+        "collision_count": 0,
+        "traversal_time_s": 15.3,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "psc_threshold_m": 1.0
+      }
+    },
+    {
+      "episode_id": "socialnav-0003",
+      "task": "socialnav",
+      "benchmark_id": "social_hm3d",
+      "stopped": true,
+      "final_xy": [
+        0.43553480511365905,
+        6.14704397415979
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.8867241298675813,
+        "distance_to_goal_m": 0.7872306370673069,
+        "agent_path_m": 6.1629823741257885,
+        "shortest_path_m": 6.94967636220353,
+        "collision_count": 0,
+        "traversal_time_s": 15.100000000000001,
+        "barn_score": 0.5,
+        "psc": 0.6357615894039735,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "psc_threshold_m": 1.0
+      }
+    },
+    {
+      "episode_id": "socialnav-0004",
+      "task": "socialnav",
+      "benchmark_id": "social_hm3d",
+      "stopped": true,
+      "final_xy": [
+        0.30594579146847506,
+        8.151053181633094
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.9122604395140679,
+        "distance_to_goal_m": 0.7844864603555657,
+        "agent_path_m": 8.158843711746016,
+        "shortest_path_m": 8.941080352019176,
+        "collision_count": 22,
+        "traversal_time_s": 24.900000000000002,
+        "barn_score": 0.0,
+        "psc": 0.7028112449799196,
+        "human_collision": true,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "psc_threshold_m": 1.0
+      }
+    },
+    {
+      "episode_id": "socialnav-0005",
+      "task": "socialnav",
+      "benchmark_id": "social_hm3d",
+      "stopped": true,
+      "final_xy": [
+        0.4676598769127149,
+        7.317793275243219
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.9034829054858748,
+        "distance_to_goal_m": 0.7833207542742163,
+        "agent_path_m": 7.333514694650434,
+        "shortest_path_m": 8.115875827152857,
+        "collision_count": 0,
+        "traversal_time_s": 17.900000000000002,
+        "barn_score": 0.5,
+        "psc": 0.9050279329608939,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "psc_threshold_m": 1.0
+      }
+    },
+    {
+      "episode_id": "socialnav-0006",
+      "task": "socialnav",
+      "benchmark_id": "social_hm3d",
+      "stopped": true,
+      "final_xy": [
+        -0.5385329408430103,
+        7.199490506745479
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.901317648850381,
+        "distance_to_goal_m": 0.7904499325032698,
+        "agent_path_m": 7.222845692966972,
+        "shortest_path_m": 8.010043572075167,
+        "collision_count": 33,
+        "traversal_time_s": 23.6,
+        "barn_score": 0.0,
+        "psc": 0.6059322033898306,
+        "human_collision": true,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "psc_threshold_m": 1.0
+      }
+    },
+    {
+      "episode_id": "socialnav-0007",
+      "task": "socialnav",
+      "benchmark_id": "social_hm3d",
+      "stopped": true,
+      "final_xy": [
+        -0.06665853927956131,
+        7.4851861169151075
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.9036295945818541,
+        "distance_to_goal_m": 0.7983127375012251,
+        "agent_path_m": 7.4854912378221385,
+        "shortest_path_m": 8.283795570200102,
+        "collision_count": 0,
+        "traversal_time_s": 18.0,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "psc_threshold_m": 1.0
+      }
+    },
+    {
+      "episode_id": "socialnav-0008",
+      "task": "socialnav",
+      "benchmark_id": "social_hm3d",
+      "stopped": true,
+      "final_xy": [
+        -0.3705980310039146,
+        8.863474836044185
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.9183324956680504,
+        "distance_to_goal_m": 0.7889101470747,
+        "agent_path_m": 8.873561195290996,
+        "shortest_path_m": 9.660025165799837,
+        "collision_count": 36,
+        "traversal_time_s": 27.5,
+        "barn_score": 0.0,
+        "psc": 0.7090909090909091,
+        "human_collision": true,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "psc_threshold_m": 1.0
+      }
+    },
+    {
+      "episode_id": "socialnav-0009",
+      "task": "socialnav",
+      "benchmark_id": "social_hm3d",
+      "stopped": true,
+      "final_xy": [
+        0.13094711724988417,
+        7.559471650007292
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.9055759459743794,
+        "distance_to_goal_m": 0.7883414030690383,
+        "agent_path_m": 7.560637158845221,
+        "shortest_path_m": 8.34894679331533,
+        "collision_count": 0,
+        "traversal_time_s": 18.2,
+        "barn_score": 0.5,
+        "psc": 0.7087912087912088,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "psc_threshold_m": 1.0
+      }
+    },
+    {
+      "episode_id": "socialnav-0010",
+      "task": "socialnav",
+      "benchmark_id": "social_hm3d",
+      "stopped": true,
+      "final_xy": [
+        -0.43532745049637844,
+        5.8255412360668135
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.880605853372449,
+        "distance_to_goal_m": 0.7919743112510045,
+        "agent_path_m": 5.84354295066845,
+        "shortest_path_m": 6.63327586503517,
+        "collision_count": 25,
+        "traversal_time_s": 17.900000000000002,
+        "barn_score": 0.0,
+        "psc": 0.6927374301675978,
+        "human_collision": true,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "psc_threshold_m": 1.0
+      }
+    },
+    {
+      "episode_id": "socialnav-0011",
+      "task": "socialnav",
+      "benchmark_id": "social_hm3d",
+      "stopped": true,
+      "final_xy": [
+        0.15876034439157213,
+        8.949883021161
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.9193279448662456,
+        "distance_to_goal_m": 0.7854857753777492,
+        "agent_path_m": 8.951323752809587,
+        "shortest_path_m": 9.736776558814727,
+        "collision_count": 0,
+        "traversal_time_s": 21.3,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "psc_threshold_m": 1.0
+      }
+    },
+    {
+      "episode_id": "socialnav-0012",
+      "task": "socialnav",
+      "benchmark_id": "social_hm3d",
+      "stopped": true,
+      "final_xy": [
+        0.12758123259659981,
+        6.084446570355514
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.8845354096886531,
+        "distance_to_goal_m": 0.7944198957531887,
+        "agent_path_m": 6.087633654567093,
+        "shortest_path_m": 6.880203650409693,
+        "collision_count": 41,
+        "traversal_time_s": 21.8,
+        "barn_score": 0.0,
+        "psc": 0.6100917431192661,
+        "human_collision": true,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "psc_threshold_m": 1.0
+      }
+    },
+    {
+      "episode_id": "socialnav-0013",
+      "task": "socialnav",
+      "benchmark_id": "social_hm3d",
+      "stopped": true,
+      "final_xy": [
+        0.8219202744604067,
+        8.397027173866725
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.9135828221184936,
+        "distance_to_goal_m": 0.7980827178939945,
+        "agent_path_m": 8.440178620330546,
+        "shortest_path_m": 9.235232363041419,
+        "collision_count": 54,
+        "traversal_time_s": 27.900000000000002,
+        "barn_score": 0.0,
+        "psc": 0.6523297491039427,
+        "human_collision": true,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "psc_threshold_m": 1.0
+      }
+    },
+    {
+      "episode_id": "socialnav-0014",
+      "task": "socialnav",
+      "benchmark_id": "social_hm3d",
+      "stopped": true,
+      "final_xy": [
+        0.5140645078302215,
+        5.45553488047122
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.8749751317564572,
+        "distance_to_goal_m": 0.7829897251042541,
+        "agent_path_m": 5.4806370269398945,
+        "shortest_path_m": 6.262671867640171,
+        "collision_count": 0,
+        "traversal_time_s": 13.600000000000001,
+        "barn_score": 0.5,
+        "psc": 0.8897058823529411,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "psc_threshold_m": 1.0
+      }
+    },
+    {
+      "episode_id": "socialnav-0015",
+      "task": "socialnav",
+      "benchmark_id": "social_hm3d",
+      "stopped": true,
+      "final_xy": [
+        0.5641611442493072,
+        7.186121927898771
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.9006966972787231,
+        "distance_to_goal_m": 0.7947188399532377,
+        "agent_path_m": 7.20887557624825,
+        "shortest_path_m": 8.00294469745728,
+        "collision_count": 0,
+        "traversal_time_s": 17.400000000000002,
+        "barn_score": 0.5,
+        "psc": 0.9137931034482759,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "psc_threshold_m": 1.0
+      }
+    },
+    {
+      "episode_id": "socialnav-0016",
+      "task": "socialnav",
+      "benchmark_id": "social_hm3d",
+      "stopped": true,
+      "final_xy": [
+        0.3042206978427573,
+        8.90711381023371
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.9186073914873099,
+        "distance_to_goal_m": 0.7896691199928925,
+        "agent_path_m": 8.912428825050032,
+        "shortest_path_m": 9.701975823391546,
+        "collision_count": 0,
+        "traversal_time_s": 21.200000000000003,
+        "barn_score": 0.5,
+        "psc": 0.8915094339622641,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "psc_threshold_m": 1.0
+      }
+    },
+    {
+      "episode_id": "socialnav-0017",
+      "task": "socialnav",
+      "benchmark_id": "social_hm3d",
+      "stopped": true,
+      "final_xy": [
+        0.8828759424202044,
+        7.82276178959621
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.9094914991262883,
+        "distance_to_goal_m": 0.7834188182312676,
+        "agent_path_m": 7.876109374045047,
+        "shortest_path_m": 8.655748473001314,
+        "collision_count": 38,
+        "traversal_time_s": 25.6,
+        "barn_score": 0.0,
+        "psc": 0.6796875,
+        "human_collision": true,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "psc_threshold_m": 1.0
+      }
+    },
+    {
+      "episode_id": "socialnav-0018",
+      "task": "socialnav",
+      "benchmark_id": "social_hm3d",
+      "stopped": true,
+      "final_xy": [
+        -0.4360680754277882,
+        6.8330427799773545
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.8962106457681596,
+        "distance_to_goal_m": 0.7929323269036452,
+        "agent_path_m": 6.8482492276206095,
+        "shortest_path_m": 7.639823301457539,
+        "collision_count": 10,
+        "traversal_time_s": 18.0,
+        "barn_score": 0.0,
+        "psc": 0.7777777777777778,
+        "human_collision": true,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "psc_threshold_m": 1.0
+      }
+    },
+    {
+      "episode_id": "socialnav-0019",
+      "task": "socialnav",
+      "benchmark_id": "social_hm3d",
+      "stopped": true,
+      "final_xy": [
+        -0.453944773935623,
+        7.854583261411245
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.9094063877741932,
+        "distance_to_goal_m": 0.7837663756068253,
+        "agent_path_m": 7.868037873923359,
+        "shortest_path_m": 8.651452970583275,
+        "collision_count": 0,
+        "traversal_time_s": 18.900000000000002,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "psc_threshold_m": 1.0
+      }
+    },
+    {
+      "episode_id": "objectnav-0000",
+      "task": "objectnav",
+      "benchmark_id": "habitat2020_objectnav",
+      "stopped": true,
+      "final_xy": [
+        -0.8935199623898494,
+        1.7920777681379463
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.6699758406007589,
+        "distance_to_goal_m": 0.9851281993279379,
+        "agent_path_m": 2.01435114627466,
+        "shortest_path_m": 2.9850184335632104,
+        "collision_count": 0,
+        "traversal_time_s": 7.1000000000000005,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "oracle_visibility": true
+      }
+    },
+    {
+      "episode_id": "objectnav-0001",
+      "task": "objectnav",
+      "benchmark_id": "habitat2020_objectnav",
+      "stopped": true,
+      "final_xy": [
+        1.1805022740430835,
+        1.2192626349907112
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.6309925427187717,
+        "distance_to_goal_m": 0.9906178380780701,
+        "agent_path_m": 1.70728037491733,
+        "shortest_path_m": 2.68454693402876,
+        "collision_count": 0,
+        "traversal_time_s": 5.2,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "oracle_visibility": true
+      }
+    },
+    {
+      "episode_id": "objectnav-0002",
+      "task": "objectnav",
+      "benchmark_id": "habitat2020_objectnav",
+      "stopped": true,
+      "final_xy": [
+        -1.1962264126258817,
+        7.38719060612814
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.8832756367846272,
+        "distance_to_goal_m": 0.9889014663282302,
+        "agent_path_m": 7.500690370308314,
+        "shortest_path_m": 8.472108470650369,
+        "collision_count": 0,
+        "traversal_time_s": 18.900000000000002,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "oracle_visibility": true
+      }
+    },
+    {
+      "episode_id": "objectnav-0003",
+      "task": "objectnav",
+      "benchmark_id": "habitat2020_objectnav",
+      "stopped": true,
+      "final_xy": [
+        2.0296035810512785,
+        4.587042182164047
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.8362277534001656,
+        "distance_to_goal_m": 0.9822944505353823,
+        "agent_path_m": 5.028857811469514,
+        "shortest_path_m": 5.997929874745798,
+        "collision_count": 0,
+        "traversal_time_s": 12.9,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "oracle_visibility": true
+      }
+    },
+    {
+      "episode_id": "objectnav-0004",
+      "task": "objectnav",
+      "benchmark_id": "habitat2020_objectnav",
+      "stopped": true,
+      "final_xy": [
+        -1.2585614565782506,
+        6.3002968208570245
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.8655667702530372,
+        "distance_to_goal_m": 0.99781123907887,
+        "agent_path_m": 6.438219261571392,
+        "shortest_path_m": 7.422355625591993,
+        "collision_count": 0,
+        "traversal_time_s": 16.6,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "oracle_visibility": true
+      }
+    },
+    {
+      "episode_id": "objectnav-0005",
+      "task": "objectnav",
+      "benchmark_id": "habitat2020_objectnav",
+      "stopped": true,
+      "final_xy": [
+        -1.7155993624116554,
+        2.271241630874115
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.7420689696898384,
+        "distance_to_goal_m": 0.9887799132683228,
+        "agent_path_m": 2.8633578188766577,
+        "shortest_path_m": 3.8335050733497105,
+        "collision_count": 0,
+        "traversal_time_s": 9.1,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "oracle_visibility": true
+      }
+    },
+    {
+      "episode_id": "objectnav-0006",
+      "task": "objectnav",
+      "benchmark_id": "habitat2020_objectnav",
+      "stopped": true,
+      "final_xy": [
+        0.41003427606175014,
+        4.458542730590722
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.819169408338909,
+        "distance_to_goal_m": 0.9882578801659704,
+        "agent_path_m": 4.491580477615598,
+        "shortest_path_m": 5.465103393667724,
+        "collision_count": 0,
+        "traversal_time_s": 12.0,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "oracle_visibility": true
+      }
+    },
+    {
+      "episode_id": "objectnav-0007",
+      "task": "objectnav",
+      "benchmark_id": "habitat2020_objectnav",
+      "stopped": true,
+      "final_xy": [
+        2.9245872403372752,
+        4.613082399588971
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.8468759182237799,
+        "distance_to_goal_m": 0.9875252481728607,
+        "agent_path_m": 5.477728571062425,
+        "shortest_path_m": 6.449183150799617,
+        "collision_count": 0,
+        "traversal_time_s": 13.700000000000001,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "oracle_visibility": true
+      }
+    },
+    {
+      "episode_id": "objectnav-0008",
+      "task": "objectnav",
+      "benchmark_id": "habitat2020_objectnav",
+      "stopped": true,
+      "final_xy": [
+        -3.049451240962525,
+        5.445937049786173
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.8622626531522337,
+        "distance_to_goal_m": 0.9969864169962172,
+        "agent_path_m": 6.255745048741697,
+        "shortest_path_m": 7.238315822201315,
+        "collision_count": 0,
+        "traversal_time_s": 16.5,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "oracle_visibility": true
+      }
+    },
+    {
+      "episode_id": "objectnav-0009",
+      "task": "objectnav",
+      "benchmark_id": "habitat2020_objectnav",
+      "stopped": true,
+      "final_xy": [
+        -2.9774833874192272,
+        5.941794112279443
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.8705312738845511,
+        "distance_to_goal_m": 0.9884019576554457,
+        "agent_path_m": 6.657842111596698,
+        "shortest_path_m": 7.634291209245967,
+        "collision_count": 0,
+        "traversal_time_s": 17.400000000000002,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "oracle_visibility": true
+      }
+    },
+    {
+      "episode_id": "objectnav-0010",
+      "task": "objectnav",
+      "benchmark_id": "habitat2020_objectnav",
+      "stopped": true,
+      "final_xy": [
+        0.41202385685177867,
+        5.807541624368913
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.8551526148773103,
+        "distance_to_goal_m": 0.986111840405647,
+        "agent_path_m": 5.8373993492252385,
+        "shortest_path_m": 6.807936778219251,
+        "collision_count": 0,
+        "traversal_time_s": 15.0,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "oracle_visibility": true
+      }
+    },
+    {
+      "episode_id": "objectnav-0011",
+      "task": "objectnav",
+      "benchmark_id": "habitat2020_objectnav",
+      "stopped": true,
+      "final_xy": [
+        3.4909331590381383,
+        7.549374220929882
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.8931658727762783,
+        "distance_to_goal_m": 0.9948575915156632,
+        "agent_path_m": 8.329221147236593,
+        "shortest_path_m": 9.312170346394359,
+        "collision_count": 0,
+        "traversal_time_s": 20.200000000000003,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "oracle_visibility": true
+      }
+    },
+    {
+      "episode_id": "objectnav-0012",
+      "task": "objectnav",
+      "benchmark_id": "habitat2020_objectnav",
+      "stopped": true,
+      "final_xy": [
+        -3.176439829020495,
+        4.732083403409335
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.8518032260756618,
+        "distance_to_goal_m": 0.9915201003418501,
+        "agent_path_m": 5.712525630706455,
+        "shortest_path_m": 6.690564673479807,
+        "collision_count": 0,
+        "traversal_time_s": 15.4,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "oracle_visibility": true
+      }
+    },
+    {
+      "episode_id": "objectnav-0013",
+      "task": "objectnav",
+      "benchmark_id": "habitat2020_objectnav",
+      "stopped": true,
+      "final_xy": [
+        -3.145760283612187,
+        3.2690719531993464
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.8200360596897811,
+        "distance_to_goal_m": 0.9955480571110271,
+        "agent_path_m": 4.5488319816357,
+        "shortest_path_m": 5.531930760100707,
+        "collision_count": 0,
+        "traversal_time_s": 13.0,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "oracle_visibility": true
+      }
+    },
+    {
+      "episode_id": "objectnav-0014",
+      "task": "objectnav",
+      "benchmark_id": "habitat2020_objectnav",
+      "stopped": true,
+      "final_xy": [
+        -0.18489213051881737,
+        6.731690394990183
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.870979427511153,
+        "distance_to_goal_m": 0.99752551552491,
+        "agent_path_m": 6.749278519711167,
+        "shortest_path_m": 7.7315229368645015,
+        "collision_count": 0,
+        "traversal_time_s": 17.1,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "oracle_visibility": true
+      }
+    },
+    {
+      "episode_id": "objectnav-0015",
+      "task": "objectnav",
+      "benchmark_id": "habitat2020_objectnav",
+      "stopped": true,
+      "final_xy": [
+        3.3417990600733045,
+        6.9543431678394025
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.8858598709392389,
+        "distance_to_goal_m": 0.9941051145561093,
+        "agent_path_m": 7.73225975262034,
+        "shortest_path_m": 8.709514547919513,
+        "collision_count": 0,
+        "traversal_time_s": 18.8,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "oracle_visibility": true
+      }
+    },
+    {
+      "episode_id": "objectnav-0016",
+      "task": "objectnav",
+      "benchmark_id": "habitat2020_objectnav",
+      "stopped": true,
+      "final_xy": [
+        -2.0719891840656928,
+        3.33770479463162
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.798586089416603,
+        "distance_to_goal_m": 0.9906216241649136,
+        "agent_path_m": 3.945932110997142,
+        "shortest_path_m": 4.918337672386036,
+        "collision_count": 0,
+        "traversal_time_s": 11.4,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "oracle_visibility": true
+      }
+    },
+    {
+      "episode_id": "objectnav-0017",
+      "task": "objectnav",
+      "benchmark_id": "habitat2020_objectnav",
+      "stopped": true,
+      "final_xy": [
+        -0.138154244729254,
+        1.6866387619140535
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.6290926379177753,
+        "distance_to_goal_m": 0.9954424758015962,
+        "agent_path_m": 1.7048965260489553,
+        "shortest_path_m": 2.6838034980306515,
+        "collision_count": 0,
+        "traversal_time_s": 6.0,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "oracle_visibility": true
+      }
+    },
+    {
+      "episode_id": "objectnav-0018",
+      "task": "objectnav",
+      "benchmark_id": "habitat2020_objectnav",
+      "stopped": true,
+      "final_xy": [
+        -0.8068928762053713,
+        5.539857051917985
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.8495923917292318,
+        "distance_to_goal_m": 0.9910325168179902,
+        "agent_path_m": 5.6146649250251235,
+        "shortest_path_m": 6.588978630880855,
+        "collision_count": 0,
+        "traversal_time_s": 14.700000000000001,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "oracle_visibility": true
+      }
+    },
+    {
+      "episode_id": "objectnav-0019",
+      "task": "objectnav",
+      "benchmark_id": "habitat2020_objectnav",
+      "stopped": true,
+      "final_xy": [
+        -1.3646943573774137,
+        1.2325514748588686
+      ],
+      "metrics": {
+        "success": true,
+        "spl": 1.0,
+        "soft_spl": 0.6479172412823817,
+        "distance_to_goal_m": 0.9977558577474853,
+        "agent_path_m": 1.8494102016173706,
+        "shortest_path_m": 2.833867416233573,
+        "collision_count": 0,
+        "traversal_time_s": 7.1000000000000005,
+        "barn_score": 0.5,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0,
+        "exploration_efficiency": 0.0
+      },
+      "metadata": {
+        "oracle_visibility": true
+      }
+    },
+    {
+      "episode_id": "exploration-0000",
+      "task": "exploration",
+      "benchmark_id": "threewe",
+      "stopped": false,
+      "final_xy": [
+        1.7001006593172692,
+        -0.2470483314856794
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.04116920543433499,
+        "distance_to_goal_m": 0.0,
+        "agent_path_m": 10.500000000000032,
+        "shortest_path_m": 10.0,
+        "collision_count": 161,
+        "traversal_time_s": 30.0,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.043227665706051875,
+        "exploration_efficiency": 0.004116920543433499
+      },
+      "metadata": {
+        "time_budget_s": 30.0
+      }
+    },
+    {
+      "episode_id": "exploration-0001",
+      "task": "exploration",
+      "benchmark_id": "threewe",
+      "stopped": false,
+      "final_xy": [
+        1.7126696568588589,
+        0.13467656208795398
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.04226542688081136,
+        "distance_to_goal_m": 0.0,
+        "agent_path_m": 10.500000000000032,
+        "shortest_path_m": 10.0,
+        "collision_count": 156,
+        "traversal_time_s": 30.0,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.04437869822485207,
+        "exploration_efficiency": 0.004226542688081136
+      },
+      "metadata": {
+        "time_budget_s": 30.0
+      }
+    },
+    {
+      "episode_id": "exploration-0002",
+      "task": "exploration",
+      "benchmark_id": "threewe",
+      "stopped": false,
+      "final_xy": [
+        1.121465246829656,
+        -1.301418775818975
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.04058441558441546,
+        "distance_to_goal_m": 0.0,
+        "agent_path_m": 10.500000000000032,
+        "shortest_path_m": 10.0,
+        "collision_count": 58,
+        "traversal_time_s": 30.0,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.04261363636363636,
+        "exploration_efficiency": 0.004058441558441546
+      },
+      "metadata": {
+        "time_budget_s": 30.0
+      }
+    },
+    {
+      "episode_id": "exploration-0003",
+      "task": "exploration",
+      "benchmark_id": "threewe",
+      "stopped": false,
+      "final_xy": [
+        -0.0560134464368245,
+        -1.7170432795125106
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.040584415584415466,
+        "distance_to_goal_m": 0.0,
+        "agent_path_m": 10.50000000000003,
+        "shortest_path_m": 10.0,
+        "collision_count": 0,
+        "traversal_time_s": 30.0,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.04261363636363636,
+        "exploration_efficiency": 0.004058441558441547
+      },
+      "metadata": {
+        "time_budget_s": 30.0
+      }
+    },
+    {
+      "episode_id": "exploration-0004",
+      "task": "exploration",
+      "benchmark_id": "threewe",
+      "stopped": false,
+      "final_xy": [
+        -1.5728730990622959,
+        0.6909741993352585
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.04277159965782707,
+        "distance_to_goal_m": 0.0,
+        "agent_path_m": 10.500000000000032,
+        "shortest_path_m": 10.0,
+        "collision_count": 0,
+        "traversal_time_s": 30.0,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.04491017964071856,
+        "exploration_efficiency": 0.004277159965782707
+      },
+      "metadata": {
+        "time_budget_s": 30.0
+      }
+    },
+    {
+      "episode_id": "exploration-0005",
+      "task": "exploration",
+      "benchmark_id": "threewe",
+      "stopped": false,
+      "final_xy": [
+        -0.10166370487049278,
+        -1.7149459527964177
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.042140750105351746,
+        "distance_to_goal_m": 0.0,
+        "agent_path_m": 10.500000000000032,
+        "shortest_path_m": 10.0,
+        "collision_count": 55,
+        "traversal_time_s": 30.0,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.04424778761061947,
+        "exploration_efficiency": 0.004214075010535175
+      },
+      "metadata": {
+        "time_budget_s": 30.0
+      }
+    },
+    {
+      "episode_id": "exploration-0006",
+      "task": "exploration",
+      "benchmark_id": "threewe",
+      "stopped": false,
+      "final_xy": [
+        -1.1147245887135753,
+        -1.3071970858360138
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.040355125100887686,
+        "distance_to_goal_m": 0.0,
+        "agent_path_m": 10.500000000000032,
+        "shortest_path_m": 10.0,
+        "collision_count": 117,
+        "traversal_time_s": 30.0,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0423728813559322,
+        "exploration_efficiency": 0.004035512510088769
+      },
+      "metadata": {
+        "time_budget_s": 30.0
+      }
+    },
+    {
+      "episode_id": "exploration-0007",
+      "task": "exploration",
+      "benchmark_id": "threewe",
+      "stopped": false,
+      "final_xy": [
+        -0.5690294484225092,
+        1.6209813745780142
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.04046944556859559,
+        "distance_to_goal_m": 0.0,
+        "agent_path_m": 10.500000000000032,
+        "shortest_path_m": 10.0,
+        "collision_count": 0,
+        "traversal_time_s": 30.0,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.042492917847025496,
+        "exploration_efficiency": 0.004046944556859559
+      },
+      "metadata": {
+        "time_budget_s": 30.0
+      }
+    },
+    {
+      "episode_id": "exploration-0008",
+      "task": "exploration",
+      "benchmark_id": "threewe",
+      "stopped": false,
+      "final_xy": [
+        0.9003341364044352,
+        -1.4631382616573672
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.04226542688081136,
+        "distance_to_goal_m": 0.0,
+        "agent_path_m": 10.500000000000032,
+        "shortest_path_m": 10.0,
+        "collision_count": 0,
+        "traversal_time_s": 30.0,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.04437869822485207,
+        "exploration_efficiency": 0.004226542688081136
+      },
+      "metadata": {
+        "time_budget_s": 30.0
+      }
+    },
+    {
+      "episode_id": "exploration-0009",
+      "task": "exploration",
+      "benchmark_id": "threewe",
+      "stopped": false,
+      "final_xy": [
+        1.7016383894621732,
+        -0.23622430317275386
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.041169205434335,
+        "distance_to_goal_m": 0.0,
+        "agent_path_m": 10.50000000000003,
+        "shortest_path_m": 10.0,
+        "collision_count": 63,
+        "traversal_time_s": 30.0,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.043227665706051875,
+        "exploration_efficiency": 0.0041169205434335
+      },
+      "metadata": {
+        "time_budget_s": 30.0
+      }
+    },
+    {
+      "episode_id": "exploration-0010",
+      "task": "exploration",
+      "benchmark_id": "threewe",
+      "stopped": false,
+      "final_xy": [
+        -1.179762501145741,
+        1.248813665360525
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.042517006802720955,
+        "distance_to_goal_m": 0.0,
+        "agent_path_m": 10.500000000000034,
+        "shortest_path_m": 10.0,
+        "collision_count": 106,
+        "traversal_time_s": 30.0,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.044642857142857144,
+        "exploration_efficiency": 0.004251700680272095
+      },
+      "metadata": {
+        "time_budget_s": 30.0
+      }
+    },
+    {
+      "episode_id": "exploration-0011",
+      "task": "exploration",
+      "benchmark_id": "threewe",
+      "stopped": false,
+      "final_xy": [
+        1.69649864695763,
+        0.27067964602423455
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.043029259896729656,
+        "distance_to_goal_m": 0.0,
+        "agent_path_m": 10.50000000000003,
+        "shortest_path_m": 10.0,
+        "collision_count": 15,
+        "traversal_time_s": 30.0,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.045180722891566265,
+        "exploration_efficiency": 0.004302925989672965
+      },
+      "metadata": {
+        "time_budget_s": 30.0
+      }
+    },
+    {
+      "episode_id": "exploration-0012",
+      "task": "exploration",
+      "benchmark_id": "threewe",
+      "stopped": false,
+      "final_xy": [
+        1.7178092908696039,
+        -0.022502668795819324
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.04214075010535175,
+        "distance_to_goal_m": 0.0,
+        "agent_path_m": 10.50000000000003,
+        "shortest_path_m": 10.0,
+        "collision_count": 192,
+        "traversal_time_s": 30.0,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.04424778761061947,
+        "exploration_efficiency": 0.0042140750105351754
+      },
+      "metadata": {
+        "time_budget_s": 30.0
+      }
+    },
+    {
+      "episode_id": "exploration-0013",
+      "task": "exploration",
+      "benchmark_id": "threewe",
+      "stopped": false,
+      "final_xy": [
+        1.284301940354271,
+        1.1410274562442098
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.04152823920265768,
+        "distance_to_goal_m": 0.0,
+        "agent_path_m": 10.500000000000034,
+        "shortest_path_m": 10.0,
+        "collision_count": 97,
+        "traversal_time_s": 30.0,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0436046511627907,
+        "exploration_efficiency": 0.004152823920265767
+      },
+      "metadata": {
+        "time_budget_s": 30.0
+      }
+    },
+    {
+      "episode_id": "exploration-0014",
+      "task": "exploration",
+      "benchmark_id": "threewe",
+      "stopped": false,
+      "final_xy": [
+        -1.6873089611446574,
+        -0.3230535552222792
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.0403551251008877,
+        "distance_to_goal_m": 0.0,
+        "agent_path_m": 10.500000000000028,
+        "shortest_path_m": 10.0,
+        "collision_count": 77,
+        "traversal_time_s": 30.0,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.0423728813559322,
+        "exploration_efficiency": 0.0040355125100887705
+      },
+      "metadata": {
+        "time_budget_s": 30.0
+      }
+    },
+    {
+      "episode_id": "exploration-0015",
+      "task": "exploration",
+      "benchmark_id": "threewe",
+      "stopped": false,
+      "final_xy": [
+        1.559077518943555,
+        -0.7215624850459449
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.043029259896729635,
+        "distance_to_goal_m": 0.0,
+        "agent_path_m": 10.500000000000034,
+        "shortest_path_m": 10.0,
+        "collision_count": 131,
+        "traversal_time_s": 30.0,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.045180722891566265,
+        "exploration_efficiency": 0.004302925989672963
+      },
+      "metadata": {
+        "time_budget_s": 30.0
+      }
+    },
+    {
+      "episode_id": "exploration-0016",
+      "task": "exploration",
+      "benchmark_id": "threewe",
+      "stopped": false,
+      "final_xy": [
+        -0.17819997428710577,
+        -1.7086895268201547
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.041771094402673216,
+        "distance_to_goal_m": 0.0,
+        "agent_path_m": 10.500000000000032,
+        "shortest_path_m": 10.0,
+        "collision_count": 48,
+        "traversal_time_s": 30.0,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.043859649122807015,
+        "exploration_efficiency": 0.004177109440267322
+      },
+      "metadata": {
+        "time_budget_s": 30.0
+      }
+    },
+    {
+      "episode_id": "exploration-0017",
+      "task": "exploration",
+      "benchmark_id": "threewe",
+      "stopped": false,
+      "final_xy": [
+        -0.12347402478435085,
+        1.7135137277256975
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.04189359028068694,
+        "distance_to_goal_m": 0.0,
+        "agent_path_m": 10.50000000000003,
+        "shortest_path_m": 10.0,
+        "collision_count": 116,
+        "traversal_time_s": 30.0,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.04398826979472141,
+        "exploration_efficiency": 0.004189359028068693
+      },
+      "metadata": {
+        "time_budget_s": 30.0
+      }
+    },
+    {
+      "episode_id": "exploration-0018",
+      "task": "exploration",
+      "benchmark_id": "threewe",
+      "stopped": false,
+      "final_xy": [
+        -1.4329869285421382,
+        -0.947588303287974
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.04164931278633889,
+        "distance_to_goal_m": 0.0,
+        "agent_path_m": 10.500000000000034,
+        "shortest_path_m": 10.0,
+        "collision_count": 126,
+        "traversal_time_s": 30.0,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.043731778425655975,
+        "exploration_efficiency": 0.004164931278633889
+      },
+      "metadata": {
+        "time_budget_s": 30.0
+      }
+    },
+    {
+      "episode_id": "exploration-0019",
+      "task": "exploration",
+      "benchmark_id": "threewe",
+      "stopped": false,
+      "final_xy": [
+        1.1797586033003025,
+        -1.248817347669301
+      ],
+      "metrics": {
+        "success": false,
+        "spl": 0.0,
+        "soft_spl": 0.04201680672268895,
+        "distance_to_goal_m": 0.0,
+        "agent_path_m": 10.500000000000034,
+        "shortest_path_m": 10.0,
+        "collision_count": 79,
+        "traversal_time_s": 30.0,
+        "barn_score": 0.0,
+        "psc": 1.0,
+        "human_collision": false,
+        "coverage": 0.04411764705882353,
+        "exploration_efficiency": 0.004201680672268894
+      },
+      "metadata": {
+        "time_budget_s": 30.0
+      }
+    }
+  ],
+  "notes": [
+    "Offline synthetic proxies only \u2014 not official Habitat/BARN/3WE leaderboard numbers.",
+    "Euclidean shortest paths are lower bounds (no occupancy planner).",
+    "GoalSeekingAgent is a coarse rotate-then-go baseline, not StubNavigator."
+  ],
+  "benchmark_count": 5
+}

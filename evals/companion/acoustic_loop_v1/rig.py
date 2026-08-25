@@ -541,29 +541,35 @@ class AcousticRig:
         stderr_file = cleanup.enter_context(
             _temporary_binary_file(prefix=f"{node_name}_", suffix=".stderr")
         )
-        process = self._track_process(
-            subprocess.Popen(
-                [
-                    "pw-record",
-                    "--target",
-                    "0",
-                    "--properties",
-                    json.dumps({"node.name": node_name, "media.name": node_name}),
-                    "--rate",
-                    str(CAPTURE_RATE_HZ),
-                    "--channels",
-                    "1",
-                    "--channel-map",
-                    "MONO",
-                    "--format",
-                    "s16",
-                    "--raw",
-                    destination,
-                ],
-                stdout=subprocess.PIPE if destination == "-" else subprocess.DEVNULL,
-                stderr=stderr_file,
+        try:
+            process = self._track_process(
+                subprocess.Popen(
+                    [
+                        "pw-record",
+                        "--target",
+                        "0",
+                        "--properties",
+                        json.dumps({"node.name": node_name, "media.name": node_name}),
+                        "--rate",
+                        str(CAPTURE_RATE_HZ),
+                        "--channels",
+                        "1",
+                        "--channel-map",
+                        "MONO",
+                        "--format",
+                        "s16",
+                        "--raw",
+                        destination,
+                    ],
+                    stdout=(
+                        subprocess.PIPE if destination == "-" else subprocess.DEVNULL
+                    ),
+                    stderr=stderr_file,
+                )
             )
-        )
+        except OSError as error:
+            cleanup.close()
+            raise RigError(f"could not launch pw-record: {error}") from error
         try:
             source_port_id = self._await_owned_port_id(
                 source_node_name,
