@@ -1,0 +1,44 @@
+{
+  "canonical_run": "results-run4.json",
+  "checks": {
+    "all_source_digests_current": true,
+    "exactly_alias_recovery_gate_failed": true,
+    "false_claims_zero": true,
+    "families_120_each": true,
+    "fixed_source_digests_identical": true,
+    "fixed_source_payloads_identical": true,
+    "matrix_600_unique": true,
+    "matrix_digest_recomputes": true,
+    "motion_authorizations_zero": true,
+    "nine_pre_replay_gates_present": true,
+    "payload_digest_recomputes_run4": true,
+    "payload_digest_recomputes_run5": true,
+    "rows_1800_exact_arms": true
+  },
+  "excluded_pilots": [
+    {
+      "path": "results-run1.json",
+      "reason": "deadline sampled 2 ms before first-candidate + 4 s"
+    },
+    {
+      "path": "results-run2.json",
+      "reason": "identity-missing harness omitted the initial candidate"
+    },
+    {
+      "path": "results-run3.json",
+      "reason": "replay of the same identity-missing harness defect"
+    }
+  ],
+  "experiment_supported": false,
+  "integrity_pass": true,
+  "payload_digest": "8207f05d9dfeb7add8b156b43f2653732519c90276bff314f2ed59f2b29a7daf",
+  "replay_run": "results-run5.json",
+  "schema": "parcel.independent-completion-h2b.verification.v1",
+  "source_matches": {
+    "research/20260826/independent-completion-h2b/DESIGN.md": true,
+    "research/20260826/independent-completion-h2b/experiment.py": true,
+    "src/parcel_robot/navigation/independent_completion.py": true,
+    "src/parcel_robot/navigation/independent_completion_evidence.py": true,
+    "tests/test_independent_completion_h2b.py": true
+  }
+}

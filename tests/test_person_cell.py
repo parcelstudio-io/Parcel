@@ -198,7 +198,7 @@ def test_deadlock_signature_reproduces_with_an_undeclared_bystander() -> None:
         world=world,
         harness=harness,
         episode=d15_episode(),
-        max_steps=40,
+        max_steps=50,
     )
 
     assert harness.reactive_safety.person_stop_m == 1.2

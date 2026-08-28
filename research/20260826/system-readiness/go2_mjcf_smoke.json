@@ -1,0 +1,19 @@
+{
+  "claim_ceiling": "Tracked MJCF parse/finite-step evidence only; no SDK2/DDS, learned policy, gateway, contact-safety, Orin, or physical-Go2 claim.",
+  "evidence_tier": "desktop-articulated-simulation-asset-smoke",
+  "finite": true,
+  "load_ms": 165.62,
+  "model_sha256": "2014a3d76e30f17ab9447d8a67bd015291f74fa4d71ae30d005f1a32bd693d4b",
+  "mujoco": "3.11.0",
+  "nq": 19,
+  "nsensor": 41,
+  "nu": 12,
+  "nv": 18,
+  "python": "3.14.4",
+  "scene": "third_party/unitree_mujoco/unitree_robots/go2/scene.xml",
+  "scene_sha256": "6c1fda780e7883665d1c84113b9275b6d448f586a8b1c110e438a37417cbccd0",
+  "schema": "parcel.go2_mjcf_smoke.v1",
+  "simulated_seconds": 2.0,
+  "state_sha256": "ca2367ef44c02771d429c4ae8f425d624229452dea4a9025cd08905033715c96",
+  "steps": 1000
+}

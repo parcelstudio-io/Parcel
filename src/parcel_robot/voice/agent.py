@@ -16,6 +16,15 @@ from ..brain.router import (
 )
 from ..brain.runtime_adapter import bind_plan_context, contextual_planner_schema
 from ..brain.validator import PlanValidationError
+from ..capabilities.commissioning_lifecycle import (
+    CommissioningStateProviderV1,
+    validate_commissioning_lifecycle,
+)
+from ..capabilities.manifest import (
+    CapabilityManifestV1,
+    DeploymentTargetV1,
+    TrustedCommissioningAuthenticatorV1,
+)
 from ..memory.conversation import ConversationMemory
 from ..models import (
     ActionProposal,
@@ -31,6 +40,7 @@ from ..navigation.goals import PlaceAdmission, navigation_directive_from_text
 from ..navigation.spatial import parse_spatial_intent, spatial_intent_from_arguments
 from ..providers import LanguageModel
 from ..safety import SafetyLimits, SafetySupervisor
+from ..skills.capability_manifest import validate_motion_manifest
 from .amendment import strip_amend_prefix
 from .closed_intents import ClosedIntent, closed_intent_phrases, parse_closed_intent
 from .dialogue_lane import conversation_tool_definitions, dialogue_act_from_text
@@ -74,6 +84,19 @@ PlanPublisher = Callable[[PlanIR, IntentFrame, str], str]
 PlannerOutputAdapter = Callable[[object, IntentFrame, ObservationSnapshot], PlanIR]
 ClosedIntentHandler = Callable[[ClosedIntent, CapDirective], str]
 
+# Exact conversation route -> commissioned navigation-mode bindings. These are
+# semantic declarations, not actuator permissions: successful admission still
+# crosses the existing planner/runtime/safety boundaries.
+_BEHAVIOR_CAPABILITY = {
+    "follow": "follow_owner",
+    "follow_behind": "follow_owner",
+}
+_SPATIAL_CAPABILITY = {
+    "move_steps": "move_steps",
+    "orbit_owner": "orbit_owner",
+}
+_NAVIGATION_CAPABILITY = "navigate"
+
 
 class VoiceAgent:
     """Maps a transcript to safe robot actions.
@@ -110,6 +133,12 @@ class VoiceAgent:
         planner_skill_contracts_provider: Callable[[], dict[str, object]] | None = None,
         planner_output_adapter: PlannerOutputAdapter | None = None,
         dog=None,
+        capability_manifest: CapabilityManifestV1 | None = None,
+        deployment_target: DeploymentTargetV1 | None = None,
+        conversation_motion_authorized: bool = False,
+        commissioning_authenticator: TrustedCommissioningAuthenticatorV1 | None = None,
+        commissioning_state_provider: CommissioningStateProviderV1 | None = None,
+        commissioning_clock_ns: Callable[[], int] = time.monotonic_ns,
         info_tools=None,
         slow_path_hook: Callable[[str], None] | None = None,
         closed_intent_handler: ClosedIntentHandler | None = None,
@@ -146,6 +175,39 @@ class VoiceAgent:
         )
         self.conversation_history_messages = conversation_history_messages
         self.dog = dog
+        self.capability_manifest = capability_manifest
+        self.deployment_target = deployment_target
+        if type(conversation_motion_authorized) is not bool:
+            raise TypeError("conversation_motion_authorized must be a boolean")
+        self.conversation_motion_authorized = conversation_motion_authorized
+        self.commissioning_authenticator = commissioning_authenticator
+        self.commissioning_state_provider = commissioning_state_provider
+        self.commissioning_clock_ns = commissioning_clock_ns
+        if self.conversation_motion_authorized and (
+            deployment_target is None or deployment_target.environment != "simulation"
+        ):
+            raise ValueError(
+                "conversation_motion_authorized is restricted to an attested simulation"
+            )
+        if capability_manifest is not None:
+            capability_manifest.assert_authenticated_commissioning(
+                commissioning_authenticator
+            )
+            if deployment_target is None or deployment_target != capability_manifest.deployment_target:
+                raise ValueError(
+                    "capability manifest deployment target does not match this adapter"
+                )
+            validate_commissioning_lifecycle(
+                capability_manifest.commissioning_lifecycle,
+                state_provider=commissioning_state_provider,
+                now_monotonic_ns=commissioning_clock_ns(),
+            )
+            if dog is None and (capability_manifest.gestures or capability_manifest.poses):
+                raise ValueError(
+                    "an embodied capability manifest requires a live skill catalog"
+                )
+            if dog is not None:
+                validate_motion_manifest(capability_manifest, dog.catalog)
         self.intent_router = intent_router or DeterministicIntentRouter(self._skill_ids())
         self.planning_context_provider = planning_context_provider
         self.plan_publisher = plan_publisher
@@ -198,20 +260,117 @@ class VoiceAgent:
     def _bounded_action_skill_ids(self) -> list[str]:
         """Skills that may be scheduled by the semantic activity coordinator."""
 
-        if self.dog is None:
-            return sorted(self.poses)
-        return [
-            skill.id for skill in self.dog.catalog.list() if skill.kind in {"pose", "trajectory"}
-        ]
+        try:
+            return list(self._validated_capability_manifest().available_embodied_names())
+        except ValueError:
+            return []
 
-    def _is_social_trajectory(self, skill_name: str) -> bool:
-        if self.dog is None:
+    def _available_pose_skill_ids(self) -> list[str]:
+        try:
+            return [
+                entry.name
+                for entry in self._validated_capability_manifest().available_poses()
+            ]
+        except ValueError:
+            return []
+
+    def _available_social_skill_ids(self) -> list[str]:
+        """Runtime-equivalent allowlist for model-authored ``next_action`` values.
+
+        ``RobotRuntime._prompt_runtime_context`` exposes exactly tagged social
+        poses and trajectories to the model.  Repeating that mechanical filter
+        at the local admission boundary makes the prompt's allowlist a checked
+        capability rather than a request that a model can bypass by changing
+        ``next_action.trigger``.  A pose-only agent has no tag metadata and
+        therefore cannot safely infer this allowlist.
+        """
+
+        try:
+            return list(
+                self._validated_capability_manifest().available_embodied_names(
+                    required_tags=("social",)
+                )
+            )
+        except ValueError:
+            return []
+
+    def _transcript_explicitly_requests_skill(self, transcript: str | None, skill: str) -> bool:
+        """Return whether the deterministic router names ``skill`` exactly.
+
+        The proposal's model-authored trigger is evidence about neither owner
+        intent nor authority.  Re-route the original final transcript through
+        the same closed grammar used by the product's direct-skill path and
+        require its exact catalog result.  In ordinary operation such a turn
+        has already short-circuited through ``_execute_named_skill``; this
+        check keeps directly injected/provider-returned decisions fail closed.
+        """
+
+        if not transcript:
             return False
         try:
-            skill = self.dog.catalog.get(skill_name)
-        except KeyError:
+            frame = self.intent_router.route(
+                transcript,
+                turn_id="action-validation",
+                original_transcript_ref="voice-agent:action-validation:final",
+            )
+        except (TypeError, ValueError):
             return False
-        return skill.kind == "trajectory" and "social" in skill.tags
+        return frame.route == "direct_skill" and frame.matched_rule == f"catalog_skill:{skill}"
+
+    def _is_social_trajectory(self, skill_name: str) -> bool:
+        try:
+            return self._validated_capability_manifest().gesture_available(
+                skill_name,
+                required_tags=("social",),
+            )
+        except ValueError:
+            return False
+
+    def _validated_capability_manifest(self) -> CapabilityManifestV1:
+        if not self.conversation_motion_authorized:
+            raise ValueError("Conversation motion authority is unavailable")
+        manifest = self.capability_manifest
+        if manifest is None:
+            raise ValueError("Capability manifest is unavailable; motion is disarmed")
+        manifest.assert_authenticated_commissioning(self.commissioning_authenticator)
+        if self.deployment_target is None or self.deployment_target != manifest.deployment_target:
+            raise ValueError("Capability manifest deployment target does not match this adapter")
+        validate_commissioning_lifecycle(
+            manifest.commissioning_lifecycle,
+            state_provider=self.commissioning_state_provider,
+            now_monotonic_ns=self.commissioning_clock_ns(),
+        )
+        if self.dog is not None:
+            validate_motion_manifest(manifest, self.dog.catalog)
+        return manifest
+
+    def _navigation_capability_error(self, capability_name: str) -> str | None:
+        """Validate one exact positive-motion capability immediately before use."""
+
+        if self.capability_manifest is None:
+            return "Capability manifest is unavailable; motion is disarmed"
+        try:
+            manifest = self._validated_capability_manifest()
+        except ValueError as error:
+            return f"Commissioned capability manifest is stale: {error}"
+        if not manifest.navigation_mode_available(capability_name):
+            return f"Navigation mode {capability_name!r} is not commissioned"
+        return None
+
+    def _embodied_capability_error(self, skill_name: str) -> str | None:
+        if self.capability_manifest is None:
+            return "Capability manifest is unavailable; motion is disarmed"
+        try:
+            manifest = self._validated_capability_manifest()
+        except ValueError as error:
+            return f"Commissioned capability manifest is stale: {error}"
+        if skill_name not in manifest.available_embodied_names():
+            return f"Skill {skill_name!r} is not commissioned"
+        return None
+
+    def _motion_refusal(self, capability_name: str) -> str | None:
+        error = self._navigation_capability_error(capability_name)
+        return None if error is None else f"I couldn't do that safely. {error}"
 
     def handle_text(self, transcript: str) -> str:
         return self._handle_text(transcript, None)
@@ -313,6 +472,7 @@ class VoiceAgent:
                     frame,
                     original,
                     commit,
+                    capability_name="follow_owner",
                     reply="Okay—I'll follow you safely.",
                 )
             return self._commit(
@@ -337,6 +497,7 @@ class VoiceAgent:
                     frame,
                     original,
                     commit,
+                    capability_name="follow_owner",
                     reply="Okay—I'll follow behind you once I can estimate your direction.",
                 )
             return self._commit(
@@ -356,6 +517,7 @@ class VoiceAgent:
                     frame,
                     original,
                     commit,
+                    capability_name=None,
                     reply="Okay—I'll stay here.",
                 )
             return self._commit(
@@ -377,13 +539,15 @@ class VoiceAgent:
                     frame,
                     original,
                     commit,
+                    capability_name=_SPATIAL_CAPABILITY[spatial_intent.behavior],
                     reply="Okay—I'll make that bounded move safely.",
                 )
             if self.spatial_behavior_publisher is not None:
                 return self._commit(
                     commit,
                     lambda: self._remember(
-                        original, lambda: self.spatial_behavior_publisher(spatial_intent)
+                        original,
+                        lambda: self._execute_spatial_behavior(spatial_intent),
                     ),
                 )
 
@@ -463,6 +627,7 @@ class VoiceAgent:
                     frame,
                     original,
                     commit,
+                    capability_name=_NAVIGATION_CAPABILITY,
                     reply=f"Okay—I'll navigate toward {nav_directive} safely.",
                 )
             return self._commit(
@@ -782,6 +947,7 @@ class VoiceAgent:
                 retarget,
                 transcript,
                 commit,
+                capability_name=_NAVIGATION_CAPABILITY,
                 reply=f"Okay — revising the goal: {nav_directive}.",
             )
 
@@ -882,6 +1048,7 @@ class VoiceAgent:
                     frame,
                     transcript,
                     commit,
+                    capability_name="follow_owner",
                     reply=directive.reply,
                 )
             return self._commit(
@@ -915,6 +1082,7 @@ class VoiceAgent:
         transcript: str,
         commit: CommitGuard | None,
         *,
+        capability_name: str | None,
         reply: str,
     ) -> str:
         """Compile a system-authored PlanSketch and publish via PlanIR admission."""
@@ -922,6 +1090,13 @@ class VoiceAgent:
         assert self.planning_context_provider is not None
         assert self.plan_publisher is not None
         assert self.planner_output_adapter is not None
+        if capability_name is not None:
+            refusal = self._motion_refusal(capability_name)
+            if refusal is not None:
+                return self._commit(
+                    commit,
+                    lambda: self._remember(transcript, lambda: refusal),
+                )
         try:
             snapshot = self.planning_context_provider()
             plan = self.planner_output_adapter(sketch, frame, snapshot)
@@ -1105,11 +1280,17 @@ class VoiceAgent:
 
     def _execute_walk_skill(self, skill: str, walk: VelocityCommand) -> str:
         assert self.dog is not None
+        refusal = self._motion_refusal(skill)
+        if refusal is not None:
+            return refusal
         result = self.dog.execute(skill, vx=walk.vx, vy=walk.vy, vyaw=walk.vyaw)
         return self._walk_reply(walk) if result.accepted else result.message
 
     def _execute_navigation(self, directive: str) -> str:
         assert self.dog is not None
+        refusal = self._motion_refusal(_NAVIGATION_CAPABILITY)
+        if refusal is not None:
+            return refusal
         if self.navigation_publisher is not None:
             try:
                 return self.navigation_publisher(directive)
@@ -1128,7 +1309,32 @@ class VoiceAgent:
             return f"I couldn't navigate to {place}. {cmd.note or mission.status}"
         return f"Navigating to {place} (vx={cmd.vx:.2f}, vyaw={cmd.vyaw:.2f}; {cmd.note})."
 
+    def _execute_spatial_behavior(self, intent: SpatialIntent) -> str:
+        assert self.spatial_behavior_publisher is not None
+        capability_name = _SPATIAL_CAPABILITY.get(intent.behavior)
+        if capability_name is None:
+            return "I couldn't do that safely. Spatial behavior has no capability binding"
+        refusal = self._motion_refusal(capability_name)
+        if refusal is not None:
+            return refusal
+        return self.spatial_behavior_publisher(intent)
+
     def _execute_named_skill(self, skill_name: str) -> str:
+        live_skill = None
+        if self.dog is not None:
+            try:
+                live_skill = self.dog.catalog.get(skill_name)
+            except KeyError:
+                pass
+        capability_error = (
+            self._embodied_capability_error(skill_name)
+            if live_skill is None or live_skill.kind in {"pose", "trajectory"}
+            else self._navigation_capability_error(skill_name)
+        )
+        if capability_error is not None:
+            return f"I couldn't do that safely. {capability_error}"
+        if self.dog is None:
+            return "I couldn't do that safely. No live commissioned skill catalog"
         if (
             self.action_proposal_publisher is not None
             and skill_name in self._bounded_action_skill_ids()
@@ -1206,6 +1412,7 @@ class VoiceAgent:
         for _, result in validations:
             self.memory.add("tool", result.message)
         failures = [result.message for _, result in validations if not result.accepted]
+        failures.extend(self._motion_capability_failures(decision.tool_calls))
         if self.action_proposal_publisher is not None:
             bounded_skills = set(self._bounded_action_skill_ids())
             for call in decision.tool_calls:
@@ -1225,7 +1432,7 @@ class VoiceAgent:
         if physical_count > 1:
             failures.append("A decision can contain only one motion-producing action")
         if decision.next_action is not None:
-            proposal_error = self._validate_action_proposal(decision)
+            proposal_error = self._validate_action_proposal(decision, transcript=transcript)
             if proposal_error:
                 if proposal_error.startswith("Unknown proposed skill"):
                     # An INTERNAL validator string — the conversation model
@@ -1341,7 +1548,7 @@ class VoiceAgent:
                     failures.append("Spatial behavior control is not configured")
                     continue
                 try:
-                    detail = self.spatial_behavior_publisher(
+                    detail = self._execute_spatial_behavior(
                         spatial_intent_from_arguments(call.arguments)
                     )
                 except (RuntimeError, TypeError, ValueError) as error:
@@ -1389,14 +1596,75 @@ class VoiceAgent:
         self.memory.add("assistant", reply)
         return reply
 
-    def _validate_action_proposal(self, decision: AgentDecision) -> str | None:
+    def _motion_capability_failures(
+        self,
+        calls: tuple[ToolCall, ...],
+    ) -> list[str]:
+        """Return manifest failures for tool calls that can produce translation."""
+
+        failures: list[str] = []
+        for call in calls:
+            if call.name in {"run_pose", "run_skill"}:
+                name = call.arguments.get("name")
+                if isinstance(name, str):
+                    error = self._embodied_capability_error(name)
+                    if error is not None:
+                        failures.append(error)
+                continue
+            capability_name = self._tool_motion_capability(call)
+            if capability_name is None:
+                continue
+            error = self._navigation_capability_error(capability_name)
+            if error is not None:
+                failures.append(error)
+        return failures
+
+    @staticmethod
+    def _tool_motion_capability(call: ToolCall) -> str | None:
+        if call.name == "navigate":
+            return _NAVIGATION_CAPABILITY
+        if call.name == "set_behavior":
+            mode = call.arguments.get("mode")
+            return _BEHAVIOR_CAPABILITY.get(mode) if isinstance(mode, str) else None
+        if call.name == "run_spatial_behavior":
+            behavior = call.arguments.get("behavior")
+            return _SPATIAL_CAPABILITY.get(behavior) if isinstance(behavior, str) else None
+        if call.name != "set_velocity":
+            return None
+        try:
+            vx = float(call.arguments.get("vx", 0.0))
+            vy = float(call.arguments.get("vy", 0.0))
+            vyaw = float(call.arguments.get("vyaw", 0.0))
+        except (TypeError, ValueError):
+            return None
+        if max(abs(vx), abs(vy), abs(vyaw)) == 0.0:
+            return None
+        if abs(vyaw) >= max(abs(vx), abs(vy)):
+            return "turn_left" if vyaw > 0.0 else "turn_right"
+        if abs(vy) > abs(vx):
+            return "strafe_left" if vy > 0.0 else "strafe_right"
+        return "walk_forward" if vx > 0.0 else "walk_backward"
+
+    def _validate_action_proposal(
+        self,
+        decision: AgentDecision,
+        *,
+        transcript: str | None,
+    ) -> str | None:
         proposal = decision.next_action
         if proposal is None:
             return None
+        if self.capability_manifest is not None and self.dog is not None:
+            try:
+                validate_motion_manifest(self.capability_manifest, self.dog.catalog)
+            except ValueError:
+                return "Live motion content no longer matches commissioned capabilities"
         if self.action_proposal_publisher is None:
             return "Semantic action proposals are not configured"
         if proposal.kind != "skill" or proposal.name not in self._skill_ids():
             return f"Unknown proposed skill: {proposal.name}"
+        if proposal.name not in self._available_social_skill_ids():
+            return "Proposed action is not in the runtime social-skill allowlist"
         if proposal.trigger == "inferred_affect":
             if decision.affect is None:
                 return "An inferred-affect action requires an affect estimate"
@@ -1415,8 +1683,11 @@ class VoiceAgent:
                 or proposal.interruption_request != "none"
             ):
                 return "Conversation reactions cannot request interruption"
-        elif proposal.name not in self._bounded_action_skill_ids():
-            return "Explicit action proposals require a bounded pose or trajectory skill"
+        else:
+            if not self._transcript_explicitly_requests_skill(transcript, proposal.name):
+                return "Explicit action authority was not present in the owner transcript"
+            if proposal.name not in self._bounded_action_skill_ids():
+                return "Explicit action proposals require a bounded pose or trajectory skill"
         return None
 
     def configure_personality(self, affect_actions: dict[str, str]) -> None:
@@ -1430,11 +1701,12 @@ class VoiceAgent:
 
     def tool_definitions(self) -> list[dict[str, Any]]:
         coordinated = self.action_proposal_publisher is not None
-        skill_enum = self._bounded_action_skill_ids() if coordinated else self._skill_ids()
+        skill_enum = self._bounded_action_skill_ids()
+        pose_enum = self._available_pose_skill_ids()
         run_skill_description = (
             "Run one bounded configured pose or trajectory through the activity coordinator."
             if coordinated
-            else "Run any catalog skill (pose, trajectory, gait, velocity)."
+            else "Run one commissioned bounded pose or trajectory."
         )
         tools: list[dict[str, Any]] = [
             {
@@ -1443,7 +1715,7 @@ class VoiceAgent:
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "name": {"type": "string", "enum": sorted(self.poses) or skill_enum}
+                        "name": {"type": "string", "enum": pose_enum}
                     },
                     "required": ["name"],
                     "additionalProperties": False,
@@ -1548,6 +1820,10 @@ class VoiceAgent:
                 "parameters": {"type": "object", "additionalProperties": False},
             },
         ]
+        if not pose_enum:
+            tools = [tool for tool in tools if tool["name"] != "run_pose"]
+        if not skill_enum:
+            tools = [tool for tool in tools if tool["name"] != "run_skill"]
         if self.info_tools is not None:
             tools.extend(self.info_tools.definitions())
         return tools

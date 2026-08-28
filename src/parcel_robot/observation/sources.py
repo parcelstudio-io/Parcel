@@ -27,6 +27,12 @@ from parcel_robot.contracts.navigation_snapshot_v2 import NavigationSnapshotV2
 from parcel_robot.evidence_origin import EvidenceOrigin
 from parcel_robot.observation.simulator_adapter import snapshot_from_carrier
 
+CARRIER_TIMESTAMP_SOURCE = "source"
+CARRIER_TIMESTAMP_INGRESS_MONOTONIC = "ingress_monotonic"
+_CARRIER_TIMESTAMP_DOMAINS = frozenset(
+    {CARRIER_TIMESTAMP_SOURCE, CARRIER_TIMESTAMP_INGRESS_MONOTONIC}
+)
+
 
 @runtime_checkable
 class ObservationSource(Protocol):
@@ -71,7 +77,10 @@ class CarrierObservationSource:
     ``observe`` is duck-typed on purpose: this module imports no backend, so
     the same source serves the mujoco backend, the headless city harness and a
     hand-built fixture.  ``range_convention`` has no default — the caller owns
-    the A2 stamping decision and must state it.
+    the A2 stamping decision and must state it.  The two optional source
+    conventions default to that output convention for legacy lossless callers;
+    a mixed carrier must state them explicitly so normalization happens before
+    the single traversability stamp is minted.
     """
 
     origin = EvidenceOrigin.SIMULATION
@@ -82,16 +91,27 @@ class CarrierObservationSource:
         *,
         range_convention: str,
         footprint_radius_m: float = 0.0,
+        planar_source_convention: str | None = None,
+        analytic_source_convention: str | None = None,
+        timestamp_domain: str = CARRIER_TIMESTAMP_SOURCE,
         source_id: str = "simulator",
         process_epoch: int = 0,
         name: str = "simulator",
     ) -> None:
         if not callable(observe):
             raise TypeError("observe must be callable")
+        if timestamp_domain not in _CARRIER_TIMESTAMP_DOMAINS:
+            raise ValueError(
+                "timestamp_domain must be one of "
+                f"{sorted(_CARRIER_TIMESTAMP_DOMAINS)}"
+            )
         self.name = name
         self._observe = observe
         self._range_convention = range_convention
         self._footprint_radius_m = footprint_radius_m
+        self._planar_source_convention = planar_source_convention
+        self._analytic_source_convention = analytic_source_convention
+        self._timestamp_domain = timestamp_domain
         self._source_id = source_id
         self._process_epoch = process_epoch
         self._sequence = 0
@@ -108,10 +128,24 @@ class CarrierObservationSource:
         """Stamp one already-obtained carrier — the runtime's per-tick path."""
 
         self._sequence += 1
+        if (
+            self._timestamp_domain == CARRIER_TIMESTAMP_INGRESS_MONOTONIC
+            and now_monotonic_ns is None
+        ):
+            raise ValueError(
+                "ingress_monotonic timestamp_domain requires now_monotonic_ns"
+            )
         snapshot = snapshot_from_carrier(
             carrier,
             range_convention=self._range_convention,
             footprint_radius_m=self._footprint_radius_m,
+            planar_source_convention=self._planar_source_convention,
+            analytic_source_convention=self._analytic_source_convention,
+            capture_monotonic_ns=(
+                now_monotonic_ns
+                if self._timestamp_domain == CARRIER_TIMESTAMP_INGRESS_MONOTONIC
+                else None
+            ),
             source_id=self._source_id,
             process_epoch=self._process_epoch,
             sequence=self._sequence,
@@ -214,6 +248,8 @@ class PhysicalObservationSource:
 
 
 __all__ = [
+    "CARRIER_TIMESTAMP_INGRESS_MONOTONIC",
+    "CARRIER_TIMESTAMP_SOURCE",
     "CarrierObservationSource",
     "ObservationSource",
     "PhysicalObservationSource",

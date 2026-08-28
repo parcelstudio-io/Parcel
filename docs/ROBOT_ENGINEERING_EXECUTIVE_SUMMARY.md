@@ -1,19 +1,21 @@
 # Parcel companion robot — engineering executive summary
 
-**A ten-page bridge from senior software engineering to robotics: physics,
+**An executive bridge from senior software engineering to robotics: physics,
 architecture, current-code truth, quality, hardware readiness, and next gates**
 
 | Document control | Value |
 | --- | --- |
-| Status | Current-code engineering explanation and executive decision brief |
-| Audit date | Base audit 2026-08-22; implementation delta 2026-08-23 |
-| Last audited implementation baseline | `c1b84055bd57`; Wave 3 is committed. The intervening `be86b78` changes only the codebase index, while pre-documentation tip `3792288` adds the ARCH-1 review packet/task stubs rather than product behavior. |
-| Worktree scope | Post-Wave-3 PROX-1, SENSE-1 and GATE-1 work is actively changing proximity, pose/scan evidence, physical configuration, capture preflight and gate paths. A new AWARE-1 addendum proposes bundling the PROX/SENSE runtime wire-ins. All remain in-flight and are not promoted into the committed baseline. |
+| Status | Current-code engineering explanation and executive decision brief; the root README governs the latest release-unit verification verdict |
+| Audit date | Base audit 2026-08-22; implementation deltas through 2026-08-26; runtime-composition and gate-status reconciliation through the current checkout |
+| Audited implementation basis | Committed base `f3ecb5cd9e09` plus the accompanying 2026-08-26 prompt, evaluation, research, P0 contract, social-progress-shadow, and documentation release unit, without promotion beyond its evidence. |
+| Audited tranche | A bounded companion-friend prompt, fresh red conversation/navigation evidence, simulator/generalization studies, capability/companion/gateway/research/learning contracts, and a default-off social-progress observer. It carries no physical-motion promotion. |
 | Audience | Senior software engineers learning robotics, engineering/product leaders, robotics and safety reviewers, and procurement owners |
-| Brief length | Approximately 7,000 words, or about 11–14 dense technical pages depending on rendering, tables, and code blocks |
-| Canonical detail | [Parcel companion robot engineering handbook](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md) |
+| Brief length | Approximately 8,900 words; rendering length varies with tables and diagrams |
+| Current status sources | [Root README](../README.md) for the latest readiness/gate verdict; [production runtime code map](PRODUCTION_RUNTIME_CODE_MAP.md) for the shortest as-built call path |
+| Concise code design | [Parcel robotics code design](ROBOTICS_CODE_DESIGN.md) |
+| Long-form reference | [Parcel companion robot engineering handbook](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md) for detailed rationale; use the root README and runtime code map above for current status |
 
-This ten-page brief assumes software, distributed-systems, testing and ML experience,
+This brief assumes software, distributed-systems, testing and ML experience,
 but no robotics background. It answers six questions:
 
 1. What robot has actually been built in code?
@@ -25,11 +27,15 @@ but no robotics background. It answers six questions:
 
 The answer in one sentence is:
 
-> Parcel is a credible simulator autonomy stack with a committed observe-only Wave-3
-> hardware rail and strong semantic/safety boundaries. It is still not a mount-and-run
-> companion: the neutral physical observation contract, target deployment,
-> localization, person/terrain sensing, sole-writer authority, stopping evidence and
-> body commissioning remain open.
+> Parcel is a credible simulator integration and autonomy codebase with strong
+> semantic/safety boundaries, a deployable sole-writer gateway, and a disarmed
+> gateway composition. Its normal application builder does not yet construct the
+> capability manifest, deployment target, or commissioning authenticator, so
+> automatic embodied and navigation actions currently fail closed. It is still not
+> a mount-and-run companion: native SDK2/DDS motion, target deployment, synchronized
+> physical evidence, localization, person/terrain sensing, independent stopping
+> evidence, body commissioning, and acceptable conversation/navigation quality
+> remain open.
 
 ### How to read every capability claim
 
@@ -38,7 +44,7 @@ the word *done*. This document uses the following vocabulary throughout:
 
 | State | Meaning | Example in Parcel |
 | --- | --- | --- |
-| **Implemented** | Code and usually isolated tests exist. | RealSense backends and an owner-appearance tracker are committed, but their existence does not wire them into physical runtime composition. |
+| **Implemented** | Code and usually isolated tests exist. | `ReplayObservationSource` exists and is tested, but the normal runtime composition does not construct it. |
 | **Wired** | A normal composition root constructs it and its output reaches the intended consumer. | The simulator observation reaches navigation and the safety chain. |
 | **Verified** | A declared scenario passes with reproducible metrics and provenance. | Frozen simulator safety panels and many narrow P1/P2 fixtures pass. |
 | **Commissioned** | Parameters, frames, timing, faults and operator procedures are measured on the intended physical body. | No autonomous Parcel perception-to-motion path is commissioned on a Go2. |
@@ -48,62 +54,58 @@ feature can run and still be wrong. A simulator-verified feature can fail on car
 under clock skew or with a real camera. Commissioning is the engineering activity
 that converts assumptions into measured properties of one hardware configuration.
 
-### 2026-08-23 implementation delta and direction
+### 2026-08-26 implementation and evidence delta
 
-This dated section supersedes earlier progress, release-integrity and procurement
-statements where they conflict; the underlying architecture and robotics analysis
-remain unchanged.
+This section governs implementation and evidence scope where older Wave-3 language
+below conflicts; the root README governs any later whole-tree verification result.
+The committed base is `f3ecb5c`; the accompanying August 26 tranche is evaluated
+as one audited release unit rather than being silently promoted beyond its
+evidence or treated as a physical baseline.
 
-The last audited implementation baseline is `c1b8405`. Wave 3 changed 150 paths
-(+32,082/-214), including 24 product paths and 11 test/replay paths. Fable reports a
-third commit-tier run with 9,813 passes at that exact commit. Treat that as recorded
-desktop evidence: this documentation update did not independently rerun the full
-gate, and nothing in it proves aarch64, Orin, DDS, Mid-360, D455 or robot motion.
-
-The subsequent ARCH-1 review is
-**ACCEPT_WITH_REQUIRED_CHANGES · SUPPLEMENT PARTIAL · NOT DISPATCHED**. It accepts
-the hybrid direction and preserve-first boundaries, not implementation spend,
-credentials or physical authority. Its reconciliation still needs one narrow
-correction: the concern partition omits L11, several delta questions lack their
-explicit truth table/schema/disposition, and status/tranche/owner statements
-conflict. See the [review packet](../scrum/20260823/task_1/README.md).
-
-| Plane | Current status | What exists | What remains open |
+| Plane | Current status | What exists now | Binding limit |
 | --- | --- | --- | --- |
-| Wave 3 hardware rail | **COMMITTED; DESKTOP/REPLAY + HOST ARRAY BENCH; NO TARGET/BODY** | Observe-only Go2/replay backend, commissioned scan latch, Mid-360 codec/band, XVF3800 duplex gateway and mic route, Go2 overlay/envelope records, host/aarch64 gate machinery, box-day and static Orin deployment artifacts | Go2/Orin/Mid-360/D455/on-dog execution, neutral observations, commissioned pose/frames/clocks, native writer/stop and physical trials |
-| ARCH-1 | **ACCEPT_WITH_REQUIRED_CHANGES; PARTIAL SUPPLEMENT; NOT DISPATCHED** | Boundary/symbol census, concern register, proportional test plan and preserve/extract direction | Narrow verdict correction plus an owner-approved tranche, budget, integrator and stop gate |
-| PROX-1 | **IN-FLIGHT; UNWIRED LIBRARY SEAM** | Typed context/profile selector and focused tests are visible in the worktree | No base-config or runtime wiring; context currently commits a tighter policy without deterministic acceptance, expiry, revision or fallback; no physical person/stopping evidence |
-| SENSE-1 / GATE-1 | **IN-FLIGHT; UNVERIFIED** | Pose/receipt, drain/config/preflight and gate corrections are actively changing | Quiescent integration, independent review, product-path refuters, target execution and physical evidence |
-| AWARE-1 addendum | **PLANNED; SCOPE CONFLICT** | Assigns one future `runtime.py` card both periodic head-turn behavior and the PROX/SENSE wire-ins | Runtime-file ownership is not authority approval: split the evidence seam from the proximity-policy decision, and do not expose a reasoning-model setter or narrower profile without proposal/accept/expiry/revision/fallback rules |
+| Capability truth | **IMPLEMENTED; NORMAL BUILDER UNWIRED** | Deployment-bound manifest, exact asset/schema digests, and authenticated process-local commissioning seam | `web_panel.build_runtime` supplies no manifest, deployment target, or commissioning authenticator, so normal automatic navigation and embodied actions are refused; no capability has been physically commissioned |
+| Companion action state | **IMPLEMENTED; PARTIALLY CONSUMED** | Typed consent, owner/operator evidence, embodiment envelope, action admission/receipt, dialogue, opportunity, and terminal-claim contracts | Not yet one fully wired live multi-turn executive; no trusted physical receipt publisher |
+| Motion gateway composition | **DESKTOP DISARMED RUNG IMPLEMENTED** | Normal `RobotRuntime` can use `ControlManager` through the real Unix gateway client to fake Sport; restart/reconnect remains disarmed; stop crosses the socket | Adapter has no acquire/command path; vendor mode, native SDK2/DDS, Orin, and physical motion remain absent |
+| Observation spine | **SIMULATION RUNTIME-WIRED; REPLAY ADAPTER TESTED; PHYSICAL SKELETON** | Immutable `NavigationSnapshotV2`, evidence headers, simulator-clock mapping, localization/discontinuity contracts, observe-only Go2 source | Normal runtime constructs the simulator carrier source; no synchronized commissioned physical sensor/localization composition |
+| Independent completion H2b | **REFUTED; DEFAULT-OFF/ISOLATED** | Zero false claims across 360 false opportunities and 120/120 nominal completion; identity/reset/geometry now use three exact, process-local authenticated channels | Alias recovery was 113/120 versus a frozen 114/120 gate; channel authenticity does not prove independent physical sensors; not connected to `navigation.pipeline` |
+| Social progress | **SHADOW OBSERVER IMPLEMENTED; POLICY NO-GO** | The prototype-only observer samples the requested arbiter winner before dispatch, then records final/achieved velocity, track visibility, planner liveness, and swept-corridor evidence after the final gate | It cannot command motion; all four hypotheses in the 475-episode study were refuted and every arm had contacts |
+| Research/learning | **LOCAL, DEFAULT-OFF, PROPOSAL-ONLY** | Bounded summary spool/bundles/retention/revocation and immutable split/evaluation/promotion contracts | No production crypto/cloud/deletion provider, trainer, deployer, activation, or physical evidence |
 
-The committed rail is directionally useful but contains known integration blockers:
-the product process constructs a vendor-SDK source despite the documented isolated
-vendor environment; physical truth still rides `SimObservation` plus identity side
-channels; arbitrary injected transports can inherit PHYSICAL; the six-term stopping
-model exists but the committed gate still evaluates V1; hard capability skips can
-false-green; and the resolved Go2 profile can inherit simulator battery/controller/
-NIC truth. No bounded reactive person/dropoff channel or commissioned ODOM/MAP chain
-exists.
+Fresh evidence sets a lower and more honest quality baseline than several historical
+green slices:
 
-The next implementation chain is therefore:
+- NAV_INSTRUCT: 25/125, success rate 0.20, SPL 0.1348, and one false arrival;
+- unseen semantic scenes: success rate 0.253 with 16 false arrivals across 75
+  episodes;
+- personal multi-turn conversation: 3/13 turns and 2/8 families passing;
+- current planner: 3/5 for full PlanIR and 3/5 for PlanSketch;
+- walk-with-me: 5/10 headless; Follow: 7/9 scripted; social yield retains one
+  simulated human contact; and
+- the one-time commit gate reached 10,510 passes before two deterministic repository-
+  maintenance failures. Both exact defects and a broader affected set passed after
+  repair, but the full gate was not rerun in that recorded research close.
 
-1. obtain the narrow ARCH-1 correction and owner-approved tranche/budget;
-2. independently verify the SENSE/GATE corrections; reject AWARE-1's bundled
-   runtime wire-in until the seams have separate acceptance, while keeping PROX
-   unwired and widest-by-default;
-3. build `ARCH-OBS-MIN`: a read-only Unitree vendor-state sidecar, separate bounded
-   LiDAR ingest, production-only PHYSICAL minting and immutable navigation snapshot;
-4. execute real mount-day capture plus aarch64/Orin install, clock, DDS and service-
-   order proof;
-5. bench the co-located native governor/sole-writer, strip Python writer credentials,
-   and prove TTL/epoch/second-writer/independent-stop behavior; then
-6. progress through restrained command-path and inspected ground-stop trials before
-   leashed crawl or any people/dropoff/autonomous ODD.
+That recorded research-close gate predates the P0 contract tranche. At that
+documentation close, 759 affected contract/runtime/evaluation tests passed, but
+that scoped result did not establish whole-working-tree release integrity. A later
+whole-working-tree audit completed and was **RED** at the default-suite and Ruff
+hard gates. The [root README](../README.md) owns the latest exact result and should
+supersede this qualitative record after the next guarded close. Until then, treat
+the checkout as non-releaseable and the earlier `FINAL_VERIFICATION_PENDING`
+language as historical.
 
-This is retain-and-characterize work, followed by decomposition behind landed
-facades—not a wholesale Python, ROS or god-object rewrite. Integrated maturity stays
-L2 simulation; the physical system remains L0–L1 until target and body evidence
-closes the corresponding gates.
+The result is a dual **NO-GO**: neither physical motion nor conversation release is
+ready. The next build is `SIM-CONTRACT-1`, not broader model authority: preserve the
+gateway as sole writer, attach the pinned native Unitree MuJoCo SDK2/DDS simulator
+surface through an explicit simulated Sport port/controller bridge, wire companion
+receipts in stationary mode, and qualify progress/completion on untouched replay.
+Only after those desktop/simulator gates should the separately governed stationary
+Stage-0 physical-capture ladder begin.
+
+The August 23 Wave-3 and ARCH-1 records remain valuable historical rationale in the
+[engineering handbook](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md) and
+[`scrum/20260823`](../scrum/20260823/); they no longer define the current status.
 
 ## 1. Executive decision
 
@@ -111,7 +113,10 @@ closes the corresponding gates.
 
 Parcel should be funded and managed as a **simulation-first supervisory-autonomy
 platform entering physical integration**, not as a field-ready companion robot.
-The integrated product is approximately **L2** on the maturity ladder used here:
+The manually operable simulator and desktop integration substrate are approximately
+**L2** on the maturity ladder used here. The automatic semantic-to-effect product
+path is still crossing L1 to L2 because the normal builder does not construct the
+capability evidence required to admit it:
 
 | Level | Meaning |
 | --- | --- |
@@ -122,10 +127,11 @@ The integrated product is approximately **L2** on the maturity ladder used here:
 | L4 | Supervised bench/tethered evidence on intended hardware |
 | L5 | Repeated integrated evidence in a declared operating design domain (ODD) |
 
-Several deterministic subsystems reach L3 in simulation. The integrated physical
-robot remains L0–L1 because no normal runtime consumes a synchronized physical
-observation and no autonomy path has commissioned Go2 motion, localization,
-perception, stopping, identity, or through-air voice.
+Several deterministic subsystems reach L3 in simulation. Those component results do
+not make automatic navigation available in the normal application composition. The
+integrated physical robot remains L0–L1 because no normal runtime consumes a
+synchronized physical observation and no autonomy path has commissioned Go2 motion,
+localization, perception, stopping, identity, or through-air voice.
 
 The strongest product assets are worth preserving:
 
@@ -136,30 +142,35 @@ The strongest product assets are worth preserving:
 - learned components are proposal/shadow/subtractive-veto sources, and tests include
   negative, frozen, provenance and seeded-defect evidence.
 
-The immediate problem is not a shortage of AI models. Wave 3 is committed and its
-desktop gate is recorded green, but the interpreter/process split has not executed
-on target and the physical evidence chain remains incomplete. More
-semantic features should not be used to defer the following foundations:
+The immediate problem is not a shortage of AI models. The deployable gateway and
+disarmed product composition are credible desktop foundations, but the normal
+simulator builder also stops automatic embodied work at capability admission. Native
+Unitree simulation/control, target execution, and the physical evidence chain remain
+incomplete. Fresh conversation and navigation results are also below their release
+bars. More semantic features should not be used to defer the following foundations:
 
-1. hosted clean-checkout evidence plus honest Python/import capabilities;
+1. one same-contract native Go2 simulation path through the existing sole-writer
+   gateway, with restart/disarm/TTL/clock/fault evidence;
 2. a synchronized physical observation and `map → odom → base_link` SLAM spine;
-3. a native sole-writer Unitree gateway plus independent stop;
-4. calibrated perception/owner identity and repeated first-ODD evidence.
+3. an independent physical stop plus measured command/feedback/stopping envelopes;
+4. calibrated perception/owner identity and repeated first-ODD evidence; and
+5. a fully wired receipt-backed companion executive plus conversation quality that
+   clears frozen multi-turn and human review gates.
 
 ### 1.2 Procurement judgment
 
-The project record now identifies an ordered **Go2 EDU Plus with Orin NX and a
-Mid-360**. That is the correct way to treat the purchase: supervised R&D and
-commissioning equipment, not a mount-and-run autonomous product. The body, D455 and
-independent stop are not yet on hand; the only relevant physical device currently
-available to this checkout is the reSpeaker XVF3800 microphone array. Delivery
-therefore begins an evidence campaign rather than raising the software's maturity.
+The August 23 procurement record identifies an ordered **Go2 EDU Plus with Orin NX
+and a Mid-360**. The August 26 system design instead evaluates a likely **AGX Orin
+64 GB** target. That compute/BOM mismatch must be reconciled before deployment
+planning. No Go2 or Orin hardware was used in the August 26 review; the last owner-
+reported on-hand device, on August 22, was the reSpeaker XVF3800 microphone array.
+Any delivery begins an evidence campaign rather than raising software maturity.
 
 | Question | Decision |
 | --- | --- |
 | Buy for autonomous companion deployment? | **No.** Physical autonomy prerequisites are absent or uncommissioned. |
 | Buy D455 for engineering now? | **Yes.** It unlocks physical camera, metric-depth and owner-tracking measurements; the RGB-only UVC path cannot satisfy the current depth contract. |
-| Buy Go2 EDU as an engineering platform today? | **Already ordered as an EDU Plus R&D platform.** Receipt does not authorize autonomous motion; acceptance, independent-stop and lab-safety gates still govern use. |
+| Buy Go2 EDU as an engineering platform today? | **Recorded as ordered on August 23 for R&D.** Verify the exact body/compute/sensor BOM; receipt does not authorize autonomous motion. |
 | How must the purchase be classified? | Supervised R&D/data-collection/commissioning platform, not an autonomous product. |
 | What should be purchased with the body? | Independent stop decision/remote, tether or leash, controlled-area equipment, dedicated network and the agreed sensor/compute mounts. |
 | What should happen before delivery? | Owner reviews/signs the box-day plan, sends the open Unitree questions, names operator/reviewer, and prepares the independent stop, controlled area, network and capture/privacy procedures. |
@@ -283,10 +294,10 @@ the robot. A differential-drive base is nonholonomic and cannot command arbitrar
 Kinematics also covers the robot footprint and sensor extrinsics. A point robot can
 fit through any positive-width gap; a Go2-sized body cannot. Planning therefore
 inflates obstacles by footprint plus clearance, transforming “move a disc through
-raw geometry” into “move a point through a configuration-space obstacle map.” The
-committed prototype exposes a real coupling defect here: a conservative obstacle stop
-number can make an ordinary 0.8–0.9 m doorway mathematically impassable, while the
-planner and final gate do not yet derive their entire envelope from one commissioned
+raw geometry” into “move a point through a configuration-space obstacle map.”
+DOOR-1/A2 closed the narrow disagreement between the planner's obstacle ring and the
+final obstacle gate for ordinary doorways. The broader person, social, localization,
+latency, and stopping envelope still is not derived from one physically commissioned
 source.
 
 ### 3.4 Dynamics: force, inertia, friction, and why simulation distance is not proof
@@ -327,12 +338,12 @@ and specific force, not world velocity; bias makes integrated pose drift. Contac
 odometry also drifts when feet slip.
 
 Parcel has good schema instincts: origin, frame, freshness and payload validity are
-treated as evidence properties, and camera ingress can carry calibrated metadata.
-Committed Wave P1/P2 adds UVC, D455 and recorded backends plus a detector process seam.
-However, `_attach_configured_camera_ingress` still constructs MuJoCo/EGL
-unconditionally. Thus physical backends are implemented but not runtime-wired, and
-the normal `SimObservation` still carries truth pose, truth-like owner tracks and
-simulator scans.
+treated as evidence properties, and camera ingress preserves calibration metadata.
+`_attach_configured_camera_ingress` defaults to MuJoCo/EGL but selects UVC,
+RealSense, or recorded venues when explicitly configured. Those paths are
+runtime-wired but uncommissioned: no attached D455/camera row or synchronized
+physical observation spine exists, and the default `SimObservation` remains
+simulator-derived.
 
 ### 3.6 Uncertainty and Bayes: a belief is not a boolean
 
@@ -401,8 +412,9 @@ and a grid-invalid scan currently permits a weaker fallback in some paths.
 
 Planning is layered by timescale: mission intent, global route, local response and
 final command admission. Semantic/route memory may propose; fresh geometry verifies.
-The planner optimizes progress, while an independent final gate restricts commands
-even when planning or configuration is wrong.
+The planner optimizes progress, while a separately owned final software restriction
+recomputes what is permissible even when planning or configuration is wrong. It is
+defense in depth, not an independent or safety-rated physical stop.
 
 ### 3.9 Feedback control, latency, and stopping distance
 
@@ -429,8 +441,8 @@ motion loop without a deadline and safe fallback.
 `SafetyEnvelope` encodes this equation and supplies one authority surface. Its committed
 prototype values—0.70 m person band over a software-derived 0.68 m floor—are useful
 simulation policy, not physical facts. Real `tau`, deceleration and uncertainty must
-be measured end to end. The independent stop must remain available if Python, GPU,
-LAN, cloud, UI or the main process dies.
+be measured end to end. A commissioned independent physical stop must be added and
+remain available even if Python, GPU, LAN, cloud, UI, or the main process dies.
 
 ### 3.10 Companion behavior is a robotics authority problem
 
@@ -471,6 +483,9 @@ text / microphone / hosted Realtime
               |
  compiler + fresh-snapshot validator
               |
+ capability + identity + consent + body-state admission
+              +---- normal builder has no manifest/attestation -> REFUSE
+              |
  TaskExecutive + resources + task revision
               |
  navigation / follow / spatial / activity controller
@@ -481,7 +496,7 @@ text / microphone / hosted Realtime
               |
  smoothing/shaping + post-shaper exact-stop reassertion
               |
- ControlManager / simulator command sink
+ ControlManager / simulator sink or disarmed Unix gateway
 ```
 
 The model supplies semantic value: interpreting open-ended language, proposing
@@ -489,22 +504,42 @@ bounded tasks, responding conversationally and eventually suggesting recovery.
 It does not own raw velocity, joints, safety priority, actuator leases or successful
 completion. This boundary should not be weakened as models improve.
 
-The code still has more than one consequential-action lifecycle. Navigation,
-following and typed tasks normally use the brain/executive path, while some legacy
-walk, catalog skill, pose/trajectory and fallback paths bypass portions of it. They
-still encounter downstream safety in the simulator runtime, but task resources,
-pause/resume, progress and verification are not uniform. The target is one semantic
-task gateway for every non-emergency physical effect, plus a separate dominant STOP.
+The new companion action/receipt contracts describe the missing uniform lifecycle,
+but the live runtime does not yet make them the sole path. The implemented planned
+routes place navigation, following, and typed tasks on the brain/executive path once
+an explicit trusted manifest is injected. The normal UI/runtime builder injects no
+manifest, deployment target, or commissioning authenticator, so those automatic
+requests currently fail at admission rather than reaching a motion controller.
+Manual browser velocity still uses the bounded runtime door through arbitration and
+final safety, and the separately scoped pose-review gallery remains available. Some
+legacy walk, catalog-skill, pose/trajectory, and fallback paths also bypass portions
+of the uniform task lifecycle. Identity, consent, task resources, pause/resume,
+progress, and verified terminal receipts are therefore not yet uniform. The target
+is one semantic task gateway for every non-emergency physical effect, plus a separate
+dominant STOP.
 
 ### 4.2 Default composition remains simulation-first
 
 With no physical profile, the UI/runtime builder and stack launcher still select
-MuJoCo. Wave 3 also makes the EDU Plus overlay select an observe-only `Go2Backend`,
-but that path still returns simulator-shaped `SimObservation` plus keyed evidence
-side channels and refuses every positive-motion method. Its in-process
-`LiveGo2Sources` construction also conflicts with the documented isolated vendor
-environment. It is a useful integration seam, not a neutral or commissioned
-physical observation path.
+MuJoCo. The observation spine now stamps an immutable `NavigationSnapshotV2` beside
+the legacy carrier and explicitly maps the synchronous simulator clock to host
+monotonic time. The EDU Plus overlay can select an observe-only `Go2Backend`, but
+that source remains uncommissioned and refuses every positive-motion method. It is a
+useful integration seam, not a synchronized or commissioned physical observation
+path.
+
+Simulation selection is not capability admission. The current
+`web_panel.build_runtime` call does not provide a capability manifest, matching
+deployment target, or commissioning authenticator. Automatic Navigate, Follow,
+roam, poses, and gestures therefore fail closed in the full normal product
+composition even though their implementations and explicitly commissioned test
+fixtures exist.
+
+The registered `motion_gateway_disarmed` composition lets the normal runtime cross
+the real Unix gateway boundary through `ControlManager`, using fake Sport in desktop
+tests. It intentionally exposes no acquire or command call, declares body velocity
+unsupported, and reconnects disarmed. This proves a production-shaped lifecycle and
+STOP seam; it does not implement the native Unitree simulator or physical writer.
 
 Canonical configuration reinforces this:
 
@@ -512,32 +547,38 @@ Canonical configuration reinforces this:
 - Unitree command axes: uncommissioned;
 - Unitree state frame: uncommissioned;
 - allowed physical modes: empty;
+- normal-builder capability manifest: absent;
 - navigation model: deterministic `grid_v1`;
 - semantic source: simulator `oracle`;
 - route memory: disabled;
 - `rl`-named motion backend: empty policy path, therefore no actuating learned
   locomotion policy.
 
-This is good fail-closed configuration. It also means changing a launcher option or
-adding a vendor class does not create a physical product.
+This is a fail-closed configuration and a visible composition gap: manual simulator
+controls and the separate pose-review surface remain useful, but selecting `grid_v1`
+does not by itself admit automatic motion. Changing a launcher option or adding a
+vendor class does not create a physical product.
 
 ### 4.3 Subsystem truth table
 
 | Subsystem | Implemented and useful now | Missing product evidence |
 | --- | --- | --- |
-| Local navigation | 161×161 rolling log-odds grid at 0.1 m, inflation/costs, eight-connected A*, path tracking and reactive/TTC safety | Persistent free-space map; consistent invalid-scan HOLD policy; physical traversal |
+| Local navigation | 161×161 rolling log-odds grid at 0.1 m, inflation/costs, eight-connected A*, path tracking, reactive/TTC safety, typed snapshot input, and discontinuity seams | The normal builder supplies no capability manifest, so automatic navigation is not admitted; fresh quality is 25/125 NAV_INSTRUCT with one false arrival; persistent free-space map and physical traversal remain absent |
 | Semantic mapping | Oracle rows for deterministic simulation; committed experimental `OnlineMap` with evidence, visits, names, embeddings, decay and persistence | Physical input, promotion accuracy, map lifecycle and proof that it never substitutes for SLAM |
-| Localization | MAP/ODOM `PoseProvider`, covariance/health validation, truth and drifting-odom providers | EKF/graph estimator, IMU/contact/visual/LiDAR fusion, `T_map_odom`, loop closure and relocalization monitoring |
-| Motion safety | Priority/TTL arbitration, finite/fresh/frame/origin checks, person/obstacle/TTC gates, shaping, exact-stop reassertion, watchdog and stationary witness | Native sole-writer gateway, independent stop campaign and commissioned response/braking envelope |
-| Interaction | Local and hosted voice lanes, committed-turn authority, task compiler/executive and deterministic STOP | Active hosted config in a clean checkout, tuned through-air endpointing/AEC and one uniform action lifecycle |
-| Companion memory | Committed consent/provenance owner facts, remember/forget/replay, affect labels and bounded initiative | Production speaker enrollment, deletion audit, distillation lifecycle and physical owner-presence source |
+| Localization | MAP/ODOM `PoseProvider`, covariance/health validation, truth/drifting providers, jump latch and pose-epoch contracts | Commissioned LIO/EKF/graph estimator, sensor fusion, `T_map_odom`, loop closure, relocalization and hardware replay |
+| Motion safety | Priority/TTL arbitration, finite/fresh/frame/origin checks, person/obstacle/TTC gates, shaping, exact-stop reassertion, deployable gateway and disarmed runtime composition | Native SDK2/DDS positive-motion port, independent stop campaign, Orin execution and commissioned response/braking envelope |
+| Interaction | Local/hosted voice lanes, committed-turn authority, deterministic STOP, capability-manifest mechanism and strict companion action/receipt contracts | The manifest is not composed by the normal builder; fresh personal conversation is 3/13; through-air endpointing/AEC, live receipt-backed executive and human review remain open |
+| Companion memory/research | Consent/provenance owner facts, remember/forget/replay, bounded initiative, default-off summary research spool and immutable learning registry | Production speaker enrollment, remote crypto/deletion, distillation utility, training/deployment services and physical owner-presence source |
+| Social progress | Inert in base and physical profiles; the prototype-only observer retains a bounded in-memory trace around dispatch without a command surface | All four research hypotheses refuted; no promotable crowd, crosswalk or elevator motion policy |
 
 The committed runtime can install/feed/persist an instance-bound learned map when a
 `learned_map` or `shadow` navigation profile is actually selected; recorded simulator
 patrol evidence grew 69 entries/seven labels and then 85/eight after reload. Shipping
 navigation remains oracle-driven, `robot.prototype.yaml` leaves the prototype
-navigation overlay commented out, and the normal camera attach site still builds
-MuJoCo/EGL. The map is therefore implemented and narrowly wired under explicit
+navigation overlay commented out, and the default camera remains MuJoCo/EGL. Physical
+camera venue selection is wired behind explicit UVC/RealSense/recorded configuration,
+but no D455/camera hardware row, synchronized physical observation spine, or physical
+perception commission exists. The map is therefore narrowly wired under explicit
 configuration, not the verified default and not physical SLAM.
 
 The committed P1-E profile similarly exposes a 0.70 m stranger band above a
@@ -546,21 +587,34 @@ not commissioned stopping evidence, and planner inflation does not yet share one
 complete envelope with the final gate. Unitree `StopMove` is a useful command, but
 it is not an independent power cut.
 
-## 5. Committed experimental capability snapshot
+## 5. Capability snapshot
 
-Wave P1/P2 landed in `b74f0bf`; `21ea2fb` landed Week 1; Wave 2 Batches A and B
-then landed in `e15e466` and `939001e`; Wave 3 landed in `c1b8405`. Committed is
-still not synonymous with commissioned: normal composition remains simulation-first
-and none of these
-mechanisms has closed its intended-hardware rows. The table records committed
-engineering progress while retaining the **experimental** maturity label.
+The August 26 tranche adds useful interfaces without changing the highest admitted
+physical capability. “Implemented” below means a software mechanism exists; it does
+not mean the mechanism is the default, actuates, passed its research hypothesis, or
+was commissioned.
+
+| Current slice | State | Evidence ceiling and decision |
+| --- | --- | --- |
+| `CapabilityManifestV1` | Deployment-bound manifest plus process-local authenticated commissioning input | Software truth boundary only; the normal builder does not supply it, so automatic simulator actions fail closed; no physical capability was commissioned |
+| Companion state/contracts | Consent, identity, embodiment, proposal/admission, receipts, corrections, memory, opportunity and terminal claims | Strict local reducers; incomplete live-session/executive wiring and no physical receipts |
+| Disarmed motion-gateway composition | Normal runtime → `ControlManager` → Unix client → gateway → fake Sport | Desktop lifecycle/STOP evidence only; zero acquire/velocity authority |
+| `NavigationSnapshotV2` spine | Simulator source is runtime-wired; replay adapter is implemented/tested; physical source remains a skeleton | No commissioned sensor synchronization, calibration or localization |
+| H2b independent completion | 600 cases × three arms; 120/120 nominal and zero false claims in 360 false opportunities; typed HMAC evidence channels | **REFUTED** at 113/120 alias recovery versus 114/120; isolated/default-off; local interface authenticity is not sensor independence |
+| Social-progress research/observer | 475 paired 2-D episodes plus a prototype bounded in-memory shadow trace around the final gate | All hypotheses **REFUTED**; no motion surface and no venue authority |
+| Research data plane | Local summary admission/spool/bundle/replay/retention and injected trust-provider seams | Default-off; no real crypto, network, cloud or remote deletion |
+| Learning loop | Immutable splits, leakage checks, candidate metrics, human-review and rollback contracts | Proposal-only; no trainer, deployment service or activation path |
+
+The earlier waves remain relevant historical foundations. Wave P1/P2 landed in
+`b74f0bf`; `21ea2fb` landed Week 1; Wave 2 Batches A and B landed in `e15e466`
+and `939001e`; Wave 3 landed in `c1b8405`. None closed an intended-hardware row.
 
 | Wave | What exists | Recorded evidence | Why it remains experimental |
 | --- | --- | --- | --- |
-| P1-A physical camera/process | UVC, RealSense, recorded backends; Unix-socket detector/embed daemon | Synthetic/recorded detector p50 about 100.6/113.7 ms; process overhead p50 0.6/1.8 ms; corrected targeted 93 pass/1 expected failure | No camera attached; physical backends not selected by normal runtime; UVC lacks metric depth |
-| P1-B learned map | Runtime install/feed/persist, thumbnails/naming/embeddings | Sim patrol 69 entries/7 labels; reload continuation 85/8; status records 500 pass/2 warnings | Default remains oracle; no physical precision/recall, duplicate/retrieval score or crash-durability proof |
+| P1-A physical camera/process | UVC, RealSense, recorded backends selectable by explicit runtime venue; Unix-socket detector/embed daemon | Synthetic/recorded detector p50 about 100.6/113.7 ms; process overhead p50 0.6/1.8 ms; corrected targeted 93 pass/1 expected failure | Default remains MuJoCo; no camera attached or physical end-to-end evidence; UVC lacks metric depth |
+| P1-B learned map | Runtime install/feed/persist, thumbnails/naming/embeddings | Sim patrol 69 entries/7 labels; reload continuation 85/8; status records 504 pass/2 warnings | Default remains oracle; no physical precision/recall, duplicate/retrieval score or crash-durability proof |
 | P1-C owner appearance | Enrollment gallery, embeddings, tracker and UWB fusion seam | Desktop SigLIP crop embed p50 3.44 ms; corrected GPU status 100 pass | Held-out owner recall/live two-person continuity halted; runtime owner still mocap truth |
-| P1-D VLM veto/names | Subtractive veto, represented ASK outcome, vocabulary/name growth | 18/40 (45%) naming fixture; corrected targeted 51 pass/1 skip | ASK is unwired; VLM is off the current 10 Hz dispatch call graph, but `mark_control_thread` has no production caller; no motion-admission authority |
+| P1-D VLM veto/names | Subtractive veto, represented ASK outcome, vocabulary/name growth | 18/40 (45%) naming fixture; corrected targeted 51 pass/1 skip | ASK and the control-thread tripwire are runtime-wired; the VLM remains outside the 10 Hz dispatch call graph and has no motion-admission authority or physical evidence |
 | P1-E social zone | Configurable prototype band and derived authority floor | Large targeted simulator sweep recorded | No physical braking/comfort evidence; full planner/final-gate envelope unification not delivered |
 | P2-A owner facts | Structured fact store, consent, replay, remember/forget tools | Nine deterministic probe families met | Hosted model-chosen row unrun; privacy/distillation lifecycle incomplete |
 | P2-B identity/affect/initiative | Labels rather than gates, affect and bounded event plumbing | Targeted software matrices recorded | No speaker enrollment or physical owner event source; no base authority |
@@ -580,15 +634,20 @@ Week 1 adds several meaningful committed results:
 - CURIO-1 adds bounded evidence-grounded remarks; AIR-1 contributes measurement
   tools but deliberately leaves through-air acoustic rows unmeasured.
 
-Wave 2 is now committed: physical-camera venue selection, calibrated owner-state
+Wave 2 committed physical-camera venue selection, calibrated owner-state
 wiring, correctness-gated names/ASK, shared doorway clearance, duplex turn policy,
-capability admission, frozen prompt/runtime hygiene and optional coverage-directed
-roam all crossed the software release boundary. ROAM-2's coverage objective is
-wired and default-off, but its registered 1.5× improvement claim missed because the
-metric saturated and the policy remained too home-seeking. It is evidence of a
-remaining exploration gap, not a promoted autonomy capability. Wave 3 is the new
-committed hardware rail; current PROX/SENSE/GATE follow-on work is the separate
-in-flight plane and remains uncommitted.
+the capability-admission mechanism, frozen prompt/runtime hygiene and optional
+coverage-directed roam all crossed the source-and-test boundary. The normal product
+builder did not complete the capability-manifest composition, so this is not a claim
+that automatic actions crossed the normal runtime admission boundary. ROAM-2's
+coverage objective is wired and default-off, but its registered 1.5× improvement
+claim missed because the metric saturated and the policy remained too home-seeking.
+It is evidence of a remaining exploration gap, not a promoted autonomy capability.
+Subsequent import/package repairs, unified clearance work,
+observation/localization seams, local STOP and ear governance, Follow composition,
+the deployable gateway, and the August 26 P0 contracts supersede the former
+“PROX/SENSE/GATE in-flight” status. Their software progress still does not promote
+physical motion.
 
 The correct promotion pattern is consistent across these features:
 
@@ -604,74 +663,76 @@ The correct promotion pattern is consistent across these features:
 
 ### 6.1 Scale and collection
 
-At `c1b8405`, Fable records the third bounded Wave-3 commit-tier run as 9,813
-passes, with the expected skip/xfail and serial confirmations documented in the
-landing record. The earlier `939001e` Batch-B result remains useful historical
-evidence. This update did not independently rerun either full gate, and the active
-post-Wave-3 tree is changing underneath it, so PROX/SENSE/GATE targeted results are
-not promoted into a committed denominator.
+The current evidence collection deliberately separates historical best results from
+fresh reruns. Historical 5/5 planner and larger simulator slices remain useful
+diagnostics, but they do not overrule the August 26 admitted-planner, conversation,
+navigation, and completion results.
 
-This is a substantial engineering test surface and the earlier clean-source
-aggregate defect is closed for the declared local gate. It is still not hosted,
-aarch64 or physical assurance.
+The one-time August 26 commit gate reached **10,510 passes** before failing two
+deterministic repository-maintenance nodes. Both exact defects then passed, and a
+broader affected set passed 111 tests with four additional skips. The full gate was
+not rerun in that research close, so this brief does not call that tree fully green.
+That sentence describes the research close, not the newest audit: a subsequent
+whole-working-tree verification completed and was **RED** at the default-suite and
+Ruff hard gates. Exact current counts and any later superseding close belong in the
+[root README](../README.md). This remains a substantial local engineering surface,
+not hosted, aarch64, Orin, or physical assurance.
 
 ### 6.2 What GATE-0 fixed, and what remains
 
-**1. The committed tracked-source gate is now green at the accepted local shape.**
-HEAD tracks the provenance- and hash-pinned Go2 pack, validates its closure before
-safety consumers, contains ordinary stage exceptions and explicitly caps the gate
-at eight workers. GATE-0b reproduced the complete pass from a tracked-only clean
-clone. Hosted execution and a pre-existing load-sensitive WebSocket test remain
-separate release risks rather than reasons to reopen the clean-clone result.
+**1. The tracked-source and asset disciplines remain valuable.** HEAD carries the
+provenance/hash-pinned Go2 pack, validates required assets before safety consumers,
+caps local parallelism, and byte-checks packaged runtime assets. Those mechanisms
+catch real omissions. The latest audited whole-tree result is red; the defects must
+be repaired and a guarded close rerun rather than inheriting an earlier denominator.
 
 **2. Python portability has a committed desktop answer, not a target answer.** HW-1
 proves the source/import floor on real CPython 3.10 and selects a
 CPython 3.12 product environment with 3.10 vendor/capture environments. Its aarch64
-locks resolve, but nothing has executed on the Orin and the Jetson ORT-GPU source is
-still unresolved. The product still constructs a vendor-SDK source in process, so
-OBS-MIN must also resolve the topology rather than treating lockfiles as deployment.
+locks resolve, but nothing has executed on the Orin and the Jetson ORT-GPU source
+remains unresolved. An installable Python gateway is not evidence that native SDK2/
+DDS, service order, drivers, or the full workload run on target.
 
-**3. Eager package barrels still collapse module boundaries.** Importing a
-core/navigation leaf can load roughly 118 Parcel modules, including the large
-navigation pipeline, simulator environments and InstructNav. A seven-hop cycle
-previously allowed `_HAS_INSTRUCTNAV=False`, turning required semantic navigation
-into a no-op while other tests remained green. Thin package initializers, leaf
-imports and startup-fatal capability admission remain higher leverage than merely
-splitting the god objects.
+**3. Import and capability truth improved, but runtime concentration remains.** The
+DEC-IG/DEC-FS import/package repairs and capability manifest address the earlier
+silent soft-import and “enum means available” failures. `RobotRuntime` and the
+navigation pipeline remain large coordinators; extraction should follow measured
+ownership, timing, or fault-domain boundaries rather than a wholesale rewrite.
 
-**4. Hosted, aarch64 and the active follow-on remain separate promotion gates.**
-Workflow text is not a retained hosted run or branch-protection proof. Wave 3 has a
-recorded integrated desktop result; PROX/SENSE/GATE must earn a quiescent commit and
-independent review, while the Orin must produce an explicit run/skip-with-reason
-report rather than inherit that desktop verdict.
+**4. Desktop, hosted, target, simulator, and physical gates remain separate.** A
+workflow definition or fake-Sport pass cannot stand in for retained hosted behavior,
+native Unitree simulation, aarch64 execution, or mounted hardware evidence. Required
+rows must report pass, fail, or an explicit capability-limited skip; they may not
+disappear from the denominator.
 
 ### 6.3 Current execution evidence
 
-Fable reports **9,813 passed** on the third commit-tier run at `c1b8405`; Ruff
-retained seven baseline fingerprints and added none. The earlier accepted
-`939001e`/GATE-0b records separately establish the Wave-2 tracked-only shape. These
-are retained records, not a claim that this document independently executed the
-suite.
+| Surface | Fresh result | Decision |
+| --- | --- | --- |
+| Personal conversation | 3/13 turns; 2/8 families | Conversation release **NO-GO** |
+| Captured Realtime corpus | 6 PASS / 8 MIXED / 11 FAIL threads; 43/76 expectations | Unblinded offline diagnostic; **NO-GO** |
+| Current structured conversation | 10/10 parse, 10/10 structured safety, 7/10 cases; all ten actions null | Useful fail-closed result; no positive embodiment witness |
+| Current PlanIR / PlanSketch | 3/5 and 3/5 | Historical 5/5 did not reproduce; **NO-GO** |
+| NAV_INSTRUCT | 25/125; SR 0.20; SPL 0.1348; one false arrival | **NO-GO** |
+| Unseen semantic scenes | SR 0.253; 16 false arrivals in 75 episodes | Diagnostic only; **NO-GO** |
+| Walk-with-me / Follow | 5/10 headless; 7/9 scripted Follow | No real owner perception; **NO-GO** |
+| Dynamic social progress | 475 paired authored 2-D episodes; every arm had contact | All four hypotheses refuted; no policy promotion |
+| H2b completion | 120/120 nominal, zero false claims, 113/120 alias recovery; three provider-bound local verifier channels | Missed frozen recovery gate; refuted/default-off; no physical sensor-independence evidence |
+| Go2 path | Finite tracked MJCF smoke; disarmed runtime-to-fake-Sport gateway | Asset/lifecycle evidence only; motion **NO-GO** |
 
-That evidence is unusually candid about its limitations. ROAM-2's coverage objective
-does not yet explore effectively; AIR-1's estimated speech onset cannot pass as a
-measured latency; no camera or Go2 hardware row ran; and one loopback-WebSocket test
-is documented as load-sensitive. Hosted Actions, branch protection, aarch64 execution
-and physical campaigns still require independent closure. Wave 3 has crossed the
-desktop integration boundary, but no target or physical row did.
-The moving PROX/SENSE/GATE follow-on has targeted reports only and no stable
-integrated result.
-
-There are useful narrow positives: 100 packaged assets are byte-parity checked;
-frozen navigation and safety/latency/freshness panels reproduce expected results;
-assertion and seeded-defect fixtures show that many tests detect the intended fault.
-These are strong test techniques. They do not qualify physical hardware.
+There are still important positives: packaged assets are byte-parity checked; frozen
+safety, latency, freshness and gateway fault panels exercise negative paths; and
+seeded-defect/mutation fixtures show that many tests detect their intended fault.
+These are strong verification techniques. They do not rescue failed product-quality
+metrics or qualify physical hardware.
 
 The executive quality statement is therefore:
 
-> Strong local regression engineering with a tracked-source gate that is green at
-> the declared eight-CPU shape; hosted, load-sensitive, aarch64 and physical
-> assurance remain, and the active follow-on must earn its own integrated verdict.
+> Strong local regression engineering and unusually explicit evidence ceilings,
+> with fresh conversation/navigation product gates red and the prior completed
+> whole-working-tree audit explicitly red. The root README owns the newest gate
+> verdict. Hosted-live, native Unitree simulation, aarch64/Orin, through-air, and
+> physical assurance remain separate work.
 
 ## 7. Physical Unitree readiness
 
@@ -688,7 +749,12 @@ Parcel has a useful high-level Unitree foundation:
 - evidence-origin controls intended to distinguish physical from synthetic state.
 - an opt-in observe-only Go2/replay backend with positive-motion refusals;
 - a Mid-360 UDP decoder/band, commissioned scan latch and box-day capture design;
-- array-audio and mic-arm seams plus static aarch64/Orin deployment artifacts.
+- array-audio and mic-arm seams plus static aarch64/Orin deployment artifacts;
+- a separately packaged gateway with boot epochs, writer leases, TTL/watchdog,
+  restart-disarmed behavior, bounded hung-I/O handling and stationary stop reports;
+  and
+- a normal-runtime adapter that reaches that Unix boundary while permanently
+  disarmed and stop-capable in desktop fake-Sport tests.
 
 Using Unitree Sport for the first ODD is the correct tradeoff. The vendor controller
 owns high-rate balance, contact and gait, while Parcel supplies bounded body-velocity
@@ -707,16 +773,19 @@ not assemble a commissioned sensor/control spine. It lacks:
 - a backend-neutral physical observation accepted by navigation/safety;
 - a bounded reactive person/dropoff channel;
 - a calibrated owner/stranger belief;
-- a native restart-disarmed sole-writer gateway;
+- a gateway-compatible native Unitree SDK2/DDS positive-motion port and normal
+  runtime arming composition;
 - an external independent stop integrated into the test plan;
 - measured velocity response, stop distance, slope/surface/payload/battery behavior;
 - a capability-admitting deploy supervisor and repeated physical scenarios.
 
-Starting a detector daemon or selecting a camera environment variable does not close
-this gap: normal runtime camera attachment still creates MuJoCo/synthetic sources.
-Likewise, an official Go2 model in MuJoCo is not proof that the simulator uses
-physical locomotion dynamics; current base travel is principally a behavioral/
-kinematic integration test.
+Selecting an explicit UVC/RealSense runtime venue or starting a detector daemon does
+not close this gap: the default remains MuJoCo, and no physical camera row is joined
+to a commissioned pose/scan/controller snapshot.
+Likewise, an official Go2 model in MuJoCo and fake-Sport gateway traffic are not
+proof that the simulator uses the native Unitree control surface or physical
+locomotion dynamics; current base travel is principally a behavioral/kinematic
+integration test.
 
 ### 7.3 First physical architecture
 
@@ -727,13 +796,13 @@ physical sensors + Unitree state
           |
  odometry + localization/SLAM + transforms
           |
- synchronized RobotObservationV2
+ synchronized NavigationSnapshotV2
           |
  local grid / tracks / semantic proposals
           |
  task-selected controller candidate
           |
- independent final safety disposition
+ separately owned final software restriction
           |
  native sole-writer gateway (epoch/lease/TTL/watchdog)
           |
@@ -758,26 +827,28 @@ application with a few deliberately isolated physical/timing domains.
    SLAM, local maps and tracking using ROS 2/C++ where mature infrastructure helps.
 3. **Local-autonomy/admission sidecar:** high-rate bounded navigation snapshots,
    local planning candidates and final safety disposition.
-4. **Native Unitree gateway:** one robot-network credential/writer, boot epoch,
-   arm/disarm, authenticated lease, monotonic sequence, TTL, local limits, watchdog,
-   stop dominance and stationary witness.
+4. **Native Unitree gateway:** the existing deployable gateway remains the one
+   robot-network credential/writer; complete it with a gateway-compatible SDK2/DDS
+   Sport port, target supervision, commissioned limits, and an independent stop.
 5. **Optional inference workers:** detector/embedding and language services behind
    bounded queues, deadlines, cancellation and capability health.
 
 ### 8.2 Structural refactor order
 
-ARCH-1 changes the near-term order from broad file splitting to bounded physical
-contracts:
+The current near-term order is preserve-first and contract-driven:
 
-1. correct and characterize the live gate, resolved-config, origin/receipt and
-   blocking-I/O defects;
-2. make only the minimum package/barrel changes required to expose dependency-light
-   contracts without soft-degrading required capabilities;
-3. land navigation-only OBS-MIN, separate vendor-state and LiDAR ingest owners, and
-   an immutable snapshot handoff behind the existing facade;
-4. bench the native governor/gateway and target deployment boundaries; and
-5. extract larger runtime/navigation/audio owners only on a forced change with a
-   measured coupling, timing or authority benefit.
+1. keep the deployment-bound capability manifest as the prompt, admission, log and
+   evaluation truth;
+2. retain fake Sport for gateway lifecycle testing and add a pinned native Unitree
+   MuJoCo SDK2/DDS simulator port through the same sole-writer boundary;
+3. wire companion dialogue/action receipts and typed mission progress into the live
+   session, starting with stationary/no-motion behavior;
+4. qualify localization discontinuity and independent completion on untouched
+   recorded-sensor replay before any product integration;
+5. add real research-plane/training providers only behind consent, cryptographic,
+   deletion, review and non-activation boundaries; and
+6. extract larger runtime/navigation/audio owners only when a measured coupling,
+   timing, deployment or fault-domain benefit forces the seam.
 
 Preserve cohesive state machines, replay cursors, evidence latches, LiDAR math,
 motion refusals, resampling and gateway lifecycle locking. At most one
@@ -788,14 +859,14 @@ Python-product card runs beside one genuinely disjoint native/capture/CI lane.
 | Decision | Selected tradeoff | Benefit | Accepted cost |
 | --- | --- | --- | --- |
 | Hybrid agent vs token-to-motor | Models propose; deterministic code admits/executes | Replaceable models, bounded authority and truthful replay | More contracts and explicit skills |
-| Classical actuating baseline vs learned navigation | A*/tracker actuate; learned systems shadow/propose | Data-efficient, inspectable rollback | May initially underperform advanced methods |
+| Classical command-producing baseline vs learned navigation | A*/tracker produce the selected command when admitted; learned systems shadow/propose | Data-efficient, inspectable rollback | May initially underperform advanced methods |
 | Unitree Sport vs low-level control | Vendor balance/gait; Parcel body velocity | Much smaller physical assurance problem | Less gait/expression authority |
 | Semantic map vs metric SLAM | Keep linked but separate | Correct uncertainty/decay/authority semantics | Transform/revision bookkeeping |
 | Route memory vs current geometry | Memory proposes; fresh grid verifies | Familiar long-horizon routes without stale free-space authority | Persistence/reanchoring work |
 | UVC vs RGB-D | RGB-D first for metric grounding | Matches current depth/localization contract | Cost, power, USB and calibration |
 | Selective ROS vs ROS rewrite | Use ROS for sensors/tf/bags/localization | Gains mature infrastructure while preserving task/safety design | Two ecosystems and IPC contracts |
 | Hosted vs local voice | Hosted conversation optional; local closed intents/STOP | Interaction quality without cloud safety dependency | Privacy, cost, network and dual paths |
-| Independent final gate vs shared check | Share calibrated inputs, recompute restriction | Defense against planner/config mistakes | Intentional duplicate computation |
+| Separately owned final software restriction vs shared check | Share calibrated inputs, recompute restriction | Defense against planner/config mistakes | Intentional duplicate computation; it still shares process/evidence/config and is not a safety-rated physical stop |
 | Ordered EDU Plus posture | Treat it as supervised R&D and gate every physical authority separately | Earlier physical learning without a deployment claim | Capital/operator/lab obligations before product readiness |
 
 Two policies should remain non-negotiable:
@@ -810,9 +881,9 @@ Two policies should remain non-negotiable:
 
 | Gate | Work | Exit evidence |
 | --- | --- | --- |
-| **A. Release integrity** | Preserve the recorded Wave-3 commit result; integrate the hard-skip/V2 correction without false-green nightly behavior; close the load-sensitive WebSocket case, add hosted evidence, resolve the product/vendor process split and prove aarch64 disposition | Local, hosted and target reports name the same admitted rows or explicit target-only skips; required hard rows can never become zero-exit SKIP/PASS. |
+| **A. Release integrity** | Close the current merged tree; preserve asset/import/capability truth; retain fresh red quality results; add hosted and aarch64 evidence | Local, hosted and target reports name the same admitted rows or explicit target-only skips; required hard rows can never disappear or become zero-exit SKIP/PASS. |
 | **B. Lab readiness** | Freeze EDU SKU/firmware/SDK/BOM; prepare controlled area, stop/tether, operator, network, capture and privacy procedures | Signed R&D acceptance plan; read-only data can be captured on day one. |
-| **C. Physical substrate** | Inventory/telemetry; clock and extrinsic calibration; physical bags/replay; native gateway; axes/frame/mode and fault commissioning | Tethered minimum-speed motion independently stops on expiry, client death, state loss and operator action. |
+| **C. Same-contract simulation and physical substrate** | Complete native Unitree MuJoCo SDK2/DDS through the existing gateway; then inventory/telemetry, clocks/extrinsics, physical bags/replay, axes/frame/mode and fault commissioning | Simulator faults leave the gateway disarmed; later tethered minimum-speed motion independently stops on expiry, client death, state loss and operator action. |
 | **D. Estimation/perception shadow** | Compare SLAM on common bags; publish MAP↔ODOM health; wire RGB-D/LiDAR; measure metric perception, semantics and owner ROC/ID switches | Frozen timing/accuracy/health thresholds pass independent visits without synthetic/physical mixing; learned output remains proposal-only. |
 | **E. Supervised mobility** | Point/semantic goals through doorways, blockage, people, localization jumps and process/network faults | Repeated first-ODD missions meet collision, clearance, intervention, success, latency and false-arrival thresholds. |
 | **F. Companion behavior** | Physical owner enrollment/follow/reacquisition; noisy through-air voice; correction/recovery; complete memory privacy lifecycle | Bounded missions show identity continuity, truthful narration, acceptable comfort and explicit handoff. |
@@ -828,8 +899,8 @@ Two policies should remain non-negotiable:
 | No physical localization/SLAM | Global goals, maps and arrival invalid on hardware | Select sensor/estimator candidates; physical bags; MAP↔ODOM health contract |
 | Simulator-to-real overclaim | Unsafe procurement/field expectations | Separate evidence levels; physical system identification and stopping campaign |
 | Owner identity switch | Robot follows a stranger | Explicit enrolled belief, ROC/ID-switch gates, ambiguity means HOLD |
-| Duplicated safety envelopes | Planner/gate disagreement or unexplained stops | One immutable calibrated envelope input; independent monotone final recomputation |
-| Python/GPU/cloud failure in motion path | Extended motion or loss of stop | Native sole-writer gateway; local TTL/watchdog; independent stop |
+| Duplicated safety envelopes | Planner/gate disagreement or unexplained stops | One immutable calibrated envelope input; separately owned monotone final recomputation |
+| Python/GPU/cloud failure in motion path | Extended motion or loss of stop | Existing sole-writer gateway and local TTL/watchdog; complete native port and independent stop |
 | Personal data leakage/false memory | Trust, privacy and regulatory harm | Consent/provenance, purpose/retention, delete-derived audit, labels not credentials |
 | Compute/thermal/dependency mismatch on Orin | Missed deadlines or unusable deployment image | aarch64 install proof, worst-load profiling, thermal soak and power budget |
 | Large mutable coordinators | Wide blast radius, lock/teardown defects | Fix import boundaries, then extract lifecycle-owned services |
@@ -851,34 +922,44 @@ Two policies should remain non-negotiable:
 
 The next milestone should be named:
 
-> **Hermetic software integrity plus a safely commissioned, observable Go2 research
-> platform.**
+> **A same-contract Go2 simulator loop plus a safely observable, stationary-first
+> research platform.**
 
 It should not be named “autonomous companion dog.” That later milestone becomes
 credible only after the physical estimation–perception–control evidence spine and
 repeated first-ODD companion missions exist.
 
-The immediate implementation order is: finish and independently review SENSE/GATE;
-keep PROX as an unwired, widest-default library until its authority/person/stopping
-preconditions exist; land OBS-MIN with separate vendor-state and LiDAR ingest;
-perform real mount-day capture and prove the aarch64/Orin service topology; then
-bench and cut over the native sole writer before restrained command-path, inspected
-ground-stop and leashed minimum-speed commissioning. New semantic breadth and broad
-god-object refactors should not displace that chain.
+The immediate implementation order is: keep one effective capability truth; attach
+the pinned native Unitree MuJoCo SDK2/DDS surface to the existing gateway without a
+second writer; wire receipt-backed companion state in stationary mode; run
+localization/completion work on untouched replay; prove the aarch64/Orin topology;
+then execute the separately governed stationary Stage-0 capture before any tethered
+command-path or ground-stop commissioning. New semantic breadth and broad god-object
+refactors should not displace that chain.
 
 ## 12. Source map and further reading
 
-- [Canonical engineering handbook](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md)
-  — full current architecture, quality evidence, subsystem designs and robotics
-  textbook.
+- [Root README](../README.md) — governing current working-tree readiness and gate
+  verdict; it supersedes recorded counts in this brief after each guarded close.
+- [Production runtime code map](PRODUCTION_RUNTIME_CODE_MAP.md) — shortest audited
+  normal call path, admission ceiling, and physical-composition truth.
+- [Long-form engineering handbook](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md)
+  — detailed subsystem designs and robotics theory; baseline status passages are
+  dated, so use the root README and runtime code map for current capability claims.
+- [Concise robotics code design](ROBOTICS_CODE_DESIGN.md) — package/process map,
+  feedback and authority concepts, rationale, failure behavior and tradeoffs.
 - [Documentation index](README.md) — authority and specialist routing.
 - [CI gate reference](CI.md) — intended runner/cadence plus current integrity warning.
 - [Dependency/environment guide](DEPENDENCIES.md) — host/dependency state and
   Python/asset warnings.
 - [Motion and Unitree commissioning](MOTION.md) — controller lifecycle and cautious
   physical bring-up.
-- [ARCH-1 review packet](../scrum/20260823/task_1/README.md) — current verdict,
-  concern census, bounded test plan and preserve/extract direction.
+- [2026-08-26 research synthesis](../research/20260826/FINAL_REPORT.md) — current
+  quality ledger, research hypotheses, P0 implementation boundary and next build.
+- [Mount-readiness decision](../research/20260826/MOUNT_READINESS.md) — physical
+  NO-GO, stationary Stage-0 conditions and commissioning ladder.
+- [ARCH-1 review packet](../scrum/20260823/task_1/README.md) — historical concern
+  census, bounded test plan and preserve/extract direction.
 - [Wave 3 hardware design](../scrum/20260822/WAVE3_HW_DESIGN_FABLE.md) — committed
   Wave-3 dependency basis, hardware unknowns and software-now/box-day split.
 - [Runtime concurrency and clocks](RUNTIME_CONCURRENCY_AND_CLOCKS.md) — threads,

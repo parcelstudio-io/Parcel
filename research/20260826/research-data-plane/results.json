@@ -1,0 +1,313 @@
+{
+  "bundle": {
+    "bundle_count": 66,
+    "bundle_throughput_MBps": 117.87089038810186,
+    "compressed_bytes": 1514594,
+    "compression_ratio": 0.0907113182611962,
+    "event_count": 14532,
+    "manifest_sha256_without_self": "93d3cf5590d8dc1adec3b0e247e46643af40273eeea257d8bb5a78b9d5631784",
+    "target_uncompressed_bytes": 262144,
+    "uncompressed_bytes": 16696858
+  },
+  "code_sha256": "f8184afe976b3724885f94fb1e54e5df3f9bdbc4761895869751bf2f2ff917cd",
+  "config": {
+    "daily_cap_mib": 50,
+    "hours": 1.0,
+    "seed": 20260826,
+    "stream_hz": {
+      "audio": 1.0,
+      "conversation": 0.03333333333333333,
+      "feedback": 0.0033333333333333335,
+      "navigation": 2.0,
+      "perception": 1.0
+    },
+    "target_bundle_kib": 256
+  },
+  "config_sha256": "7983e243f72b963d623a8323da6e5a41c4bcd4115464825ab435724df20ad119",
+  "environment": {
+    "pid": 2776869,
+    "platform": "Linux-7.0.0-30-generic-x86_64-with-glibc2.43",
+    "python": "3.14.4",
+    "sqlite": "3.46.1"
+  },
+  "hypotheses": {
+    "H1_privacy_boundary": {
+      "claim": "All seeded PII/secrets/raw fields are absent from the spool and bundles.",
+      "pass": true,
+      "threshold": "zero seeded marker hits, zero forbidden keys, and all three negative controls rejected"
+    },
+    "H2_deterministic_replay": {
+      "claim": "Replay is complete and deterministic, duplicates are idempotent, and one-byte corruption is detected.",
+      "pass": true,
+      "threshold": "exact count/digest twice, zero duplicate insertions, corruption detected"
+    },
+    "H3_compact_fast_bundles": {
+      "claim": "Summary NDJSON compresses to at most 30% and bundles at at least 10 MB/s on this host.",
+      "pass": true,
+      "threshold": {
+        "max_compression_ratio": 0.3,
+        "min_bundle_throughput_MBps": 10.0
+      }
+    },
+    "H4_budgeted_sync": {
+      "claim": "The projected summary stream stays below 5 GB/month and all priority 0-2 bundles fit a 50 MiB/day governor.",
+      "pass": true,
+      "threshold": {
+        "daily_cap_MiB": 50,
+        "max_month_decimal_gb": 5.0
+      }
+    },
+    "H5_summary_first_required": {
+      "claim": "The named raw-data scenario exceeds a conservative 40 GB/month priority bucket while summaries do not.",
+      "pass": true,
+      "threshold": "raw > 40 GB/month and summaries < 40 GB/month"
+    },
+    "H6_summary_storage_cost": {
+      "claim": "Ninety days of projected summaries costs under $1/month at the cited R2 Standard storage rate.",
+      "pass": true,
+      "threshold_usd_per_month": 1.0
+    }
+  },
+  "hypotheses_passed": 6,
+  "hypotheses_total": 6,
+  "limitations": [
+    "Synthetic summaries are not a physical-robot throughput, sensor-rate, power, thermal, or network measurement.",
+    "Regex and field allow-list checks cover seeded cases; they do not prove that arbitrary free text, images, or embeddings are anonymous.",
+    "The upload is a local simulation; no object-store API, TLS, KMS, Starlink link, or interrupted multipart transfer was exercised.",
+    "gzip/JSONL was tested as an edge interchange bundle; Parquet, Iceberg commits, catalog concurrency, and query performance were not benchmarked.",
+    "SQLite WAL durability was configured but sudden-power-loss recovery was not fault-injected in this run.",
+    "R2 prices and Starlink policy were researched as of 2026-08-26 and can change."
+  ],
+  "privacy": {
+    "forbidden_key_hits": {},
+    "marker_hits": [],
+    "pass": true,
+    "scanned_file_count": 68,
+    "scanned_files_by_suffix": {
+      ".json": 1,
+      ".jsonl.gz": 66,
+      ".sqlite3": 1
+    },
+    "scope_note": "Seeded-marker and schema-key test only; it does not prove de-identification of arbitrary unstructured content.",
+    "seeded_marker_count": 10
+  },
+  "replay": {
+    "corruption_probe": {
+      "actual_sha256": "3bb66ea652708e5060058292180dd25c9079676a6b267b06b52b291b42cfe2ec",
+      "detected": true,
+      "detection_stage": "pre-decompression SHA-256 verification",
+      "expected_sha256": "3eb6ce74677903273f3cab7e1bc7d45f654bdbcd7caa0dc796a613abde4f6cb7",
+      "mutated_bytes": 1
+    },
+    "first_event_count": 14532,
+    "first_event_set_sha256": "15e4fdcb4ec6702739037a3e3c5c3b63f6b417575521ba0c3069b63262bf8e03",
+    "replay_throughput_MBps": 32.25982178085345,
+    "second_event_count": 14532,
+    "second_event_set_sha256": "15e4fdcb4ec6702739037a3e3c5c3b63f6b417575521ba0c3069b63262bf8e03",
+    "sequence_contiguous_by_stream": {
+      "audio": true,
+      "conversation": true,
+      "feedback": true,
+      "navigation": true,
+      "perception": true
+    },
+    "stable": true
+  },
+  "result_version": "parcel.research_data_plane_benchmark.v1",
+  "run_at": "2026-08-26T06:52:05.638956Z",
+  "run_id": "research-plane-probe-20260826",
+  "spool": {
+    "candidate_count": 14535,
+    "duplicate_attempts": 100,
+    "duplicate_insertions": 0,
+    "filter_counters": {
+      "redacted_credential": 4,
+      "redacted_email": 8,
+      "redacted_phone": 8,
+      "rejected_companion_only": 1,
+      "rejected_missing_consent": 1,
+      "rejected_raw_payload": 1,
+      "removed_key:exact_address": 8,
+      "removed_key:face_embedding": 5,
+      "removed_key:gps_lat": 8,
+      "removed_key:gps_lon": 8,
+      "removed_key:raw_audio": 5,
+      "removed_key:raw_image": 5,
+      "removed_key:transcript": 5,
+      "removed_key:voice_embedding": 5,
+      "removed_unknown:navigation.unexpected_owner_hint": 8
+    },
+    "journal_mode": "WAL",
+    "retained_by_stream": {
+      "audio": 3600,
+      "conversation": 120,
+      "feedback": 12,
+      "navigation": 7200,
+      "perception": 3600
+    },
+    "retained_count": 14532,
+    "sqlite_bytes": 28880896,
+    "synchronous": "FULL"
+  },
+  "sync": {
+    "algorithm": "priority then content hash; whole-bundle idempotency",
+    "all_priority_0_to_2_synced": true,
+    "all_synced": true,
+    "manifest_bundle_count": 66,
+    "remote_bundle_count": 66,
+    "rounds": [
+      {
+        "cap_bytes": 757297,
+        "transferred_bundle_count": 34,
+        "transferred_bytes": 753940,
+        "transferred_sha256": [
+          "3eb6ce74677903273f3cab7e1bc7d45f654bdbcd7caa0dc796a613abde4f6cb7",
+          "a90acf9bb36e750feeb9007823b3245ff4436ab309774a2e06424ad2fdb5d074",
+          "0388205b8836ee5fe5a48832e0ad60399b6db4fc4905ae08e8f2796f34f9964a",
+          "0506ea8f928274e90718d32e3e98b8ea22416d1373689e54c7464708d542c0a3",
+          "0b788f8d362e81d2bc35caf1780f8c845449b299e0763c5f855cc83a8fd2fdf1",
+          "0eec15925ad013a342a91c7f11458f6cdd4a47734a4721c9c6e9e0467a13a4d9",
+          "0efb7c9476f85938c957e5157470955b24e6d2f8526998cc2be833a7851cdcc6",
+          "1270dd5e3439aa99532fb9970c696a60bb149506fe20e7c3a681269ba0a4b66e",
+          "1543e13c1efee332610a49ed053ab0b4c22f14c7c289e3e903b1ce821e109842",
+          "286351f13c772fbd4570ce61b07af6786401328a6d6c877e3a07e21781c22d91",
+          "2afd688d0f15001a0f3a87e342959c2380bcea18a9db0f28a6ed3dc9aa7618fb",
+          "2fe67d59caead50d3d08f598de30a13ff5b71e618a089058fd3377ef643435d5",
+          "302e757ed4aef85aa0d20bc39f31c4eee4d180de259b94aad8b294dcb9bee6b4",
+          "306359fe018a767e656b9aafad3fedaa23bab096f59700bc4d25dad2a753059c",
+          "310f190a6173112ba79e61057dcb7a445161cc3d4e6f1b5628a16feb1cc6a03b",
+          "384df1769ab47eec176dca42b01e853044910739a8a0b2280a963642851fef30",
+          "39b86396ae38bb55185ba28c9faaf763c794db45d28bf1f25418aa55474dfdd6",
+          "3e18354f27d49f456aca892fc3772d2d04b296bec96484db96e22f12e3af9ac1",
+          "3e7e63b2cb9e2fd8b5f72a5e6186157644e2979abf738d28a3188fe6d6aef6ee",
+          "40154e526cc7d95b27cc08e36a019ec8861529327121c833bd254d50268090b1",
+          "424d2ad94b092fb80e3247319b5f37dfe459b13ec6bb3d6323480a73720f1cac",
+          "459beeb2218535d19f69f3c881d22972fe4c1947edd49c78cb8d937df7202148",
+          "47cfa5901edce3e95f7956c3fdee818cd415b0c8f3de943898b679467b2ac46f",
+          "4f3c7f67e1ebffc1be7b1b4b67bf4b0e006a32c85f7ecd805d6946df33c1140c",
+          "52cdacc5603ed0e54c9eb8190425995d9cefb4cbcf0a8417f8b90d417a7047f8",
+          "5a81157a579069fea249075503bc0ab9c1b1244a38064ccee6319c57e7efca6b",
+          "62eec7955c099a68ddcb8fb7932721fbaed6ef4d8762aa4016441f9cc0829e3d",
+          "651f9376f33f1f2bdbfea69b20c4b36964ebe3e209ddc2288e02dbf562e7c1ab",
+          "65221fec5d1bbb120f4b13558a8a0ddcc42c6e7fe4b0f796cc01ab63a0c84410",
+          "679df7f1f982469b76bb463bec0d1dfdaca17bae01fcc426dbb1faaa3b9cebbc",
+          "68ec34546ad7abe3ed1e378da8b10a045b10949c87e179179de9fd684063db8d",
+          "7405845553b054dfcd7d6bc2226b092b7712e5170b07aea59715f9d3011c6806",
+          "757c4d7ea3f2dd75869e5eb8a57247146b964a1ac4a896da41d343d2ce8063e8",
+          "7fca297c3480c6402af5883ec329469ab7d1626562950c23d1c844803e9822f9"
+        ]
+      },
+      {
+        "cap_bytes": 52428800,
+        "transferred_bundle_count": 32,
+        "transferred_bytes": 760654,
+        "transferred_sha256": [
+          "866c419ff6253a493972f7bc422b75e5e02aa447b056fc578ba891b153521a76",
+          "8e97a8408ce22d6fd32b206def2c9e20d7aa873b3bfa1517dd493b5f29144b92",
+          "9241d4f03cd144e252cc30b3bd5d659afb9837c6ff637a8c3da937a9804bab01",
+          "a25986c5f6eebff9140475a68d7718768d1c1d17106a4f62ec3e104f8ed2d0e6",
+          "a2b35b6f846b648fa4e546a3f448d918436136aa457d4c4ba2fabaddccc467af",
+          "a9f6581bdc258bccb8cc022d21aeb7ad0ea95aa076cfde69d68de59c14c033da",
+          "ac0b64f5c4a46467377e5c9f67d1e156e03c585bf990d795d913554718c4b882",
+          "b1ba1a5f4bb0fbbc084dab653bf166f469575b064c840f09449f40e5fdba0363",
+          "b1ee12d64726f5e6ede8e25f8a6d77d7f18a7dd39360913351248051659c6861",
+          "b77e1f617903790b713083e99ee38b2def80d82eace7a8823e798704cd9bfee1",
+          "bc1c393071ccf8d3658548928fd2684043ea70b8d1b9b5bd47813567ad51edd5",
+          "bf32689a2edd2c1c39d4480147c00f4b641f8220a84f964de6e6fc504bb34056",
+          "c830d76a161192a5385a9d7eac90368653cfb76bd37d92800e02b4389dc22f30",
+          "cdebf451accb2249140b8896bf99a621630f87a37521195e1546dddab602f2d7",
+          "d6669b70c700f27482e83f79d6e506fc81f48657ab980dac7d7e06a0a912f2a1",
+          "d9af9cc290dcdf02bfaa2277f920654823161f782a588d92f1bb10b582eb831e",
+          "da28d9a9698f1c2c32bd993316cfd81bcc151173f8d5c49a94be75bf312fb2d6",
+          "dd4010a9f66ccf6e117e5ddd93afeb364568d42833abdca1e48e0e6ba83024d1",
+          "e3691a5c12892e80816cee391affc95bbcceebcb4a542bd6d98eecb7d04c0d34",
+          "e5ed8c56190b0e0bb3924e89b954d3fa5d590d6e95cdde8e12f7da0c61093f9d",
+          "e6448965c13b6b1cdc8fc3ee0a5acc36841e8f03c09efd21b6f4325538f83213",
+          "e679be466d50600426be7318c47427243cc50851046451001feccd181832e915",
+          "e8e4c7af3fe3f42d295806abdea4340a13bfdb6d4cd67e14136303884a65bf3b",
+          "e9fbf3b29fff035456030e4a1444aa8b90ab2c5fc532762a0391fdffb4bb0a4b",
+          "ed28d1fe9fbac5dc1257ae603ffb00c385257d80829526a8de2c07ae07bda74c",
+          "edf455a35bed1ada17d4e8fc8c3f89cb5ed50d5fd56e54c5358aa17d8b0a2b30",
+          "f136c8824165b51341b3908b89cd3626adb0bf00d2fe18f4db682ef77fbabcec",
+          "f4848d81379c499df8d4ab8f69a79a9f61af2f4f6088aed8e58d4b3ac25bae63",
+          "f724e5be452e44a42513618d9b5e4e0c4f6a69879c8583331b36f325e56227dd",
+          "f9627341a649bfb9d058726bf7c07d66be38abf9911f1144493cba363edea470",
+          "fe0e51b12026d80db76f5ed7cd819808d2e6e8b2565134ab8743a7167ded316c",
+          "ff10382478b3aa24e1009686cd9dea7ecb3ecf889437659ef82e86ea97a836f8"
+        ]
+      },
+      {
+        "cap_bytes": 52428800,
+        "transferred_bundle_count": 0,
+        "transferred_bytes": 0,
+        "transferred_sha256": []
+      }
+    ],
+    "third_round_transferred_zero_bytes": true
+  },
+  "timing": {
+    "bundle_seconds": 0.14165378699544817,
+    "generation_seconds": 0.1445810809964314,
+    "ingest_seconds": 0.7652488910243846,
+    "replay_seconds": 0.5175744030275382,
+    "total_seconds": 2.36890937195858
+  },
+  "traffic_and_cost": {
+    "projection_basis": {
+      "days_per_month": 30,
+      "decimal_gb_bytes": 1000000000,
+      "measured_synthetic_hours": 1.0,
+      "operating_hours_per_day": 8
+    },
+    "r2_standard_estimate_as_of_2026_08_26": {
+      "class_a_usd_per_million": 4.5,
+      "excludes": [
+        "compute",
+        "catalog operations",
+        "retrieval",
+        "tax",
+        "Starlink subscription and overage",
+        "support and engineering labor"
+      ],
+      "free_tier_adjusted_class_a_put_usd_per_month": 0.0,
+      "gross_class_a_put_usd_per_month": 0.07128,
+      "monthly_bundle_puts": 15840,
+      "raw_30d_storage_scenario_usd_per_month": 11.430719999999999,
+      "storage_usd_per_gb_month": 0.015,
+      "summary_90d_storage_usd_per_month": 0.016357615199999998
+    },
+    "raw_scenario": {
+      "combined_bytes_per_second": 882000,
+      "not_a_physical_measurement": true,
+      "projected_month_bytes": 762048000000,
+      "projected_month_decimal_gb": 762.048,
+      "rates": {
+        "jpeg_camera_5fps_150kb_per_frame": {
+          "basis": "scenario assumption; measure on physical camera",
+          "bytes_per_second": 750000
+        },
+        "pcm16_mono_16khz": {
+          "basis": "derived: 16,000 samples/s * 2 bytes/sample",
+          "bytes_per_second": 32000
+        },
+        "serialized_lidar_100kbps": {
+          "basis": "scenario assumption; measure on physical lidar",
+          "bytes_per_second": 100000
+        }
+      }
+    },
+    "starlink": {
+      "conservative_priority_bucket_decimal_gb": 40.0,
+      "plan_and_country_must_be_operator_configured": true,
+      "raw_scenario_fraction_of_40gb": 19.0512,
+      "summary_fraction_of_40gb": 0.009087564
+    },
+    "summary": {
+      "compressed_bytes_per_hour": 1514594.0,
+      "projected_90d_retained_decimal_gb": 1.09050768,
+      "projected_month_bytes": 363502560.0,
+      "projected_month_decimal_gb": 0.36350256,
+      "uncompressed_bytes_per_hour": 16696858.0
+    }
+  }
+}

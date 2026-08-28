@@ -22,13 +22,13 @@ sys.path.insert(0, REPO + "/src")
 sys.path.insert(0, REPO + "/tests")
 os.environ.setdefault("PARCEL_VLM_WEIGHTS", sys.argv[1] if len(sys.argv) > 1 else "")
 
-from test_p1d_eval_rows import ABSENT, _build_map, _prototype_policy
-
 from parcel_robot.perception_abstention import (
     clear_veto_cache,
     in_control_thread,
     resolve_veto,
 )
+from test_p1d_eval_rows import ABSENT, _build_map, _prototype_policy
+
 from parcel_robot.vlm_veto.bureau import bureau_for, clear_bureaus
 
 MAIN = threading.get_ident()

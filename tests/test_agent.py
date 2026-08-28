@@ -1,17 +1,28 @@
 from pathlib import Path
 
+from commissioned_sim import commissioned_agent_kwargs
+
 from parcel_robot.config import ConfigStore
-from parcel_robot.models import Pose
 from parcel_robot.skills.api import Dog
 from parcel_robot.voice.agent import VoiceAgent
+
+REPO = Path(__file__).resolve().parents[1]
 
 
 def test_pose_command_publishes_pose():
     sent = []
-    pose = Pose("sit", {"hip": 0.5})
-    agent = VoiceAgent({"sit": pose}, [], sent.append)
+    config = REPO / "configs" / "robot.yaml"
+    dog = Dog.from_config(config, on_pose=sent.append)
+    pose = dog.poses()["sit"]
+    agent = VoiceAgent(
+        dog.poses(),
+        [],
+        sent.append,
+        dog=dog,
+        **commissioned_agent_kwargs(config),
+    )
 
-    assert agent.handle_text("do the sit pose") == "Running sit pose"
+    assert agent.handle_text("do the sit pose") == "Running sit"
     assert sent == [pose]
 
 
@@ -42,8 +53,15 @@ modules:
 
 
 def test_navigate_directive_with_dog():
-    dog = Dog.from_config(Path(__file__).resolve().parents[1] / "configs" / "robot.yaml")
-    agent = VoiceAgent(dog.poses(), [], lambda pose: None, dog=dog)
+    config = REPO / "configs" / "robot.yaml"
+    dog = Dog.from_config(config)
+    agent = VoiceAgent(
+        dog.poses(),
+        [],
+        lambda pose: None,
+        dog=dog,
+        **commissioned_agent_kwargs(config),
+    )
     reply = agent.handle_text("I want you to go to the coffee shop at 42nd street")
     assert "coffee" in reply.lower()
     assert "Navigating" in reply or "Arrived" in reply

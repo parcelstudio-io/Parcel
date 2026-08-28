@@ -1,0 +1,744 @@
+{
+  "clean_checks": {
+    "no_authority_disagreement": true,
+    "no_false_arrival": true,
+    "path_length_plausible": true,
+    "zero_collisions": true
+  },
+  "clean_run": {
+    "authority": {
+      "agreement": 5
+    },
+    "collisions": 0,
+    "episodes": [
+      {
+        "distance_to_goal_m": 0.0,
+        "episode_id": "nav-region_goal-A-00-1c735162",
+        "failure": "none",
+        "final_xy": [
+          1.6343056567718721,
+          2.52850419901889
+        ],
+        "min_clearance_m": 1.14492482740201,
+        "path_length_m": 3.0258618384424247,
+        "success": true
+      },
+      {
+        "distance_to_goal_m": 2.0685389676645194,
+        "episode_id": "nav-region_goal-D-15-1b8b2361",
+        "failure": "grounding_error",
+        "final_xy": [
+          0.28146103233548087,
+          0.16032498556726626
+        ],
+        "min_clearance_m": 1.2804493814764855,
+        "path_length_m": 0.3239984860549071,
+        "success": false
+      },
+      {
+        "distance_to_goal_m": 0.0,
+        "episode_id": "nav-object_goal-A-00-4caa923b",
+        "failure": "none",
+        "final_xy": [
+          -0.0500007456710952,
+          0.7035426669104067
+        ],
+        "min_clearance_m": 1.257306177078997,
+        "path_length_m": 0.6785426669110132,
+        "success": true
+      },
+      {
+        "distance_to_goal_m": 1.8083989841253034,
+        "episode_id": "nav-object_relative-A-00-3efbba45",
+        "failure": "grounding_error",
+        "final_xy": [
+          0.1,
+          -0.05
+        ],
+        "min_clearance_m": 1.3309833423600554,
+        "path_length_m": 0.0,
+        "success": false
+      },
+      {
+        "distance_to_goal_m": 0.0,
+        "episode_id": "nav-follow_owner-D-15-74a535dd",
+        "failure": "none",
+        "final_xy": [
+          0.05,
+          -0.025
+        ],
+        "min_clearance_m": 1.3050277006184698,
+        "path_length_m": 0.0,
+        "success": true
+      }
+    ],
+    "failure_histogram": {
+      "grounding_error": 2,
+      "none": 3
+    },
+    "mean_dtg_m": 0.7753875903579646,
+    "n": 5,
+    "successes": [
+      "nav-follow_owner-D-15-74a535dd",
+      "nav-object_goal-A-00-4caa923b",
+      "nav-region_goal-A-00-1c735162"
+    ]
+  },
+  "episode_ids": [
+    "nav-region_goal-A-00-1c735162",
+    "nav-region_goal-D-15-1b8b2361",
+    "nav-object_goal-A-00-4caa923b",
+    "nav-object_relative-A-00-3efbba45",
+    "nav-follow_owner-D-15-74a535dd"
+  ],
+  "episode_selection": "chosen to exercise the code each mutation touches (longest traverse, the reactive gate's only binding episode, one per family). A mutant on a path the episodes never reach is an equivalent mutant and says nothing about the harness. Coverage selection, not tuning: no robot parameter is chosen from a result.",
+  "episode_set_provenance": "regenerated 2026-08-11 (lane E8) onto the v4 frozen set, OWNER-AUTHORIZED. NOT a re-baseline of a red result: every safety-relevant field is BIT-IDENTICAL to the superseded v3 artifact \u2014 clean_checks all four green (no_false_arrival, no_authority_disagreement, zero_collisions, path_length_plausible), clean authority {agreement: 5}, collisions 0, the same four clean successes, the same failure histogram, 6/6 mutants killed. What moved: the episode_set_version label, two clean-run poses that lanes E1-E6 already moved on the CODE axis (nav-region_goal-D-15 path 0.4548 -> 0.2520 and nav-follow_owner-D-15 path 0.2428 -> 0.0, both reported by E7 before this lane existed), and two mutants gaining an EXTRA reddened check. The panel got stronger, not greener: on the retired v3 set the clean run itself now contains a false arrival, which silently DISABLES no_false_arrival as a kill channel for all six mutants (harness_checks excludes any check already red on the clean run). On v4 that channel is live and reactive_gate_disabled kills through it. See scrum/20260809/task_15/E7_FALSE_ARRIVAL_STATUS.md \u00a71.1 and E8_V4_REFREEZE_STATUS.md. RE-RUN 2026-08-11 (card VS-6) to add ONE mutant, phantom_view_consistent. Additive by construction and proven so by diff: the clean run, the four clean_checks, the survivors list and all six pre-existing mutant rows are BYTE-IDENTICAL to the superseded artifact; the only fields that moved are generated_at, this note, and the appended seventh row. 7/7 killed. See scrum/20260811/task_1/W2_EVAL_STATUS.md.",
+  "episode_set_version": "v4",
+  "equivalent_mutants": [],
+  "equivalent_note": "an equivalent mutant produced a run identical to the clean run: the defect was never exercised by these episodes, so the panel makes no claim about harness blindness for it",
+  "frozen_baseline": false,
+  "generated_at": "20260826T061612Z",
+  "kind": "mutation_panel",
+  "method": "monkeypatch / config injection only \u2014 never a committed source edit",
+  "mutants": [
+    {
+      "checks_reddened": [
+        "success_set_identical",
+        "mean_dtg_within_tolerance",
+        "failure_histogram_identical",
+        "final_poses_within_tolerance"
+      ],
+      "error": null,
+      "mutation": "arrival_radius_x2",
+      "run": {
+        "authority": {
+          "agreement": 5
+        },
+        "collisions": 0,
+        "episodes": [
+          {
+            "distance_to_goal_m": 0.0,
+            "episode_id": "nav-region_goal-A-00-1c735162",
+            "failure": "none",
+            "final_xy": [
+              1.6343056567718721,
+              2.52850419901889
+            ],
+            "min_clearance_m": 1.14492482740201,
+            "path_length_m": 3.0258618384424247,
+            "success": true
+          },
+          {
+            "distance_to_goal_m": 2.0685389676645194,
+            "episode_id": "nav-region_goal-D-15-1b8b2361",
+            "failure": "grounding_error",
+            "final_xy": [
+              0.28146103233548087,
+              0.16032498556726626
+            ],
+            "min_clearance_m": 1.2804493814764855,
+            "path_length_m": 0.3239984860549071,
+            "success": false
+          },
+          {
+            "distance_to_goal_m": 0.6349840509961133,
+            "episode_id": "nav-object_goal-A-00-4caa923b",
+            "failure": "none",
+            "final_xy": [
+              -0.05,
+              0.025
+            ],
+            "min_clearance_m": 1.257306177078997,
+            "path_length_m": 0.0,
+            "success": true
+          },
+          {
+            "distance_to_goal_m": 1.8083989841253034,
+            "episode_id": "nav-object_relative-A-00-3efbba45",
+            "failure": "none",
+            "final_xy": [
+              0.1,
+              -0.05
+            ],
+            "min_clearance_m": 1.3309833423600554,
+            "path_length_m": 0.0,
+            "success": true
+          },
+          {
+            "distance_to_goal_m": 0.0,
+            "episode_id": "nav-follow_owner-D-15-74a535dd",
+            "failure": "none",
+            "final_xy": [
+              0.05,
+              -0.025
+            ],
+            "min_clearance_m": 1.3050277006184698,
+            "path_length_m": 0.0,
+            "success": true
+          }
+        ],
+        "failure_histogram": {
+          "grounding_error": 1,
+          "none": 4
+        },
+        "mean_dtg_m": 0.9023844005571873,
+        "n": 5,
+        "successes": [
+          "nav-follow_owner-D-15-74a535dd",
+          "nav-object_goal-A-00-4caa923b",
+          "nav-object_relative-A-00-3efbba45",
+          "nav-region_goal-A-00-1c735162"
+        ]
+      },
+      "survived": false,
+      "verdict": "killed"
+    },
+    {
+      "checks_reddened": [
+        "success_set_identical",
+        "mean_dtg_within_tolerance",
+        "failure_histogram_identical",
+        "final_poses_within_tolerance"
+      ],
+      "error": null,
+      "mutation": "reactive_gate_disabled",
+      "run": {
+        "authority": {
+          "agreement": 5
+        },
+        "collisions": 0,
+        "episodes": [
+          {
+            "distance_to_goal_m": 0.0,
+            "episode_id": "nav-region_goal-A-00-1c735162",
+            "failure": "none",
+            "final_xy": [
+              1.6343056567718721,
+              2.52850419901889
+            ],
+            "min_clearance_m": 1.14492482740201,
+            "path_length_m": 3.0258618384424247,
+            "success": true
+          },
+          {
+            "distance_to_goal_m": 0.0,
+            "episode_id": "nav-region_goal-D-15-1b8b2361",
+            "failure": "none",
+            "final_xy": [
+              2.7279900794048553,
+              0.6816234367958127
+            ],
+            "min_clearance_m": 1.2804493814764855,
+            "path_length_m": 3.02159906009185,
+            "success": true
+          },
+          {
+            "distance_to_goal_m": 0.0,
+            "episode_id": "nav-object_goal-A-00-4caa923b",
+            "failure": "none",
+            "final_xy": [
+              -0.0500007456710952,
+              0.7035426669104067
+            ],
+            "min_clearance_m": 1.257306177078997,
+            "path_length_m": 0.6785426669110132,
+            "success": true
+          },
+          {
+            "distance_to_goal_m": 1.8083989841253034,
+            "episode_id": "nav-object_relative-A-00-3efbba45",
+            "failure": "grounding_error",
+            "final_xy": [
+              0.1,
+              -0.05
+            ],
+            "min_clearance_m": 1.3309833423600554,
+            "path_length_m": 0.0,
+            "success": false
+          },
+          {
+            "distance_to_goal_m": 0.0,
+            "episode_id": "nav-follow_owner-D-15-74a535dd",
+            "failure": "none",
+            "final_xy": [
+              0.05,
+              -0.025
+            ],
+            "min_clearance_m": 1.3050277006184698,
+            "path_length_m": 0.0,
+            "success": true
+          }
+        ],
+        "failure_histogram": {
+          "grounding_error": 1,
+          "none": 4
+        },
+        "mean_dtg_m": 0.3616797968250607,
+        "n": 5,
+        "successes": [
+          "nav-follow_owner-D-15-74a535dd",
+          "nav-object_goal-A-00-4caa923b",
+          "nav-region_goal-A-00-1c735162",
+          "nav-region_goal-D-15-1b8b2361"
+        ]
+      },
+      "survived": false,
+      "verdict": "killed"
+    },
+    {
+      "checks_reddened": [
+        "final_poses_within_tolerance"
+      ],
+      "error": null,
+      "mutation": "pose_offset_0m5",
+      "run": {
+        "authority": {
+          "agreement": 5
+        },
+        "collisions": 0,
+        "episodes": [
+          {
+            "distance_to_goal_m": 0.0,
+            "episode_id": "nav-region_goal-A-00-1c735162",
+            "failure": "none",
+            "final_xy": [
+              1.533173873415801,
+              2.5255097450127484
+            ],
+            "min_clearance_m": 1.0724738799307483,
+            "path_length_m": 2.9664022952801465,
+            "success": true
+          },
+          {
+            "distance_to_goal_m": 2.067239635427996,
+            "episode_id": "nav-region_goal-D-15-1b8b2361",
+            "failure": "grounding_error",
+            "final_xy": [
+              0.2827603645720044,
+              0.15813087836643047
+            ],
+            "min_clearance_m": 1.2804493814764855,
+            "path_length_m": 0.32399944326990965,
+            "success": false
+          },
+          {
+            "distance_to_goal_m": 0.0,
+            "episode_id": "nav-object_goal-A-00-4caa923b",
+            "failure": "none",
+            "final_xy": [
+              -0.050000745671075736,
+              0.7035426272751928
+            ],
+            "min_clearance_m": 1.257306177078997,
+            "path_length_m": 0.6785426272757993,
+            "success": true
+          },
+          {
+            "distance_to_goal_m": 1.8083989841253034,
+            "episode_id": "nav-object_relative-A-00-3efbba45",
+            "failure": "grounding_error",
+            "final_xy": [
+              0.1,
+              -0.05
+            ],
+            "min_clearance_m": 1.3309833423600554,
+            "path_length_m": 0.0,
+            "success": false
+          },
+          {
+            "distance_to_goal_m": 0.0,
+            "episode_id": "nav-follow_owner-D-15-74a535dd",
+            "failure": "none",
+            "final_xy": [
+              0.05,
+              -0.025
+            ],
+            "min_clearance_m": 1.3050277006184698,
+            "path_length_m": 0.0,
+            "success": true
+          }
+        ],
+        "failure_histogram": {
+          "grounding_error": 2,
+          "none": 3
+        },
+        "mean_dtg_m": 0.7751277239106599,
+        "n": 5,
+        "successes": [
+          "nav-follow_owner-D-15-74a535dd",
+          "nav-object_goal-A-00-4caa923b",
+          "nav-region_goal-A-00-1c735162"
+        ]
+      },
+      "survived": false,
+      "verdict": "killed"
+    },
+    {
+      "checks_reddened": [
+        "success_set_identical",
+        "mean_dtg_within_tolerance",
+        "failure_histogram_identical",
+        "final_poses_within_tolerance"
+      ],
+      "error": null,
+      "mutation": "inverted_relation",
+      "run": {
+        "authority": {
+          "agreement": 5
+        },
+        "collisions": 0,
+        "episodes": [
+          {
+            "distance_to_goal_m": 0.0,
+            "episode_id": "nav-region_goal-A-00-1c735162",
+            "failure": "none",
+            "final_xy": [
+              1.6343056567718721,
+              2.52850419901889
+            ],
+            "min_clearance_m": 1.14492482740201,
+            "path_length_m": 3.0258618384424247,
+            "success": true
+          },
+          {
+            "distance_to_goal_m": 2.0685389676645194,
+            "episode_id": "nav-region_goal-D-15-1b8b2361",
+            "failure": "grounding_error",
+            "final_xy": [
+              0.28146103233548087,
+              0.16032498556726626
+            ],
+            "min_clearance_m": 1.2804493814764855,
+            "path_length_m": 0.3239984860549071,
+            "success": false
+          },
+          {
+            "distance_to_goal_m": 0.6349840509961133,
+            "episode_id": "nav-object_goal-A-00-4caa923b",
+            "failure": "none",
+            "final_xy": [
+              -0.05,
+              0.025
+            ],
+            "min_clearance_m": 1.257306177078997,
+            "path_length_m": 0.0,
+            "success": true
+          },
+          {
+            "distance_to_goal_m": 1.8083989841253034,
+            "episode_id": "nav-object_relative-A-00-3efbba45",
+            "failure": "none",
+            "final_xy": [
+              0.1,
+              -0.05
+            ],
+            "min_clearance_m": 1.3309833423600554,
+            "path_length_m": 0.0,
+            "success": true
+          },
+          {
+            "distance_to_goal_m": 0.0,
+            "episode_id": "nav-follow_owner-D-15-74a535dd",
+            "failure": "none",
+            "final_xy": [
+              0.05,
+              -0.025
+            ],
+            "min_clearance_m": 1.3050277006184698,
+            "path_length_m": 0.0,
+            "success": true
+          }
+        ],
+        "failure_histogram": {
+          "grounding_error": 1,
+          "none": 4
+        },
+        "mean_dtg_m": 0.9023844005571873,
+        "n": 5,
+        "successes": [
+          "nav-follow_owner-D-15-74a535dd",
+          "nav-object_goal-A-00-4caa923b",
+          "nav-object_relative-A-00-3efbba45",
+          "nav-region_goal-A-00-1c735162"
+        ]
+      },
+      "survived": false,
+      "verdict": "killed"
+    },
+    {
+      "checks_reddened": [
+        "success_set_identical",
+        "mean_dtg_within_tolerance",
+        "failure_histogram_identical",
+        "final_poses_within_tolerance"
+      ],
+      "error": null,
+      "mutation": "dropped_detections",
+      "run": {
+        "authority": {
+          "agreement": 5
+        },
+        "collisions": 0,
+        "episodes": [
+          {
+            "distance_to_goal_m": 2.1500000000000004,
+            "episode_id": "nav-region_goal-A-00-1c735162",
+            "failure": "refusal",
+            "final_xy": [
+              -0.1,
+              0.05
+            ],
+            "min_clearance_m": 1.2356554957709782,
+            "path_length_m": 0.0,
+            "success": false
+          },
+          {
+            "distance_to_goal_m": 2.0685389676645194,
+            "episode_id": "nav-region_goal-D-15-1b8b2361",
+            "failure": "grounding_error",
+            "final_xy": [
+              0.28146103233548087,
+              0.16032498556726626
+            ],
+            "min_clearance_m": 1.2804493814764855,
+            "path_length_m": 0.3239984860549071,
+            "success": false
+          },
+          {
+            "distance_to_goal_m": 0.0,
+            "episode_id": "nav-object_goal-A-00-4caa923b",
+            "failure": "none",
+            "final_xy": [
+              -0.0500007456710952,
+              0.7035426669104067
+            ],
+            "min_clearance_m": 1.257306177078997,
+            "path_length_m": 0.6785426669110132,
+            "success": true
+          },
+          {
+            "distance_to_goal_m": 1.8083989841253034,
+            "episode_id": "nav-object_relative-A-00-3efbba45",
+            "failure": "refusal",
+            "final_xy": [
+              0.1,
+              -0.05
+            ],
+            "min_clearance_m": 1.3309833423600554,
+            "path_length_m": 0.0,
+            "success": false
+          },
+          {
+            "distance_to_goal_m": 0.0,
+            "episode_id": "nav-follow_owner-D-15-74a535dd",
+            "failure": "none",
+            "final_xy": [
+              0.05,
+              -0.025
+            ],
+            "min_clearance_m": 1.3050277006184698,
+            "path_length_m": 0.0,
+            "success": true
+          }
+        ],
+        "failure_histogram": {
+          "grounding_error": 1,
+          "none": 2,
+          "refusal": 2
+        },
+        "mean_dtg_m": 1.2053875903579647,
+        "n": 5,
+        "successes": [
+          "nav-follow_owner-D-15-74a535dd",
+          "nav-object_goal-A-00-4caa923b"
+        ]
+      },
+      "survived": false,
+      "verdict": "killed"
+    },
+    {
+      "checks_reddened": [
+        "success_set_identical",
+        "failure_histogram_identical",
+        "final_poses_within_tolerance"
+      ],
+      "error": null,
+      "mutation": "doubled_envelope",
+      "run": {
+        "authority": {
+          "agreement": 5
+        },
+        "collisions": 0,
+        "episodes": [
+          {
+            "distance_to_goal_m": 0.0,
+            "episode_id": "nav-region_goal-A-00-1c735162",
+            "failure": "none",
+            "final_xy": [
+              1.6343056567718721,
+              2.52850419901889
+            ],
+            "min_clearance_m": 1.14492482740201,
+            "path_length_m": 3.0258618384424247,
+            "success": true
+          },
+          {
+            "distance_to_goal_m": 2.0685389676645194,
+            "episode_id": "nav-region_goal-D-15-1b8b2361",
+            "failure": "grounding_error",
+            "final_xy": [
+              0.28146103233548087,
+              0.16032498556726626
+            ],
+            "min_clearance_m": 1.2804493814764855,
+            "path_length_m": 0.3239984860549071,
+            "success": false
+          },
+          {
+            "distance_to_goal_m": 0.09105584705388159,
+            "episode_id": "nav-object_goal-A-00-4caa923b",
+            "failure": "planning_error",
+            "final_xy": [
+              -0.05000008517516193,
+              0.571033082809219
+            ],
+            "min_clearance_m": 1.257306177078997,
+            "path_length_m": 0.5460330828096558,
+            "success": false
+          },
+          {
+            "distance_to_goal_m": 1.8083989841253034,
+            "episode_id": "nav-object_relative-A-00-3efbba45",
+            "failure": "grounding_error",
+            "final_xy": [
+              0.1,
+              -0.05
+            ],
+            "min_clearance_m": 1.3309833423600554,
+            "path_length_m": 0.0,
+            "success": false
+          },
+          {
+            "distance_to_goal_m": 0.0,
+            "episode_id": "nav-follow_owner-D-15-74a535dd",
+            "failure": "none",
+            "final_xy": [
+              0.05,
+              -0.025
+            ],
+            "min_clearance_m": 1.3050277006184698,
+            "path_length_m": 0.0,
+            "success": true
+          }
+        ],
+        "failure_histogram": {
+          "grounding_error": 2,
+          "none": 2,
+          "planning_error": 1
+        },
+        "mean_dtg_m": 0.7935987597687408,
+        "n": 5,
+        "successes": [
+          "nav-follow_owner-D-15-74a535dd",
+          "nav-region_goal-A-00-1c735162"
+        ]
+      },
+      "survived": false,
+      "verdict": "killed"
+    },
+    {
+      "checks_reddened": [
+        "no_false_arrival",
+        "success_set_identical",
+        "mean_dtg_within_tolerance",
+        "failure_histogram_identical",
+        "final_poses_within_tolerance"
+      ],
+      "error": null,
+      "mutation": "phantom_view_consistent",
+      "run": {
+        "authority": {
+          "agreement": 4,
+          "false_arrival": 1
+        },
+        "collisions": 0,
+        "episodes": [
+          {
+            "distance_to_goal_m": 4.62803433674487,
+            "episode_id": "nav-region_goal-A-00-1c735162",
+            "failure": "false_arrival",
+            "final_xy": [
+              0.5715154121571364,
+              -2.42803433674487
+            ],
+            "min_clearance_m": 1.080742605897043,
+            "path_length_m": 2.5682708782162447,
+            "success": false
+          },
+          {
+            "distance_to_goal_m": 2.06969840511241,
+            "episode_id": "nav-region_goal-D-15-1b8b2361",
+            "failure": "grounding_error",
+            "final_xy": [
+              0.2803015948875898,
+              0.16240421372036792
+            ],
+            "min_clearance_m": 1.2804493814764855,
+            "path_length_m": 0.3239990513284291,
+            "success": false
+          },
+          {
+            "distance_to_goal_m": 0.6349840509961133,
+            "episode_id": "nav-object_goal-A-00-4caa923b",
+            "failure": "grounding_error",
+            "final_xy": [
+              -0.05,
+              0.025
+            ],
+            "min_clearance_m": 1.257306177078997,
+            "path_length_m": 0.0,
+            "success": false
+          },
+          {
+            "distance_to_goal_m": 1.8083989841253034,
+            "episode_id": "nav-object_relative-A-00-3efbba45",
+            "failure": "grounding_error",
+            "final_xy": [
+              0.1,
+              -0.05
+            ],
+            "min_clearance_m": 1.3309833423600554,
+            "path_length_m": 0.0,
+            "success": false
+          },
+          {
+            "distance_to_goal_m": 0.0,
+            "episode_id": "nav-follow_owner-D-15-74a535dd",
+            "failure": "none",
+            "final_xy": [
+              0.05,
+              -0.025
+            ],
+            "min_clearance_m": 1.3050277006184698,
+            "path_length_m": 0.0,
+            "success": true
+          }
+        ],
+        "failure_histogram": {
+          "false_arrival": 1,
+          "grounding_error": 3,
+          "none": 1
+        },
+        "mean_dtg_m": 1.8282231553957395,
+        "n": 5,
+        "successes": [
+          "nav-follow_owner-D-15-74a535dd"
+        ]
+      },
+      "survived": false,
+      "verdict": "killed"
+    }
+  ],
+  "passed": true,
+  "survivors": []
+}

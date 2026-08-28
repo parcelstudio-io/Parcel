@@ -41,6 +41,7 @@ import time
 from pathlib import Path
 
 import pytest
+from commissioned_sim import commissioned_runtime_kwargs
 
 from parcel_robot.core.activities import ActivityContext
 from parcel_robot.models import ActionProposal
@@ -861,6 +862,7 @@ modules: []
             connected_output=False,
             detail="r19 fixture",
         ),
+        **commissioned_runtime_kwargs(path),
     )
     session._observation = session.backend.observe()
     try:

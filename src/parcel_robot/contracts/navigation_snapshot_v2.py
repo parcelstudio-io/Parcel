@@ -46,8 +46,9 @@ NAVIGATION_SNAPSHOT_SCHEMA_VERSION = 2
 # range conventions — A2 NAV-GLUE's handoff
 # --------------------------------------------------------------------------
 #: The producer already subtracted the body footprint: the number is clearance
-#: from the robot's SURFACE to the obstacle's surface.  This is what
-#: ``simulation/mujoco_lidar.py`` and the Go2 band seam actually publish.
+#: from the robot's SURFACE to the obstacle's surface. The MuJoCo/Go2 analytic
+#: nearest-obstacle channels publish this; their planar rays are base-centre
+#: ranges and must be normalized before sharing this convention.
 RANGE_CONVENTION_BODY_SURFACE = "body_surface_to_obstacle_surface"
 #: Range measured from the body CENTRE — what ``authority.CLEARANCE_CONVENTION``
 #: declares and what the planner's inflation assumes.

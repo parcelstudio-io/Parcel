@@ -1,0 +1,3706 @@
+{
+  "aggregate": {
+    "arrival_epsilon_m": 0.05,
+    "attribution_histogram": {
+      "L1_parse": 0,
+      "L2a_vocabulary": 0,
+      "L2b_visibility_gated": 1,
+      "L3_exploration": 0,
+      "L4_planning": 2,
+      "L5_control": 0,
+      "L6_termination": 2,
+      "none": 5
+    },
+    "authority_histogram": {
+      "agreement": 3,
+      "authority_disagreement": 2,
+      "false_arrival": 0,
+      "tolerated_boundary": 0,
+      "unknown": 5
+    },
+    "by_theme": [
+      {
+        "n": 1,
+        "sr": 0.0,
+        "successes": 0,
+        "theme": "absent_target"
+      },
+      {
+        "n": 1,
+        "sr": 1.0,
+        "successes": 1,
+        "theme": "barge_in"
+      },
+      {
+        "n": 1,
+        "sr": 1.0,
+        "successes": 1,
+        "theme": "curb_stop"
+      },
+      {
+        "n": 1,
+        "sr": 0.0,
+        "successes": 0,
+        "theme": "follow"
+      },
+      {
+        "n": 1,
+        "sr": 0.0,
+        "successes": 0,
+        "theme": "lamppost"
+      },
+      {
+        "n": 1,
+        "sr": 0.0,
+        "successes": 0,
+        "theme": "orbit"
+      },
+      {
+        "n": 1,
+        "sr": 1.0,
+        "successes": 1,
+        "theme": "owner_search"
+      },
+      {
+        "n": 1,
+        "sr": 1.0,
+        "successes": 1,
+        "theme": "pause_resume"
+      },
+      {
+        "n": 1,
+        "sr": 0.0,
+        "successes": 0,
+        "theme": "sidewalk"
+      },
+      {
+        "n": 1,
+        "sr": 1.0,
+        "successes": 1,
+        "theme": "wait"
+      }
+    ],
+    "collision_total": 0,
+    "does_not_prove": [
+      "real-sensor or real-robot performance (stub/headless kinematic base; oracle owner track when used)",
+      "acoustic barge-in / AEC under motion (barge-in scripts exercise arbitration stubs only \u2014 no mic array, no TTS playback clock)",
+      "owner re-identification or enrolled gallery (search/reacquire scripts use identity-perfect scripted tracks)",
+      "curb/crossing physics or road-entry legality under real perception (curb-stop is a companion-moment stub on scripted polygon events)",
+      "camera-grounded semantics (sidewalk/lamppost goals use sim ground-truth polygons, not OCR or open-vocab detectors)",
+      "full voice\u2192PlanIR\u2192executive path (pause/resume hooks ResumeStore; utterance parsing is fixture-level, not ASR)",
+      "hardware commissioning or Orin budgets (evidence ladder \u2264 L2 sim)"
+    ],
+    "failure_histogram": {
+      "control_error": 0,
+      "false_arrival": 0,
+      "grounding_error": 1,
+      "none": 5,
+      "planning_error": 2,
+      "refusal": 0,
+      "search_error": 0,
+      "termination": 2
+    },
+    "hard_collision_total": 0,
+    "n": 10,
+    "pack_version": "walk-with-me-v1.0-k8",
+    "runner_version": "walk-with-me-v1.0-k8",
+    "sr": 0.5
+  },
+  "does_not_prove": [
+    "real-sensor or real-robot performance (stub/headless kinematic base; oracle owner track when used)",
+    "acoustic barge-in / AEC under motion (barge-in scripts exercise arbitration stubs only \u2014 no mic array, no TTS playback clock)",
+    "owner re-identification or enrolled gallery (search/reacquire scripts use identity-perfect scripted tracks)",
+    "curb/crossing physics or road-entry legality under real perception (curb-stop is a companion-moment stub on scripted polygon events)",
+    "camera-grounded semantics (sidewalk/lamppost goals use sim ground-truth polygons, not OCR or open-vocab detectors)",
+    "full voice\u2192PlanIR\u2192executive path (pause/resume hooks ResumeStore; utterance parsing is fixture-level, not ASR)",
+    "hardware commissioning or Orin budgets (evidence ladder \u2264 L2 sim)"
+  ],
+  "elapsed_s": 2.474373454984743,
+  "episode_digest": "d9487ce70602d69d117ef90e937546120c1c81fb03cb6908c623f18c6ff401da",
+  "freeze_seed": 20260805,
+  "mode": "headless",
+  "pose_profile": "truth",
+  "report_id": "walk-with-me-v1-headless-20260826T061531Z",
+  "runner_version": "walk-with-me-v1.0-k8",
+  "scripts": [
+    {
+      "arrival_epsilon_m": 0.05,
+      "attribution_layer": "L4_planning",
+      "authority_category": "agreement",
+      "collision_count": 0,
+      "detail": "directive_not_understood",
+      "failure": "planning_error",
+      "harness_used": "headless_spatial",
+      "instruction": "follow behind me",
+      "mode": "headless",
+      "score": {
+        "attribution_layer": "L4_planning",
+        "authority_category": "unknown",
+        "detail": "directive_not_understood",
+        "distance_to_goal_m": 0.06155281280883029,
+        "failure": "planning_error",
+        "oracle_sr_gap": 0.0,
+        "oracle_success": false,
+        "scorer_arrival": false,
+        "spl": 0.0,
+        "success": false,
+        "system_arrival": null,
+        "time_to_goal_s": null
+      },
+      "scorer_arrival": false,
+      "script_id": "wwm-follow-behind",
+      "success": false,
+      "system_arrival": false,
+      "theme": "follow",
+      "trace": [
+        {
+          "attempted": true,
+          "note": "directive_not_understood",
+          "stopped": true,
+          "t_s": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        }
+      ],
+      "trace_len": 1
+    },
+    {
+      "arrival_epsilon_m": 0.05,
+      "attribution_layer": "none",
+      "authority_category": "unknown",
+      "collision_count": 0,
+      "detail": "hold_stopped",
+      "failure": "none",
+      "harness_used": "stub",
+      "instruction": "wait here",
+      "mode": "headless",
+      "score": {
+        "attribution_layer": "none",
+        "authority_category": "unknown",
+        "detail": "success",
+        "distance_to_goal_m": 0.0,
+        "failure": "none",
+        "oracle_sr_gap": 0.0,
+        "oracle_success": true,
+        "scorer_arrival": true,
+        "spl": 1.0,
+        "success": true,
+        "system_arrival": null,
+        "time_to_goal_s": 8.0
+      },
+      "scorer_arrival": true,
+      "script_id": "wwm-wait-hold",
+      "success": true,
+      "system_arrival": null,
+      "theme": "wait",
+      "trace": [
+        {
+          "attempted": true,
+          "note": "wait_hold",
+          "stopped": true,
+          "t_s": 0.0,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 1.0,
+          "y": 0.5
+        },
+        {
+          "attempted": true,
+          "note": "wait_hold",
+          "stopped": true,
+          "t_s": 8.0,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 1.0,
+          "y": 0.5
+        }
+      ],
+      "trace_len": 2
+    },
+    {
+      "arrival_epsilon_m": 0.05,
+      "attribution_layer": "L6_termination",
+      "authority_category": "authority_disagreement",
+      "collision_count": 0,
+      "detail": "orbit_owner",
+      "failure": "termination",
+      "harness_used": "headless_spatial",
+      "instruction": "circle me once",
+      "mode": "headless",
+      "score": {
+        "attribution_layer": "L6_termination",
+        "authority_category": "unknown",
+        "detail": "orbit_owner",
+        "distance_to_goal_m": 0.0,
+        "failure": "termination",
+        "oracle_sr_gap": 1.0,
+        "oracle_success": true,
+        "scorer_arrival": true,
+        "spl": 0.0,
+        "success": false,
+        "system_arrival": null,
+        "time_to_goal_s": null
+      },
+      "scorer_arrival": true,
+      "script_id": "wwm-orbit-once",
+      "success": false,
+      "system_arrival": false,
+      "theme": "orbit",
+      "trace": [
+        {
+          "attempted": true,
+          "note": "approach_orbit_ring",
+          "stopped": false,
+          "t_s": 0.0,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "approach_orbit_ring",
+          "stopped": false,
+          "t_s": 0.09999999999999999,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "approach_orbit_ring",
+          "stopped": false,
+          "t_s": 0.20000000000000004,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "approach_orbit_ring",
+          "stopped": false,
+          "t_s": 0.3000000000000001,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "approach_orbit_ring",
+          "stopped": false,
+          "t_s": 0.4000000000000002,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "approach_orbit_ring",
+          "stopped": false,
+          "t_s": 0.5000000000000002,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.027800192071295568,
+          "y": -0.0033356492513508334
+        },
+        {
+          "attempted": true,
+          "note": "approach_orbit_ring",
+          "stopped": false,
+          "t_s": 0.6000000000000003,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.05553556586897486,
+          "y": -0.007173586012835949
+        },
+        {
+          "attempted": true,
+          "note": "approach_orbit_ring",
+          "stopped": false,
+          "t_s": 0.7000000000000004,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.08320312071865302,
+          "y": -0.011473577789974886
+        },
+        {
+          "attempted": true,
+          "note": "approach_orbit_ring",
+          "stopped": false,
+          "t_s": 0.8000000000000005,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.11080096302009576,
+          "y": -0.01620061390021533
+        },
+        {
+          "attempted": true,
+          "note": "approach_orbit_ring",
+          "stopped": false,
+          "t_s": 0.9000000000000006,
+          "vx": 0.2579517499983012,
+          "vy": 0.0,
+          "x": 0.13832792275842126,
+          "y": -0.02132448484838932
+        },
+        {
+          "attempted": true,
+          "note": "approach_orbit_ring",
+          "stopped": false,
+          "t_s": 1.0000000000000007,
+          "vx": 0.23740124840991497,
+          "vy": 0.0,
+          "x": 0.16362130241587788,
+          "y": -0.02638676193933793
+        },
+        {
+          "attempted": true,
+          "note": "approach_orbit_ring",
+          "stopped": false,
+          "t_s": 1.1000000000000008,
+          "vx": 0.21847899620730538,
+          "vy": 0.0,
+          "x": 0.18683855278177178,
+          "y": -0.03134113329924839
+        },
+        {
+          "attempted": true,
+          "note": "approach_orbit_ring",
+          "stopped": false,
+          "t_s": 1.2000000000000008,
+          "vx": 0.20105764395234568,
+          "vy": 0.0,
+          "x": 0.2081492066523529,
+          "y": -0.03615584852956051
+        },
+        {
+          "attempted": true,
+          "note": "approach_orbit_ring",
+          "stopped": false,
+          "t_s": 1.300000000000001,
+          "vx": 0.1850194940136103,
+          "vy": 0.0,
+          "x": 0.22770944620450068,
+          "y": -0.04080717500295124
+        },
+        {
+          "attempted": true,
+          "note": "approach_orbit_ring",
+          "stopped": false,
+          "t_s": 1.400000000000001,
+          "vx": 0.17025582709997567,
+          "vy": 0.0,
+          "x": 0.24566301725157344,
+          "y": -0.0452780196675265
+        },
+        {
+          "attempted": true,
+          "note": "approach_orbit_ring",
+          "stopped": false,
+          "t_s": 1.500000000000001,
+          "vx": 0.1566662645337964,
+          "vy": 0.0,
+          "x": 0.262142114257595,
+          "y": -0.04955675808729514
+        },
+        {
+          "attempted": true,
+          "note": "approach_orbit_ring",
+          "stopped": false,
+          "t_s": 1.6000000000000012,
+          "vx": 0.14415816673165915,
+          "vy": 0.0,
+          "x": 0.27726822826653524,
+          "y": -0.053636241998887474
+        },
+        {
+          "attempted": true,
+          "note": "approach_orbit_ring",
+          "stopped": false,
+          "t_s": 1.7000000000000013,
+          "vx": 0.1326460677148069,
+          "vy": 0.0,
+          "x": 0.29115295267988905,
+          "y": -0.057512960306636995
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 1.8000000000000014,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.3038987439421368,
+          "y": -0.061186331689939935
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 1.9000000000000015,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.3038987439421368,
+          "y": -0.061186331689939935
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 2.0000000000000013,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.3038987439421368,
+          "y": -0.061186331689939935
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 2.099999999999999,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.3038987439421368,
+          "y": -0.061186331689939935
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 2.199999999999997,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.3038987439421368,
+          "y": -0.061186331689939935
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 2.299999999999995,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.3038987439421368,
+          "y": -0.061186331689939935
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 2.399999999999993,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.3038987439421368,
+          "y": -0.061186331689939935
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 2.4999999999999907,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.3038987439421368,
+          "y": -0.061186331689939935
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 2.5999999999999885,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.3038987439421368,
+          "y": -0.061186331689939935
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 2.6999999999999864,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.3038987439421368,
+          "y": -0.061186331689939935
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 2.7999999999999843,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.3038987439421368,
+          "y": -0.061186331689939935
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 2.899999999999982,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.3038987439421368,
+          "y": -0.061186331689939935
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 2.99999999999998,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.3038987439421368,
+          "y": -0.061186331689939935
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 3.099999999999978,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.3038987439421368,
+          "y": -0.061186331689939935
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 3.1999999999999758,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.3038987439421368,
+          "y": -0.061186331689939935
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 3.2999999999999736,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.3038987439421368,
+          "y": -0.061186331689939935
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 3.3999999999999715,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.3038987439421368,
+          "y": -0.061186331689939935
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 3.4999999999999694,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.3038987439421368,
+          "y": -0.061186331689939935
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 3.5999999999999672,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.3038987439421368,
+          "y": -0.061186331689939935
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 3.699999999999965,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.31193035989673473,
+          "y": -0.08800933941620907
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 3.799999999999963,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.3195109487429361,
+          "y": -0.11496333525812895
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 3.899999999999961,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.32667103617875287,
+          "y": -0.14203211382163794
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 3.9999999999999587,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.3334414075518084,
+          "y": -0.16920102816620294
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 4.099999999999957,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.339853203152761,
+          "y": -0.19645683007304288
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 4.199999999999955,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.345937965021705,
+          "y": -0.2237875340208239
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 4.299999999999953,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.3517276400603758,
+          "y": -0.25118229689893073
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 4.399999999999951,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.35725454509916704,
+          "y": -0.2786313073317905
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 4.4999999999999485,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.36255130007518077,
+          "y": -0.306125680162626
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 4.599999999999946,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.3676507356642066,
+          "y": -0.33365735313285155
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 4.699999999999944,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.37258578161531963,
+          "y": -0.36121898407401726
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 4.799999999999942,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.3773893417108144,
+          "y": -0.38880384798746576
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 4.89999999999994,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.3820941607712257,
+          "y": -0.4164057342161736
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 4.999999999999938,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.38673268850123943,
+          "y": -0.4440188445175975
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 5.099999999999936,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.3913369442803039,
+          "y": -0.47163769324001187
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 5.199999999999934,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.3959383862883199,
+          "y": -0.4992570110106576
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 5.299999999999931,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.40056778765993317,
+          "y": -0.5268716533909834
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 5.399999999999929,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.40525512170924477,
+          "y": -0.5544765158745465
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 5.499999999999927,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.4100294576794029,
+          "y": -0.5820664564295577
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 5.599999999999925,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.4149188679593395,
+          "y": -0.6096362265517482
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 5.699999999999923,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.41995034727664565,
+          "y": -0.6371804115220594
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 5.799999999999921,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.42514974401965533,
+          "y": -0.6646933802811467
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 5.899999999999919,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.4305417035578586,
+          "y": -0.692169245057583
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 5.9999999999999165,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.4361496232101355,
+          "y": -0.7196018306329113
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 6.099999999999914,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.44199561834620305,
+          "y": -0.7469846529038401
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 6.199999999999912,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.4481004989891337,
+          "y": -0.7743109062155249
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 6.29999999999991,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.4544837562073149,
+          "y": -0.8015734587924294
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 6.399999999999908,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.461163557535094,
+          "y": -0.8287648554845561
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 6.499999999999906,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.4681567506359853,
+          "y": -0.8558773269748773
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 6.599999999999904,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.4754788744151695,
+          "y": -0.882902804555236
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 6.699999999999902,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.4831441767946587,
+          "y": -0.9098329395687418
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 6.7999999999998995,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.49116563838139954,
+          "y": -0.9366591266322266
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 6.899999999999897,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.4995550012830736,
+          "y": -0.9633725297880847
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 6.999999999999895,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.5083228023563726,
+          "y": -0.9899641107863532
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 7.099999999999893,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.5174784102065674,
+          "y": -1.0164246587610566
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 7.199999999999891,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.5270300652941242,
+          "y": -1.0427448206359322
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 7.299999999999889,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.536984922543102,
+          "y": -1.0689151316703878
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 7.399999999999887,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.5473490958864481,
+          "y": -1.094926045634141
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 7.4999999999998845,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.5581277042245713,
+          "y": -1.1207679641761594
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 7.599999999999882,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.5693249183152898,
+          "y": -1.146431265028351
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 7.69999999999988,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.5809440081550528,
+          "y": -1.1719063287555753
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 7.799999999999878,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.5929873904528549,
+          "y": -1.1971835638298047
+        },
+        {
+          "attempted": true,
+          "note": "orbit_owner",
+          "stopped": false,
+          "t_s": 7.899999999999876,
+          "vx": 0.28,
+          "vy": 0.0,
+          "x": 0.6054566758392244,
+          "y": -1.2222534298670003
+        }
+      ],
+      "trace_len": 80
+    },
+    {
+      "arrival_epsilon_m": 0.05,
+      "attribution_layer": "L4_planning",
+      "authority_category": "agreement",
+      "collision_count": 0,
+      "detail": "grid_track err=-1.0 goal=2.2 route=2 status=planned|clear",
+      "failure": "planning_error",
+      "harness_used": "headless_navigation",
+      "instruction": "go to the sidewalk",
+      "mode": "headless",
+      "score": {
+        "attribution_layer": "L4_planning",
+        "authority_category": "unknown",
+        "detail": "grid_track err=-1.0 goal=2.2 route=2 status=planned|clear",
+        "distance_to_goal_m": 1.6183468052664387,
+        "failure": "planning_error",
+        "oracle_sr_gap": 0.0,
+        "oracle_success": false,
+        "scorer_arrival": false,
+        "spl": 0.0,
+        "success": false,
+        "system_arrival": null,
+        "time_to_goal_s": null
+      },
+      "scorer_arrival": false,
+      "script_id": "wwm-sidewalk-from-road",
+      "success": false,
+      "system_arrival": false,
+      "theme": "sidewalk",
+      "trace": [
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 0.0,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 0.09999999999999999,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 0.20000000000000004,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 0.3000000000000001,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 0.4000000000000002,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 0.5000000000000002,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 0.6000000000000003,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 0.7000000000000004,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 0.8000000000000005,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 0.9000000000000006,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 1.0000000000000007,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 1.1000000000000008,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 1.2000000000000008,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 1.300000000000001,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 1.400000000000001,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 1.500000000000001,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 1.6000000000000012,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 1.7000000000000013,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 1.8000000000000014,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 1.9000000000000015,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 2.0000000000000013,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 2.099999999999999,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 2.199999999999997,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 2.299999999999995,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 2.399999999999993,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 2.4999999999999907,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 2.5999999999999885,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 2.6999999999999864,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 2.7999999999999843,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 2.899999999999982,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 2.99999999999998,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 3.099999999999978,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 3.1999999999999758,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 3.2999999999999736,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 3.3999999999999715,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_target_resolved",
+          "stopped": true,
+          "t_s": 3.4999999999999694,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-103.1 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 3.5999999999999672,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-102.1 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 3.699999999999965,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-100.0 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 3.799999999999963,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-96.9 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 3.899999999999961,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-92.8 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 3.9999999999999587,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-88.2 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 4.099999999999957,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-83.6 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 4.199999999999955,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-79.0 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 4.299999999999953,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-74.4 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 4.399999999999951,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-69.9 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 4.4999999999999485,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-65.3 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 4.599999999999946,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-60.7 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 4.699999999999944,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-56.1 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 4.799999999999942,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-51.5 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 4.89999999999994,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-46.9 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 4.999999999999938,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-42.4 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 5.099999999999936,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-37.8 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 5.199999999999934,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-33.2 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 5.299999999999931,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-28.6 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 5.399999999999929,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-24.6 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 5.499999999999927,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-21.2 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 5.599999999999925,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-18.2 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 5.699999999999923,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-15.6 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 5.799999999999921,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-13.5 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 5.899999999999919,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-11.6 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 5.9999999999999165,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-10.0 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 6.099999999999914,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-8.6 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 6.199999999999912,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-7.4 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 6.29999999999991,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-6.2 goal=3.1 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 6.399999999999908,
+          "vx": 0.09000000000000001,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-5.4 goal=3.1 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 6.499999999999906,
+          "vx": 0.18000000000000002,
+          "vy": 0.0,
+          "x": 0.004097216524670929,
+          "y": 0.008013193824695408
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-4.6 goal=3.1 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 6.599999999999904,
+          "vx": 0.27,
+          "vy": 0.0,
+          "x": 0.012519208961205938,
+          "y": 0.023921224927021655
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-4.0 goal=3.1 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 6.699999999999902,
+          "vx": 0.36000000000000004,
+          "vy": 0.0,
+          "x": 0.025445029927196144,
+          "y": 0.04762598003371604
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-3.5 goal=3.0 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 6.7999999999998995,
+          "vx": 0.45000000000000007,
+          "vy": 0.0,
+          "x": 0.04301577489748005,
+          "y": 0.07904665071240569
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-3.1 goal=3.0 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 6.899999999999897,
+          "vx": 0.54,
+          "vy": 0.0,
+          "x": 0.0653427911963641,
+          "y": 0.11811699793692089
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-2.7 goal=2.9 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 6.999999999999895,
+          "vx": 0.63,
+          "vy": 0.0,
+          "x": 0.09251409257447032,
+          "y": 0.1647829043732999
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-2.4 goal=2.9 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 7.099999999999893,
+          "vx": 0.72,
+          "vy": 0.0,
+          "x": 0.12459939322264,
+          "y": 0.2190002379902647
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-2.1 goal=2.8 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 7.199999999999891,
+          "vx": 0.8099999999999999,
+          "vy": 0.0,
+          "x": 0.1616540760910155,
+          "y": 0.28073301743585743
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-1.9 goal=2.7 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 7.299999999999889,
+          "vx": 0.8490959130238732,
+          "vy": 0.0,
+          "x": 0.2037223364215192,
+          "y": 0.34995185290677083
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-1.7 goal=2.6 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 7.399999999999887,
+          "vx": 0.8492818558492051,
+          "vy": 0.0,
+          "x": 0.2481747242958727,
+          "y": 0.4222955568706443
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-1.5 goal=2.5 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 7.4999999999998845,
+          "vx": 0.84942817612769,
+          "vy": 0.0,
+          "x": 0.29295070180797467,
+          "y": 0.4944613291449772
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-1.3 goal=2.4 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 7.599999999999882,
+          "vx": 0.8495435048471974,
+          "vy": 0.0,
+          "x": 0.33801358619386257,
+          "y": 0.5664655711325213
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-1.2 goal=2.4 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 7.69999999999988,
+          "vx": 0.8496345607259495,
+          "vy": 0.0,
+          "x": 0.38333131244321533,
+          "y": 0.6383233409642451
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-1.1 goal=2.3 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 7.799999999999878,
+          "vx": 0.8497065794491938,
+          "vy": 0.0,
+          "x": 0.4288758170414532,
+          "y": 0.7100483850529088
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-1.0 goal=2.2 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 7.899999999999876,
+          "vx": 0.8497636455221985,
+          "vy": 0.0,
+          "x": 0.4746225099447897,
+          "y": 0.7816531947335613
+        }
+      ],
+      "trace_len": 80
+    },
+    {
+      "arrival_epsilon_m": 0.05,
+      "attribution_layer": "L6_termination",
+      "authority_category": "authority_disagreement",
+      "collision_count": 0,
+      "detail": "grid_track err=-0.0 goal=0.3 route=2 status=planned|clear",
+      "failure": "termination",
+      "harness_used": "headless_navigation",
+      "instruction": "wait by the lamppost",
+      "mode": "headless",
+      "score": {
+        "attribution_layer": "L6_termination",
+        "authority_category": "unknown",
+        "detail": "grid_track err=-0.0 goal=0.3 route=2 status=planned|clear",
+        "distance_to_goal_m": 0.0,
+        "failure": "termination",
+        "oracle_sr_gap": 1.0,
+        "oracle_success": true,
+        "scorer_arrival": true,
+        "spl": 0.0,
+        "success": false,
+        "system_arrival": null,
+        "time_to_goal_s": null
+      },
+      "scorer_arrival": true,
+      "script_id": "wwm-lamppost-standoff",
+      "success": false,
+      "system_arrival": false,
+      "theme": "lamppost",
+      "trace": [
+        {
+          "attempted": true,
+          "note": "semantic_search_scan",
+          "stopped": false,
+          "t_s": 0.0,
+          "vx": 0.12,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "semantic_target_resolved",
+          "stopped": true,
+          "t_s": 0.09999999999999999,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 5.4742279373075996e-05,
+          "y": 0.011999824182731215
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-27.1 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 0.20000000000000004,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 5.4742279373075996e-05,
+          "y": 0.011999824182731215
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-26.0 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 0.3000000000000001,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 5.4742279373075996e-05,
+          "y": 0.011999824182731215
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-24.0 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 0.4000000000000002,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 5.4742279373075996e-05,
+          "y": 0.011999824182731215
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-20.9 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 0.5000000000000002,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 5.4742279373075996e-05,
+          "y": 0.011999824182731215
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-18.0 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 0.6000000000000003,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 5.4742279373075996e-05,
+          "y": 0.011999824182731215
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-15.4 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 0.7000000000000004,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 5.4742279373075996e-05,
+          "y": 0.011999824182731215
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-13.3 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 0.8000000000000005,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 5.4742279373075996e-05,
+          "y": 0.011999824182731215
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-11.4 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 0.9000000000000006,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 5.4742279373075996e-05,
+          "y": 0.011999824182731215
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-9.8 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 1.0000000000000007,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 5.4742279373075996e-05,
+          "y": 0.011999824182731215
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-8.5 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 1.1000000000000008,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 5.4742279373075996e-05,
+          "y": 0.011999824182731215
+        },
+        {
+          "attempted": true,
+          "note": "grid_align err=-7.3 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 1.2000000000000008,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 5.4742279373075996e-05,
+          "y": 0.011999824182731215
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-6.1 goal=2.9 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 1.300000000000001,
+          "vx": 0.09000000000000001,
+          "vy": 0.0,
+          "x": 5.4742279373075996e-05,
+          "y": 0.011999824182731215
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-5.3 goal=2.9 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 1.400000000000001,
+          "vx": 0.18000000000000002,
+          "vy": 0.0,
+          "x": 0.0034147999480146707,
+          "y": 0.020348986842989688
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-4.6 goal=2.9 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 1.500000000000001,
+          "vx": 0.27,
+          "vy": 0.0,
+          "x": 0.010368641558189612,
+          "y": 0.03695138525717549
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-4.0 goal=2.9 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 1.6000000000000012,
+          "vx": 0.36000000000000004,
+          "vy": 0.0,
+          "x": 0.02110070224959246,
+          "y": 0.06172668264434719
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-3.5 goal=2.8 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 1.7000000000000013,
+          "vx": 0.45000000000000007,
+          "vy": 0.0,
+          "x": 0.035756753045184275,
+          "y": 0.09460813778891691
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-3.0 goal=2.8 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 1.8000000000000014,
+          "vx": 0.54,
+          "vy": 0.0,
+          "x": 0.05445220069379826,
+          "y": 0.13554062194101565
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-2.7 goal=2.7 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 1.9000000000000015,
+          "vx": 0.63,
+          "vy": 0.0,
+          "x": 0.07727859538776162,
+          "y": 0.18447877160874893
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-2.4 goal=2.7 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 2.0000000000000013,
+          "vx": 0.72,
+          "vy": 0.0,
+          "x": 0.10430875436226913,
+          "y": 0.2413853320677285
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-2.1 goal=2.6 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 2.099999999999999,
+          "vx": 0.8099999999999999,
+          "vy": 0.0,
+          "x": 0.1356008136844109,
+          "y": 0.30622970661505017
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-1.9 goal=2.5 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 2.199999999999997,
+          "vx": 0.8491095746828248,
+          "vy": 0.0,
+          "x": 0.17120144861106662,
+          "y": 0.3789867046823514
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-1.7 goal=2.4 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 2.299999999999995,
+          "vx": 0.8492900143305677,
+          "vy": 0.0,
+          "x": 0.20888964911518118,
+          "y": 0.45507519279888736
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-1.5 goal=2.3 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 2.399999999999993,
+          "vx": 0.8494323662381377,
+          "vy": 0.0,
+          "x": 0.2469138018549898,
+          "y": 0.5310165474617096
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-1.3 goal=2.2 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 2.4999999999999907,
+          "vx": 0.8495448649946304,
+          "vy": 0.0,
+          "x": 0.2852367710255092,
+          "y": 0.6068235107891473
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-1.2 goal=2.2 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 2.5999999999999885,
+          "vx": 0.8496339314736034,
+          "vy": 0.0,
+          "x": 0.3238260077235646,
+          "y": 0.6825079169599676
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-1.1 goal=2.1 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 2.6999999999999864,
+          "vx": 0.8497045779150533,
+          "vy": 0.0,
+          "x": 0.3626529553034276,
+          "y": 0.7580806718980206
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-1.0 goal=2.0 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 2.7999999999999843,
+          "vx": 0.8462901181787412,
+          "vy": 0.0,
+          "x": 0.4016925370419973,
+          "y": 0.8335517636941474
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.9 goal=1.9 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 2.899999999999982,
+          "vx": 0.8092682737598381,
+          "vy": 0.0,
+          "x": 0.4407624900173382,
+          "y": 0.9086224314369544
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.8 goal=1.8 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 2.99999999999998,
+          "vx": 0.7738556471216701,
+          "vy": 0.0,
+          "x": 0.4782843550813231,
+          "y": 0.9803250018782642
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.7 goal=1.7 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 3.099999999999978,
+          "vx": 0.7399845905563693,
+          "vy": 0.0,
+          "x": 0.5143030083984976,
+          "y": 1.0488171944121452
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.6 goal=1.7 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 3.1999999999999758,
+          "vx": 0.7075897860283626,
+          "vy": 0.0,
+          "x": 0.5488645967941863,
+          "y": 1.1142485875809185
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.6 goal=1.6 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 3.2999999999999736,
+          "vx": 0.6766082836505046,
+          "vy": 0.0,
+          "x": 0.5820160207493351,
+          "y": 1.176761107514988
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.5 goal=1.5 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 3.3999999999999715,
+          "vx": 0.646979507360149,
+          "vy": 0.0,
+          "x": 0.6138045068327972,
+          "y": 1.2364894852688344
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.5 goal=1.5 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 3.4999999999999694,
+          "vx": 0.618645236113964,
+          "vy": 0.0,
+          "x": 0.6442772557871681,
+          "y": 1.2935616838611892
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.4 goal=1.4 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 3.5999999999999672,
+          "vx": 0.5915495670351517,
+          "vy": 0.0,
+          "x": 0.6734811545777891,
+          "y": 1.3480992962937879
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.4 goal=1.4 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 3.699999999999965,
+          "vx": 0.5656388654798482,
+          "vy": 0.0,
+          "x": 0.7014625424876133,
+          "y": 1.400217916103684
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.3 goal=1.3 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 3.799999999999963,
+          "vx": 0.5408617058485714,
+          "vy": 0.0,
+          "x": 0.7282670228423347,
+          "y": 1.4500274821517796
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.3 goal=1.2 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 3.899999999999961,
+          "vx": 0.5171688060816025,
+          "vy": 0.0,
+          "x": 0.7539393132223282,
+          "y": 1.4976325994042574
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.3 goal=1.2 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 3.9999999999999587,
+          "vx": 0.4945129580880235,
+          "vy": 0.0,
+          "x": 0.7785231280960645,
+          "y": 1.5431328374531632
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.2 goal=1.1 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 4.099999999999957,
+          "vx": 0.47284895582302877,
+          "vy": 0.0,
+          "x": 0.8020610887237928,
+          "y": 1.5866230084688702
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.2 goal=1.1 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 4.199999999999955,
+          "vx": 0.4521335223129648,
+          "vy": 0.0,
+          "x": 0.8245946559558329,
+          "y": 1.628193426196249
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.2 goal=1.0 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 4.299999999999953,
+          "vx": 0.4323252366057875,
+          "vy": 0.0,
+          "x": 0.8461640822082013,
+          "y": 1.6679301475093014
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.2 goal=1.0 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 4.399999999999951,
+          "vx": 0.4133844613755161,
+          "vy": 0.0,
+          "x": 0.8668083794575736,
+          "y": 1.7059151979339076
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.2 goal=1.0 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 4.4999999999999485,
+          "vx": 0.38540481117441155,
+          "vy": 0.0,
+          "x": 0.886565300572988,
+          "y": 1.7422267824407758
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.1 goal=0.9 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 4.599999999999946,
+          "vx": 0.35379074114484144,
+          "vy": 0.0,
+          "x": 0.9049993204783665,
+          "y": 1.7760728394544554
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.1 goal=0.9 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 4.699999999999944,
+          "vx": 0.326348793410832,
+          "vy": 0.0,
+          "x": 0.9219330662554436,
+          "y": 1.8071361156155332
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.1 goal=0.9 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 4.799999999999942,
+          "vx": 0.30234532465760194,
+          "vy": 0.0,
+          "x": 0.937563143835603,
+          "y": 1.8357846062448118
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.1 goal=0.8 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 4.89999999999994,
+          "vx": 0.2812038288701388,
+          "vy": 0.0,
+          "x": 0.9520517488575951,
+          "y": 1.8623215102026303
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.1 goal=0.8 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 4.999999999999938,
+          "vx": 0.2624658283667822,
+          "vy": 0.0,
+          "x": 0.9655340176767906,
+          "y": 1.8869991186130672
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.1 goal=0.8 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 5.099999999999936,
+          "vx": 0.24576273966423906,
+          "vy": 0.0,
+          "x": 0.9781235511158612,
+          "y": 1.91002924573763
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.1 goal=0.7 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 5.199999999999934,
+          "vx": 0.2307953139807345,
+          "vy": 0.0,
+          "x": 0.989916623462346,
+          "y": 1.9315911724743586
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.1 goal=0.7 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 5.299999999999931,
+          "vx": 0.21731839733746738,
+          "vy": 0.0,
+          "x": 1.0009954304609832,
+          "y": 1.9518377722770304
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.1 goal=0.7 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 5.399999999999929,
+          "vx": 0.20512948605992473,
+          "vy": 0.0,
+          "x": 1.0114306247588885,
+          "y": 1.9709002898742591
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.1 goal=0.7 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 5.499999999999927,
+          "vx": 0.19406002953793633,
+          "vy": 0.0,
+          "x": 1.021283316094076,
+          "y": 1.9888921083826194
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.0 goal=0.7 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 5.599999999999925,
+          "vx": 0.183968748023051,
+          "vy": 0.0,
+          "x": 1.030606664576373,
+          "y": 2.0059117477209365
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.0 goal=0.6 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 5.699999999999923,
+          "vx": 0.17473644648993833,
+          "vy": 0.0,
+          "x": 1.03944716121782,
+          "y": 2.0220452724833833
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.0 goal=0.6 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 5.799999999999921,
+          "vx": 0.2479142027027258,
+          "vy": 0.0,
+          "x": 1.047845665633782,
+          "y": 2.037368241537594
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.0 goal=0.6 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 5.899999999999919,
+          "vx": 0.2370520077062449,
+          "vy": 0.0,
+          "x": 1.0597634616701168,
+          "y": 2.0591071618476207
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.0 goal=0.6 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 5.9999999999999165,
+          "vx": 0.21810204328072894,
+          "vy": 0.0,
+          "x": 1.0711608668422974,
+          "y": 2.079892630295927
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.0 goal=0.6 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 6.099999999999914,
+          "vx": 0.20101506597199426,
+          "vy": 0.0,
+          "x": 1.0816486331893467,
+          "y": 2.099015699340308
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.0 goal=0.5 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 6.199999999999912,
+          "vx": 0.18588196616068828,
+          "vy": 0.0,
+          "x": 1.091315963536368,
+          "y": 2.116639923899086
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.0 goal=0.5 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 6.29999999999991,
+          "vx": 0.17241330372444985,
+          "vy": 0.0,
+          "x": 1.1002565128086166,
+          "y": 2.132936783475451
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.0 goal=0.5 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 6.399999999999908,
+          "vx": 0.16037165893542787,
+          "vy": 0.0,
+          "x": 1.10855008325105,
+          "y": 2.1480523437449883
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.0 goal=0.5 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 6.499999999999906,
+          "vx": 0.1495607462959027,
+          "vy": 0.0,
+          "x": 1.1162651114556557,
+          "y": 2.162111825586561
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.0 goal=0.5 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 6.599999999999904,
+          "vx": 0.1398171074101878,
+          "vy": 0.0,
+          "x": 1.1234606352645857,
+          "y": 2.1752232177860744
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.0 goal=0.5 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 6.699999999999902,
+          "vx": 0.1310037051073708,
+          "vy": 0.0,
+          "x": 1.1301878637343514,
+          "y": 2.1874801599960754
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.0 goal=0.4 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 6.7999999999998995,
+          "vx": 0.12300493562027026,
+          "vy": 0.0,
+          "x": 1.1364914409758715,
+          "y": 2.1989642629851494
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.0 goal=0.4 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 6.899999999999897,
+          "vx": 0.12,
+          "vy": 0.0,
+          "x": 1.1424104716081493,
+          "y": 2.2097469907584504
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.0 goal=0.4 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 6.999999999999895,
+          "vx": 0.12,
+          "vy": 0.0,
+          "x": 1.1481851935748622,
+          "y": 2.2202661440608455
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.0 goal=0.4 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 7.099999999999893,
+          "vx": 0.12,
+          "vy": 0.0,
+          "x": 1.1539601724229696,
+          "y": 2.2307851563385137
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.0 goal=0.4 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 7.199999999999891,
+          "vx": 0.12,
+          "vy": 0.0,
+          "x": 1.1597353791954026,
+          "y": 2.2413040434816844
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.0 goal=0.4 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 7.299999999999889,
+          "vx": 0.12,
+          "vy": 0.0,
+          "x": 1.1655107883861948,
+          "y": 2.2518228194881913
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.0 goal=0.4 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 7.399999999999887,
+          "vx": 0.12,
+          "vy": 0.0,
+          "x": 1.1712863775198523,
+          "y": 2.262341496693816
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.0 goal=0.4 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 7.4999999999998845,
+          "vx": 0.12,
+          "vy": 0.0,
+          "x": 1.177062126783066,
+          "y": 2.2728600859740418
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.0 goal=0.3 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 7.599999999999882,
+          "vx": 0.12,
+          "vy": 0.0,
+          "x": 1.1828380187021794,
+          "y": 2.2833785969207874
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.0 goal=0.3 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 7.69999999999988,
+          "vx": 0.12,
+          "vy": 0.0,
+          "x": 1.1886140378606673,
+          "y": 2.293897037997261
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.0 goal=0.3 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 7.799999999999878,
+          "vx": 0.12,
+          "vy": 0.0,
+          "x": 1.194390170651618,
+          "y": 2.3044154166736583
+        },
+        {
+          "attempted": true,
+          "note": "grid_track err=-0.0 goal=0.3 route=2 status=planned|clear",
+          "stopped": false,
+          "t_s": 7.899999999999876,
+          "vx": 0.12,
+          "vy": 0.0,
+          "x": 1.200166405060839,
+          "y": 2.314933739546092
+        }
+      ],
+      "trace_len": 80
+    },
+    {
+      "arrival_epsilon_m": 0.05,
+      "attribution_layer": "none",
+      "authority_category": "unknown",
+      "collision_count": 0,
+      "detail": "resume_fresh_ok",
+      "failure": "none",
+      "harness_used": "resume_store",
+      "instruction": "follow me",
+      "mode": "headless",
+      "score": null,
+      "scorer_arrival": false,
+      "script_id": "wwm-pause-resume",
+      "success": true,
+      "system_arrival": null,
+      "theme": "pause_resume",
+      "trace": [
+        {
+          "note": "pause",
+          "paused": true,
+          "stopped": true,
+          "t_s": 3.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "resume",
+          "requires_fresh_observation": true,
+          "resumed": true,
+          "stale_dropped": true,
+          "stopped": false,
+          "t_s": 5.0,
+          "x": 0.0,
+          "y": 0.0
+        }
+      ],
+      "trace_len": 2
+    },
+    {
+      "arrival_epsilon_m": 0.05,
+      "attribution_layer": "none",
+      "authority_category": "unknown",
+      "collision_count": 0,
+      "detail": "barge_in_tts_only",
+      "failure": "none",
+      "harness_used": "behavior_stub",
+      "instruction": "follow me",
+      "mode": "headless",
+      "score": null,
+      "scorer_arrival": null,
+      "script_id": "wwm-barge-in-tts",
+      "success": true,
+      "system_arrival": null,
+      "theme": "barge_in",
+      "trace": [
+        {
+          "attempted": true,
+          "stopped": false,
+          "t_s": 0.0,
+          "tts_playing": true,
+          "vx": 0.4
+        },
+        {
+          "attempted": true,
+          "motion_intent": false,
+          "note": "barge_in",
+          "stopped": false,
+          "t_s": 2.0,
+          "tts_interrupted": true,
+          "tts_playing": false,
+          "vx": 0.4
+        }
+      ],
+      "trace_len": 2
+    },
+    {
+      "arrival_epsilon_m": 0.05,
+      "attribution_layer": "L2b_visibility_gated",
+      "authority_category": "agreement",
+      "collision_count": 0,
+      "detail": "hallucinated_or_silent",
+      "failure": "grounding_error",
+      "harness_used": "headless_navigation",
+      "instruction": "walk towards the purple hydrant",
+      "mode": "headless",
+      "score": null,
+      "scorer_arrival": false,
+      "script_id": "wwm-absent-target",
+      "success": false,
+      "system_arrival": false,
+      "theme": "absent_target",
+      "trace": [
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 0.0,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 0.09999999999999999,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 0.20000000000000004,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 0.3000000000000001,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 0.4000000000000002,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 0.5000000000000002,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 0.6000000000000003,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 0.7000000000000004,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 0.8000000000000005,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 0.9000000000000006,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 1.0000000000000007,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 1.1000000000000008,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 1.2000000000000008,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 1.300000000000001,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 1.400000000000001,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 1.500000000000001,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 1.6000000000000012,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 1.7000000000000013,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 1.8000000000000014,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 1.9000000000000015,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 2.0000000000000013,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 2.099999999999999,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 2.199999999999997,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 2.299999999999995,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 2.399999999999993,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 2.4999999999999907,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 2.5999999999999885,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 2.6999999999999864,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 2.7999999999999843,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 2.899999999999982,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 2.99999999999998,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 3.099999999999978,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 3.1999999999999758,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 3.2999999999999736,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 3.3999999999999715,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 3.4999999999999694,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 3.5999999999999672,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 3.699999999999965,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 3.799999999999963,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 3.899999999999961,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 3.9999999999999587,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 4.099999999999957,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 4.199999999999955,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 4.299999999999953,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 4.399999999999951,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 4.4999999999999485,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 4.599999999999946,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 4.699999999999944,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 4.799999999999942,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 4.89999999999994,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 4.999999999999938,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 5.099999999999936,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 5.199999999999934,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 5.299999999999931,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 5.399999999999929,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 5.499999999999927,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 5.599999999999925,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 5.699999999999923,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 5.799999999999921,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 5.899999999999919,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 5.9999999999999165,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 6.099999999999914,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 6.199999999999912,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 6.29999999999991,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 6.399999999999908,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 6.499999999999906,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 6.599999999999904,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 6.699999999999902,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 6.7999999999998995,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 6.899999999999897,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 6.999999999999895,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 7.099999999999893,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 7.199999999999891,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 7.299999999999889,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 7.399999999999887,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 7.4999999999998845,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 7.599999999999882,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 7.69999999999988,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "scan_behavior_rotate",
+          "stopped": false,
+          "t_s": 7.799999999999878,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attempted": true,
+          "note": "search_entity_align",
+          "stopped": false,
+          "t_s": 7.899999999999876,
+          "vx": 0.0,
+          "vy": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        }
+      ],
+      "trace_len": 80
+    },
+    {
+      "arrival_epsilon_m": 0.05,
+      "attribution_layer": "none",
+      "authority_category": "unknown",
+      "collision_count": 0,
+      "detail": "bounded_search_or_stop",
+      "failure": "none",
+      "harness_used": "behavior_stub",
+      "instruction": "find me",
+      "mode": "headless",
+      "score": null,
+      "scorer_arrival": false,
+      "script_id": "wwm-owner-search",
+      "success": true,
+      "system_arrival": null,
+      "theme": "owner_search",
+      "trace": [
+        {
+          "attempted": true,
+          "owner_visible": true,
+          "stopped": false,
+          "t_s": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attached_nearest": false,
+          "attempted": true,
+          "note": "lose_owner",
+          "owner_visible": false,
+          "searching": true,
+          "stopped": false,
+          "t_s": 1.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "attached_nearest": false,
+          "attempted": true,
+          "note": "bounded_search_stop",
+          "owner_visible": false,
+          "searching": false,
+          "stopped": true,
+          "t_s": 15.0,
+          "x": 0.0,
+          "y": 0.0
+        }
+      ],
+      "trace_len": 3
+    },
+    {
+      "arrival_epsilon_m": 0.05,
+      "attribution_layer": "none",
+      "authority_category": "unknown",
+      "collision_count": 0,
+      "detail": "curb_stop_hold",
+      "failure": "none",
+      "harness_used": "behavior_stub",
+      "instruction": "cross with me",
+      "mode": "headless",
+      "score": null,
+      "scorer_arrival": null,
+      "script_id": "wwm-curb-stop",
+      "success": true,
+      "system_arrival": null,
+      "theme": "curb_stop",
+      "trace": [
+        {
+          "attempted": true,
+          "stopped": false,
+          "t_s": 0.0,
+          "vx": 0.3,
+          "x": 2.5,
+          "y": 1.0
+        },
+        {
+          "attempted": true,
+          "awaiting_voice": true,
+          "curb_edge": true,
+          "note": "curb_stop",
+          "stopped": true,
+          "t_s": 2.0,
+          "vx": 0.0,
+          "x": 2.5,
+          "y": 1.0
+        }
+      ],
+      "trace_len": 2
+    }
+  ],
+  "smoke": false
+}

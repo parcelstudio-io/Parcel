@@ -1,0 +1,167 @@
+{
+  "accessed_on": "2026-08-26",
+  "scope": "Primary documentation and papers used for the system-readiness and simulator synthesis; repository artifacts and raw run outputs are cited by path in RESULTS.md.",
+  "sources": [
+    {
+      "id": "unitree_ros2",
+      "kind": "official_repository",
+      "title": "Unitree ROS 2",
+      "url": "https://github.com/unitreerobotics/unitree_ros2",
+      "used_for": "Go2 ROS 2, CycloneDDS, Ubuntu/Humble, networking, and high-level Sport interface facts"
+    },
+    {
+      "id": "unitree_sdk2_python",
+      "kind": "official_repository",
+      "title": "Unitree SDK2 Python",
+      "url": "https://github.com/unitreerobotics/unitree_sdk2_python",
+      "used_for": "Go2 SDK2 high/low-level, camera, obstacle-avoidance, and VUI surfaces"
+    },
+    {
+      "id": "unitree_mujoco",
+      "kind": "official_repository",
+      "title": "Unitree MuJoCo",
+      "url": "https://github.com/unitreerobotics/unitree_mujoco",
+      "used_for": "Go2 articulated simulation, SDK2/DDS compatibility, domains/interfaces, terrain, and evidence ceiling"
+    },
+    {
+      "id": "unitree_rl_lab",
+      "kind": "official_repository",
+      "title": "Unitree RL Lab",
+      "url": "https://github.com/unitreerobotics/unitree_rl_lab",
+      "used_for": "Official Unitree Isaac Lab task availability and articulated training path"
+    },
+    {
+      "id": "isaac_lab",
+      "kind": "official_documentation",
+      "title": "NVIDIA Isaac Lab",
+      "url": "https://isaac-sim.github.io/IsaacLab/",
+      "used_for": "GPU-parallel robotics simulation, RL, sensors, planning, and domain randomization"
+    },
+    {
+      "id": "metaurban",
+      "kind": "official_repository",
+      "title": "MetaUrban",
+      "url": "https://github.com/metadriverse/metaurban",
+      "used_for": "Procedural urban and social-navigation simulator assessment"
+    },
+    {
+      "id": "habitat_lab",
+      "kind": "official_repository",
+      "title": "Habitat Lab",
+      "url": "https://github.com/facebookresearch/habitat-lab",
+      "used_for": "Indoor embodied simulator scope and current maintenance notice"
+    },
+    {
+      "id": "mcap",
+      "kind": "official_specification",
+      "title": "MCAP specification",
+      "url": "https://mcap.dev/spec",
+      "used_for": "Robotics log container, indexing, schemas, checksums, chunks, and replay design"
+    },
+    {
+      "id": "openai_gpt_realtime_2_1",
+      "kind": "official_documentation",
+      "title": "OpenAI GPT-Realtime-2.1",
+      "url": "https://developers.openai.com/api/docs/models/gpt-realtime-2.1",
+      "used_for": "Current text/audio token prices for the repository default alias"
+    },
+    {
+      "id": "openai_gpt_realtime_2_1_mini",
+      "kind": "official_documentation",
+      "title": "OpenAI GPT-Realtime-2.1 Mini",
+      "url": "https://developers.openai.com/api/docs/models/gpt-realtime-2.1-mini",
+      "used_for": "Current text/audio token prices for the example deployment alias"
+    },
+    {
+      "id": "openai_realtime_costs",
+      "kind": "official_documentation",
+      "title": "Managing Realtime API costs",
+      "url": "https://developers.openai.com/api/docs/guides/realtime-costs",
+      "used_for": "Caching, truncation, session accounting, and cost controls"
+    },
+    {
+      "id": "saycan",
+      "kind": "research_preprint",
+      "title": "Do As I Can, Not As I Say: Grounding Language in Robotic Affordances",
+      "url": "https://arxiv.org/abs/2204.01691",
+      "used_for": "Affordance-grounded language planning architecture"
+    },
+    {
+      "id": "rma",
+      "kind": "peer_reviewed_paper",
+      "title": "Rapid Motor Adaptation for Legged Robots",
+      "url": "https://www.roboticsproceedings.org/rss17/p011.html",
+      "used_for": "Privileged training and deployment-time adaptation for legged locomotion"
+    },
+    {
+      "id": "safe_mapping",
+      "kind": "peer_reviewed_paper",
+      "title": "Certifiably-Correct Mapping for Safe Navigation Despite Odometry Drift",
+      "url": "https://www.roboticsproceedings.org/rss21/p007.html",
+      "used_for": "Completion/localization correctness under odometry drift"
+    },
+    {
+      "id": "follow_bench",
+      "kind": "research_preprint",
+      "title": "Follow-Bench",
+      "url": "https://arxiv.org/abs/2509.10796",
+      "used_for": "Socially-aware person-following scenario and metric design"
+    },
+    {
+      "id": "tpt_bench",
+      "kind": "research_preprint",
+      "title": "TPT-Bench",
+      "url": "https://arxiv.org/abs/2505.07446",
+      "used_for": "Long-term egocentric target-person tracking scenario design"
+    },
+    {
+      "id": "affectloop",
+      "kind": "research_preprint",
+      "title": "Closing the Affective Loop: Multimodal Speaker-Listener Emotion-Dynamics-Aware Empathetic Social Robots",
+      "url": "https://arxiv.org/abs/2608.16686",
+      "used_for": "Hypothesis direction for multimodal affect-action feedback; not Parcel or Go2 validation"
+    },
+    {
+      "id": "mind_the_context",
+      "kind": "research_preprint",
+      "title": "Mind the Context: Continual Learning of Socially Appropriate Robot Actions via Environmental-Social Disentanglement",
+      "url": "https://arxiv.org/abs/2608.13448",
+      "used_for": "Hypothesis direction for context-conditioned social-action learning; not a Parcel policy"
+    },
+    {
+      "id": "agile_quadruped_sim_to_real",
+      "kind": "peer_reviewed_paper",
+      "title": "Sim-to-Real: Learning Agile Locomotion For Quadruped Robots",
+      "url": "https://www.roboticsproceedings.org/rss14/p10.html",
+      "used_for": "Quadruped dynamics randomization and staged sim-to-real locomotion evidence"
+    },
+    {
+      "id": "egocentric_terrain_locomotion",
+      "kind": "research_preprint",
+      "title": "Legged Locomotion in Challenging Terrains using Egocentric Vision",
+      "url": "https://arxiv.org/abs/2211.07638",
+      "used_for": "Vision-conditioned terrain locomotion and policy-distillation research direction"
+    },
+    {
+      "id": "caro",
+      "kind": "research_preprint",
+      "title": "CARO: Contact-Agnostic Residual Observation for Zero-Shot Robust Quadruped Locomotion",
+      "url": "https://arxiv.org/abs/2608.24217",
+      "used_for": "Recent residual-observation comparison point; explicitly not Parcel evidence"
+    },
+    {
+      "id": "quadruped_navigation_ai_scientist",
+      "kind": "research_preprint",
+      "title": "An AI Scientist that Doesn't Drift: Taste, Structure, and Falsifiable Findings in a Quadruped Navigation Research Loop",
+      "url": "https://arxiv.org/abs/2608.07542",
+      "used_for": "Hypothesis direction for immutable falsifiable recursive simulator research loops"
+    },
+    {
+      "id": "claude_artifact",
+      "kind": "user_supplied_link",
+      "title": "Claude Code artifact",
+      "url": "https://claude.ai/code/artifact/5adb2865-5165-4936-b358-bc871687823e",
+      "availability": "Page not found on 2026-08-26; not used as evidence"
+    }
+  ]
+}

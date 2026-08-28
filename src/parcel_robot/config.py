@@ -161,7 +161,6 @@ OVERLAY_INTRODUCIBLE_KEYS = frozenset(
         # tried to set it made the whole config load REFUSE. The knob existed
         # and no operator could ever turn it — ROAM-1 finding 6, a second time,
         # in the product launcher.
-        #
         # ONE ENTRY, NOT FOUR, for the reason written beside `roam` above: the
         # loop stops descending at an exempt parent, so listing
         # `planner_model.enabled` alongside it would LOOK like a spelling guard
@@ -173,6 +172,7 @@ OVERLAY_INTRODUCIBLE_KEYS = frozenset(
         # `planner_config.get("enabled", False)` is still False on every run
         # that does not write one; this entry only makes writing one possible.
         "planner_model",
+        "social_progress",
         # ---- CARD HW-4 (task_37): WHICH EAR THIS VENUE HAS ------------------
         # `audio.gateway: browser|array` chooses between
         # `realtime.audio_gateway.BrowserAudioGateway` (the shipped default: the

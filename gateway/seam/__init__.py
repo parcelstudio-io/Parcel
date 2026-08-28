@@ -1,4 +1,4 @@
-"""The deployable motion seam: bounded vendor I/O, the production client, the CLI.
+"""The deployable motion seam: bounded vendor I/O, client compatibility, the CLI.
 
 Card ``DEPLOYABLE-MOTION-SEAM`` (``scrum/20260824/task_3/ROBOT_READY_PLAN.md``
 §4).  Three things live here and nothing else:
@@ -8,8 +8,9 @@ Card ``DEPLOYABLE-MOTION-SEAM`` (``scrum/20260824/task_3/ROBOT_READY_PLAN.md``
   instead of a wedged process.  ``gateway/core.py`` reaches the vendor's
   synchronous surface only through it; ``gateway/writer.py`` already owned
   ``Move``.
-* :mod:`gateway.seam.client` — ``MotionGatewayClientV1``, the *production*
-  Unix client.  It owns no vendor object, opens exactly one
+* :mod:`gateway.seam.client` — the compatibility import for the product-owned
+  :class:`parcel_robot.bridge.gateway_client.MotionGatewayClientV1`. The
+  implementation owns no vendor object, opens exactly one
   ``AF_UNIX``/``SOCK_SEQPACKET`` connection, and has no raw-packet or
   malformed-message escape hatch (that stays ``gateway/bench_client.py``'s
   job, and that module is bench-only).
@@ -24,12 +25,14 @@ delivered, and that suite is required to stay byte-unchanged and green.  A new
 top-level module would re-pin an accepted A1 invariant.  The pin's intent is
 not evaded: ``tests/test_motion_seam.py`` re-applies every one of its rules
 **recursively** over ``gateway/**/*.py`` (expected module set, no vendor SDK,
-the deployable surface reaches exactly ``parcel_robot.bridge.protocol``, no
+the gateway-side client shim reaches exactly
+``parcel_robot.bridge.gateway_client``, no
 product runtime/control/backends, CPython 3.10 clean), so this subpackage is
 held to a stricter version of the same contract rather than a weaker one.
 
-**What is deployable here.** ``vendor_io``, ``client``, ``notify`` and ``cli``
-all ship in the vendor venv.  ``cli`` is the one module in this subpackage that
+**What is deployable here.** ``vendor_io``, the client compatibility shim,
+``notify`` and ``cli`` all ship in the vendor venv. ``cli`` is the one module
+in this subpackage that
 may name the bench vendor, and it does so exactly the way ``gateway/process.py``
 does: by refusing to start at all unless a sport backend was named, and by
 importing ``parcel_robot.bridge.fake_sport`` lazily and only for ``fake``.

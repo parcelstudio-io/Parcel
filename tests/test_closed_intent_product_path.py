@@ -33,6 +33,7 @@ from dataclasses import replace
 from pathlib import Path
 
 import pytest
+from commissioned_sim import commissioned_runtime_kwargs
 
 from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
@@ -146,7 +147,12 @@ def audio_status() -> AudioDeviceStatus:
 @pytest.fixture()
 def runtime(config: Path, audio_status: AudioDeviceStatus):
     backend = _Backend()
-    session = RobotRuntime(config, backend, audio_status=audio_status)
+    session = RobotRuntime(
+        config,
+        backend,
+        audio_status=audio_status,
+        **commissioned_runtime_kwargs(config),
+    )
     # A cold runtime has no observation at all, which is fixture emptiness and
     # not a product state: admission reads the current snapshot.
     observation = backend.observe()

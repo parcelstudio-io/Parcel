@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from commissioned_sim import commissioned_runtime_kwargs
 
 from parcel_robot.attention.stimuli import StimulusKind
 from parcel_robot.audio.devices import AudioDeviceStatus
@@ -226,7 +227,12 @@ def test_agent_goal_amend_via_handler_metrics() -> None:
 def test_runtime_dialogue_state_tick_and_pace(
     runtime_config: Path, audio_status: AudioDeviceStatus
 ) -> None:
-    runtime = RobotRuntime(runtime_config, _Backend(), audio_status=audio_status)
+    runtime = RobotRuntime(
+        runtime_config,
+        _Backend(),
+        audio_status=audio_status,
+        **commissioned_runtime_kwargs(runtime_config),
+    )
     try:
         runtime._dialogue_state.set_phase("listening", engagement=0.9, turn_id="p2")
         runtime._step_dialogue_state(runtime._observation)
@@ -252,7 +258,12 @@ def test_runtime_dialogue_state_tick_and_pace(
 def test_runtime_goal_amend_fail_closed_and_pause(
     runtime_config: Path, audio_status: AudioDeviceStatus
 ) -> None:
-    runtime = RobotRuntime(runtime_config, _Backend(), audio_status=audio_status)
+    runtime = RobotRuntime(
+        runtime_config,
+        _Backend(),
+        audio_status=audio_status,
+        **commissioned_runtime_kwargs(runtime_config),
+    )
     try:
         # Idle: fail closed.
         reply = runtime._apply_closed_intent(
@@ -283,7 +294,12 @@ def test_runtime_goal_amend_fail_closed_and_pause(
 def test_runtime_feeds_dialogue_stimulus(
     runtime_config: Path, audio_status: AudioDeviceStatus
 ) -> None:
-    runtime = RobotRuntime(runtime_config, _Backend(), audio_status=audio_status)
+    runtime = RobotRuntime(
+        runtime_config,
+        _Backend(),
+        audio_status=audio_status,
+        **commissioned_runtime_kwargs(runtime_config),
+    )
     try:
         runtime._dialogue_state.set_phase("thinking", engagement=0.8)
         runtime._step_reaction_bridge(None)

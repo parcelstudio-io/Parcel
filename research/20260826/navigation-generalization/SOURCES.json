@@ -1,0 +1,288 @@
+{
+  "schema": "parcel.navigation-generalization.sources.v1",
+  "accessed": "2026-08-26",
+  "access_scope": "The accessed date applies to every source row in this manifest.",
+  "policy": "Primary sources only. Reported results belong to their authors unless RESULTS.md explicitly labels them as this repository's measurements.",
+  "sources": [
+    {
+      "id": "unitree_ros2",
+      "title": "unitree_ros2",
+      "kind": "official_vendor_repository",
+      "version": "git 668d1ec5a05d1c38d3306bdca7d59f2ba3581a88",
+      "url": "https://github.com/unitreerobotics/unitree_ros2",
+      "used_for": "Go2 ROS 2/DDS boundary and Humble-oriented integration",
+      "limits": "Repository documentation is an interface reference, not proof that Parcel has run on a Go2 or AGX Orin."
+    },
+    {
+      "id": "unitree_mujoco",
+      "title": "unitree_mujoco",
+      "kind": "official_vendor_repository",
+      "version": "git 4134cb5dc7ff1ba7f484deda48b5274b58694519",
+      "url": "https://github.com/unitreerobotics/unitree_mujoco",
+      "used_for": "First articulated Go2 simulator tier, SDK2/DDS lifecycle, terrain and command-contract tests",
+      "limits": "Simulated actuation and stops cannot establish a physical stopping envelope."
+    },
+    {
+      "id": "unitree_rl_lab",
+      "title": "unitree_rl_lab",
+      "kind": "official_vendor_repository",
+      "version": "git 4960b84732b0c2ec593dccbfe963fda1bcd7b1e3",
+      "url": "https://github.com/unitreerobotics/unitree_rl_lab",
+      "used_for": "Go2 Isaac Lab training/deployment path",
+      "limits": "Adoption requires a pinned compatible Isaac stack and an independent Parcel safety boundary."
+    },
+    {
+      "id": "unitree_rl_mjlab",
+      "title": "unitree_rl_mjlab",
+      "kind": "official_vendor_repository",
+      "version": "git 1425b15f73bd4095f0df53709d7c389c3eb9e790",
+      "url": "https://github.com/unitreerobotics/unitree_rl_mjlab",
+      "used_for": "Go2 MuJoCo Playground training, ONNX export and deployment reference",
+      "limits": "A vendor-supported path still does not validate Parcel's payload, sensors, surfaces or stop path."
+    },
+    {
+      "id": "isaac_lab_mdp",
+      "title": "Isaac Lab MDP utilities",
+      "kind": "official_documentation",
+      "version": "2.0.2",
+      "url": "https://isaac-sim.github.io/IsaacLab/v2.0.2/source/api/lab/isaaclab.envs.mdp.html",
+      "used_for": "Modular observation, event, reward, termination, curriculum and randomization design",
+      "limits": "API availability is not a claim of integration in this repository."
+    },
+    {
+      "id": "isaac_lab_reproducibility",
+      "title": "Isaac Lab reproducibility and determinism",
+      "kind": "official_documentation",
+      "version": "main documentation accessed 2026-08-26",
+      "url": "https://isaac-sim.github.io/IsaacLab/main/source/features/reproducibility.html",
+      "used_for": "Seed policy and separation of deterministic evaluation from GPU training",
+      "limits": "The documentation warns that some GPU/runtime randomization paths may remain nondeterministic."
+    },
+    {
+      "id": "tan2018simtoreal",
+      "title": "Sim-to-Real: Learning Agile Locomotion For Quadruped Robots",
+      "kind": "peer_reviewed_primary_paper",
+      "version": "RSS 2018, DOI 10.15607/RSS.2018.XIV.010",
+      "url": "https://www.roboticsproceedings.org/rss14/p10.html",
+      "used_for": "Actuator modelling, latency simulation, system identification and dynamics randomization",
+      "limits": "Results are on the authors' robot and task, not Unitree Go2 with Parcel's payload."
+    },
+    {
+      "id": "rma2021",
+      "title": "RMA: Rapid Motor Adaptation for Legged Robots",
+      "kind": "peer_reviewed_primary_paper",
+      "version": "RSS 2021, DOI 10.15607/RSS.2021.XVII.011",
+      "url": "https://www.roboticsproceedings.org/rss17/p011.html",
+      "used_for": "Privileged simulation training followed by online latent adaptation",
+      "limits": "The reported A1 transfer does not establish Go2 stairs or navigation safety."
+    },
+    {
+      "id": "artplanner",
+      "title": "ArtPlanner: Robust Legged Robot Navigation in the Field",
+      "kind": "primary_preprint",
+      "version": "arXiv:2303.01420v1",
+      "url": "https://arxiv.org/abs/2303.01420",
+      "used_for": "Reachability abstraction, learned motion cost and negative-obstacle-aware local planning",
+      "limits": "Author field results and timing are design evidence, not replicated Parcel measurements."
+    },
+    {
+      "id": "egocentric_locomotion",
+      "title": "Legged Locomotion in Challenging Terrains using Egocentric Vision",
+      "kind": "primary_preprint",
+      "version": "arXiv:2211.07638v1",
+      "url": "https://arxiv.org/abs/2211.07638",
+      "used_for": "Privileged-to-egocentric perception distillation for stairs, curbs, gaps and stepping obstacles",
+      "limits": "Reported terrain skills do not authorize Parcel to attempt stairs."
+    },
+    {
+      "id": "navila_paper",
+      "title": "NaVILA: Legged Robot Vision-Language-Action Model for Navigation",
+      "kind": "primary_preprint",
+      "version": "arXiv:2412.04453v2",
+      "url": "https://arxiv.org/abs/2412.04453",
+      "used_for": "Two-level language/spatial action generation plus real-time visual locomotion",
+      "limits": "Reported Go2 demonstrations are the authors' results; a VLA must not bypass Parcel's typed safety and completion authorities."
+    },
+    {
+      "id": "navila_code",
+      "title": "NaVILA official implementation",
+      "kind": "official_author_repository",
+      "version": "git 76b98f233dd0fff05dfcd69435eec6740febff9d",
+      "url": "https://github.com/AnjieCheng/NaVILA",
+      "used_for": "Implementation-readiness and dependency audit",
+      "limits": "Training/model/evaluation TODOs remain in the public repository; license and runtime compatibility require review before reuse."
+    },
+    {
+      "id": "ca_nav",
+      "title": "Constraint-Aware Zero-Shot Vision-Language Navigation in Continuous Environments",
+      "kind": "primary_preprint",
+      "version": "arXiv:2412.10137v4",
+      "url": "https://arxiv.org/abs/2412.10137",
+      "used_for": "Constraint-aware subinstruction completion and structured value maps",
+      "limits": "Paper-reported benchmark gains are not replicated here and use a different embodiment."
+    },
+    {
+      "id": "goat_bench",
+      "title": "GOAT-Bench: A Benchmark for Multi-Modal Lifelong Navigation",
+      "kind": "primary_preprint",
+      "version": "arXiv:2404.06609v1",
+      "url": "https://arxiv.org/abs/2404.06609",
+      "used_for": "Sequential category, language and image goals with explicit/implicit memory and noisy actuation",
+      "limits": "Benchmark embodiment and assets differ from Go2; it supplies task structure, not a physical pass."
+    },
+    {
+      "id": "hm3d_ovon",
+      "title": "HM3D-OVON: A Dataset and Benchmark for Open-Vocabulary Object Goal Navigation",
+      "kind": "primary_preprint",
+      "version": "arXiv:2409.14296v1",
+      "url": "https://arxiv.org/abs/2409.14296",
+      "used_for": "Held-out object categories and noisy open-vocabulary navigation evaluation",
+      "limits": "Dataset/runtime licensing and a non-Go2 embodiment limit near-term use."
+    },
+    {
+      "id": "hm3d_semantics",
+      "title": "Habitat-Matterport 3D Semantics Dataset",
+      "kind": "official_dataset_page",
+      "version": "HM3D Semantics v0.2",
+      "url": "https://aihabitat.org/datasets/hm3d-semantics/",
+      "used_for": "Indoor semantic scene assets and license feasibility",
+      "limits": "Assets have access/license conditions; repository adapter contracts are not scene-level results."
+    },
+    {
+      "id": "vlmaps",
+      "title": "Visual Language Maps for Robot Navigation",
+      "kind": "primary_preprint",
+      "version": "arXiv:2210.05714v4",
+      "url": "https://arxiv.org/abs/2210.05714",
+      "used_for": "Open-vocabulary spatial memory fused with 3D reconstruction",
+      "limits": "Map quality inherits reconstruction and odometry errors; it must not become independent arrival evidence."
+    },
+    {
+      "id": "hydra_paper",
+      "title": "Hydra: A Real-time Spatial Perception System for 3D Scene Graph Construction and Optimization",
+      "kind": "primary_preprint",
+      "version": "arXiv:2201.13360v2",
+      "url": "https://arxiv.org/abs/2201.13360",
+      "used_for": "Incremental metric-semantic scene graphs, topology and hierarchical loop closure",
+      "limits": "Author platform timing is only feasibility evidence; Parcel has not integrated or benchmarked Hydra on AGX Orin."
+    },
+    {
+      "id": "hydra_code",
+      "title": "Hydra official implementation",
+      "kind": "official_author_repository",
+      "version": "git 2e58a35baea629eee8838409771876acff015daf",
+      "url": "https://github.com/MIT-SPARK/Hydra",
+      "used_for": "Implementation and embedded-platform feasibility audit",
+      "limits": "Repository support does not imply compatibility with Parcel's current localizer or map schema."
+    },
+    {
+      "id": "failure_prediction",
+      "title": "Failure Prediction with Statistical Guarantees for Vision-Based Robot Control",
+      "kind": "peer_reviewed_primary_paper",
+      "version": "RSS 2022, DOI 10.15607/RSS.2022.XVIII.042",
+      "url": "https://www.roboticsproceedings.org/rss18/p042.html",
+      "used_for": "Calibrated failure prediction and selective autonomy with statistical error bounds",
+      "limits": "Guarantees apply under the paper's assumptions and calibration data, not automatically to Parcel."
+    },
+    {
+      "id": "certifiable_mapping",
+      "title": "Certifiably-Correct Mapping for Safe Navigation Despite Odometry Drift",
+      "kind": "peer_reviewed_primary_paper",
+      "version": "RSS 2025, DOI 10.15607/RSS.2025.XXI.007",
+      "url": "https://www.roboticsproceedings.org/rss21/p007.html",
+      "used_for": "Safe-region deflation as localization uncertainty accumulates",
+      "limits": "The paper's assumptions and sensor model must be validated before transferring any guarantee."
+    },
+    {
+      "id": "step",
+      "title": "STEP: Stochastic Traversability Evaluation and Planning for Risk-Aware Off-road Navigation",
+      "kind": "peer_reviewed_primary_paper",
+      "version": "RSS 2021, DOI 10.15607/RSS.2021.XVII.021",
+      "url": "https://www.roboticsproceedings.org/rss17/p021.html",
+      "used_for": "Uncertainty-aware traversability, tail risk and model-predictive local planning",
+      "limits": "Reported underground wheeled/legged results do not validate Go2 indoor stairs."
+    },
+    {
+      "id": "metaurban_paper",
+      "title": "MetaUrban: An Embodied AI Simulation Platform for Urban Micromobility",
+      "kind": "primary_preprint",
+      "version": "arXiv:2407.08725v2",
+      "url": "https://arxiv.org/abs/2407.08725",
+      "used_for": "Procedural social-navigation scenes, unseen split design and morphology diversity",
+      "limits": "The paper's reported generalization is not a Parcel result; the repository's MetaUrban adapter is currently incomplete."
+    },
+    {
+      "id": "metaurban_code",
+      "title": "MetaUrban official implementation",
+      "kind": "official_author_repository",
+      "version": "git 6b8ff9aa48dd27d5c57fa1c712db520732f11fa9",
+      "url": "https://github.com/metadriverse/metaurban",
+      "used_for": "Runtime, scene generation and integration feasibility",
+      "limits": "Requires an isolated pinned environment and a Parcel IPC adapter."
+    },
+    {
+      "id": "habitat3",
+      "title": "Habitat 3.0: A Co-Habitat for Humans, Avatars and Robots",
+      "kind": "official_project_page",
+      "version": "Habitat 3.0",
+      "url": "https://aihabitat.org/habitat3/",
+      "used_for": "Find/follow social tasks and human-distance evaluation in interactive scenes",
+      "limits": "Current Parcel evidence is one-step adapter contracts only; licensed assets and full runtime are absent."
+    },
+    {
+      "id": "habitat_lab",
+      "title": "Habitat-Lab",
+      "kind": "official_repository",
+      "version": "git 0fb6f43ffe806a8088a171b036336c093bcf604e",
+      "url": "https://github.com/facebookresearch/habitat-lab",
+      "used_for": "Benchmark task/configuration and evaluator integration audit",
+      "limits": "Pinned upstream code does not supply the required licensed scenes or establish Go2 dynamics."
+    },
+    {
+      "id": "socnavbench",
+      "title": "SocNavBench: A Grounded Simulation Testing Framework for Evaluating Social Navigation",
+      "kind": "primary_preprint",
+      "version": "arXiv:2103.00047v2",
+      "url": "https://arxiv.org/abs/2103.00047",
+      "used_for": "Real-pedestrian-data-grounded scenarios and interpretable social metrics",
+      "limits": "Benchmark metrics require task-specific calibration for a companion dog and its owner."
+    },
+    {
+      "id": "follow_bench",
+      "title": "Follow-Bench: A Unified Motion Planning Benchmark for Socially-Aware Robot Person Following",
+      "kind": "primary_preprint",
+      "version": "arXiv:2509.10796v4",
+      "url": "https://arxiv.org/abs/2509.10796",
+      "used_for": "Target paths, crowd flows, formations, following distances, occlusion and safe search",
+      "limits": "Reported benchmark findings are external; exact robot embodiment and sensor transfer remain open."
+    },
+    {
+      "id": "tpt_bench",
+      "title": "TPT-Bench: A Large-Scale, Long-Term and Robot-Egocentric Dataset for Benchmarking Target Person Tracking",
+      "kind": "primary_preprint_and_dataset",
+      "version": "arXiv:2505.07446v2; dataset v1.0, DOI 10.5281/zenodo.17718188",
+      "url": "https://arxiv.org/abs/2505.07446",
+      "dataset_url": "https://doi.org/10.5281/zenodo.17718188",
+      "used_for": "Long-duration identity, disappearance, distractor and reacquisition stress tests",
+      "limits": "The full corpus is large; start with the evaluation subset and do not imply current integration."
+    },
+    {
+      "id": "conformal_crowd_safety",
+      "title": "Towards Generalizable Safety in Crowd Navigation via Conformal Uncertainty Handling",
+      "kind": "peer_reviewed_primary_paper",
+      "version": "CoRL 2025, PMLR 305",
+      "url": "https://proceedings.mlr.press/v305/yao25a.html",
+      "used_for": "Adaptive conformal uncertainty for distribution-shift-aware crowd navigation",
+      "limits": "Coverage/safety claims require exchangeability or the method's stated adaptive assumptions and Parcel-specific calibration."
+    },
+    {
+      "id": "sim2val",
+      "title": "Sim2Val: Leveraging Correlation Across Test Platforms for Variance-Reduced Metric Estimation",
+      "kind": "peer_reviewed_primary_project",
+      "version": "CoRL 2025",
+      "url": "https://research.nvidia.com/labs/avg/publication/luo.yang.etal.corl2025/",
+      "used_for": "Paired simulator/real control variates and correlation-measured validation",
+      "limits": "Variance reduction needs paired physical data; simulator-only scores cannot substitute for it."
+    }
+  ]
+}

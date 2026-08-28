@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from commissioned_sim import commissioned_runtime_kwargs
 
 from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
@@ -85,10 +86,65 @@ def runtime_config(tmp_path: Path) -> Path:
     return path
 
 
+def test_shipped_emotes_boot_as_optional_commissioned_capabilities(
+    runtime_config: Path,
+    audio_status: AudioDeviceStatus,
+) -> None:
+    runtime = RobotRuntime(
+        runtime_config,
+        _Backend(),
+        audio_status=audio_status,
+        **commissioned_runtime_kwargs(runtime_config),
+    )
+    try:
+        diagnostic = runtime.snapshot()["brain"]["emote_capabilities"]
+        assert "hop" in diagnostic["desired"]
+        assert "hop" not in diagnostic["available"]
+        assert diagnostic["omitted"] == [
+            {
+                "schema": "emote-capability-omission-v1",
+                "name": "hop",
+                "catalog_kind": "trajectory",
+                "reason_code": "not_commissioned",
+            }
+        ]
+        assert any(
+            event.get("detail") == diagnostic for event in runtime.snapshot()["events"]
+        )
+        with pytest.raises(ValueError, match="unknown emote"):
+            runtime._brain_gesture("hop")
+    finally:
+        runtime.close()
+
+
+def test_missing_manifest_keeps_emote_omissions_observable_without_startup_warning(
+    runtime_config: Path,
+    audio_status: AudioDeviceStatus,
+) -> None:
+    runtime = RobotRuntime(runtime_config, _Backend(), audio_status=audio_status)
+    try:
+        diagnostic = runtime.emote_capability_snapshot()
+        assert diagnostic["available"] == []
+        assert diagnostic["omitted"]
+        assert {
+            item["reason_code"] for item in diagnostic["omitted"]
+        } == {"capability_manifest_unavailable"}
+        assert not any(
+            event.get("detail") == diagnostic for event in runtime.snapshot()["events"]
+        )
+    finally:
+        runtime.close()
+
+
 def test_generation_tokens_isolation_runtime_level(
     runtime_config: Path, audio_status: AudioDeviceStatus
 ) -> None:
-    rt = RobotRuntime(runtime_config, _Backend(), audio_status=audio_status)
+    rt = RobotRuntime(
+        runtime_config,
+        _Backend(),
+        audio_status=audio_status,
+        **commissioned_runtime_kwargs(runtime_config),
+    )
     try:
         nav = rt._generation.bump("navigation")
         follow = rt._generation.bump("follow")
@@ -103,7 +159,12 @@ def test_generation_tokens_isolation_runtime_level(
 def test_preempt_voice_stops_follow_via_table(
     runtime_config: Path, audio_status: AudioDeviceStatus
 ) -> None:
-    rt = RobotRuntime(runtime_config, _Backend(), audio_status=audio_status)
+    rt = RobotRuntime(
+        runtime_config,
+        _Backend(),
+        audio_status=audio_status,
+        **commissioned_runtime_kwargs(runtime_config),
+    )
     try:
         rt._enable_owner_follow("direct")
         assert rt.follow.enabled
@@ -257,7 +318,12 @@ def test_voice_suspend_navigate_records_resume_intent(
         ),
     )
     validated = PlanValidator(SkillContractRegistry.default()).validate(plan, snap())
-    rt = RobotRuntime(runtime_config, _Backend(), audio_status=audio_status)
+    rt = RobotRuntime(
+        runtime_config,
+        _Backend(),
+        audio_status=audio_status,
+        **commissioned_runtime_kwargs(runtime_config),
+    )
     try:
         rt.task_executive.submit(validated)
         dispatch = rt.task_executive.tick(snap(), now=10.0)

@@ -1,4 +1,8 @@
-from parcel_robot.models import Pose, ToolCall, VelocityCommand
+from pathlib import Path
+
+from commissioned_sim import commissioned_agent_kwargs
+
+from parcel_robot.models import ToolCall, VelocityCommand
 from parcel_robot.motion.router import (
     MotionRouter,
     RLPolicyBackend,
@@ -6,7 +10,11 @@ from parcel_robot.motion.router import (
     build_motion_router,
 )
 from parcel_robot.safety import SafetySupervisor
+from parcel_robot.skills.api import Dog
 from parcel_robot.voice.agent import VoiceAgent
+
+REPO = Path(__file__).resolve().parents[1]
+ROBOT_CONFIG = REPO / "configs" / "robot.yaml"
 
 
 def _router(**hooks):
@@ -23,7 +31,13 @@ def _router(**hooks):
 def test_walk_forward_uses_rl_backend():
     walks = []
     router = _router(on_command=walks.append)
-    agent = VoiceAgent({}, [], lambda pose: None, motion=router)
+    agent = VoiceAgent(
+        {},
+        [],
+        lambda pose: None,
+        motion=router,
+        **commissioned_agent_kwargs(ROBOT_CONFIG, include_embodied=False),
+    )
 
     assert agent.handle_text("walk forward") == "Walking forward."
     assert walks == [VelocityCommand(vx=0.3, vy=0.0, vyaw=0.0)]
@@ -32,7 +46,13 @@ def test_walk_forward_uses_rl_backend():
 
 def test_switch_backend_and_vendor_stub():
     router = _router()
-    agent = VoiceAgent({}, [], lambda pose: None, motion=router)
+    agent = VoiceAgent(
+        {},
+        [],
+        lambda pose: None,
+        motion=router,
+        **commissioned_agent_kwargs(ROBOT_CONFIG, include_embodied=False),
+    )
 
     assert "vendor" in agent.handle_text("use vendor backend")
     assert agent.handle_text("walk forward") == "Walking forward."
@@ -45,7 +65,13 @@ def test_switch_backend_and_vendor_stub():
 
 def test_legacy_sport_alias_switches_to_vendor_backend():
     router = _router()
-    agent = VoiceAgent({}, [], lambda pose: None, motion=router)
+    agent = VoiceAgent(
+        {},
+        [],
+        lambda pose: None,
+        motion=router,
+        **commissioned_agent_kwargs(ROBOT_CONFIG, include_embodied=False),
+    )
 
     assert "vendor" in agent.handle_text("use sport backend")
     assert router.active == "vendor"
@@ -56,9 +82,17 @@ def test_pose_stops_active_walk():
     router = _router(
         on_command=lambda cmd: events.append(("walk", cmd)), on_stop=lambda: events.append("stop")
     )
-    pose = Pose("sit", {"FL_hip_joint": 0.0})
     sent = []
-    agent = VoiceAgent({"sit": pose}, [], sent.append, motion=router)
+    dog = Dog.from_config(ROBOT_CONFIG, motion=router, on_pose=sent.append)
+    pose = dog.poses()["sit"]
+    agent = VoiceAgent(
+        dog.poses(),
+        [],
+        sent.append,
+        motion=router,
+        dog=dog,
+        **commissioned_agent_kwargs(ROBOT_CONFIG),
+    )
 
     agent.handle_text("walk forward")
     agent.handle_text("do the sit pose")

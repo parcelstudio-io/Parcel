@@ -32,14 +32,14 @@ os.environ.setdefault("MUJOCO_GL", "egl")  # MUST precede first mujoco import
 os.environ.setdefault("PARCEL_OWLV2_ONNX", "1")
 
 import mujoco
-
 import parcel_robot.headless_city as hc
-from parcel_robot.camera_channel.channel import CameraChannelSpec
-from parcel_robot.camera_channel.ingress import CameraIngress
 from parcel_robot.headless_city import (
     HeadlessCityQualityHarness,
     HeadlessCityWorld,
 )
+
+from parcel_robot.camera_channel.channel import CameraChannelSpec
+from parcel_robot.camera_channel.ingress import CameraIngress
 from parcel_robot.navigation.pipeline import DirectiveNavigator
 
 MAX_STEPS = 1400

@@ -969,6 +969,27 @@ def _nav_observation(
             "person_bearing_rad": observation.nearest_person_bearing_rad,
             "person_id": observation.nearest_person_id,
             "person_ttc_s": observation.nearest_person_ttc_s,
+            # Match ``RobotRuntime._navigation_extras``: semantic arrival
+            # etiquette consumes the owner's live map position from the same
+            # velocity-track channel that feeds the dynamic-cost layer.  The
+            # headless venue already observes an explicit owner body; dropping
+            # it here made an otherwise truthful simulation fail closed at the
+            # final owner-facing turn.
+            "owner_track": (
+                (
+                    {
+                        "x": float(observation.owner.x),
+                        "y": float(observation.owner.y),
+                        "vx": 0.0,
+                        "vy": 0.0,
+                        "radius_m": 0.35,
+                    },
+                )
+                if observation.owner.visible
+                and math.isfinite(observation.owner.x)
+                and math.isfinite(observation.owner.y)
+                else ()
+            ),
             "semantic_candidates": semantic_candidates_from_observation(observation),
             "lidar_obstacles": lidar_payload_from_observation(observation),
             "motion_feedback": {

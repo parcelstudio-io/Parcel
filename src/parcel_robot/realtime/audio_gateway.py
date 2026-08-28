@@ -1907,15 +1907,16 @@ class BrowserAudioGateway:
                     {"enabled": False} if capture is None else capture.snapshot()
                 ),
                 # Card F1-SI. Same rule, and it matters more here: "no gate" and
-                # "a gate with nobody enrolled" both mean any voice can command
-                # the robot, and a reader must be able to see that rather than
-                # infer it from an absent key.
+                # "a gate with nobody enrolled" both mean non-emergency motion
+                # is disarmed, and a reader must see that rather than infer it
+                # from an absent key.
                 "voice_identity": (
                     {
                         "enabled": False,
                         "reason": (
-                            "no speaker-identity gate is wired to this gateway: any "
-                            "voice in the room can arm a command"
+                            "no speaker-identity gate is wired to this gateway: "
+                            "non-emergency motion is disarmed; emergency stop remains "
+                            "available to anyone"
                         ),
                     }
                     if identity is None

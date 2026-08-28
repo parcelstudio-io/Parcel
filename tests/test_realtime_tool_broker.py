@@ -28,6 +28,10 @@ import time
 from pathlib import Path
 
 import pytest
+from commissioned_sim import (
+    authorize_commissioned_voice_binding,
+    commissioned_runtime_kwargs,
+)
 
 from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
@@ -578,7 +582,7 @@ modules: []
         encoding="utf-8",
     )
     del realtime
-    return RobotRuntime(
+    runtime = RobotRuntime(
         path,
         _Backend(),
         language_model=_SilentModel(),
@@ -590,7 +594,10 @@ modules: []
             connected_output=False,
             detail="r3 broker fixture",
         ),
+        **commissioned_runtime_kwargs(path),
     )
+    authorize_commissioned_voice_binding(runtime)
+    return runtime
 
 
 @pytest.fixture()

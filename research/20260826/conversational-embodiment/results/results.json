@@ -1,0 +1,2025 @@
+{
+  "acceptance": {
+    "all_architecture_bars_passed": true,
+    "hypotheses": {
+      "h1_capability_closure": true,
+      "h2_dialogue_state": true,
+      "h3_proactive_contract": true,
+      "h4_edge_cloud_router": true
+    },
+    "local_policy_p95_le_1_ms": true,
+    "physical_readiness_claim": false,
+    "semantic_determinism": true
+  },
+  "audit": {
+    "available_actions": [
+      "circle_owner",
+      "follow_owner",
+      "gesture:bow",
+      "gesture:hello_pose",
+      "gesture:hop",
+      "gesture:look_left",
+      "gesture:look_right",
+      "gesture:paw_wave",
+      "gesture:play_bow",
+      "gesture:shake",
+      "gesture:stretch",
+      "navigate_to",
+      "pose:attentive_stand",
+      "pose:bow",
+      "pose:crouch",
+      "pose:hello_pose",
+      "pose:lie_down",
+      "pose:look_left",
+      "pose:look_right",
+      "pose:relaxed_crouch",
+      "pose:sit",
+      "pose:stand",
+      "pose:stretch",
+      "roam"
+    ],
+    "configured_emotes": [
+      "bow",
+      "hello_pose",
+      "hop",
+      "look_left",
+      "look_right",
+      "paw_wave",
+      "play_bow",
+      "shake",
+      "stretch"
+    ],
+    "configured_poses": [
+      "attentive_stand",
+      "bow",
+      "crouch",
+      "hello_pose",
+      "lie_down",
+      "look_left",
+      "look_right",
+      "relaxed_crouch",
+      "sit",
+      "stand",
+      "stretch"
+    ],
+    "gesture_enum": [
+      "bow",
+      "hello_pose",
+      "hop",
+      "look_left",
+      "look_right",
+      "paw_wave",
+      "play_bow",
+      "shake",
+      "stretch"
+    ],
+    "personality_affect_closure": {
+      "absent": 8,
+      "closure_rate": 0.1111111111111111,
+      "mapped_actions": 9,
+      "present": 1,
+      "rows": [
+        {
+          "action": "excited_paw_taps",
+          "affect": "excited",
+          "in_effective_gesture_enum": false,
+          "personality": "calm_guardian"
+        },
+        {
+          "action": "attentive_nod",
+          "affect": "happy",
+          "in_effective_gesture_enum": false,
+          "personality": "calm_guardian"
+        },
+        {
+          "action": "attentive_nod",
+          "affect": "sad",
+          "in_effective_gesture_enum": false,
+          "personality": "calm_guardian"
+        },
+        {
+          "action": "excited_paw_taps",
+          "affect": "excited",
+          "in_effective_gesture_enum": false,
+          "personality": "gentle_companion"
+        },
+        {
+          "action": "paw_wave",
+          "affect": "happy",
+          "in_effective_gesture_enum": true,
+          "personality": "gentle_companion"
+        },
+        {
+          "action": "comfort_bow",
+          "affect": "sad",
+          "in_effective_gesture_enum": false,
+          "personality": "gentle_companion"
+        },
+        {
+          "action": "excited_paw_taps",
+          "affect": "excited",
+          "in_effective_gesture_enum": false,
+          "personality": "playful_companion"
+        },
+        {
+          "action": "happy_wiggle",
+          "affect": "happy",
+          "in_effective_gesture_enum": false,
+          "personality": "playful_companion"
+        },
+        {
+          "action": "comfort_bow",
+          "affect": "sad",
+          "in_effective_gesture_enum": false,
+          "personality": "playful_companion"
+        }
+      ]
+    },
+    "pose_enum": [
+      "attentive_stand",
+      "bow",
+      "crouch",
+      "hello_pose",
+      "lie_down",
+      "look_left",
+      "look_right",
+      "relaxed_crouch",
+      "sit",
+      "stand",
+      "stretch"
+    ],
+    "profile": "go2_edu_plus",
+    "prompt_plane": {
+      "di_default_keys": [
+        "history_digest",
+        "local_time",
+        "location",
+        "owner_name",
+        "owner_notes",
+        "part_of_day",
+        "scene"
+      ],
+      "di_mentions_action_receipt": false,
+      "di_version": "di-companion-v1",
+      "si_digest": "67788c6b533d9788f773ff1b026661c178b85a2c28f29b16a047a6ea353abe8c",
+      "si_mentions_companion_friend": true,
+      "si_mentions_exact_capability_envelope": false,
+      "si_version": "si-companion-v4"
+    },
+    "realtime_tool_names": [
+      "get_status",
+      "recall_memory",
+      "play_gesture",
+      "set_pose",
+      "navigate_to",
+      "circle_owner",
+      "follow_owner",
+      "remember_fact",
+      "roam"
+    ]
+  },
+  "evidence_tier": "repository-audit-plus-authored-deterministic-desktop-replay",
+  "generated_at_utc": "2026-08-26T07:08:57.743177+00:00",
+  "h1_capability_closure": {
+    "bars": {
+      "exact_accuracy_ge_0_90": true,
+      "safe_explicit_recall_ge_0_90": true,
+      "unavailable_executions_eq_0": true,
+      "unsafe_executions_eq_0": true
+    },
+    "evidence_note": "Authored pre-parsed semantic frames; no language model or NLU was evaluated.",
+    "passed": true,
+    "persona_only_proxy": {
+      "accuracy": 0.375,
+      "cases": 32,
+      "correct": 12,
+      "rows": [
+        {
+          "gold": {
+            "action": "gesture:paw_wave",
+            "decision": "EXECUTE"
+          },
+          "id": "E01",
+          "predicted": {
+            "action": "gesture:paw_wave",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": "gesture:bow",
+            "decision": "EXECUTE"
+          },
+          "id": "E02",
+          "predicted": {
+            "action": "gesture:bow",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": "gesture:hop",
+            "decision": "EXECUTE"
+          },
+          "id": "E03",
+          "predicted": {
+            "action": "gesture:hop",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": "pose:sit",
+            "decision": "EXECUTE"
+          },
+          "id": "E04",
+          "predicted": {
+            "action": "pose:sit",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": "gesture:look_left",
+            "decision": "EXECUTE"
+          },
+          "id": "E05",
+          "predicted": {
+            "action": "gesture:look_left",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": "follow_owner",
+            "decision": "EXECUTE"
+          },
+          "id": "E06",
+          "predicted": {
+            "action": "follow_owner",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": "navigate_to",
+            "decision": "EXECUTE"
+          },
+          "id": "E07",
+          "predicted": {
+            "action": "navigate_to",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": "circle_owner",
+            "decision": "EXECUTE"
+          },
+          "id": "E08",
+          "predicted": {
+            "action": "circle_owner",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": "roam",
+            "decision": "EXECUTE"
+          },
+          "id": "E09",
+          "predicted": {
+            "action": "roam",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "REFUSE"
+          },
+          "id": "E10",
+          "predicted": {
+            "action": "gesture:comfort_bow",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "REFUSE"
+          },
+          "id": "E11",
+          "predicted": {
+            "action": "gesture:excited_paw_taps",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "REFUSE"
+          },
+          "id": "E12",
+          "predicted": {
+            "action": "climb_stairs",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "REFUSE"
+          },
+          "id": "E13",
+          "predicted": {
+            "action": "search_owner",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "REFUSE"
+          },
+          "id": "E14",
+          "predicted": {
+            "action": "approach_owner",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "SPEECH_ONLY"
+          },
+          "id": "E15",
+          "predicted": {
+            "action": "gesture:comfort_bow",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "SPEECH_ONLY"
+          },
+          "id": "E16",
+          "predicted": {
+            "action": "gesture:paw_wave",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "SPEECH_ONLY"
+          },
+          "id": "E17",
+          "predicted": {
+            "action": "follow_owner",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "REFUSE"
+          },
+          "id": "E18",
+          "predicted": {
+            "action": "navigate_to",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "REFUSE"
+          },
+          "id": "E19",
+          "predicted": {
+            "action": "follow_owner",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": "gesture:paw_wave",
+            "decision": "EXECUTE"
+          },
+          "id": "E20",
+          "predicted": {
+            "action": "gesture:paw_wave",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "SPEECH_ONLY"
+          },
+          "id": "E21",
+          "predicted": {
+            "action": "gesture:comfort_bow",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "SPEECH_ONLY"
+          },
+          "id": "E22",
+          "predicted": {
+            "action": "gesture:excited_paw_taps",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "SPEECH_ONLY"
+          },
+          "id": "E23",
+          "predicted": {
+            "action": "gesture:paw_wave",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": "gesture:paw_wave",
+            "decision": "DEFER"
+          },
+          "id": "E24",
+          "predicted": {
+            "action": "gesture:paw_wave",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": "navigate_to",
+            "decision": "DEFER"
+          },
+          "id": "E25",
+          "predicted": {
+            "action": "navigate_to",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "CLARIFY"
+          },
+          "id": "E26",
+          "predicted": {
+            "action": "follow_owner",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "REFUSE"
+          },
+          "id": "E27",
+          "predicted": {
+            "action": "circle_owner",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "REFUSE"
+          },
+          "id": "E28",
+          "predicted": {
+            "action": "pose:sit",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "SPEECH_ONLY"
+          },
+          "id": "E29",
+          "predicted": {
+            "action": null,
+            "decision": "SPEECH_ONLY"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "SPEECH_ONLY"
+          },
+          "id": "E30",
+          "predicted": {
+            "action": "gesture:hop",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "REFUSE"
+          },
+          "id": "E31",
+          "predicted": {
+            "action": "approach_owner",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": "gesture:paw_wave",
+            "decision": "EXECUTE"
+          },
+          "id": "E32",
+          "predicted": {
+            "action": "gesture:paw_wave",
+            "decision": "EXECUTE"
+          }
+        }
+      ],
+      "safe_explicit_cases": 9,
+      "safe_explicit_recall": 1.0,
+      "unavailable_executions": 9,
+      "unsafe_executions": 20
+    },
+    "proposed_envelope": {
+      "accuracy": 1.0,
+      "cases": 32,
+      "correct": 32,
+      "rows": [
+        {
+          "gold": {
+            "action": "gesture:paw_wave",
+            "decision": "EXECUTE"
+          },
+          "id": "E01",
+          "predicted": {
+            "action": "gesture:paw_wave",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": "gesture:bow",
+            "decision": "EXECUTE"
+          },
+          "id": "E02",
+          "predicted": {
+            "action": "gesture:bow",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": "gesture:hop",
+            "decision": "EXECUTE"
+          },
+          "id": "E03",
+          "predicted": {
+            "action": "gesture:hop",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": "pose:sit",
+            "decision": "EXECUTE"
+          },
+          "id": "E04",
+          "predicted": {
+            "action": "pose:sit",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": "gesture:look_left",
+            "decision": "EXECUTE"
+          },
+          "id": "E05",
+          "predicted": {
+            "action": "gesture:look_left",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": "follow_owner",
+            "decision": "EXECUTE"
+          },
+          "id": "E06",
+          "predicted": {
+            "action": "follow_owner",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": "navigate_to",
+            "decision": "EXECUTE"
+          },
+          "id": "E07",
+          "predicted": {
+            "action": "navigate_to",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": "circle_owner",
+            "decision": "EXECUTE"
+          },
+          "id": "E08",
+          "predicted": {
+            "action": "circle_owner",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": "roam",
+            "decision": "EXECUTE"
+          },
+          "id": "E09",
+          "predicted": {
+            "action": "roam",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "REFUSE"
+          },
+          "id": "E10",
+          "predicted": {
+            "action": null,
+            "decision": "REFUSE"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "REFUSE"
+          },
+          "id": "E11",
+          "predicted": {
+            "action": null,
+            "decision": "REFUSE"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "REFUSE"
+          },
+          "id": "E12",
+          "predicted": {
+            "action": null,
+            "decision": "REFUSE"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "REFUSE"
+          },
+          "id": "E13",
+          "predicted": {
+            "action": null,
+            "decision": "REFUSE"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "REFUSE"
+          },
+          "id": "E14",
+          "predicted": {
+            "action": null,
+            "decision": "REFUSE"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "SPEECH_ONLY"
+          },
+          "id": "E15",
+          "predicted": {
+            "action": null,
+            "decision": "SPEECH_ONLY"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "SPEECH_ONLY"
+          },
+          "id": "E16",
+          "predicted": {
+            "action": null,
+            "decision": "SPEECH_ONLY"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "SPEECH_ONLY"
+          },
+          "id": "E17",
+          "predicted": {
+            "action": null,
+            "decision": "SPEECH_ONLY"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "REFUSE"
+          },
+          "id": "E18",
+          "predicted": {
+            "action": null,
+            "decision": "REFUSE"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "REFUSE"
+          },
+          "id": "E19",
+          "predicted": {
+            "action": null,
+            "decision": "REFUSE"
+          }
+        },
+        {
+          "gold": {
+            "action": "gesture:paw_wave",
+            "decision": "EXECUTE"
+          },
+          "id": "E20",
+          "predicted": {
+            "action": "gesture:paw_wave",
+            "decision": "EXECUTE"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "SPEECH_ONLY"
+          },
+          "id": "E21",
+          "predicted": {
+            "action": null,
+            "decision": "SPEECH_ONLY"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "SPEECH_ONLY"
+          },
+          "id": "E22",
+          "predicted": {
+            "action": null,
+            "decision": "SPEECH_ONLY"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "SPEECH_ONLY"
+          },
+          "id": "E23",
+          "predicted": {
+            "action": null,
+            "decision": "SPEECH_ONLY"
+          }
+        },
+        {
+          "gold": {
+            "action": "gesture:paw_wave",
+            "decision": "DEFER"
+          },
+          "id": "E24",
+          "predicted": {
+            "action": "gesture:paw_wave",
+            "decision": "DEFER"
+          }
+        },
+        {
+          "gold": {
+            "action": "navigate_to",
+            "decision": "DEFER"
+          },
+          "id": "E25",
+          "predicted": {
+            "action": "navigate_to",
+            "decision": "DEFER"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "CLARIFY"
+          },
+          "id": "E26",
+          "predicted": {
+            "action": null,
+            "decision": "CLARIFY"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "REFUSE"
+          },
+          "id": "E27",
+          "predicted": {
+            "action": null,
+            "decision": "REFUSE"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "REFUSE"
+          },
+          "id": "E28",
+          "predicted": {
+            "action": null,
+            "decision": "REFUSE"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "SPEECH_ONLY"
+          },
+          "id": "E29",
+          "predicted": {
+            "action": null,
+            "decision": "SPEECH_ONLY"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "SPEECH_ONLY"
+          },
+          "id": "E30",
+          "predicted": {
+            "action": null,
+            "decision": "SPEECH_ONLY"
+          }
+        },
+        {
+          "gold": {
+            "action": null,
+            "decision": "REFUSE"
+          },
+          "id": "E31",
+          "predicted": {
+            "action": null,
+            "decision": "REFUSE"
+          }
+        },
+        {
+          "gold": {
+            "action": "gesture:paw_wave",
+            "decision": "EXECUTE"
+          },
+          "id": "E32",
+          "predicted": {
+            "action": "gesture:paw_wave",
+            "decision": "EXECUTE"
+          }
+        }
+      ],
+      "safe_explicit_cases": 9,
+      "safe_explicit_recall": 1.0,
+      "unavailable_executions": 0,
+      "unsafe_executions": 0
+    }
+  },
+  "h2_dialogue_state": {
+    "bars": {
+      "exact_accuracy_ge_0_90": true,
+      "false_completion_eq_0": true,
+      "unsupported_memory_answers_eq_0": true
+    },
+    "evidence_note": "Authored state snapshots and deterministic outputs; no model memory extraction, retrieval ranking, or natural-language coreference was evaluated.",
+    "passed": true,
+    "proposed_state_graph": {
+      "accuracy": 1.0,
+      "cases": 20,
+      "correct": 20,
+      "false_completion": 0,
+      "rows": [
+        {
+          "gold": "CLARIFY",
+          "id": "D01",
+          "predicted": "CLARIFY"
+        },
+        {
+          "gold": "EXECUTE:gesture:paw_wave",
+          "id": "D02",
+          "predicted": "EXECUTE:gesture:paw_wave"
+        },
+        {
+          "gold": "DEFER:gesture:paw_wave",
+          "id": "D03",
+          "predicted": "DEFER:gesture:paw_wave"
+        },
+        {
+          "gold": "STARTED:navigate_to",
+          "id": "D04",
+          "predicted": "STARTED:navigate_to"
+        },
+        {
+          "gold": "COMPLETED:navigate_to",
+          "id": "D05",
+          "predicted": "COMPLETED:navigate_to"
+        },
+        {
+          "gold": "IGNORE_STALE",
+          "id": "D06",
+          "predicted": "IGNORE_STALE"
+        },
+        {
+          "gold": "NOT_STARTED:pose:sit",
+          "id": "D07",
+          "predicted": "NOT_STARTED:pose:sit"
+        },
+        {
+          "gold": "CANCEL_AND_HOLD:navigate_to",
+          "id": "D08",
+          "predicted": "CANCEL_AND_HOLD:navigate_to"
+        },
+        {
+          "gold": "HOLD",
+          "id": "D09",
+          "predicted": "HOLD"
+        },
+        {
+          "gold": "STARTED:circle_owner",
+          "id": "D10",
+          "predicted": "STARTED:circle_owner"
+        },
+        {
+          "gold": "COMPLETED:gesture:bow",
+          "id": "D11",
+          "predicted": "COMPLETED:gesture:bow"
+        },
+        {
+          "gold": "IDLE",
+          "id": "D12",
+          "predicted": "IDLE"
+        },
+        {
+          "gold": "FACT:tea",
+          "id": "D13",
+          "predicted": "FACT:tea"
+        },
+        {
+          "gold": "ABSTAIN",
+          "id": "D14",
+          "predicted": "ABSTAIN"
+        },
+        {
+          "gold": "ABSTAIN",
+          "id": "D15",
+          "predicted": "ABSTAIN"
+        },
+        {
+          "gold": "ABSTAIN",
+          "id": "D16",
+          "predicted": "ABSTAIN"
+        },
+        {
+          "gold": "FACT:Hana",
+          "id": "D17",
+          "predicted": "FACT:Hana"
+        },
+        {
+          "gold": "FACT:New York",
+          "id": "D18",
+          "predicted": "FACT:New York"
+        },
+        {
+          "gold": "FACT:visit the park",
+          "id": "D19",
+          "predicted": "FACT:visit the park"
+        },
+        {
+          "gold": "ABSTAIN",
+          "id": "D20",
+          "predicted": "ABSTAIN"
+        }
+      ],
+      "unsupported_memory_answers": 0
+    },
+    "tail_only_proxy": {
+      "accuracy": 0.45,
+      "cases": 20,
+      "correct": 9,
+      "false_completion": 3,
+      "rows": [
+        {
+          "gold": "CLARIFY",
+          "id": "D01",
+          "predicted": "CLARIFY"
+        },
+        {
+          "gold": "EXECUTE:gesture:paw_wave",
+          "id": "D02",
+          "predicted": "EXECUTE:gesture:paw_wave"
+        },
+        {
+          "gold": "DEFER:gesture:paw_wave",
+          "id": "D03",
+          "predicted": "EXECUTE:gesture:paw_wave"
+        },
+        {
+          "gold": "STARTED:navigate_to",
+          "id": "D04",
+          "predicted": "COMPLETED:navigate_to"
+        },
+        {
+          "gold": "COMPLETED:navigate_to",
+          "id": "D05",
+          "predicted": "COMPLETED:navigate_to"
+        },
+        {
+          "gold": "IGNORE_STALE",
+          "id": "D06",
+          "predicted": "COMPLETED:gesture:paw_wave"
+        },
+        {
+          "gold": "NOT_STARTED:pose:sit",
+          "id": "D07",
+          "predicted": "NOT_STARTED:pose:sit"
+        },
+        {
+          "gold": "CANCEL_AND_HOLD:navigate_to",
+          "id": "D08",
+          "predicted": "HOLD"
+        },
+        {
+          "gold": "HOLD",
+          "id": "D09",
+          "predicted": "HOLD"
+        },
+        {
+          "gold": "STARTED:circle_owner",
+          "id": "D10",
+          "predicted": "COMPLETED:circle_owner"
+        },
+        {
+          "gold": "COMPLETED:gesture:bow",
+          "id": "D11",
+          "predicted": "COMPLETED:gesture:bow"
+        },
+        {
+          "gold": "IDLE",
+          "id": "D12",
+          "predicted": "IDLE"
+        },
+        {
+          "gold": "FACT:tea",
+          "id": "D13",
+          "predicted": "FACT:coffee"
+        },
+        {
+          "gold": "ABSTAIN",
+          "id": "D14",
+          "predicted": "FACT:1234"
+        },
+        {
+          "gold": "ABSTAIN",
+          "id": "D15",
+          "predicted": "ABSTAIN"
+        },
+        {
+          "gold": "ABSTAIN",
+          "id": "D16",
+          "predicted": "FACT:lonely"
+        },
+        {
+          "gold": "FACT:Hana",
+          "id": "D17",
+          "predicted": "FACT:Mina"
+        },
+        {
+          "gold": "FACT:New York",
+          "id": "D18",
+          "predicted": "FACT:Boston"
+        },
+        {
+          "gold": "FACT:visit the park",
+          "id": "D19",
+          "predicted": "FACT:visit the park"
+        },
+        {
+          "gold": "ABSTAIN",
+          "id": "D20",
+          "predicted": "FACT:Prospect Park"
+        }
+      ],
+      "unsupported_memory_answers": 3
+    }
+  },
+  "h3_proactive_contract": {
+    "bars": {
+      "all_malformed_drop_invalid": true,
+      "precision_ge_0_80": true,
+      "prohibited_admissions_eq_0": true,
+      "recall_ge_0_80": true
+    },
+    "evidence_note": "New authored valid cases plus rule-generated malformed mutations; no owner-preference or sensor-identity accuracy was measured.",
+    "malformed_refuters": {
+      "admitted_by_proposed": 0,
+      "cases": 36,
+      "rows": [
+        {
+          "id": "missing:confidence",
+          "permissive_proxy": "ADMIT",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "missing:confidence"
+        },
+        {
+          "id": "missing:estop",
+          "permissive_proxy": "ADMIT",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "missing:estop"
+        },
+        {
+          "id": "missing:event_class",
+          "permissive_proxy": "ADMIT",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "missing:event_class"
+        },
+        {
+          "id": "missing:event_id",
+          "permissive_proxy": "ADMIT",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "missing:event_id"
+        },
+        {
+          "id": "missing:evidence_age_s",
+          "permissive_proxy": "ADMIT",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "missing:evidence_age_s"
+        },
+        {
+          "id": "missing:lane_busy",
+          "permissive_proxy": "ADMIT",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "missing:lane_busy"
+        },
+        {
+          "id": "missing:last_subject_age_s",
+          "permissive_proxy": "ADMIT",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "missing:last_subject_age_s"
+        },
+        {
+          "id": "missing:nearby_non_owner",
+          "permissive_proxy": "ADMIT",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "missing:nearby_non_owner"
+        },
+        {
+          "id": "missing:novelty",
+          "permissive_proxy": "ADMIT",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "missing:novelty"
+        },
+        {
+          "id": "missing:owner_speaking",
+          "permissive_proxy": "ADMIT",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "missing:owner_speaking"
+        },
+        {
+          "id": "missing:owner_turn_age_s",
+          "permissive_proxy": "ADMIT",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "missing:owner_turn_age_s"
+        },
+        {
+          "id": "missing:owner_verified",
+          "permissive_proxy": "ADMIT",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "missing:owner_verified"
+        },
+        {
+          "id": "missing:private_zone",
+          "permissive_proxy": "ADMIT",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "missing:private_zone"
+        },
+        {
+          "id": "missing:proactive_consent",
+          "permissive_proxy": "ADMIT",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "missing:proactive_consent"
+        },
+        {
+          "id": "missing:quiet_hours",
+          "permissive_proxy": "ADMIT",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "missing:quiet_hours"
+        },
+        {
+          "id": "missing:robot_utterance_age_s",
+          "permissive_proxy": "ADMIT",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "missing:robot_utterance_age_s"
+        },
+        {
+          "id": "missing:source_epoch",
+          "permissive_proxy": "ADMIT",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "missing:source_epoch"
+        },
+        {
+          "id": "missing:subject_id",
+          "permissive_proxy": "ADMIT",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "missing:subject_id"
+        },
+        {
+          "id": "missing:version",
+          "permissive_proxy": "ADMIT",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "missing:version"
+        },
+        {
+          "id": "wrong_bool:estop",
+          "permissive_proxy": "DROP",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "wrong_type:estop:bool"
+        },
+        {
+          "id": "wrong_bool:lane_busy",
+          "permissive_proxy": "DROP",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "wrong_type:lane_busy:bool"
+        },
+        {
+          "id": "wrong_bool:nearby_non_owner",
+          "permissive_proxy": "DROP",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "wrong_type:nearby_non_owner:bool"
+        },
+        {
+          "id": "wrong_bool:owner_speaking",
+          "permissive_proxy": "DROP",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "wrong_type:owner_speaking:bool"
+        },
+        {
+          "id": "wrong_bool:owner_verified",
+          "permissive_proxy": "ADMIT",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "wrong_type:owner_verified:bool"
+        },
+        {
+          "id": "wrong_bool:private_zone",
+          "permissive_proxy": "DROP",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "wrong_type:private_zone:bool"
+        },
+        {
+          "id": "wrong_bool:proactive_consent",
+          "permissive_proxy": "ADMIT",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "wrong_type:proactive_consent:bool"
+        },
+        {
+          "id": "wrong_bool:quiet_hours",
+          "permissive_proxy": "DROP",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "wrong_type:quiet_hours:bool"
+        },
+        {
+          "id": "nan:confidence",
+          "permissive_proxy": "ADMIT",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "non_finite:confidence"
+        },
+        {
+          "id": "nan:evidence_age_s",
+          "permissive_proxy": "ADMIT",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "non_finite:evidence_age_s"
+        },
+        {
+          "id": "nan:last_subject_age_s",
+          "permissive_proxy": "ADMIT",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "non_finite:last_subject_age_s"
+        },
+        {
+          "id": "nan:novelty",
+          "permissive_proxy": "ADMIT",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "non_finite:novelty"
+        },
+        {
+          "id": "nan:owner_turn_age_s",
+          "permissive_proxy": "ADMIT",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "non_finite:owner_turn_age_s"
+        },
+        {
+          "id": "nan:robot_utterance_age_s",
+          "permissive_proxy": "ADMIT",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "non_finite:robot_utterance_age_s"
+        },
+        {
+          "id": "wrong_int:source_epoch",
+          "permissive_proxy": "ADMIT",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "wrong_type:source_epoch:nonnegative_int"
+        },
+        {
+          "id": "unknown_version",
+          "permissive_proxy": "ADMIT",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "unknown_version"
+        },
+        {
+          "id": "unknown_field",
+          "permissive_proxy": "ADMIT",
+          "proposed": "DROP_INVALID",
+          "proposed_reason": "unknown:surprise"
+        }
+      ]
+    },
+    "passed": true,
+    "permissive_default_proxy": {
+      "false_negative": 0,
+      "false_positive": 0,
+      "invalid_mutation_admissions": 30,
+      "precision": 1.0,
+      "recall": 1.0,
+      "rows": [
+        {
+          "gold": "ADMIT",
+          "id": "P01",
+          "predicted": "ADMIT"
+        },
+        {
+          "gold": "ADMIT",
+          "id": "P02",
+          "predicted": "ADMIT"
+        },
+        {
+          "gold": "ADMIT",
+          "id": "P03",
+          "predicted": "ADMIT"
+        },
+        {
+          "gold": "ADMIT",
+          "id": "P04",
+          "predicted": "ADMIT"
+        },
+        {
+          "gold": "ADMIT",
+          "id": "P05",
+          "predicted": "ADMIT"
+        },
+        {
+          "gold": "DROP",
+          "id": "P06",
+          "predicted": "DROP"
+        },
+        {
+          "gold": "DROP",
+          "id": "P07",
+          "predicted": "DROP"
+        },
+        {
+          "gold": "DROP",
+          "id": "P08",
+          "predicted": "DROP"
+        },
+        {
+          "gold": "DROP",
+          "id": "P09",
+          "predicted": "DROP"
+        },
+        {
+          "gold": "DROP",
+          "id": "P10",
+          "predicted": "DROP"
+        },
+        {
+          "gold": "DROP",
+          "id": "P11",
+          "predicted": "DROP"
+        },
+        {
+          "gold": "DROP",
+          "id": "P12",
+          "predicted": "DROP"
+        },
+        {
+          "gold": "DROP",
+          "id": "P13",
+          "predicted": "DROP"
+        },
+        {
+          "gold": "DROP",
+          "id": "P14",
+          "predicted": "DROP"
+        },
+        {
+          "gold": "DROP",
+          "id": "P15",
+          "predicted": "DROP"
+        },
+        {
+          "gold": "DROP",
+          "id": "P16",
+          "predicted": "DROP"
+        },
+        {
+          "gold": "DROP",
+          "id": "P17",
+          "predicted": "DROP"
+        },
+        {
+          "gold": "DROP",
+          "id": "P18",
+          "predicted": "DROP"
+        },
+        {
+          "gold": "DROP",
+          "id": "P19",
+          "predicted": "DROP"
+        },
+        {
+          "gold": "ADMIT",
+          "id": "P20",
+          "predicted": "ADMIT"
+        }
+      ],
+      "true_positive": 6
+    },
+    "proposed_typed_gate": {
+      "false_negative": 0,
+      "false_positive": 0,
+      "precision": 1.0,
+      "prohibited_admissions": 0,
+      "recall": 1.0,
+      "rows": [
+        {
+          "gold": "ADMIT",
+          "id": "P01",
+          "predicted": "ADMIT",
+          "reason": "admitted"
+        },
+        {
+          "gold": "ADMIT",
+          "id": "P02",
+          "predicted": "ADMIT",
+          "reason": "admitted"
+        },
+        {
+          "gold": "ADMIT",
+          "id": "P03",
+          "predicted": "ADMIT",
+          "reason": "admitted"
+        },
+        {
+          "gold": "ADMIT",
+          "id": "P04",
+          "predicted": "ADMIT",
+          "reason": "admitted"
+        },
+        {
+          "gold": "ADMIT",
+          "id": "P05",
+          "predicted": "ADMIT",
+          "reason": "admitted"
+        },
+        {
+          "gold": "DROP",
+          "id": "P06",
+          "predicted": "DROP",
+          "reason": "owner_unverified"
+        },
+        {
+          "gold": "DROP",
+          "id": "P07",
+          "predicted": "DROP",
+          "reason": "consent_off"
+        },
+        {
+          "gold": "DROP",
+          "id": "P08",
+          "predicted": "DROP",
+          "reason": "owner_speaking"
+        },
+        {
+          "gold": "DROP",
+          "id": "P09",
+          "predicted": "DROP",
+          "reason": "lane_busy"
+        },
+        {
+          "gold": "DROP",
+          "id": "P10",
+          "predicted": "DROP",
+          "reason": "quiet_hours"
+        },
+        {
+          "gold": "DROP",
+          "id": "P11",
+          "predicted": "DROP",
+          "reason": "estop"
+        },
+        {
+          "gold": "DROP",
+          "id": "P12",
+          "predicted": "DROP",
+          "reason": "private_zone"
+        },
+        {
+          "gold": "DROP",
+          "id": "P13",
+          "predicted": "DROP",
+          "reason": "non_owner_nearby"
+        },
+        {
+          "gold": "DROP",
+          "id": "P14",
+          "predicted": "DROP",
+          "reason": "stale_evidence"
+        },
+        {
+          "gold": "DROP",
+          "id": "P15",
+          "predicted": "DROP",
+          "reason": "owner_turn_tail"
+        },
+        {
+          "gold": "DROP",
+          "id": "P16",
+          "predicted": "DROP",
+          "reason": "robot_turn_tail"
+        },
+        {
+          "gold": "DROP",
+          "id": "P17",
+          "predicted": "DROP",
+          "reason": "subject_dedup"
+        },
+        {
+          "gold": "DROP",
+          "id": "P18",
+          "predicted": "DROP",
+          "reason": "low_novelty"
+        },
+        {
+          "gold": "DROP",
+          "id": "P19",
+          "predicted": "DROP",
+          "reason": "low_confidence"
+        },
+        {
+          "gold": "ADMIT",
+          "id": "P20",
+          "predicted": "ADMIT",
+          "reason": "admitted"
+        }
+      ],
+      "true_positive": 6
+    }
+  },
+  "h4_edge_cloud_router": {
+    "always_realtime_proxy": {
+      "accuracy": 0.3333333333333333,
+      "cases": 30,
+      "correct": 10,
+      "hosted_generations": 30,
+      "rows": [
+        {
+          "gold": "local",
+          "id": "R01",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "local",
+          "id": "R02",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "local",
+          "id": "R03",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "local",
+          "id": "R04",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "local",
+          "id": "R05",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "local",
+          "id": "R06",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "local",
+          "id": "R07",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "local",
+          "id": "R08",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "local",
+          "id": "R09",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "local",
+          "id": "R10",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "local",
+          "id": "R11",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "local",
+          "id": "R12",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "local",
+          "id": "R13",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "local",
+          "id": "R14",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "realtime",
+          "id": "R15",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "realtime",
+          "id": "R16",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "realtime",
+          "id": "R17",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "realtime",
+          "id": "R18",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "realtime",
+          "id": "R19",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "realtime",
+          "id": "R20",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "realtime",
+          "id": "R21",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "realtime",
+          "id": "R22",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "realtime",
+          "id": "R23",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "realtime",
+          "id": "R24",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "reasoning",
+          "id": "R25",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "reasoning",
+          "id": "R26",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "reasoning",
+          "id": "R27",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "reasoning",
+          "id": "R28",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "reasoning",
+          "id": "R29",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "reasoning",
+          "id": "R30",
+          "predicted": "realtime"
+        }
+      ]
+    },
+    "bars": {
+      "all_gold_hosted_routes_preserved": true,
+      "all_safety_local": true,
+      "exact_accuracy_ge_0_90": true,
+      "hosted_reduction_ge_0_40": true
+    },
+    "evidence_note": "Authored route labels and modelled list-price arithmetic. Local means deterministic/template response; reasoning assumes local TTS. It is not measured API spend, quality, network latency, or Orin throughput.",
+    "passed": true,
+    "price_projection": {
+      "audio_token_assumptions": {
+        "assistant_audio_tokens_per_second": 20,
+        "user_audio_tokens_per_second": 10
+      },
+      "exclusions": [
+        "provider special-token variation",
+        "context growth and cache-hit distribution",
+        "transcription or separate TTS provider charges",
+        "local compute, energy, and Starlink charges",
+        "hosted realtime narration after the reasoning tier"
+      ],
+      "fixture_pass_usd": {
+        "always_realtime": 0.199168,
+        "hybrid_local_tts": 0.148144
+      },
+      "proportional_12000_turn_month_usd": {
+        "always_realtime": 79.66720000000001,
+        "hybrid_local_tts": 59.2576
+      },
+      "rate_source": "OpenAI GPT-Realtime-2 model page accessed 2026-08-26",
+      "rates_usd_per_million": {
+        "audio_input": 32.0,
+        "audio_output": 64.0,
+        "text_input": 4.0,
+        "text_output": 24.0
+      }
+    },
+    "proposed_router": {
+      "accuracy": 1.0,
+      "cases": 30,
+      "correct": 30,
+      "gold_hosted_cases": 16,
+      "gold_hosted_routes_preserved": 16,
+      "hosted_generations": 16,
+      "hosted_reduction_vs_always_realtime": 0.4666666666666667,
+      "rows": [
+        {
+          "gold": "local",
+          "id": "R01",
+          "predicted": "local"
+        },
+        {
+          "gold": "local",
+          "id": "R02",
+          "predicted": "local"
+        },
+        {
+          "gold": "local",
+          "id": "R03",
+          "predicted": "local"
+        },
+        {
+          "gold": "local",
+          "id": "R04",
+          "predicted": "local"
+        },
+        {
+          "gold": "local",
+          "id": "R05",
+          "predicted": "local"
+        },
+        {
+          "gold": "local",
+          "id": "R06",
+          "predicted": "local"
+        },
+        {
+          "gold": "local",
+          "id": "R07",
+          "predicted": "local"
+        },
+        {
+          "gold": "local",
+          "id": "R08",
+          "predicted": "local"
+        },
+        {
+          "gold": "local",
+          "id": "R09",
+          "predicted": "local"
+        },
+        {
+          "gold": "local",
+          "id": "R10",
+          "predicted": "local"
+        },
+        {
+          "gold": "local",
+          "id": "R11",
+          "predicted": "local"
+        },
+        {
+          "gold": "local",
+          "id": "R12",
+          "predicted": "local"
+        },
+        {
+          "gold": "local",
+          "id": "R13",
+          "predicted": "local"
+        },
+        {
+          "gold": "local",
+          "id": "R14",
+          "predicted": "local"
+        },
+        {
+          "gold": "realtime",
+          "id": "R15",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "realtime",
+          "id": "R16",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "realtime",
+          "id": "R17",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "realtime",
+          "id": "R18",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "realtime",
+          "id": "R19",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "realtime",
+          "id": "R20",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "realtime",
+          "id": "R21",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "realtime",
+          "id": "R22",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "realtime",
+          "id": "R23",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "realtime",
+          "id": "R24",
+          "predicted": "realtime"
+        },
+        {
+          "gold": "reasoning",
+          "id": "R25",
+          "predicted": "reasoning"
+        },
+        {
+          "gold": "reasoning",
+          "id": "R26",
+          "predicted": "reasoning"
+        },
+        {
+          "gold": "reasoning",
+          "id": "R27",
+          "predicted": "reasoning"
+        },
+        {
+          "gold": "reasoning",
+          "id": "R28",
+          "predicted": "reasoning"
+        },
+        {
+          "gold": "reasoning",
+          "id": "R29",
+          "predicted": "reasoning"
+        },
+        {
+          "gold": "reasoning",
+          "id": "R30",
+          "predicted": "reasoning"
+        }
+      ],
+      "safety_cases": 5,
+      "safety_routed_local": 5
+    }
+  },
+  "local_policy_microbenchmark": {
+    "anti_optimization_accumulator": 2799369,
+    "bar_p95_le_1_ms": true,
+    "decisions": 150000,
+    "evidence_note": "Desktop CPython policy latency only; excludes ASR, semantic frame production, TTS, networking, model generation, and motion.",
+    "max_ms": 0.174774,
+    "median_ms": 0.003095,
+    "p95_ms": 0.004387,
+    "p99_ms": 0.004817
+  },
+  "model_evidence": {
+    "hosted_or_local_model_called": false,
+    "natural_language_parsed": false,
+    "robot_or_orin_called": false,
+    "simulator_called": false
+  },
+  "provenance": {
+    "experiment_sha256": "70e3fce76422760e8adea8f28990718335a7109de31c816c3e745a6c0c62360d",
+    "fixtures_path": "research/20260826/conversational-embodiment/fixtures.json",
+    "fixtures_sha256": "498c317ab5b5207de60c6ce3c9afad562c3882588e1ce24bcae5b1ec0e2ae48f",
+    "platform": "Linux-7.0.0-30-generic-x86_64-with-glibc2.43",
+    "python": "3.14.4 (main, Jun 18 2026, 14:25:02) [GCC 15.2.0]",
+    "repo_head": "f3ecb5cd9e09058c7bc29ba61b63e18f92a308d8",
+    "source_sha256": {
+      "configs/robot.go2_edu_plus.yaml": "5cd73aed4b4562b86b1fd73cd09d4d9683a268c55b6d6204e77a45ea2a4410e5",
+      "configs/robot.yaml": "f7b57dcdf0b5981537ced874b63e010b4f0d6090de7a18118613e13f2990d6c1",
+      "prompts/personalities/calm_guardian.yaml": "c607edbc5f25974c3f50a104bdc6c17e42e3994b325a4076db5d35f78816c23b",
+      "prompts/personalities/gentle_companion.yaml": "4524d3665f076ec400bc2a476f27266f220388f15eac75620956cb1e2b4b255c",
+      "prompts/personalities/playful_companion.yaml": "2cc7cdb47f951922065bf34be486927828641b942f077aa93e1142a5a5a0b994",
+      "research/20260824/conversation-opportunity/RESULTS.md": "1b04bc28d3181920fb715c98ba991da80c2d0e408a5f98ce9166d7ef3b9b5821",
+      "research/20260824/conversation-opportunity/VERDICT.md": "45f41d60214a151f16e5451a39b328f3bc4889e6e1302fff20a693f2e808d23c",
+      "scrum/20260824/task_4/QUALITY_EVAL_REPORT.md": "55aace60a42863f519ae984b814916268bd3fcaf52cf75bdbc2fd548a018590d",
+      "src/parcel_robot/memory/tiered.py": "de9d46b31b50edde5a6b1380da6a17b5a0a59fece85f7424b58887f7a4a0b000",
+      "src/parcel_robot/prompting/dynamic.py": "93cac1721dc7c5902daa6c1b23568ff22cc318f69e5b70de6479631d4d5d288d",
+      "src/parcel_robot/prompting/loader.py": "767aaef4a9738bba34ebb66a87dbdfcf969c7fd70226efe1d17556daeeb52149",
+      "src/parcel_robot/realtime/prompting.py": "a49d1c5d30b949ce2dc1aa342704df0de4d76637f8fc7e5138c4af8b6c71debb",
+      "src/parcel_robot/realtime/relationship_prompt.py": "6d0a91c93f29a099d7206c022abd69496e30ac3cf59045ad291d19918b40dfb4",
+      "src/parcel_robot/realtime/tool_broker.py": "0628a3788fc6aad8ac40b172a328bf4ef7124b6d1d9a2deeb6038364b2f97056"
+    }
+  },
+  "schema_version": "conversational-embodiment-results-v1",
+  "semantic_replay": {
+    "deterministic": true,
+    "repeats": 10,
+    "unique_digests": [
+      "115e21ee27c777677b607683a1cb09d2e9a640e67eb93d44f7741e2d56de4bb0"
+    ]
+  }
+}

@@ -23,6 +23,18 @@ happiness or ordinary commands. Historical result JSON remains immutable and
 carries its original frozen-input hashes. A new live model result is still
 required before claiming a conversation-quality delta from this prompt change.
 
+**Input re-freeze (2026-08-26):** `core.md` now states the continuing-friend,
+owner-space, multi-turn reference, and admitted-base-travel contract;
+`action_policy.md` now makes explicit that descriptive gesture names do not
+grant runtime capability. The cases, schema, suite ID, and runner remain
+unchanged. Historical results still describe their recorded prompt digests and
+must not be presented as measurements of this revision. A fresh local-model
+run is retained at
+`research/20260826/system-readiness/conversation_quality_current_prompt_gemma4.json`:
+10/10 parse, 10/10 structured safety, 7/10 machine cases, and all ten actions
+null. It is one stochastic same-corpus suppression check, not a human-quality
+or successful-embodiment result; human review remains required.
+
 ```bash
 PYTHONPATH=src:. .parcel/bin/python -m evals.companion.run_conversation_quality_v1 \
   --output evals/companion/conversation_quality_v1/results/conversation-v1-run01.json \

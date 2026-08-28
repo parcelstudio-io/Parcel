@@ -445,6 +445,20 @@ def _corridor_observation(world: _CorridorWorld, *, extras=None) -> NavObservati
         "time_s": world.t,
         "semantic_candidates": [candidate],
         "lidar_obstacles": [{"id": "lamp-b", "distance_m": distance, "bearing_rad": bearing}],
+        # The lamppost arrival policy has a separate owner-facing terminal
+        # phase. The owner stands well outside the corridor and due east of the
+        # verified arrival ring, so this route-memory fixture exercises that
+        # yaw-only phase without changing the taught route or granting motion.
+        "owner_track": (
+            {
+                "id": "owner-1",
+                "x": CORRIDOR_GOAL_XY[0] + 10.0,
+                "y": CORRIDOR_GOAL_XY[1],
+                "vx": 0.0,
+                "vy": 0.0,
+                "radius_m": 0.35,
+            },
+        ),
         "motion_feedback": {
             "fresh": True,
             "stop_confirmed": True,

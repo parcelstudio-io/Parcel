@@ -3,6 +3,8 @@ from __future__ import annotations
 import time
 from pathlib import Path
 
+from commissioned_sim import commissioned_runtime_kwargs
+
 from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
 from parcel_robot.brain.contracts import PlanIR
@@ -353,6 +355,7 @@ modules: []
         _Backend(),
         language_model=_PlanningModel(),
         audio_status=_audio(),
+        **commissioned_runtime_kwargs(path),
     )
     try:
         assert "sit" in runtime.brain_registry.pose_names

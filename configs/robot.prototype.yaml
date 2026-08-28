@@ -124,6 +124,19 @@ agent:
     minimum_confidence: 0.5
 
 # ---------------------------------------------------------------------------
+# SOCIAL-PROGRESS-1 — simulator research observer only.
+#
+# This samples typed pre-dispatch intent, final accepted output, achieved
+# feedback, dynamic-track visibility and swept-corridor evidence after the
+# existing final gate. It emits planning/evaluation proposals only: no velocity,
+# actuator write, safety-envelope change, road-entry authority or elevator
+# authority exists in this mode. The shipped/physical config omits this block,
+# which is the strict default-off path.
+social_progress:
+  enabled: true
+  mode: shadow
+
+# ---------------------------------------------------------------------------
 # INDOOR PERSON STANDOFF — DELIVERED BY CARD P1-E (2026-08-22).
 #
 # HISTORY, kept because it is the reason this key exists. P0-A recorded this as

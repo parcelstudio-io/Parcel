@@ -203,6 +203,7 @@ parcel_robot = [
   "scenes/assets/meshes/*.obj",
   "ui/*.html",
   "runtime_assets/**/*",
+  "research_plane/schemas/*.json",
 ]
 
 [tool.pytest.ini_options]

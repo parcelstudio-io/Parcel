@@ -1,13 +1,17 @@
 # Crucial design decisions
 
 This is Parcel's lightweight architecture-decision record. It complements the
-dated [redesign assessment](REDESIGN_2026_ASSESSMENT.md) and the current
-[engineering handbook](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md) by stating the choices
-that must remain visible during refactors: why each choice exists, what it buys,
-what it costs, and what evidence would justify changing it.
+dated [redesign assessment](REDESIGN_2026_ASSESSMENT.md) and the long-form
+[engineering handbook](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md). The concise
+[robotics code design](ROBOTICS_CODE_DESIGN.md) maps these decisions onto the
+current package/process and authority flow; this record states the choices that
+must remain visible during refactors: why each choice exists, what it buys, what it
+costs, and what evidence would justify changing it.
 
-For the difference between implemented, wired, and operational, and for the
-current evidence-dated quality snapshot, see that living handbook. The former
+For the difference between implemented, wired, and operational, see the handbook;
+for the current evidence-dated quality snapshot, see the
+[executive summary](ROBOT_ENGINEERING_EXECUTIVE_SUMMARY.md) and August 26
+[research synthesis](../research/20260826/FINAL_REPORT.md). The former
 [implementation-status snapshot](archive/LEGACY_IMPLEMENTATION_STATUS_2026-08-04_TO_09.md)
 is historical rather than the current authority.
 

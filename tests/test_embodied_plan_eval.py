@@ -153,18 +153,27 @@ def test_full_gate_executes_physics_and_separates_unsupported(report) -> None:
         # ALL five cases still pass; collision 0, timeout 0, and min-clearance
         # 0.883147 are bit-identical (that min is five_steps_away_then_hold, which
         # moves 0). Faster arrivals that still verify, not weakened capability.
-        "simulator_step_count": 997,
+        # Re-frozen 2026-08-28 after the owner-facing arrival closeout and the
+        # headless/runtime observation-parity fix: 997 -> 1051. The headless
+        # navigator now receives the owner body that the simulator already
+        # observes, just as RobotRuntime does, so owner-facing terminal turns
+        # execute instead of running with that channel silently absent. Exact
+        # per-case movement is 200/260/64/389/84 -> 207/266/64/389/125.
+        # Capability and hard-safety outcomes are unchanged: 4 passed, 1
+        # unsupported, 0 collisions, and 0 timeouts. The new 0.865683 m
+        # minimum remains above the configured 0.65 m obstacle clearance.
+        "simulator_step_count": 1051,
         "collision_count": 0,
         "timeout_count": 0,
-        "minimum_clearance_m": pytest.approx(0.883147),
+        "minimum_clearance_m": pytest.approx(0.865683),
         "simulator_steps_per_case": {
             "count": 5,
             "minimum": 64.0,
             # Median 282 -> 200 and mean 243.8 -> 199.4: the two region legs and
             # the lamppost `near` case all sped up (seams 2/3); min (64,
             # five_steps) and max (389, orbit unsupported) cases move 0.
-            "median": 200.0,
-            "mean": 199.4,
+            "median": 207.0,
+            "mean": 210.2,
             "maximum": 389.0,
         },
     }
@@ -261,7 +270,11 @@ def test_correction_waits_for_checkpoint_then_executes_replacement(report) -> No
     # at ~0.032 m/s (now >=0.12 m/s until the arrival radius). Same route, same
     # checkpoint semantics, same clearance; still near_surface_le_1m + off_road
     # True. Seam 3 (region convergence) moves this "near" case by 0.
-    assert case["physical"]["simulator_step_count"] == 84
+    # 84 -> 125 (2026-08-28): the object arrival now completes its separate,
+    # verified owner-facing turn and the headless navigator receives the live
+    # owner channel that production already supplies. The checkpoint and route
+    # semantics above remain unchanged; safety stays collision/timeout free.
+    assert case["physical"]["simulator_step_count"] == 125
     assert case["semantic"]["checks"]["near_surface_le_1m"] is True
     assert case["semantic"]["checks"]["off_road"] is True
 

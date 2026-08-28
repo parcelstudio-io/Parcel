@@ -6,9 +6,11 @@ amicable personality — seamless, interesting, interruptible conversation;
 autonomous indoor/outdoor navigation; generalized perception; recursive
 (governed) learning about the owner and the world; continuous self-initiated
 behavior (breathing, looking, checking things, starting conversations) with a
-motion planner that is always emitting a safe intent. Hosted chat-API spend
-**≤ $200/month**; local models run continuously; the controller keeps running
-while the dog learns and REACTS.
+motion planner that is always emitting a safe intent. The current hosted
+envelopes are **≤ $300/month for Realtime conversation** and **≤ $100/month
+for deliberative text**; local models run continuously, and the controller
+keeps running while the dog learns and REACTS. Provider use must remain in
+separate measured ledgers rather than borrowing silently across envelopes.
 
 ## Layout — one folder per hypothesis
 ```
@@ -56,3 +58,7 @@ VERDICT.md is a claim, not a finding.
 - `20260823/` — first program: see `20260823/README.md`.
 - `20260824/` — mountability decisions, Codex cross-review and the proposed
   portable living-dog HLD: see `20260824/README.md`.
+- `20260826/` — generalized conversational/navigation research, companion
+  prompt v4, simulator-learning architecture, dynamic social-progress and
+  pedestrian-stall research, research data plane, and the current motion
+  `NO-GO`: see `20260826/README.md`.

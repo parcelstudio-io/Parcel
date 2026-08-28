@@ -66,6 +66,7 @@ from parcel_robot.bridge.fake_sport import FakeSportFaultsV1, FakeSportServiceV1
 
 REPO = Path(__file__).resolve().parents[1]
 GATEWAY_ROOT = REPO / "gateway"
+PRODUCT_CLIENT = REPO / "src" / "parcel_robot" / "bridge" / "gateway_client.py"
 SERVICE_FILE = REPO / "deploy" / "orin" / "services" / "parcel-gateway.service"
 GATEWAY_PYPROJECT = GATEWAY_ROOT / "pyproject.toml"
 
@@ -606,7 +607,7 @@ def test_no_vendor_sdk_is_imported_anywhere_in_the_tree_including_subpackages() 
 
 
 def test_the_deployable_seam_reaches_exactly_the_frozen_wire_contract() -> None:
-    """Contract 3: the production side sees the protocol and stdlib. Nothing else."""
+    """Contract 3: the gateway reaches only the product-owned client seam."""
 
     surface: dict[str, set[str]] = {}
     for name in DEPLOYABLE_SEAM_MODULES:
@@ -615,21 +616,34 @@ def test_the_deployable_seam_reaches_exactly_the_frozen_wire_contract() -> None:
         if product:
             surface[name] = product
     reached = set().union(*surface.values()) if surface else set()
-    assert reached <= {"parcel_robot.bridge.protocol"}, surface
-    assert surface.get("seam/client.py") == {"parcel_robot.bridge.protocol"}
+    assert reached <= {"parcel_robot.bridge.gateway_client"}, surface
+    assert surface.get("seam/client.py") == {"parcel_robot.bridge.gateway_client"}
+
+    product_modules, _members = _imports(PRODUCT_CLIENT.read_text(encoding="utf-8"))
+    product_reaches = {
+        module for module in product_modules if module.startswith("parcel_robot")
+    }
+    assert product_reaches == {"parcel_robot.bridge.protocol"}
 
 
 def test_the_production_client_cannot_reach_the_vendor_or_the_core() -> None:
     """Contract 3 / stop condition: no runtime caller may bypass the gateway."""
 
-    source = _tree_sources()["seam/client.py"]
-    # It imports nothing from this package at all — not ports, not core, not
-    # the writer, not the bench client.  The only way out of this module is the
-    # Unix socket.
+    source = PRODUCT_CLIENT.read_text(encoding="utf-8")
+    # The product-owned implementation imports nothing from the gateway package
+    # at all — not ports, core, writer, or the bench client. The only way out of
+    # this module is the Unix socket.
     assert _relative_imports(source) == set()
     modules, _members = _imports(source)
     assert not any(module.startswith("gateway") for module in modules), modules
     assert "parcel_robot.bridge.fake_sport" not in modules
+
+
+def test_the_historical_gateway_client_path_is_an_identity_preserving_reexport() -> None:
+    from parcel_robot.bridge.gateway_client import MotionGatewayClientV1 as ProductClient
+
+    assert MotionGatewayClientV1 is ProductClient
+    assert client_module.MotionGatewayClientV1 is ProductClient
 
 
 def test_the_gateway_never_reaches_the_product_runtime_or_a_controller() -> None:
@@ -643,7 +657,13 @@ def test_the_gateway_never_reaches_the_product_runtime_or_a_controller() -> None
 
 def test_every_module_in_the_tree_is_python_310_clean() -> None:
     findings: list[tuple[str, str, str]] = []
-    for name, source in _tree_sources().items():
+    sources = {
+        **_tree_sources(),
+        "src/parcel_robot/bridge/gateway_client.py": PRODUCT_CLIENT.read_text(
+            encoding="utf-8"
+        ),
+    }
+    for name, source in sources.items():
         modules, members = _imports(source, runtime_only=True)
         for module in modules:
             if module.split(".")[0] in POST_310_MODULES:

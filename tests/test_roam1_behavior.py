@@ -25,6 +25,10 @@ import math
 from pathlib import Path
 
 import pytest
+from commissioned_sim import (
+    authorize_commissioned_voice_binding,
+    commissioned_runtime_kwargs,
+)
 
 from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
@@ -438,7 +442,7 @@ modules: []
         # the product path.
         (tmp_path / "roam1-robot.demo.yaml").write_text(overlay, encoding="utf-8")
         monkeypatch.setenv(PROFILE_ENV, "demo")
-    return RobotRuntime(
+    runtime = RobotRuntime(
         path,
         _Backend(),
         language_model=_SilentModel(),
@@ -450,7 +454,10 @@ modules: []
             connected_output=False,
             detail="roam1 fixture",
         ),
+        **commissioned_runtime_kwargs(path),
     )
+    authorize_commissioned_voice_binding(runtime)
+    return runtime
 
 
 def _observation(runtime: RobotRuntime) -> SimObservation:

@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://parcel.invalid/schemas/research-event-v1.schema.json",
+  "title": "Parcel research event v1",
+  "description": "A summary-first, pseudonymous research event. This schema is deliberately separate from companion memory and raw sensor payloads.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "specversion",
+    "id",
+    "source",
+    "type",
+    "time",
+    "dataschema",
+    "run_id",
+    "stream",
+    "sequence",
+    "robot_pseudonym",
+    "origin",
+    "privacy_class",
+    "purpose",
+    "consent_id",
+    "retention_class",
+    "priority",
+    "provenance",
+    "data"
+  ],
+  "properties": {
+    "specversion": {"const": "1.0"},
+    "id": {"type": "string", "format": "uuid"},
+    "source": {"type": "string", "pattern": "^parcel://robot/[^/]+$"},
+    "type": {
+      "enum": [
+        "ai.parcel.research.navigation.summary.v1",
+        "ai.parcel.research.conversation.outcome.v1",
+        "ai.parcel.research.audio.summary.v1",
+        "ai.parcel.research.perception.summary.v1",
+        "ai.parcel.research.learning.feedback.v1"
+      ]
+    },
+    "time": {"type": "string", "format": "date-time"},
+    "dataschema": {"const": "parcel://schemas/research_event_v1"},
+    "run_id": {"type": "string", "minLength": 1, "maxLength": 128},
+    "stream": {
+      "enum": ["navigation", "conversation", "audio", "perception", "feedback"]
+    },
+    "sequence": {"type": "integer", "minimum": 0},
+    "robot_pseudonym": {"type": "string", "pattern": "^robot_[0-9a-f]{16}$"},
+    "origin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["device_clock", "source_time_ns", "receive_monotonic_ns"],
+      "properties": {
+        "device_clock": {"enum": ["sim", "sensor", "ros", "system"]},
+        "source_time_ns": {"type": "integer", "minimum": 0},
+        "receive_monotonic_ns": {"type": "integer", "minimum": 0}
+      }
+    },
+    "privacy_class": {
+      "enum": ["research_nonpersonal", "research_pseudonymous", "consent_required"]
+    },
+    "purpose": {"const": "research_evaluation"},
+    "consent_id": {"type": ["string", "null"], "maxLength": 128},
+    "retention_class": {
+      "enum": ["summary_90d", "feedback_1y", "consented_text_30d"]
+    },
+    "priority": {"type": "integer", "minimum": 0, "maximum": 3},
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_event_ids",
+        "code_sha256",
+        "config_sha256",
+        "model_ids",
+        "calibration_ids"
+      ],
+      "properties": {
+        "source_event_ids": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "maxItems": 32
+        },
+        "code_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "config_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "model_ids": {
+          "type": "array",
+          "items": {"type": "string", "maxLength": 128},
+          "maxItems": 16
+        },
+        "calibration_ids": {
+          "type": "array",
+          "items": {"type": "string", "maxLength": 128},
+          "maxItems": 16
+        }
+      }
+    },
+    "data": {
+      "type": "object",
+      "description": "Typed, redacted summary fields only. Raw audio, imagery, transcripts, exact coordinates, credentials, and biometric embeddings are forbidden by the ingestion policy."
+    }
+  }
+}

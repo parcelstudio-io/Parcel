@@ -1,0 +1,31 @@
+{
+  "schema": "parcel.navigation-generalization.verification.v1",
+  "verdict": "PASS",
+  "checks": {
+    "primary_digest_recomputed": true,
+    "primary_repeat_matches": true,
+    "primary_canonical_is_run1": true,
+    "h1b_digest_recomputed": true,
+    "h1b_repeat_matches": true,
+    "h1b_canonical_is_run1": true,
+    "h1_preregistered_refuted": true,
+    "h2_negative_hypothesis_supported": true,
+    "h1b_explicitly_exploratory": true,
+    "h1b_all_checks_pass": true,
+    "source_ids_unique": true,
+    "source_manifest_has_access_date": true,
+    "source_rows_have_version_and_https_url": true
+  },
+  "deterministic_payload_sha256": {
+    "primary": "95726bddf90466c81c4a859ff479e00cd18daba96f8e3e60039f934abc7100e6",
+    "h1b": "f5ade5d0407bf9f04d7db5743775e27e77e979a87f8230a014047657a8faeece"
+  },
+  "episode_executions_per_repeat": {
+    "primary": 174,
+    "h1b": 84
+  },
+  "total_episode_executions": 516,
+  "primary_source_count": 31,
+  "source_manifest_sha256": "7d085238e08baeffeaf98cd205586a07531564296b045fa50fffd96cf8c4b837",
+  "hardware_used": "none"
+}

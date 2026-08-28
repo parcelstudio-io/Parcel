@@ -675,6 +675,54 @@
     {
       "mode": "0644",
       "origin": "mirror",
+      "packaged": "prompts/personalities/_frozen/si-companion-v4/calm_guardian.yaml",
+      "sha256": "c607edbc5f25974c3f50a104bdc6c17e42e3994b325a4076db5d35f78816c23b",
+      "size": 489,
+      "source": "prompts/personalities/_frozen/si-companion-v4/calm_guardian.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "prompts/personalities/_frozen/si-companion-v4/gentle_companion.yaml",
+      "sha256": "4524d3665f076ec400bc2a476f27266f220388f15eac75620956cb1e2b4b255c",
+      "size": 480,
+      "source": "prompts/personalities/_frozen/si-companion-v4/gentle_companion.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "prompts/personalities/_frozen/si-companion-v4/playful_companion.yaml",
+      "sha256": "2cc7cdb47f951922065bf34be486927828641b942f077aa93e1142a5a5a0b994",
+      "size": 500,
+      "source": "prompts/personalities/_frozen/si-companion-v4/playful_companion.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "prompts/personalities/_frozen/si-companion-v5/calm_guardian.yaml",
+      "sha256": "c607edbc5f25974c3f50a104bdc6c17e42e3994b325a4076db5d35f78816c23b",
+      "size": 489,
+      "source": "prompts/personalities/_frozen/si-companion-v5/calm_guardian.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "prompts/personalities/_frozen/si-companion-v5/gentle_companion.yaml",
+      "sha256": "4524d3665f076ec400bc2a476f27266f220388f15eac75620956cb1e2b4b255c",
+      "size": 480,
+      "source": "prompts/personalities/_frozen/si-companion-v5/gentle_companion.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "prompts/personalities/_frozen/si-companion-v5/playful_companion.yaml",
+      "sha256": "2cc7cdb47f951922065bf34be486927828641b942f077aa93e1142a5a5a0b994",
+      "size": 500,
+      "source": "prompts/personalities/_frozen/si-companion-v5/playful_companion.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
       "packaged": "prompts/personalities/calm_guardian.yaml",
       "sha256": "c607edbc5f25974c3f50a104bdc6c17e42e3994b325a4076db5d35f78816c23b",
       "size": 489,
@@ -748,16 +796,16 @@
       "mode": "0644",
       "origin": "mirror",
       "packaged": "prompts/system/action_policy.md",
-      "sha256": "1f3e4258d8ba3779f8d8816523e82184483eb8b40f24f6775d362d1453ba0a1c",
-      "size": 2722,
+      "sha256": "a2b59779c7a10bc9b42e425777c3e005479cd4682e5cf8bbf177834bdda2df03",
+      "size": 3499,
       "source": "prompts/system/action_policy.md"
     },
     {
       "mode": "0644",
       "origin": "mirror",
       "packaged": "prompts/system/core.md",
-      "sha256": "fdf3ea28a8a18ec56a885b2ab8ad729ab9ce6b2192dfdff14a49d51daaef624e",
-      "size": 2296,
+      "sha256": "5c49d1f79881b2ae9a51c0b3a3370e475daf1de172f9be14ef5f01b2adf66569",
+      "size": 4138,
       "source": "prompts/system/core.md"
     },
     {
@@ -793,7 +841,7 @@
       "source": "prompts/system/planner_v2.md"
     }
   ],
-  "count": 99,
+  "count": 105,
   "generator": "tools/sync_runtime_assets.py",
   "schema_version": 1,
   "side_mirrors": [
@@ -803,5 +851,5 @@
       "target": "src/parcel_robot/config/robot.yaml"
     }
   ],
-  "tree_digest": "c443eeaf3d07b66cb9f9fc04d09b625afd76993d1b1edc62518171376762ba60"
+  "tree_digest": "c6841871986e3ecffde6831d6c3b85dbf140de30809fe162355b199218e27eba"
 }

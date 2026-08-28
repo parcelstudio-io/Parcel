@@ -15,6 +15,8 @@ from __future__ import annotations
 import time
 from pathlib import Path
 
+from commissioned_sim import commissioned_runtime_kwargs
+
 from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
 from parcel_robot.brain.navigate_admission import assert_searchable_admission_contract
@@ -201,8 +203,13 @@ def _audio() -> AudioDeviceStatus:
 def test_runtime_text_path_admits_go_to_the_sidewalk(tmp_path: Path) -> None:
     """Full agent path: transcript -> local sketch -> admission -> task."""
 
+    config_path = _runtime_config(tmp_path)
     runtime = RobotRuntime(
-        _runtime_config(tmp_path), _Backend(), language_model=None, audio_status=_audio()
+        config_path,
+        _Backend(),
+        language_model=None,
+        audio_status=_audio(),
+        **commissioned_runtime_kwargs(config_path),
     )
     observation = _fresh_observation(time.monotonic())
     runtime._observation = observation
@@ -219,8 +226,13 @@ def test_runtime_text_path_admits_go_to_the_sidewalk(tmp_path: Path) -> None:
 
 
 def test_runtime_text_path_reports_stale_camera_honestly(tmp_path: Path) -> None:
+    config_path = _runtime_config(tmp_path)
     runtime = RobotRuntime(
-        _runtime_config(tmp_path), _Backend(), language_model=None, audio_status=_audio()
+        config_path,
+        _Backend(),
+        language_model=None,
+        audio_status=_audio(),
+        **commissioned_runtime_kwargs(config_path),
     )
     # No observation ever streamed: sensors cannot be fresh.
     reply = runtime.handle_text("go to the sidewalk")

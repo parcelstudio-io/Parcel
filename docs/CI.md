@@ -5,35 +5,33 @@ panel, follow-bench, acoustic loop, planner/conversation packs, metamorphic
 suite). The executable runner and versioned workflow definition below close the
 historical gap where every promotion gate was manual.
 
-**Current integrity notice (2026-08-22, committed baseline `904edd2` plus the
-visible experimental worktree): the aggregate gate is RED and nonfunctional from
-a clean checkout.** `.gitignore` excludes `third_party/`, Git tracks no Unitree
-MuJoCo pack/submodule, and the workflow fetches nothing. A tracked-only archive
-exits in about 0.40 seconds when the first mutation/hard stage compiles a city scene
-whose Go2 XML is absent. The exception escapes before the summary, JSON, later
-independent gates, or pytest. A developer's ignored Unitree checkout does not make
-the repository hermetic.
+**Current integrity notice (2026-08-26): the former clean-checkout Go2 asset
+failure is closed.** GATE-0 tracks a license/provenance-reviewed, hash-pinned
+20-file Unitree MJCF subset and runs an asset-first stage that compiles both
+product scenes. The gate also contains stage exceptions and emits the remaining
+diagnostics. This proves repository hermeticity for those assets, not the native
+SDK2/DDS boundary or physical Go2 behavior.
 
-Current collection on CPython 3.14.4 is **8,701 nodes**: 8,620 in the commit
-selection and 81 slow. This is inventory, not a passing gate. On declared-supported
-Python 3.11.15, `realtime/protocol.py` is rejected for a direct
-`MappingProxyType({})` dataclass default: 6,067 nodes collect with 69 errors, leaving
-2,634 current nodes absent relative to 3.14. CI runs only Python 3.12; the voice
-extra's `websockets>=17` also conflicts with the advertised Python 3.10 floor.
+The required one-time commit-tier close run reached the default suite and
+recorded **10,510 passed, 22 skipped, five expected failures, and two deterministic
+maintenance failures**. The failures were a stale packaged-asset count and the
+Realtime prompting module crossing its existing line-count ratchet. Both exact
+defects were repaired afterward: the failed nodes passed 2/2, a broader affected
+suite passed 111 tests with four skips, and asset parity, prompt freeze replay,
+JSON, Ruff, and whitespace checks passed. The full gate was deliberately not run
+a second time under the repository's once-per-close policy, so there is no claimed
+post-fix full-gate green result. See the dated
+[system-readiness result](../research/20260826/system-readiness/RESULTS.md).
 
-Direct Ruff evaluation of the current worktree finds 16 fingerprints: seven
-grandfathered baseline rows and nine new rows in untracked evidence scripts. A
-partial serial default-suite run was stopped honestly at roughly 17% after 402 s:
-1,542 passed, three environment-coupled `pyrealsense2` expectation tests failed,
-and 81 were deselected. This is not a suite verdict. `tests/test_ci_gate.py` itself
-reports 45 passed/one warning, but does not cover clean-checkout missing assets or
-per-stage exception containment.
+A subsequent adversarial close added SI-v5/DI-v2 prompt-data hardening, local
+action-allowlist enforcement, and an explicit simulator-clock mapping. Its
+guarded prompt/action/freeze/parity regression passed 265 tests and the direct
+HeadlessCity clock regression passed 1/1; these targeted results do not replace
+the intentionally unrerun full gate.
 
-The last recorded nightly remains the red 2026-08-21 row at
-`evals/nightly/20260821T102132Z`. Hosted GitHub Actions execution and required
-branch protection remain unverified. The authoritative corrective plan is
-[`scrum/20260822/INTEGRITY_GATES_TODO.md`](../scrum/20260822/INTEGRITY_GATES_TODO.md);
-the canonical quality interpretation is in the
+Hosted GitHub Actions execution, branch-protection configuration, exact-device
+Orin execution, and hosted/live provider cells remain separate evidence. The
+canonical quality interpretation is in the
 [engineering handbook](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md).
 
 The runner does **not** add new evals. It wraps the harnesses that already
@@ -47,9 +45,9 @@ exist and turns the aspirational promotion gates into one exit-coded command.
 
 ## Run it locally
 
-These are the intended commands. On a tracked-only checkout they currently exit
-with the missing-Unitree-asset traceback described above. Do not bootstrap an
-unrecorded local clone and report the result as clean evidence; close IG-1 first.
+These are the intended commands. Run them from the declared environment through
+the repository process guard; do not add an unrecorded SDK/model checkout and
+reinterpret that workstation state as clean evidence.
 
 ```bash
 # per-commit gate (offline; deterministic under its declared host capabilities)
@@ -63,9 +61,9 @@ scripts/ci_gate.sh commit
 scripts/ci_gate.sh commit --json      # also emit machine-readable JSON
 ```
 
-The intended contract is exit code `0` iff every **hard** gate is green, with
-report-only gates visible. The current implementation violates the reporting half
-when an evaluator raises: it exits nonzero but omits the remaining results/JSON.
+The contract is exit code `0` iff every **hard** gate is green, with report-only
+gates visible. A stage exception is recorded as a failed stage while independent
+later checks and the final report still run.
 
 ## Cadence
 
@@ -76,18 +74,18 @@ when an evaluator raises: it exits nonzero but omits the remaining results/JSON.
 
 `ci.yml` is the canonical, versioned record of what is intended to run and when; the gate
 logic lives in `ci_gate.py` so a hosted runner and a laptop invoke the same
-gate logic. The runner has been exercised locally and the current local verdict
-is red; hosted execution remains unverified. Python, resolved dependencies,
+gate logic. The latest full local record is red for the two subsequently repaired
+maintenance nodes described above; hosted execution remains unverified. Python, resolved dependencies,
 host packages, GL support and credentials can still differ between environments.
 
 ## What the commit tier intends to enforce (all hard, all offline)
 
-This roster describes the designed stages. It is not a claim that the present
-aggregate reaches or reports them from a clean checkout.
+This roster describes the designed stages. The 2026-08-26 run reached and
+reported them, but its recorded overall verdict remains red as described above.
 
 | Gate | Wraps | Reddens when |
 | --- | --- | --- |
-| `default-suite` | `pytest -m "not slow"` (current selection: 8,620 nodes; no complete current result) | any default-gate test fails |
+| `default-suite` | `pytest -m "not slow"` (2026-08-26 close run: 10,510 passed, 22 skipped, five xfailed, two later-repaired failures) | any default-gate test fails |
 | `ruff` | `ruff check` ratcheted vs baseline | a **new** `(file, rule)` violation appears |
 | `release-parity` | generated runtime-asset manifest | a canonical/deployable asset differs or disappears |
 | `assertion-evals` | five frozen EV-1 fixtures reproducing 20 expected findings + seeded harness self-test | findings drift or a deliberately broken evaluator passes |

@@ -9,9 +9,9 @@ WHAT THIS FILE PINS
    which is what "binding" has to mean to be worth writing down.
 2. **The threshold is the line**, it comes from configuration, and nothing else
    in the module can arm a turn that scored below it.
-3. **Fail-closed in four flavours**: no profile disables verification and SAYS
-   so; a corrupt profile is a refusal and never a silent absence; a verify that
-   raises refuses to arm; a turn too short to embed refuses to arm.
+3. **Fail-closed in four flavours**: no profile disarms and SAYS so; a corrupt
+   profile is a refusal and never a silent absence; a verify that raises
+   refuses to arm; a turn too short to embed refuses to arm.
 4. **The refusal is never silent** — counter, panel event, and one spoken
    always-band fact per minute, with a hint that forbids the model from
    claiming strangers cannot stop it.
@@ -203,7 +203,7 @@ def test_a_strangers_stop_still_latches_while_their_command_does_not_arm(runtime
     project has, and the command half because that is the entire card.
     """
 
-    gate = gate_for(OWNER)
+    gate = gate_for(OWNER, clock=lambda: 5.0)
     runtime.realtime_voice_identity = gate
 
     # A stranger is in the room and speaking.
@@ -234,18 +234,34 @@ def test_a_strangers_stop_still_latches_while_their_command_does_not_arm(runtime
     assert gate.voice_accepted == 0
 
 
-def test_the_owner_is_armed_for_the_same_sentences(runtime) -> None:
-    """The other half of a security feature: it lets the right person through."""
+def test_passing_identity_without_turn_binding_remains_disarmed(runtime) -> None:
+    """Acoustic success alone cannot authorize an unbound hosted command."""
 
-    gate = gate_for(OWNER)
+    gate = gate_for(OWNER, clock=lambda: 5.0)
     runtime.realtime_voice_identity = gate
     hear(gate, OWNER_ISH)  # the owner, on a different day
     assert gate.current(wall=5.0).code == V.CODE_ARMED
 
     outcome = runtime.submit_realtime_transcript("follow me")
-    assert outcome.executed is True
-    assert runtime._gate_by_voice("navigate_to", lambda **_: "walking")(place="bench") == "walking"
-    assert gate.voice_rejected == 0
+    assert outcome.executed is False
+    assert "no authenticated one-shot binding" in outcome.error
+    with pytest.raises(RuntimeError, match="did not recognise the voice"):
+        runtime._gate_by_voice("navigate_to", lambda **_: "walking")(place="bench")
+
+
+def test_passing_verdict_is_fresh_one_shot_and_cannot_cross_ingress_classes() -> None:
+    gate = gate_for(OWNER)
+    hear(gate, OWNER, at=10.0)
+    assert gate.decide("none", wall=11.0).armed is True
+    duplicate = gate.decide("tool", wall=11.0)
+    assert duplicate.armed is False
+    assert "already consumed" in duplicate.reason
+
+    stale = gate_for(OWNER)
+    hear(stale, OWNER, at=10.0, seconds=1.5)
+    delayed = stale.decide("follow", wall=13.0)
+    assert delayed.armed is False
+    assert "stale" in delayed.reason
 
 
 def test_gates_kind_reads_the_ingress_emergency_class_and_gates_everything_else() -> None:
@@ -367,15 +383,32 @@ def test_a_turn_that_has_not_been_verified_yet_does_not_arm() -> None:
 # ===========================================================================
 # 3. the profile — fail-closed, four flavours
 # ===========================================================================
-def test_no_profile_means_verification_is_off_and_the_snapshot_says_so_loudly() -> None:
+def test_no_profile_disarms_commands_and_the_snapshot_says_so_loudly() -> None:
     gate = gate_for(None)
     assert gate.enabled is False
     hear(gate, STRANGER)
-    assert gate.decide("follow", wall=5.0).armed is True  # pre-card behaviour
+    decision = gate.decide("follow", wall=5.0)
+    assert decision.armed is False
+    assert decision.code == V.CODE_DISABLED
     snapshot = gate.snapshot()
     assert snapshot["enabled"] is False
     assert "NO ENROLLED OWNER VOICE PROFILE" in snapshot["reason"]
-    assert "any voice in the room can arm a command" in snapshot["reason"]
+    assert "non-emergency motion is DISARMED" in snapshot["reason"]
+
+
+def test_runtime_missing_or_broken_identity_fails_closed_except_emergency(runtime) -> None:
+    runtime.realtime_voice_identity = None
+    assert runtime._voice_arming_for("follow").armed is False
+    assert runtime._voice_arming_for(KIND_EMERGENCY).armed is True
+
+    class _BrokenGate:
+        def decide(self, _kind: str):
+            raise RuntimeError("verifier unavailable")
+
+    runtime.realtime_voice_identity = _BrokenGate()
+    assert runtime._voice_arming_for("follow").armed is False
+    # Runtime must short-circuit the latch before calling even a broken gate.
+    assert runtime._voice_arming_for(KIND_EMERGENCY).armed is True
 
 
 def test_an_absent_profile_is_none_and_a_broken_one_is_a_refusal(tmp_path: Path) -> None:
@@ -671,9 +704,9 @@ def test_the_doa_is_not_read_at_all_without_a_configured_sector() -> None:
 
 
 # ===========================================================================
-# 6. provenance — every armed turn carries its score
+# 6. provenance — refused turns cannot masquerade as armed
 # ===========================================================================
-def test_every_armed_turn_carries_its_verify_score(runtime) -> None:
+def test_unbound_passing_turn_never_records_false_arming_provenance(runtime) -> None:
     gate = gate_for(OWNER)
     runtime.realtime_voice_identity = gate
     hear(gate, OWNER_ISH)
@@ -684,13 +717,11 @@ def test_every_armed_turn_carries_its_verify_score(runtime) -> None:
         for row in runtime.snapshot()["events"]
         if runtime.VOICE_PROVENANCE_PREFIX in str(row.get("text", ""))
     ]
-    assert rows, "an armed turn wrote no provenance row"
-    from evals.assertions.checks import VOICE_ARMED_RE
-
-    match = VOICE_ARMED_RE.search(rows[-1])
-    assert match is not None, rows[-1]
-    assert match.group("code") == V.CODE_ARMED
-    assert float(match.group("score")) >= float(match.group("threshold"))
+    assert rows == []
+    assert any(
+        "voice identity REFUSED" in str(row.get("text", ""))
+        for row in runtime.snapshot()["events"]
+    )
 
 
 def test_the_latch_writes_a_provenance_row_that_proves_it_was_not_gated(runtime) -> None:
@@ -998,7 +1029,7 @@ def test_a_gateway_without_a_gate_says_so_and_behaves_exactly_as_before() -> Non
     gateway = BrowserAudioGateway(on_audio=lambda _payload: None)
     snapshot = gateway.snapshot()["voice_identity"]
     assert snapshot["enabled"] is False
-    assert "any voice in the room can arm a command" in snapshot["reason"]
+    assert "non-emergency motion is disarmed" in snapshot["reason"]
     assert gateway.voice_identity is None
 
 

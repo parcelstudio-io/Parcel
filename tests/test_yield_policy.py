@@ -35,6 +35,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from commissioned_sim import commissioned_runtime_kwargs
 
 from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
@@ -597,10 +598,12 @@ def _runtime(tmp_path: Path, *, personality_policy: Path | None = None) -> Robot
         detail="deterministic test status",
     )
     backend = _Backend()
+    config_path = _write_config(tmp_path, personality_policy=personality_policy)
     session = RobotRuntime(
-        _write_config(tmp_path, personality_policy=personality_policy),
+        config_path,
         backend,
         audio_status=audio_status,
+        **commissioned_runtime_kwargs(config_path),
     )
     observation = backend.observe()
     session._observation = observation

@@ -330,14 +330,14 @@ def test_every_verdict_code_has_exactly_one_label(code: str, expected: str) -> N
     assert speaker_label(KIND_NONE, verdict, enrolled=True).label == expected
 
 
-def test_an_unenrolled_build_labels_every_row_and_arms_everything() -> None:
-    """Before ``tools/enroll_owner_voice.py`` is run, and after. Both correct."""
+def test_an_unenrolled_build_disarms_commands_but_not_emergency() -> None:
+    """Missing owner evidence never grants authority; stop remains universal."""
 
     gate = _unenrolled_gate()
     for kind in (KIND_EMERGENCY, KIND_NONE, "tool"):
         decision = gate.decide(kind)
         label = gate.label(kind)
-        assert decision.armed is True, f"{kind} must still arm with no profile"
+        assert decision.armed is (kind == KIND_EMERGENCY)
         assert label.enrolled is False
         expected = LABEL_UNGATED if kind == KIND_EMERGENCY else LABEL_UNENROLLED
         assert label.label == expected

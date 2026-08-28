@@ -1,0 +1,191 @@
+{
+  "schema": "parcel.dynamic-social-progress.sources.v1",
+  "accessed": "2026-08-26",
+  "policy": "Primary papers, official project pages, and official documentation only. External results are design evidence and are never reported as Parcel measurements.",
+  "sources": [
+    {
+      "id": "kalman1960",
+      "title": "A New Approach to Linear Filtering and Prediction Problems",
+      "kind": "peer_reviewed_primary_paper",
+      "url": "https://doi.org/10.1115/1.3662552",
+      "used_for": "Constant-velocity state estimation baseline",
+      "limits": "A linear Gaussian tracker does not capture multimodal pedestrian intent."
+    },
+    {
+      "id": "negative_information",
+      "title": "Negative Information for Occlusion Reasoning in Dynamic Extended Multiobject Tracking",
+      "kind": "peer_reviewed_primary_paper",
+      "url": "https://doi.org/10.1109/TRO.2015.2409413",
+      "used_for": "Visibility-aware use of missed detections and occlusion in track-existence reasoning",
+      "limits": "Its sensor/platform results do not calibrate Parcel's Mid-series LiDAR and camera."
+    },
+    {
+      "id": "bayesian_occupancy_filter",
+      "title": "Bayesian Occupancy Filter for Dynamic Environments",
+      "kind": "peer_reviewed_primary_paper",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3658723/",
+      "used_for": "Probabilistic dynamic occupancy and free-space updates",
+      "limits": "Grid-filter assumptions and costs require device-specific evaluation."
+    },
+    {
+      "id": "nav2_obstacle_layer",
+      "title": "Nav2 Obstacle Layer documentation",
+      "kind": "official_documentation",
+      "url": "https://github.com/ros-navigation/docs.nav2.org/blob/rolling/docs/configuration_and_development/configuration_guide/core_servers/costmap_2d/costmap_plugins/obstacle.md",
+      "used_for": "Marking, clearing, raytrace range, persistence, and expected-update semantics",
+      "limits": "Configuration features do not by themselves distinguish occlusion from explicit free space."
+    },
+    {
+      "id": "nav2_collision_monitor",
+      "title": "Nav2 Collision Monitor configuration",
+      "kind": "official_documentation",
+      "url": "https://github.com/ros-navigation/docs.nav2.org/blob/rolling/docs/configuration_and_development/configuration_guide/core_servers/collision_monitor/configuring_collision_monitor_node.md",
+      "used_for": "Independent downstream stop/slow/approach safety shield",
+      "limits": "The monitor is a last-line collision-avoidance component, not a social predictor or safety certification."
+    },
+    {
+      "id": "trajectron_pp",
+      "title": "Trajectron++: Dynamically-Feasible Trajectory Forecasting With Heterogeneous Data",
+      "kind": "peer_reviewed_primary_paper",
+      "url": "https://www.ecva.net/papers/eccv_2020/papers_ECCV/html/3094_ECCV_2020_paper.php",
+      "used_for": "Multimodal, interaction-aware trajectory-distribution challenger",
+      "limits": "Best-of-sample displacement error is insufficient for closed-loop safety or calibration."
+    },
+    {
+      "id": "agentformer",
+      "title": "AgentFormer: Agent-Aware Transformers for Socio-Temporal Multi-Agent Forecasting",
+      "kind": "peer_reviewed_primary_paper",
+      "url": "https://openaccess.thecvf.com/content/ICCV2021/html/Yuan_AgentFormer_Agent-Aware_Transformers_for_Socio-Temporal_Multi-Agent_Forecasting_ICCV_2021_paper.html",
+      "used_for": "Interaction-aware multimodal forecasting challenger",
+      "limits": "Offline trajectory metrics do not establish Go2 closed-loop performance or deadline compliance."
+    },
+    {
+      "id": "adaptive_conformal_mpc",
+      "title": "Adaptive Conformal Prediction for Motion Planning among Dynamic Agents",
+      "kind": "peer_reviewed_primary_paper",
+      "url": "https://proceedings.mlr.press/v211/dixit23a.html",
+      "used_for": "Calibrated multi-step prediction sets coupled to model-predictive control",
+      "limits": "Coverage guarantees depend on assumptions and calibration data; they do not replace the reactive safety shell."
+    },
+    {
+      "id": "orca",
+      "title": "Optimal Reciprocal Collision Avoidance",
+      "kind": "peer_reviewed_primary_paper_and_author_project",
+      "url": "https://gamma-web.iacs.umd.edu/ORCA/",
+      "used_for": "Fast reciprocal velocity-selection baseline",
+      "limits": "Core guarantees assume reciprocal agents and idealized state/geometry; ordinary pedestrians need not cooperate."
+    },
+    {
+      "id": "proactive_deadlock",
+      "title": "Proactive Opinion-Driven Robot Navigation Around Human Movers",
+      "kind": "primary_preprint",
+      "url": "https://arxiv.org/abs/2210.01642",
+      "used_for": "Commitment-based resolution of reciprocal yielding and deadlock",
+      "limits": "Reported experiments do not validate Parcel's sensors, gait, or crowded-sidewalk ODD."
+    },
+    {
+      "id": "freezing_robot",
+      "title": "Unfreezing the Robot: Navigation in Dense, Interacting Crowds",
+      "kind": "peer_reviewed_primary_paper",
+      "url": "https://las.inf.ethz.ch/files/trautman10unfreezing.pdf",
+      "used_for": "Joint interaction prediction as a response to the freezing-robot problem",
+      "limits": "The model and platform differ from a quadruped companion and do not provide a hard safety boundary."
+    },
+    {
+      "id": "group_surfing",
+      "title": "Group Surfing: A Pedestrian-Based Approach to Sidewalk Robot Navigation",
+      "kind": "primary_preprint",
+      "url": "https://arxiv.org/abs/2104.05933",
+      "used_for": "Sidewalk flow/group hypotheses and documented outdoor failure modes",
+      "limits": "Pedestrian flow is a soft navigation cue and never road-crossing authority."
+    },
+    {
+      "id": "side_by_side",
+      "title": "Adaptive Side-by-Side Social Robot Navigation to Approach and Interact with People",
+      "kind": "peer_reviewed_primary_paper",
+      "url": "https://doi.org/10.1109/LRA.2020.2970676",
+      "used_for": "Adaptive companion-formation regions rather than a single point goal",
+      "limits": "Human comfort findings and robot geometry do not define Parcel's physical clearance."
+    },
+    {
+      "id": "social_nav_eval_guidelines",
+      "title": "Principles and Guidelines for Evaluating Social Robot Navigation Algorithms",
+      "kind": "primary_preprint",
+      "url": "https://arxiv.org/abs/2306.16740",
+      "used_for": "Multi-metric, scenario-diverse, human-centered evaluation design",
+      "limits": "Guidelines structure evaluation but do not set a universal safe distance."
+    },
+    {
+      "id": "socnavbench",
+      "title": "SocNavBench: A Grounded Simulation Testing Framework for Evaluating Social Navigation",
+      "kind": "primary_preprint_and_official_repository",
+      "url": "https://github.com/CMU-TBD/SocNavBench",
+      "used_for": "Held-out replay against real pedestrian trajectories and interpretable social metrics",
+      "limits": "Benchmark geometry and embodiment need adaptation to Go2 footprint and companion formations."
+    },
+    {
+      "id": "hunavsim",
+      "title": "HuNavSim: A ROS 2 Human Navigation Simulator for Benchmarking Human-Aware Robot Navigation",
+      "kind": "official_author_repository",
+      "url": "https://github.com/robotics-upo/hunav_sim",
+      "used_for": "Reactive human and group scenarios across simulator backends",
+      "limits": "Synthetic social agents can encode their own behavior assumptions and must not be the only test domain."
+    },
+    {
+      "id": "socialgym2",
+      "title": "SocialGym 2.0",
+      "kind": "official_project_page",
+      "url": "https://amrl.cs.utexas.edu/SocialGym2/",
+      "used_for": "Fast repeatable social-navigation policy sweeps and curricula",
+      "limits": "Planar simulation cannot validate legged stopping, gait sweep, curbs, or door thresholds."
+    },
+    {
+      "id": "elevator_navigation",
+      "title": "A Procedure for Taking a Remotely Controlled Elevator with an Autonomous Mobile Robot Based on 2D LIDAR",
+      "kind": "peer_reviewed_primary_paper",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10347168/",
+      "used_for": "Door-region sensing and explicit elevator boarding/alighting phases",
+      "limits": "A wheeled platform and authored elevator setup do not validate Go2 threshold locomotion or reflective-sensor behavior."
+    },
+    {
+      "id": "pie",
+      "title": "PIE: A Large-Scale Dataset and Models for Pedestrian Intention Estimation and Trajectory Prediction",
+      "kind": "peer_reviewed_primary_paper",
+      "url": "https://openaccess.thecvf.com/content_ICCV_2019/html/Rasouli_PIE_A_Large-Scale_Dataset_and_Models_for_Pedestrian_Intention_Estimation_ICCV_2019_paper.html",
+      "used_for": "Roadside pedestrian-intent features and evaluation data",
+      "limits": "Driver-view crossing intention is not sufficient evidence for a dog robot to enter a road."
+    },
+    {
+      "id": "pidnet",
+      "title": "PIDNet: A Real-Time Semantic Segmentation Network Inspired by PID Controllers",
+      "kind": "peer_reviewed_primary_paper",
+      "url": "https://openaccess.thecvf.com/content/CVPR2023/html/Xu_PIDNet_A_Real-Time_Semantic_Segmentation_Network_Inspired_by_PID_Controllers_CVPR_2023_paper.html",
+      "used_for": "On-device semantic segmentation candidate for sidewalks, curbs, crosswalks, doors, and floor",
+      "limits": "Paper timing and accuracy must be reprofiled on the intended AGX Orin camera pipeline."
+    },
+    {
+      "id": "unitree_rl_lab",
+      "title": "Unitree RL Lab",
+      "kind": "official_vendor_repository",
+      "url": "https://github.com/unitreerobotics/unitree_rl_lab",
+      "used_for": "Vendor Go2 Isaac simulation, sim-to-sim, and sim-to-real locomotion path",
+      "limits": "Vendor simulator support does not qualify Parcel's payload, navigation, perception, or safety."
+    },
+    {
+      "id": "isaac_domain_randomization",
+      "title": "Isaac Sim Domain Randomization documentation",
+      "kind": "official_documentation",
+      "url": "https://docs.isaacsim.omniverse.nvidia.com/5.0.0/py/source/extensions/isaacsim.replicator.domain_randomization/docs/index.html",
+      "used_for": "Sensor, latency, appearance, and environment randomization design",
+      "limits": "Randomization needs measured real distributions; arbitrary variation is not sim-to-real validation."
+    },
+    {
+      "id": "iso_13482",
+      "title": "ISO 13482:2014 Robots and robotic devices — Safety requirements for personal care robots",
+      "kind": "official_standard_page",
+      "url": "https://www.iso.org/standard/53820.html",
+      "used_for": "Hazard-analysis design input for a personal-care-like mobile robot",
+      "limits": "This project has not performed a conformity assessment and makes no compliance claim."
+    }
+  ]
+}

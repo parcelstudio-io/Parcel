@@ -56,6 +56,10 @@ import time
 from collections.abc import Iterable
 
 import pytest
+from commissioned_sim import (
+    authorize_commissioned_voice_binding,
+    commissioned_runtime_kwargs,
+)
 
 from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
@@ -1373,7 +1377,9 @@ modules: []
             connected_output=False,
             detail="r24 stress fixture",
         ),
+        **commissioned_runtime_kwargs(path),
     )
+    authorize_commissioned_voice_binding(runtime)
     runtime._observation = runtime.backend.observe()
     assert runtime.realtime_snapshot().get("constructed") is True, (
         "the lane did not construct — realtime_snapshot would not carry "

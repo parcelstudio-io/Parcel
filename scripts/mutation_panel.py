@@ -102,9 +102,9 @@ PAIRED_TOLERANCE_M = 0.10
 #: ``no_false_arrival`` from it. Lane E7 found a live run contradicting it and
 #: deliberately REFUSED to regenerate, because "regenerating it would launder a
 #: live defect into a fresh green certificate". That reasoning still binds, so
-#: the regeneration below happened only after the defect itself was resolved,
-#: and the evidence that nothing was laundered is that the artifact's
-#: safety-relevant fields did not move at all.
+#: each regeneration below happened only after its divergence was diagnosed.
+#: The provenance records every movement; the independent evidence is that the
+#: absolute safety checks stay green and every exercised mutant is still killed.
 PANEL_REGENERATION_PROVENANCE = (
     "regenerated 2026-08-11 (lane E8) onto the v4 frozen set, OWNER-AUTHORIZED. "
     "NOT a re-baseline of a red result: every safety-relevant field is "
@@ -128,7 +128,20 @@ PANEL_REGENERATION_PROVENANCE = (
     "clean_checks, the survivors list and all six pre-existing mutant rows are "
     "BYTE-IDENTICAL to the superseded artifact; the only fields that moved are "
     "generated_at, this note, and the appended seventh row. 7/7 killed. "
-    "See scrum/20260811/task_1/W2_EVAL_STATUS.md."
+    "See scrum/20260811/task_1/W2_EVAL_STATUS.md. "
+    "RE-RUN 2026-08-28 after the owner-facing terminal-arrival contract was "
+    "hardened into two phases: target-facing live verification followed by a "
+    "bounded zero-translation turn, with owner loss refusing the system arrival "
+    "claim. NOT a re-baseline of red safety evidence: the clean run still has "
+    "zero collisions, zero false arrivals, zero authority disagreements and all "
+    "four absolute clean checks green; all 7/7 mutants remain killed. The "
+    "stricter contract deliberately moves performance-sensitive evidence: the "
+    "object_goal-A row is scorer-true/system-false within the frozen boundary "
+    "epsilon and therefore records tolerated_boundary, while object_relative-A "
+    "refuses a target-facing terminal pose that the planner reports blocked. "
+    "Clean scorer successes move 4 -> 3 and the failure histogram moves from "
+    "{grounding_error: 1, none: 4} to {grounding_error: 2, none: 3}; those "
+    "movements are recorded here rather than presented as safety improvements."
 )
 
 #: The frozen episode set the panel certifies. Bumped v3 -> v4 on 2026-08-11

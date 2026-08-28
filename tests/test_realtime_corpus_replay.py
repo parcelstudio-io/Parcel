@@ -75,7 +75,7 @@ from parcel_robot.realtime.config import RealtimeConfig
 from parcel_robot.realtime.fake_server import FakeRealtimeServer, pcm_tone
 from parcel_robot.realtime.lane import TOOL_REFUSAL_OUTPUT, RealtimeLane
 from parcel_robot.realtime.prompting import (
-    DI_VERSION,
+    DI_V1,
     SI_DIGESTS,
     SI_V1,
     SI_VERSION,
@@ -108,6 +108,7 @@ FIXTURES = load_fixtures()
 #: in ``verify_prompt_plane``). Promoting the corpus to v2 is a re-scrape and an
 #: owner decision — see scrum/20260818/task_2/R5_STATUS.md.
 CORPUS_SI_VERSION = SI_V1
+CORPUS_DI_VERSION = DI_V1
 
 #: Frozen-flagged manifests under ``evals/``, found with a filename pattern
 #: WIDER than the one ``test_ci_gate.py`` uses. Pinning the set here is what
@@ -306,7 +307,7 @@ def test_every_fixture_is_tied_to_the_exact_prompt_that_produced_it(fixture: Fix
 
     verify_prompt_plane(fixture)
     assert fixture.si_version == CORPUS_SI_VERSION
-    assert fixture.di_version == DI_VERSION
+    assert fixture.di_version == CORPUS_DI_VERSION
     assert fixture.model == SCRAPE_MODEL
     assert tuple(fixture.declared_tools) == DECLARED_TOOLS
 
@@ -576,19 +577,19 @@ def test_the_manifest_digests_match_the_files_on_disk() -> None:
 
 
 def test_the_manifest_agrees_with_the_tree_field_by_field() -> None:
-    """Everything except the two SI-provenance fields, which are v1 on purpose.
+    """Everything except captured prompt-provenance fields, which stay historical.
 
     ``diff_manifest()`` rebuilds from the tree, so after the R5 bump it reports
-    ``si_version`` and ``si_digests`` — the manifest records what the capture was
-    run under, and the tree records what ships today. Pinning the drift to
-    EXACTLY those two fields keeps the rest of the manifest (locked file digests,
-    fixture counts, usage totals) as strict as it was: a fixture edited under
-    cover of the SI bump still reddens here.
+    ``si_version``, ``di_version``, and ``si_digests`` — the manifest records
+    what the capture ran under, while the tree records what ships today. Pinning
+    the drift to EXACTLY those three fields keeps locked file digests, fixture
+    counts, and usage totals strict: a fixture edit hidden under a prompt bump
+    still reddens here.
     """
 
-    assert diff_manifest() == ["si_version", "si_digests"], (
-        "only the SI provenance fields may differ from the tree; the corpus is "
-        "an SI-v1 artifact and every other field must still agree exactly"
+    assert diff_manifest() == ["si_version", "di_version", "si_digests"], (
+        "only prompt provenance may differ from the tree; the corpus is an "
+        "SI-v1/DI-v1 artifact and every other field must still agree exactly"
     )
     manifest = load_manifest()
     assert manifest["si_version"] == CORPUS_SI_VERSION
@@ -608,7 +609,7 @@ def test_the_manifest_records_the_model_versions_and_the_captured_scrape() -> No
     manifest = load_manifest()
     assert manifest["model"] == SCRAPE_MODEL
     assert manifest["si_version"] == CORPUS_SI_VERSION
-    assert manifest["di_version"] == DI_VERSION
+    assert manifest["di_version"] == CORPUS_DI_VERSION
     assert manifest["si_digests"]["gentle_companion"] == si_pin(
         "gentle_companion", version=CORPUS_SI_VERSION
     )

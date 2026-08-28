@@ -519,7 +519,7 @@ def test_the_di_carries_the_scene_block_after_the_history_block() -> None:
     text = render_developer_instruction(flags).text
     assert SCENE_BLOCK_HEADER in text
     assert text.index("What you last talked about:") < text.index(SCENE_BLOCK_HEADER)
-    assert "- sidewalk 2.0 m straight ahead" in text
+    assert '- "sidewalk 2.0 m straight ahead"' in text
 
 
 def test_the_di_scene_header_admits_that_it_is_a_snapshot() -> None:

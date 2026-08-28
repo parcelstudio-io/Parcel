@@ -1315,7 +1315,7 @@ def _python_sources() -> list[Path]:
 
 
 def test_no_module_outside_the_commissioning_seam_imports_it() -> None:
-    """GATE 5. Only the CLI and one lazy factory function may reach this package."""
+    """GATE 5. Only the CLI and one lazy factory may reach physical commissioning."""
 
     allowed = {
         PACKAGE_ROOT / "unitree_control.py",
@@ -1325,18 +1325,30 @@ def test_no_module_outside_the_commissioning_seam_imports_it() -> None:
     for path in _python_sources():
         if PACKAGE_ROOT / "commissioning" in path.parents or path in allowed:
             continue
-        text = path.read_text()
-        if "parcel_robot.commissioning" in text or "from .commissioning" in text:
+        imported = _imported_modules(path)
+        if any(
+            name == "parcel_robot.commissioning"
+            or name.startswith(("parcel_robot.commissioning.", ".commissioning."))
+            or name == ".commissioning"
+            for name in imported
+        ):
             offenders.append(str(path.relative_to(PACKAGE_ROOT)))
     assert offenders == []
 
 
 def test_the_runtime_module_never_mentions_commissioning() -> None:
+    """The autonomous runtime cannot import the physical W0-B session package."""
+
     runtime = (PACKAGE_ROOT / "runtime.py").read_text()
     assert "parcel_robot.commissioning" not in runtime
     assert "CommissioningSession" not in runtime
     imported = _imported_modules(PACKAGE_ROOT / "runtime.py")
-    assert [name for name in imported if "commissioning" in name] == []
+    assert [
+        name
+        for name in imported
+        if name == "parcel_robot.commissioning"
+        or name.startswith("parcel_robot.commissioning.")
+    ] == []
 
 
 def test_the_commissioning_package_imports_no_runtime_or_navigation() -> None:

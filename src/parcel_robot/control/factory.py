@@ -161,6 +161,66 @@ def build_unitree_sport_control_manager(
 register_controller_factory("unitree_sport", build_unitree_sport_control_manager)
 
 
+def build_motion_gateway_disarmed_control_manager(
+    config: dict[str, Any],
+    safety_limits: SafetyLimits,
+) -> ControlManager:
+    """Build the product Unix-gateway composition without motion authority.
+
+    This is intentionally suitable only for the first desktop/bench rung.  The
+    nested section must say ``mode: disarmed`` exactly, unknown keys fail
+    closed, and the resulting controller cannot acquire or command the
+    gateway.  ``RobotRuntime`` still requires this manager to be passed through
+    its explicit ``control_manager=`` injection seam; configuration alone can
+    never select a robot-facing controller.
+    """
+
+    from .motion_gateway import build_disarmed_gateway_pair
+
+    gateway = config.get("motion_gateway")
+    if not isinstance(gateway, dict):
+        raise TypeError("control.motion_gateway must be a mapping")
+    allowed = {"mode", "socket_path", "writer_id", "timeout_s"}
+    unknown = sorted(set(gateway) - allowed)
+    if unknown:
+        raise ValueError(f"unknown control.motion_gateway keys: {', '.join(unknown)}")
+    if gateway.get("mode") != "disarmed":
+        raise ValueError("control.motion_gateway.mode must be exactly 'disarmed'")
+    socket_path = gateway.get("socket_path")
+    if not isinstance(socket_path, str) or not socket_path.strip():
+        raise ValueError("control.motion_gateway.socket_path must be a non-empty string")
+    writer_id = gateway.get("writer_id", "parcel-runtime")
+    if not isinstance(writer_id, str):
+        raise TypeError("control.motion_gateway.writer_id must be a string")
+    raw_timeout_s = gateway.get("timeout_s", 2.0)
+    if isinstance(raw_timeout_s, bool) or not isinstance(raw_timeout_s, (int, float)):
+        raise TypeError("control.motion_gateway.timeout_s must be numeric")
+    timeout_s = float(raw_timeout_s)
+    timing = _timing(config)
+    if timeout_s > timing.io_quiesce_timeout_s:
+        raise ValueError(
+            "control.motion_gateway.timeout_s cannot exceed control.io_quiesce_timeout_s"
+        )
+    controller, state_source = build_disarmed_gateway_pair(
+        socket_path.strip(),
+        writer_id=writer_id,
+        timeout_s=timeout_s,
+        state_timeout_s=timing.state_timeout_s,
+    )
+    return ControlManager(
+        controller,
+        state_source,
+        limits=_limits(config, safety_limits),
+        timing=timing,
+    )
+
+
+register_controller_factory(
+    "motion_gateway_disarmed",
+    build_motion_gateway_disarmed_control_manager,
+)
+
+
 # ---------------------------------------------------------------------------
 # Commissioning-only path (card W0-B).
 #

@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from commissioned_sim import commissioned_runtime_kwargs
 
 from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
@@ -178,7 +179,12 @@ def _arm_navigation(rt: RobotRuntime, directive: str = "walk to the sidewalk"):
 def test_pause_resume_retains_nav_progress(
     runtime_config: Path, audio_status: AudioDeviceStatus
 ) -> None:
-    rt = RobotRuntime(runtime_config, _Backend(), audio_status=audio_status)
+    rt = RobotRuntime(
+        runtime_config,
+        _Backend(),
+        audio_status=audio_status,
+        **commissioned_runtime_kwargs(runtime_config),
+    )
     try:
         _fresh_obs(rt)
         nav, mission = _arm_navigation(rt)
@@ -201,7 +207,12 @@ def test_pause_resume_retains_nav_progress(
 def test_stale_observation_blocks_resume(
     runtime_config: Path, audio_status: AudioDeviceStatus
 ) -> None:
-    rt = RobotRuntime(runtime_config, _Backend(), audio_status=audio_status)
+    rt = RobotRuntime(
+        runtime_config,
+        _Backend(),
+        audio_status=audio_status,
+        **commissioned_runtime_kwargs(runtime_config),
+    )
     try:
         nav, _mission = _arm_navigation(rt)
         rt.pause_navigation(reason="owner_summons")
@@ -223,7 +234,12 @@ def test_stale_observation_blocks_resume(
 def test_expired_intent_does_not_silently_resume(
     runtime_config: Path, audio_status: AudioDeviceStatus
 ) -> None:
-    rt = RobotRuntime(runtime_config, _Backend(), audio_status=audio_status)
+    rt = RobotRuntime(
+        runtime_config,
+        _Backend(),
+        audio_status=audio_status,
+        **commissioned_runtime_kwargs(runtime_config),
+    )
     try:
         _fresh_obs(rt)
         nav, _mission = _arm_navigation(rt)
@@ -274,7 +290,12 @@ def test_navigate_redispatch_consumes_resume_intent(
         ),
     )
     validated = PlanValidator(SkillContractRegistry.default()).validate(plan, _brain_snap())
-    rt = RobotRuntime(runtime_config, _Backend(), audio_status=audio_status)
+    rt = RobotRuntime(
+        runtime_config,
+        _Backend(),
+        audio_status=audio_status,
+        **commissioned_runtime_kwargs(runtime_config),
+    )
     try:
         _fresh_obs(rt)
         rt.task_executive.submit(validated)
@@ -311,7 +332,12 @@ def test_navigate_redispatch_consumes_resume_intent(
 def test_search_to_follow_uses_stored_intent(
     runtime_config: Path, audio_status: AudioDeviceStatus
 ) -> None:
-    rt = RobotRuntime(runtime_config, _Backend(), audio_status=audio_status)
+    rt = RobotRuntime(
+        runtime_config,
+        _Backend(),
+        audio_status=audio_status,
+        **commissioned_runtime_kwargs(runtime_config),
+    )
     try:
         _fresh_obs(rt)
         # 1.8 -> 2.0 (2026-08-10, owner-authorized person-clearance retune):
@@ -345,7 +371,12 @@ def test_search_to_follow_uses_stored_intent(
 def test_expired_follow_intent_does_not_resume_after_search(
     runtime_config: Path, audio_status: AudioDeviceStatus
 ) -> None:
-    rt = RobotRuntime(runtime_config, _Backend(), audio_status=audio_status)
+    rt = RobotRuntime(
+        runtime_config,
+        _Backend(),
+        audio_status=audio_status,
+        **commissioned_runtime_kwargs(runtime_config),
+    )
     try:
         _fresh_obs(rt)
         rt._enable_owner_follow("direct")

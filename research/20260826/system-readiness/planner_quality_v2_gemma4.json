@@ -1,0 +1,1159 @@
+{
+  "aggregate": {
+    "case_count": 5,
+    "failed_case_count": 2,
+    "latency_ms": {
+      "model_http": {
+        "count": 5,
+        "maximum": 8015.824,
+        "mean": 6423.373,
+        "median": 6000.193,
+        "minimum": 5661.162,
+        "p95_nearest_rank": 8015.824
+      },
+      "model_ttft": {
+        "count": 5,
+        "maximum": 939.741,
+        "mean": 851.703,
+        "median": 882.203,
+        "minimum": 692.558,
+        "p95_nearest_rank": 939.741
+      },
+      "runner_case": {
+        "count": 5,
+        "maximum": 8016.555,
+        "mean": 6423.972,
+        "median": 6000.778,
+        "minimum": 5661.699,
+        "p95_nearest_rank": 8016.555
+      }
+    },
+    "passed_case_count": 3,
+    "physical_navigation_episode_count": 0,
+    "physical_navigation_success_rate": null,
+    "plan_quality_accuracy": 0.6,
+    "tokens": {
+      "completion": {
+        "count": 5,
+        "maximum": 788.0,
+        "mean": 603.0,
+        "median": 548.0,
+        "minimum": 511.0,
+        "p95_nearest_rank": 788.0
+      },
+      "prompt": {
+        "count": 5,
+        "maximum": 2291.0,
+        "mean": 2236.8,
+        "median": 2223.0,
+        "minimum": 2217.0,
+        "p95_nearest_rank": 2291.0
+      },
+      "total": {
+        "count": 5,
+        "maximum": 3079.0,
+        "mean": 2839.8,
+        "median": 2776.0,
+        "minimum": 2733.0,
+        "p95_nearest_rank": 3079.0
+      }
+    }
+  },
+  "cases": [
+    {
+      "admitted_plan": {
+        "goal": {
+          "relation": "inside",
+          "target": {
+            "kind": "semantic_region",
+            "query": "sidewalk"
+          },
+          "tolerance_m": 0.0
+        },
+        "invariants": [],
+        "plan_revision": 1,
+        "requested_interrupt": "at_checkpoint",
+        "schema_version": 1,
+        "source_turn_id": "planner-v2-sidewalk_then_hold",
+        "steps": [
+          {
+            "arguments": {
+              "directive": "sidewalk"
+            },
+            "id": "step_1",
+            "interruptibility": "checkpoint",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available",
+              "camera_fresh",
+              "lidar_fresh"
+            ],
+            "recovery": [
+              "safe_stop"
+            ],
+            "resources": [
+              "base",
+              "attention"
+            ],
+            "skill": "NavigateTo",
+            "success": {
+              "confidence_min": null,
+              "fact": "inside",
+              "target": "sidewalk",
+              "tolerance_m": null
+            },
+            "timeout_s": 240.0
+          },
+          {
+            "arguments": {},
+            "id": "step_2",
+            "interruptibility": "immediate",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available"
+            ],
+            "recovery": [
+              "safe_stop"
+            ],
+            "resources": [
+              "base"
+            ],
+            "skill": "Hold",
+            "success": {
+              "confidence_min": null,
+              "fact": "motion_stopped",
+              "target": null,
+              "tolerance_m": null
+            },
+            "timeout_s": 10.0
+          }
+        ],
+        "task_id": "parcel-task-2b2be1ca3cc652a391904083"
+      },
+      "case_id": "sidewalk_then_hold",
+      "failures": [],
+      "intent_frame": {
+        "affect_evidence": null,
+        "confidence": 0.92,
+        "matched_rule": "compound_physical_request",
+        "original_transcript_ref": "turn:planner-v2-sidewalk_then_hold:final",
+        "requires_fresh_scene": true,
+        "route": "deliberative_plan",
+        "router_version": "deterministic-v1.2",
+        "schema_version": 1,
+        "spatial_references": [
+          "sidewalk"
+        ],
+        "speech_act": "request",
+        "transcript_sha256": "6a53b8d851ddb2df4452497aff86f77a7288d69da6761c623956c5ba9e0328c6",
+        "turn_id": "planner-v2-sidewalk_then_hold",
+        "urgency_cues": []
+      },
+      "passed": true,
+      "provider_error": null,
+      "provider_metrics": {
+        "completion_tokens": 548,
+        "model_http_ms": 5753.336,
+        "model_json_validation_ms": 0.211,
+        "model_mode": "plan",
+        "model_output_bytes": 1531,
+        "model_output_contract": "plan_ir_v1",
+        "model_streaming": true,
+        "model_ttft_ms": 692.558,
+        "prompt_tokens": 2223,
+        "reasoning_first_output_estimated": false,
+        "runner_case_elapsed_ms": 5753.934,
+        "total_tokens": 2771
+      },
+      "raw_plan": {
+        "goal": {
+          "relation": "inside",
+          "target": {
+            "kind": "semantic_region",
+            "query": "sidewalk"
+          },
+          "tolerance_m": 0.0
+        },
+        "invariants": [],
+        "plan_revision": 1,
+        "requested_interrupt": "at_checkpoint",
+        "schema_version": 1,
+        "source_turn_id": "planner-v2-sidewalk_then_hold",
+        "steps": [
+          {
+            "arguments": {
+              "directive": "sidewalk"
+            },
+            "id": "step_1",
+            "interruptibility": "checkpoint",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available",
+              "camera_fresh",
+              "lidar_fresh",
+              "target_grounded"
+            ],
+            "recovery": [
+              "alternate_candidate",
+              "ask_user",
+              "replan",
+              "rescan",
+              "safe_stop"
+            ],
+            "resources": [
+              "base",
+              "attention"
+            ],
+            "skill": "NavigateTo",
+            "success": {
+              "confidence_min": 0.9,
+              "fact": "inside",
+              "target": "sidewalk",
+              "tolerance_m": null
+            },
+            "timeout_s": 240.0
+          },
+          {
+            "arguments": {},
+            "id": "step_2",
+            "interruptibility": "immediate",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available"
+            ],
+            "recovery": [
+              "safe_stop"
+            ],
+            "resources": [
+              "base"
+            ],
+            "skill": "Hold",
+            "success": {
+              "confidence_min": 0.9,
+              "fact": "motion_stopped",
+              "target": null,
+              "tolerance_m": null
+            },
+            "timeout_s": 10.0
+          }
+        ],
+        "task_id": "go_to_sidewalk_then_hold"
+      },
+      "snapshot_id": "planner-v2-snapshot-1",
+      "validation": {
+        "code": null,
+        "effective_invariants": [
+          "keep_collision_margin",
+          "avoid_road_when_not_crossing",
+          "stop_on_stale_perception",
+          "yield_to_people",
+          "do_not_interrupt_critical_task"
+        ],
+        "plan_sha256": "d764a88916a2532c1b94b9a3c613866f18e27ecd18d151842736d9f8ca922da5",
+        "status": "accepted"
+      }
+    },
+    {
+      "admitted_plan": {
+        "goal": {
+          "relation": "near",
+          "target": {
+            "kind": "semantic_object",
+            "query": "lamppost"
+          },
+          "tolerance_m": 0.0
+        },
+        "invariants": [],
+        "plan_revision": 1,
+        "requested_interrupt": "at_checkpoint",
+        "schema_version": 1,
+        "source_turn_id": "planner-v2-sidewalk_then_lamppost",
+        "steps": [
+          {
+            "arguments": {
+              "directive": "sidewalk"
+            },
+            "id": "step_1",
+            "interruptibility": "checkpoint",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available",
+              "camera_fresh",
+              "lidar_fresh"
+            ],
+            "recovery": [
+              "safe_stop"
+            ],
+            "resources": [
+              "base",
+              "attention"
+            ],
+            "skill": "NavigateTo",
+            "success": {
+              "confidence_min": null,
+              "fact": "inside",
+              "target": "sidewalk",
+              "tolerance_m": null
+            },
+            "timeout_s": 240.0
+          },
+          {
+            "arguments": {
+              "directive": "lamppost"
+            },
+            "id": "step_2",
+            "interruptibility": "checkpoint",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available",
+              "camera_fresh",
+              "lidar_fresh"
+            ],
+            "recovery": [
+              "safe_stop"
+            ],
+            "resources": [
+              "base",
+              "attention"
+            ],
+            "skill": "NavigateTo",
+            "success": {
+              "confidence_min": null,
+              "fact": "near",
+              "target": "lamppost",
+              "tolerance_m": null
+            },
+            "timeout_s": 240.0
+          },
+          {
+            "arguments": {},
+            "id": "step_3",
+            "interruptibility": "immediate",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available"
+            ],
+            "recovery": [
+              "safe_stop"
+            ],
+            "resources": [
+              "base"
+            ],
+            "skill": "Hold",
+            "success": {
+              "confidence_min": null,
+              "fact": "motion_stopped",
+              "target": null,
+              "tolerance_m": null
+            },
+            "timeout_s": 10.0
+          }
+        ],
+        "task_id": "parcel-task-a7044ea956a51a694c7d4388"
+      },
+      "case_id": "sidewalk_then_lamppost",
+      "failures": [],
+      "intent_frame": {
+        "affect_evidence": null,
+        "confidence": 0.92,
+        "matched_rule": "compound_physical_request",
+        "original_transcript_ref": "turn:planner-v2-sidewalk_then_lamppost:final",
+        "requires_fresh_scene": true,
+        "route": "deliberative_plan",
+        "router_version": "deterministic-v1.2",
+        "schema_version": 1,
+        "spatial_references": [
+          "sidewalk",
+          "lamppost"
+        ],
+        "speech_act": "request",
+        "transcript_sha256": "ec18077135771b67fa7623bf1de2cd986271aead1a680f03aaee8a29e969f63c",
+        "turn_id": "planner-v2-sidewalk_then_lamppost",
+        "urgency_cues": []
+      },
+      "passed": true,
+      "provider_error": null,
+      "provider_metrics": {
+        "completion_tokens": 788,
+        "model_http_ms": 8015.824,
+        "model_json_validation_ms": 0.223,
+        "model_mode": "plan",
+        "model_output_bytes": 2245,
+        "model_output_contract": "plan_ir_v1",
+        "model_streaming": true,
+        "model_ttft_ms": 816.621,
+        "prompt_tokens": 2291,
+        "reasoning_first_output_estimated": false,
+        "runner_case_elapsed_ms": 8016.555,
+        "total_tokens": 3079
+      },
+      "raw_plan": {
+        "goal": {
+          "relation": "near",
+          "target": {
+            "kind": "semantic_object",
+            "query": "lamppost"
+          },
+          "tolerance_m": 0.0
+        },
+        "invariants": [],
+        "plan_revision": 1,
+        "requested_interrupt": "at_checkpoint",
+        "schema_version": 1,
+        "source_turn_id": "planner-v2-sidewalk_then_lamppost:final",
+        "steps": [
+          {
+            "arguments": {
+              "directive": "sidewalk"
+            },
+            "id": "step_1",
+            "interruptibility": "checkpoint",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available",
+              "camera_fresh",
+              "lidar_fresh",
+              "target_grounded"
+            ],
+            "recovery": [
+              "alternate_candidate",
+              "ask_user",
+              "replan",
+              "rescan",
+              "safe_stop"
+            ],
+            "resources": [
+              "base",
+              "attention"
+            ],
+            "skill": "NavigateTo",
+            "success": {
+              "confidence_min": 0.9,
+              "fact": "inside",
+              "target": "sidewalk",
+              "tolerance_m": null
+            },
+            "timeout_s": 240.0
+          },
+          {
+            "arguments": {
+              "directive": "lamppost"
+            },
+            "id": "step_2",
+            "interruptibility": "checkpoint",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available",
+              "camera_fresh",
+              "lidar_fresh",
+              "target_grounded"
+            ],
+            "recovery": [
+              "alternate_candidate",
+              "ask_user",
+              "replan",
+              "rescan",
+              "safe_stop"
+            ],
+            "resources": [
+              "base",
+              "attention"
+            ],
+            "skill": "NavigateTo",
+            "success": {
+              "confidence_min": 0.9,
+              "fact": "near",
+              "target": "lamppost",
+              "tolerance_m": null
+            },
+            "timeout_s": 240.0
+          },
+          {
+            "arguments": {},
+            "id": "step_3",
+            "interruptibility": "immediate",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available"
+            ],
+            "recovery": [
+              "safe_stop"
+            ],
+            "resources": [
+              "base"
+            ],
+            "skill": "Hold",
+            "success": {
+              "confidence_min": 0.9,
+              "fact": "motion_stopped",
+              "target": null,
+              "tolerance_m": null
+            },
+            "timeout_s": 10.0
+          }
+        ],
+        "task_id": "walk_to_sidewalk_then_wait_by_lamppost"
+      },
+      "snapshot_id": "planner-v2-snapshot-2",
+      "validation": {
+        "code": null,
+        "effective_invariants": [
+          "keep_collision_margin",
+          "avoid_road_when_not_crossing",
+          "stop_on_stale_perception",
+          "yield_to_people",
+          "do_not_interrupt_critical_task"
+        ],
+        "plan_sha256": "01d0a7f4c9a98e928ace987ab5ecf5e615d57b72d1a536929deb18640aac4441",
+        "status": "accepted"
+      }
+    },
+    {
+      "admitted_plan": {
+        "goal": {
+          "relation": "relative",
+          "target": {
+            "kind": "owner",
+            "query": "owner"
+          },
+          "tolerance_m": 0.0
+        },
+        "invariants": [],
+        "plan_revision": 1,
+        "requested_interrupt": "at_checkpoint",
+        "schema_version": 1,
+        "source_turn_id": "planner-v2-five_steps_away_then_hold",
+        "steps": [
+          {
+            "arguments": {
+              "direction": "away",
+              "steps": 5
+            },
+            "id": "step_1",
+            "interruptibility": "checkpoint",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available",
+              "lidar_fresh"
+            ],
+            "recovery": [
+              "safe_stop"
+            ],
+            "resources": [
+              "base"
+            ],
+            "skill": "MoveRelative",
+            "success": {
+              "confidence_min": null,
+              "fact": "distance_travelled",
+              "target": null,
+              "tolerance_m": null
+            },
+            "timeout_s": 60.0
+          },
+          {
+            "arguments": {},
+            "id": "step_2",
+            "interruptibility": "immediate",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available"
+            ],
+            "recovery": [
+              "safe_stop"
+            ],
+            "resources": [
+              "base"
+            ],
+            "skill": "Hold",
+            "success": {
+              "confidence_min": null,
+              "fact": "motion_stopped",
+              "target": null,
+              "tolerance_m": null
+            },
+            "timeout_s": 10.0
+          }
+        ],
+        "task_id": "parcel-task-ada06901f9b3af5d73d004d7"
+      },
+      "case_id": "five_steps_away_then_hold",
+      "failures": [
+        "validation"
+      ],
+      "intent_frame": {
+        "affect_evidence": null,
+        "confidence": 0.92,
+        "matched_rule": "compound_physical_request",
+        "original_transcript_ref": "turn:planner-v2-five_steps_away_then_hold:final",
+        "requires_fresh_scene": true,
+        "route": "deliberative_plan",
+        "router_version": "deterministic-v1.2",
+        "schema_version": 1,
+        "spatial_references": [
+          "owner"
+        ],
+        "speech_act": "request",
+        "transcript_sha256": "b1729dbe34123cbceff4ef13e36340a0dd91e0b3385eb7171772b266d9935751",
+        "turn_id": "planner-v2-five_steps_away_then_hold",
+        "urgency_cues": []
+      },
+      "passed": false,
+      "provider_error": null,
+      "provider_metrics": {
+        "completion_tokens": 511,
+        "model_http_ms": 5661.162,
+        "model_json_validation_ms": 0.169,
+        "model_mode": "plan",
+        "model_output_bytes": 1405,
+        "model_output_contract": "plan_ir_v1",
+        "model_streaming": true,
+        "model_ttft_ms": 882.203,
+        "prompt_tokens": 2222,
+        "reasoning_first_output_estimated": false,
+        "runner_case_elapsed_ms": 5661.699,
+        "total_tokens": 2733
+      },
+      "raw_plan": {
+        "goal": {
+          "relation": "relative",
+          "target": {
+            "kind": "owner",
+            "query": "owner"
+          },
+          "tolerance_m": 0.0
+        },
+        "invariants": [],
+        "plan_revision": 1,
+        "requested_interrupt": "at_checkpoint",
+        "schema_version": 1,
+        "source_turn_id": "planner-v2-five_steps_away_then_hold:final",
+        "steps": [
+          {
+            "arguments": {
+              "direction": "away",
+              "steps": 5
+            },
+            "id": "step_1",
+            "interruptibility": "checkpoint",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available",
+              "lidar_fresh"
+            ],
+            "recovery": [
+              "safe_stop",
+              "wait"
+            ],
+            "resources": [
+              "base"
+            ],
+            "skill": "MoveRelative",
+            "success": {
+              "confidence_min": 1.0,
+              "fact": "distance_travelled",
+              "target": null,
+              "tolerance_m": null
+            },
+            "timeout_s": 60.0
+          },
+          {
+            "arguments": {},
+            "id": "step_2",
+            "interruptibility": "immediate",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available"
+            ],
+            "recovery": [
+              "safe_stop"
+            ],
+            "resources": [
+              "base"
+            ],
+            "skill": "Hold",
+            "success": {
+              "confidence_min": 1.0,
+              "fact": "motion_stopped",
+              "target": null,
+              "tolerance_m": null
+            },
+            "timeout_s": 10.0
+          }
+        ],
+        "task_id": "move_away_and_hold"
+      },
+      "snapshot_id": "planner-v2-snapshot-3",
+      "validation": {
+        "code": "invalid_argument_value",
+        "effective_invariants": [],
+        "plan_sha256": null,
+        "status": "rejected"
+      }
+    },
+    {
+      "admitted_plan": {
+        "goal": {
+          "relation": "behind",
+          "target": {
+            "kind": "owner",
+            "query": "owner"
+          },
+          "tolerance_m": 0.0
+        },
+        "invariants": [],
+        "plan_revision": 1,
+        "requested_interrupt": "at_checkpoint",
+        "schema_version": 1,
+        "source_turn_id": "planner-v2-orbit_then_follow_behind",
+        "steps": [
+          {
+            "arguments": {
+              "direction": "clockwise",
+              "revolutions": 1,
+              "size": "medium"
+            },
+            "id": "step_1",
+            "interruptibility": "checkpoint",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available",
+              "camera_fresh",
+              "lidar_fresh",
+              "owner_visible"
+            ],
+            "recovery": [
+              "safe_stop"
+            ],
+            "resources": [
+              "base",
+              "attention"
+            ],
+            "skill": "OrbitOwner",
+            "success": {
+              "confidence_min": null,
+              "fact": "orbit_complete",
+              "target": "owner",
+              "tolerance_m": null
+            },
+            "timeout_s": 180.0
+          },
+          {
+            "arguments": {
+              "distance_m": 1.0,
+              "relation": "behind"
+            },
+            "id": "step_2",
+            "interruptibility": "checkpoint",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available",
+              "camera_fresh",
+              "lidar_fresh",
+              "owner_heading_available",
+              "owner_visible"
+            ],
+            "recovery": [
+              "safe_stop"
+            ],
+            "resources": [
+              "base",
+              "attention"
+            ],
+            "skill": "FollowFormation",
+            "success": {
+              "confidence_min": null,
+              "fact": "behind",
+              "target": "owner",
+              "tolerance_m": null
+            },
+            "timeout_s": 300.0
+          }
+        ],
+        "task_id": "parcel-task-84aff9ccae34c12b36e455d1"
+      },
+      "case_id": "orbit_then_follow_behind",
+      "failures": [
+        "validation"
+      ],
+      "intent_frame": {
+        "affect_evidence": null,
+        "confidence": 0.92,
+        "matched_rule": "compound_physical_request",
+        "original_transcript_ref": "turn:planner-v2-orbit_then_follow_behind:final",
+        "requires_fresh_scene": true,
+        "route": "deliberative_plan",
+        "router_version": "deterministic-v1.2",
+        "schema_version": 1,
+        "spatial_references": [
+          "owner"
+        ],
+        "speech_act": "request",
+        "transcript_sha256": "d4d50564364f03ca79958bb21fcafd97cb5c16ad9adcb5bcdceffa8f301177a1",
+        "turn_id": "planner-v2-orbit_then_follow_behind",
+        "urgency_cues": []
+      },
+      "passed": false,
+      "provider_error": null,
+      "provider_metrics": {
+        "completion_tokens": 623,
+        "model_http_ms": 6686.352,
+        "model_json_validation_ms": 0.186,
+        "model_mode": "plan",
+        "model_output_bytes": 1767,
+        "model_output_contract": "plan_ir_v1",
+        "model_streaming": true,
+        "model_ttft_ms": 939.741,
+        "prompt_tokens": 2217,
+        "reasoning_first_output_estimated": false,
+        "runner_case_elapsed_ms": 6686.896,
+        "total_tokens": 2840
+      },
+      "raw_plan": {
+        "goal": {
+          "relation": "behind",
+          "target": {
+            "kind": "owner",
+            "query": "owner"
+          },
+          "tolerance_m": 0.0
+        },
+        "invariants": [],
+        "plan_revision": 1,
+        "requested_interrupt": "at_checkpoint",
+        "schema_version": 1,
+        "source_turn_id": "planner-v2-orbit_then_follow_behind:final",
+        "steps": [
+          {
+            "arguments": {
+              "direction": "clockwise",
+              "revolutions": 1,
+              "size": "medium"
+            },
+            "id": "step_1",
+            "interruptibility": "checkpoint",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available",
+              "camera_fresh",
+              "lidar_fresh",
+              "owner_visible"
+            ],
+            "recovery": [
+              "reacquire_owner",
+              "replan",
+              "safe_stop"
+            ],
+            "resources": [
+              "base",
+              "attention"
+            ],
+            "skill": "OrbitOwner",
+            "success": {
+              "confidence_min": 1.0,
+              "fact": "orbit_complete",
+              "target": null,
+              "tolerance_m": null
+            },
+            "timeout_s": 180.0
+          },
+          {
+            "arguments": {
+              "distance_m": 1.0,
+              "relation": "behind"
+            },
+            "id": "step_2",
+            "interruptibility": "checkpoint",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available",
+              "camera_fresh",
+              "lidar_fresh",
+              "owner_visible"
+            ],
+            "recovery": [
+              "reacquire_owner",
+              "replan",
+              "safe_stop",
+              "wait"
+            ],
+            "resources": [
+              "base",
+              "attention"
+            ],
+            "skill": "FollowFormation",
+            "success": {
+              "confidence_min": 1.0,
+              "fact": "following",
+              "target": "owner",
+              "tolerance_m": null
+            },
+            "timeout_s": 300.0
+          }
+        ],
+        "task_id": "orbit_then_follow_behind"
+      },
+      "snapshot_id": "planner-v2-snapshot-4",
+      "validation": {
+        "code": "invalid_argument_value",
+        "effective_invariants": [],
+        "plan_sha256": null,
+        "status": "rejected"
+      }
+    },
+    {
+      "admitted_plan": {
+        "goal": {
+          "relation": "near",
+          "target": {
+            "kind": "semantic_object",
+            "query": "lamppost"
+          },
+          "tolerance_m": 0.0
+        },
+        "invariants": [],
+        "plan_revision": 2,
+        "requested_interrupt": "at_checkpoint",
+        "schema_version": 1,
+        "source_turn_id": "planner-v2-correct_active_task_to_lamppost",
+        "steps": [
+          {
+            "arguments": {
+              "directive": "lamppost"
+            },
+            "id": "step_1",
+            "interruptibility": "checkpoint",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available",
+              "camera_fresh",
+              "lidar_fresh"
+            ],
+            "recovery": [
+              "safe_stop"
+            ],
+            "resources": [
+              "base",
+              "attention"
+            ],
+            "skill": "NavigateTo",
+            "success": {
+              "confidence_min": null,
+              "fact": "near",
+              "target": "lamppost",
+              "tolerance_m": null
+            },
+            "timeout_s": 240.0
+          },
+          {
+            "arguments": {},
+            "id": "step_2",
+            "interruptibility": "immediate",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available"
+            ],
+            "recovery": [
+              "safe_stop"
+            ],
+            "resources": [
+              "base"
+            ],
+            "skill": "Hold",
+            "success": {
+              "confidence_min": null,
+              "fact": "motion_stopped",
+              "target": null,
+              "tolerance_m": null
+            },
+            "timeout_s": 10.0
+          }
+        ],
+        "task_id": "active-navigation"
+      },
+      "case_id": "correct_active_task_to_lamppost",
+      "failures": [],
+      "intent_frame": {
+        "affect_evidence": null,
+        "confidence": 0.98,
+        "matched_rule": "task_correction",
+        "original_transcript_ref": "turn:planner-v2-correct_active_task_to_lamppost:final",
+        "requires_fresh_scene": true,
+        "route": "deliberative_plan",
+        "router_version": "deterministic-v1.2",
+        "schema_version": 1,
+        "spatial_references": [
+          "lamppost"
+        ],
+        "speech_act": "correction",
+        "transcript_sha256": "e4df027840d3e0cc2eaaeb07678afe791ced730ca4f2ac5476536ef1bed5cb73",
+        "turn_id": "planner-v2-correct_active_task_to_lamppost",
+        "urgency_cues": []
+      },
+      "passed": true,
+      "provider_error": null,
+      "provider_metrics": {
+        "completion_tokens": 545,
+        "model_http_ms": 6000.193,
+        "model_json_validation_ms": 0.167,
+        "model_mode": "plan",
+        "model_output_bytes": 1502,
+        "model_output_contract": "plan_ir_v1",
+        "model_streaming": true,
+        "model_ttft_ms": 927.394,
+        "prompt_tokens": 2231,
+        "reasoning_first_output_estimated": false,
+        "runner_case_elapsed_ms": 6000.778,
+        "total_tokens": 2776
+      },
+      "raw_plan": {
+        "goal": {
+          "relation": "near",
+          "target": {
+            "kind": "semantic_object",
+            "query": "lamppost"
+          },
+          "tolerance_m": 0.0
+        },
+        "invariants": [],
+        "plan_revision": 2,
+        "requested_interrupt": "at_checkpoint",
+        "schema_version": 1,
+        "source_turn_id": "planner-v2-correct_active_task_to_lamppost:final",
+        "steps": [
+          {
+            "arguments": {
+              "directive": "lamppost"
+            },
+            "id": "step-1",
+            "interruptibility": "checkpoint",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available",
+              "camera_fresh",
+              "lidar_fresh",
+              "target_grounded"
+            ],
+            "recovery": [
+              "replan",
+              "rescan",
+              "safe_stop"
+            ],
+            "resources": [
+              "base",
+              "attention"
+            ],
+            "skill": "NavigateTo",
+            "success": {
+              "confidence_min": 0.9,
+              "fact": "near",
+              "target": "lamppost",
+              "tolerance_m": null
+            },
+            "timeout_s": 240.0
+          },
+          {
+            "arguments": {},
+            "id": "step-2",
+            "interruptibility": "immediate",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available"
+            ],
+            "recovery": [
+              "safe_stop"
+            ],
+            "resources": [
+              "base"
+            ],
+            "skill": "Hold",
+            "success": {
+              "confidence_min": 0.9,
+              "fact": "motion_stopped",
+              "target": null,
+              "tolerance_m": null
+            },
+            "timeout_s": 10.0
+          }
+        ],
+        "task_id": "correct_active_task_to_lamppost"
+      },
+      "snapshot_id": "planner-v2-snapshot-5",
+      "validation": {
+        "code": null,
+        "effective_invariants": [
+          "keep_collision_margin",
+          "avoid_road_when_not_crossing",
+          "stop_on_stale_perception",
+          "yield_to_people",
+          "do_not_interrupt_critical_task"
+        ],
+        "plan_sha256": "1c877f534f7bf088d601b378d8edf62c31acba6a1d1ee8414730ea197f8a4229",
+        "status": "accepted"
+      }
+    }
+  ],
+  "change_description": "2026-08-26 current frozen PlanIR quality remeasurement",
+  "claims": {
+    "does_not_prove": [
+      "semantic skill execution or physical navigation success",
+      "camera or LiDAR perception accuracy",
+      "collision avoidance, Unitree locomotion, or conversation quality"
+    ],
+    "proves": [
+      "live or fake provider PlanIR quality on the selected frozen compound cases",
+      "runtime-router, admitted-schema, fresh-snapshot, and validator compatibility",
+      "system compilation of PlanIR controller boilerplate"
+    ]
+  },
+  "corpus": {
+    "baseline_planner_prompt_sha256": "4ca75618d5765d4e6812c3d18826dc77ec989969064290d4a336db496896914c",
+    "cases_sha256": "6717f2fbda80920133f20f4584630f78748b6146c17222600bf71471e9272d1a",
+    "context_binding_version": "trusted-envelope-v1",
+    "contract_compiler_version": "semantic-planir-compiler-v1",
+    "frozen": true,
+    "plan_schema_sha256": "a4bb6d64cbf92716d3590e46e385a518f815eda0c3a3a121fd98e1a00b1218ba",
+    "planner_prompt": "prompts/system/planner_v2.md",
+    "planner_prompt_is_manifest_default": true,
+    "planner_prompt_sha256": "4ca75618d5765d4e6812c3d18826dc77ec989969064290d4a336db496896914c",
+    "selected_case_ids": [
+      "sidewalk_then_hold",
+      "sidewalk_then_lamppost",
+      "five_steps_away_then_hold",
+      "orbit_then_follow_behind",
+      "correct_active_task_to_lamppost"
+    ]
+  },
+  "inference": {
+    "device": {
+      "gpu_layers": 999,
+      "profile": "cuda:rtx5000ada:sm89:31-of-31-layers",
+      "threads": 16
+    },
+    "generation": {
+      "plan_enable_thinking": false,
+      "plan_max_tokens": 1024,
+      "plan_temperature": 0.0,
+      "plan_timeout_s": 90.0,
+      "top_p": 0.9
+    },
+    "model": {
+      "artifact": "models/gemma-4-26b-a4b/gemma-4-26B_q4_0-it.gguf",
+      "artifact_sha256": "3eca3b8f6d7baf218a7dd6bba5fb59a56ee25fe2d567b6f5f589b4f697eca51d",
+      "artifact_size_bytes": 14439363584,
+      "id": "gemma-4-26b-a4b",
+      "quantization": "Q4_0 QAT"
+    },
+    "server": {
+      "backend": "llama.cpp",
+      "base_url": "http://127.0.0.1:18081",
+      "cache_state": "warm",
+      "version": "llama.cpp b10236 CUDA12 OCI"
+    }
+  },
+  "recorded_at_utc": "2026-08-26T06:35:44.668776Z",
+  "run_id": "planner-v2-20260826-sol",
+  "runner_version": "runtime-routed-plan-quality-v4",
+  "schema_version": 1,
+  "suite_id": "parcel-planner-quality-v2"
+}

@@ -36,6 +36,7 @@ import wave
 from pathlib import Path
 
 import pytest
+from commissioned_sim import commissioned_runtime_kwargs
 
 from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
@@ -77,6 +78,7 @@ from parcel_robot.realtime.lane import (
 )
 from parcel_robot.realtime.protocol import PCM16_SAMPLE_RATE_HZ
 from parcel_robot.realtime.transport import transport_pair
+from parcel_robot.realtime.voice_identity import VoiceArmingDecision
 from parcel_robot.runtime import (
     TRANSCRIPT_ORIGIN_MIC,
     TRANSCRIPT_ORIGIN_PANEL,
@@ -953,6 +955,7 @@ modules: []
             connected_output=False,
             detail="r1 realtime fixture",
         ),
+        **commissioned_runtime_kwargs(path),
     )
 
 
@@ -969,6 +972,17 @@ def _spy(runtime: RobotRuntime, name: str) -> list[tuple]:
 
     setattr(owner, name, wrapper)
     return calls
+
+
+def _authorize_one_hosted_motion(runtime: RobotRuntime) -> None:
+    """Model an authenticated one-shot audio binding for dispatch-only tests."""
+
+    runtime._voice_arming_for = lambda kind: VoiceArmingDecision(  # type: ignore[method-assign]
+        armed=True,
+        code=CODE_ARMED,
+        reason="authenticated one-shot test binding",
+        kind=str(kind),
+    )
 
 
 def test_flag_off_leaves_the_lane_unconstructed(
@@ -1111,6 +1125,7 @@ def test_follow_me_executes_once_and_never_reaches_the_planner(
     monkeypatch.delenv(REALTIME_CONFIG_ENV, raising=False)
     model = _SilentModel()
     runtime = _runtime(tmp_path, model)
+    _authorize_one_hosted_motion(runtime)
     behaviors = _spy(runtime, "set_behavior")
     agent_calls = _spy(runtime, "handle_text")
     submits = _spy(runtime, "submit_text")
@@ -1131,6 +1146,7 @@ def test_stay_takes_the_hold_door_and_come_takes_the_follow_door(
 ) -> None:
     monkeypatch.delenv(REALTIME_CONFIG_ENV, raising=False)
     runtime = _runtime(tmp_path)
+    _authorize_one_hosted_motion(runtime)
     behaviors = _spy(runtime, "set_behavior")
     try:
         assert runtime.submit_realtime_transcript("Stay.").kind == "hold"

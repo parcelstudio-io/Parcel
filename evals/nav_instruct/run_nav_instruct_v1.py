@@ -154,7 +154,12 @@ def _run_scene_split(args: argparse.Namespace) -> int:
     single-scene matrix: the headline is the *gap*, not either side.
     """
 
-    from evals.nav_instruct.unseen_split import markdown_table, run_split, write_report
+    from evals.nav_instruct.unseen_split import (
+        SPLIT_REPORT_TEMPLATE,
+        markdown_table,
+        run_split,
+        write_report,
+    )
 
     scenes = (
         None
@@ -162,7 +167,10 @@ def _run_scene_split(args: argparse.Namespace) -> int:
         else [Path(item.strip()) for item in str(args.scenes).split(",") if item.strip()]
     )
     payload = run_split(mode=args.mode, max_steps=args.max_steps, seed=args.seed, scenes=scenes)
-    path = write_report(payload)
+    path = write_report(
+        payload,
+        Path(args.out) / SPLIT_REPORT_TEMPLATE.format(mode=args.mode),
+    )
     print(markdown_table(payload))
     print(f"\nwrote {path}")
     return 0

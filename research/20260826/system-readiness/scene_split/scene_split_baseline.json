@@ -1,0 +1,1864 @@
+{
+  "episode_set_version": "v2",
+  "episodes_per_scene": 15,
+  "families": [
+    "region_goal",
+    "object_goal",
+    "object_relative"
+  ],
+  "frozen_baseline": false,
+  "gap": {
+    "mean_dtg_unseen_minus_seen_m": 0.10839182042393603,
+    "reading": "positive sr gap = worse on scenes nobody tuned against, which is the expected and informative direction",
+    "spl_seen_minus_unseen": -0.10673809778013366,
+    "sr_seen_minus_unseen": -0.11999999999999997
+  },
+  "generated_at": "20260826T063429Z",
+  "kind": "scene_generalization_split",
+  "mode": "baseline",
+  "never_tuned_against": true,
+  "runner_version": "nav-instruct-v1.1-k0-arrival",
+  "seed": 20260804,
+  "val_seen": {
+    "authority_histogram": {
+      "agreement": 15,
+      "authority_disagreement": 0,
+      "false_arrival": 0,
+      "tolerated_boundary": 0,
+      "unknown": 0
+    },
+    "by_family_tier": [
+      {
+        "dtg_m": 0.0,
+        "failures": {
+          "control_error": 0,
+          "false_arrival": 0,
+          "grounding_error": 0,
+          "none": 1,
+          "planning_error": 0,
+          "refusal": 0,
+          "search_error": 0,
+          "termination": 0
+        },
+        "family": "object_goal",
+        "n": 1,
+        "spl": 1.0,
+        "sr": 1.0,
+        "tier": "A"
+      },
+      {
+        "dtg_m": 0.9525353003264136,
+        "failures": {
+          "control_error": 0,
+          "false_arrival": 0,
+          "grounding_error": 1,
+          "none": 0,
+          "planning_error": 0,
+          "refusal": 0,
+          "search_error": 0,
+          "termination": 0
+        },
+        "family": "object_goal",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "B"
+      },
+      {
+        "dtg_m": 1.87,
+        "failures": {
+          "control_error": 0,
+          "false_arrival": 0,
+          "grounding_error": 1,
+          "none": 0,
+          "planning_error": 0,
+          "refusal": 0,
+          "search_error": 0,
+          "termination": 0
+        },
+        "family": "object_goal",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "C"
+      },
+      {
+        "dtg_m": 3.3251609419826336,
+        "failures": {
+          "control_error": 0,
+          "false_arrival": 0,
+          "grounding_error": 1,
+          "none": 0,
+          "planning_error": 0,
+          "refusal": 0,
+          "search_error": 0,
+          "termination": 0
+        },
+        "family": "object_goal",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "D"
+      },
+      {
+        "dtg_m": 56.159536928923096,
+        "failures": {
+          "control_error": 0,
+          "false_arrival": 0,
+          "grounding_error": 0,
+          "none": 0,
+          "planning_error": 0,
+          "refusal": 1,
+          "search_error": 0,
+          "termination": 0
+        },
+        "family": "object_goal",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "E"
+      },
+      {
+        "dtg_m": 2.542155984125303,
+        "failures": {
+          "control_error": 0,
+          "false_arrival": 0,
+          "grounding_error": 1,
+          "none": 0,
+          "planning_error": 0,
+          "refusal": 0,
+          "search_error": 0,
+          "termination": 0
+        },
+        "family": "object_relative",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "A"
+      },
+      {
+        "dtg_m": 2.2172604159515106,
+        "failures": {
+          "control_error": 0,
+          "false_arrival": 0,
+          "grounding_error": 0,
+          "none": 0,
+          "planning_error": 0,
+          "refusal": 1,
+          "search_error": 0,
+          "termination": 0
+        },
+        "family": "object_relative",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "B"
+      },
+      {
+        "dtg_m": 8.203988870562457,
+        "failures": {
+          "control_error": 0,
+          "false_arrival": 0,
+          "grounding_error": 0,
+          "none": 0,
+          "planning_error": 0,
+          "refusal": 1,
+          "search_error": 0,
+          "termination": 0
+        },
+        "family": "object_relative",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "C"
+      },
+      {
+        "dtg_m": 4.610315150929648,
+        "failures": {
+          "control_error": 0,
+          "false_arrival": 0,
+          "grounding_error": 0,
+          "none": 0,
+          "planning_error": 1,
+          "refusal": 0,
+          "search_error": 0,
+          "termination": 0
+        },
+        "family": "object_relative",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "D"
+      },
+      {
+        "dtg_m": 55.2003361982978,
+        "failures": {
+          "control_error": 0,
+          "false_arrival": 0,
+          "grounding_error": 0,
+          "none": 0,
+          "planning_error": 0,
+          "refusal": 1,
+          "search_error": 0,
+          "termination": 0
+        },
+        "family": "object_relative",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "E"
+      },
+      {
+        "dtg_m": 0.0,
+        "failures": {
+          "control_error": 0,
+          "false_arrival": 0,
+          "grounding_error": 0,
+          "none": 1,
+          "planning_error": 0,
+          "refusal": 0,
+          "search_error": 0,
+          "termination": 0
+        },
+        "family": "region_goal",
+        "n": 1,
+        "spl": 1.0,
+        "sr": 1.0,
+        "tier": "A"
+      },
+      {
+        "dtg_m": 2.4250000000000003,
+        "failures": {
+          "control_error": 0,
+          "false_arrival": 0,
+          "grounding_error": 0,
+          "none": 0,
+          "planning_error": 0,
+          "refusal": 1,
+          "search_error": 0,
+          "termination": 0
+        },
+        "family": "region_goal",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "B"
+      },
+      {
+        "dtg_m": 2.325,
+        "failures": {
+          "control_error": 0,
+          "false_arrival": 0,
+          "grounding_error": 0,
+          "none": 0,
+          "planning_error": 0,
+          "refusal": 1,
+          "search_error": 0,
+          "termination": 0
+        },
+        "family": "region_goal",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "C"
+      },
+      {
+        "dtg_m": 2.0685389676645194,
+        "failures": {
+          "control_error": 0,
+          "false_arrival": 0,
+          "grounding_error": 1,
+          "none": 0,
+          "planning_error": 0,
+          "refusal": 0,
+          "search_error": 0,
+          "termination": 0
+        },
+        "family": "region_goal",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "D"
+      },
+      {
+        "dtg_m": 56.139209034025185,
+        "failures": {
+          "control_error": 0,
+          "false_arrival": 0,
+          "grounding_error": 1,
+          "none": 0,
+          "planning_error": 0,
+          "refusal": 0,
+          "search_error": 0,
+          "termination": 0
+        },
+        "family": "region_goal",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "E"
+      }
+    ],
+    "collision_total": 0,
+    "episode_digest": "4d715111c13038cfbf89906bbf41fd104e01aefbd2438b864a52a810da799235",
+    "failure_histogram": {
+      "control_error": 0,
+      "false_arrival": 0,
+      "grounding_error": 6,
+      "none": 2,
+      "planning_error": 1,
+      "refusal": 6,
+      "search_error": 0,
+      "termination": 0
+    },
+    "mean_dtg_m": 13.202602519519239,
+    "n": 15,
+    "scene": "src/parcel_robot/scenes/city_block.xml",
+    "scene_id": "city_block",
+    "spl": 0.13333333333333333,
+    "sr": 0.13333333333333333,
+    "sr_frozen_rule": 0.0,
+    "successes": [
+      "city_block|nav-object_goal-A-00-4caa923b",
+      "city_block|nav-region_goal-A-00-1c735162"
+    ]
+  },
+  "val_unseen_mean": {
+    "collision_total": 0,
+    "mean_dtg_m": 13.310994339943175,
+    "scenes": 5,
+    "spl": 0.240071431113467,
+    "sr": 0.2533333333333333
+  },
+  "val_unseen_scenes": [
+    {
+      "authority_histogram": {
+        "agreement": 11,
+        "authority_disagreement": 0,
+        "false_arrival": 4,
+        "tolerated_boundary": 0,
+        "unknown": 0
+      },
+      "by_family_tier": [
+        {
+          "dtg_m": 0.0,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 1,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_goal",
+          "n": 1,
+          "spl": 1.0,
+          "sr": 1.0,
+          "tier": "A"
+        },
+        {
+          "dtg_m": 1.7935374692670374,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 1,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_goal",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "B"
+        },
+        {
+          "dtg_m": 0.0,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 1,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_goal",
+          "n": 1,
+          "spl": 0.5008679111019313,
+          "sr": 1.0,
+          "tier": "C"
+        },
+        {
+          "dtg_m": 0.0,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 1,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_goal",
+          "n": 1,
+          "spl": 1.0,
+          "sr": 1.0,
+          "tier": "D"
+        },
+        {
+          "dtg_m": 56.159536928923096,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_goal",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "E"
+        },
+        {
+          "dtg_m": 0.7273672792881674,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 1,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_relative",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "A"
+        },
+        {
+          "dtg_m": 3.2265319209754626,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_relative",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "B"
+        },
+        {
+          "dtg_m": 8.787095265428428,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_relative",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "C"
+        },
+        {
+          "dtg_m": 9.576588275277846,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 1,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_relative",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "D"
+        },
+        {
+          "dtg_m": 55.2003361982978,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_relative",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "E"
+        },
+        {
+          "dtg_m": 0.0,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 1,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "region_goal",
+          "n": 1,
+          "spl": 1.0,
+          "sr": 1.0,
+          "tier": "A"
+        },
+        {
+          "dtg_m": 2.9,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "region_goal",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "B"
+        },
+        {
+          "dtg_m": 1.1989999999999998,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "region_goal",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "C"
+        },
+        {
+          "dtg_m": 4.452327262089766,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 1,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "region_goal",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "D"
+        },
+        {
+          "dtg_m": 59.77199043287243,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 1,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "region_goal",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "E"
+        }
+      ],
+      "collision_total": 0,
+      "episode_digest": "d9fe337b8e2947c482048bf0d1c0d862b81ad8ebd3b04e2da3e64a62b9c95f17",
+      "failure_histogram": {
+        "control_error": 0,
+        "false_arrival": 3,
+        "grounding_error": 1,
+        "none": 4,
+        "planning_error": 1,
+        "refusal": 6,
+        "search_error": 0,
+        "termination": 0
+      },
+      "mean_dtg_m": 13.586287402161336,
+      "n": 15,
+      "scene": "configs/scenes/generated/val_unseen_91011.xml",
+      "scene_id": "val_unseen_91011",
+      "spl": 0.23339119407346207,
+      "sr": 0.26666666666666666,
+      "sr_frozen_rule": 0.0,
+      "successes": [
+        "val_unseen_91011|nav-object_goal-A-00-4caa923b",
+        "val_unseen_91011|nav-object_goal-C-10-68aa2ab8",
+        "val_unseen_91011|nav-object_goal-D-15-109547e2",
+        "val_unseen_91011|nav-region_goal-A-00-1c735162"
+      ]
+    },
+    {
+      "authority_histogram": {
+        "agreement": 11,
+        "authority_disagreement": 0,
+        "false_arrival": 4,
+        "tolerated_boundary": 0,
+        "unknown": 0
+      },
+      "by_family_tier": [
+        {
+          "dtg_m": 0.0,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 1,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_goal",
+          "n": 1,
+          "spl": 1.0,
+          "sr": 1.0,
+          "tier": "A"
+        },
+        {
+          "dtg_m": 1.525872778464092,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 1,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_goal",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "B"
+        },
+        {
+          "dtg_m": 0.0,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 1,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_goal",
+          "n": 1,
+          "spl": 0.693992803995306,
+          "sr": 1.0,
+          "tier": "C"
+        },
+        {
+          "dtg_m": 0.0,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 1,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_goal",
+          "n": 1,
+          "spl": 1.0,
+          "sr": 1.0,
+          "tier": "D"
+        },
+        {
+          "dtg_m": 56.159536928923096,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_goal",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "E"
+        },
+        {
+          "dtg_m": 0.7288857840459526,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 1,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_relative",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "A"
+        },
+        {
+          "dtg_m": 2.631107962762532,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_relative",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "B"
+        },
+        {
+          "dtg_m": 8.365676763405538,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_relative",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "C"
+        },
+        {
+          "dtg_m": 9.597705846018437,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 1,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_relative",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "D"
+        },
+        {
+          "dtg_m": 55.2003361982978,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_relative",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "E"
+        },
+        {
+          "dtg_m": 0.0,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 1,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "region_goal",
+          "n": 1,
+          "spl": 1.0,
+          "sr": 1.0,
+          "tier": "A"
+        },
+        {
+          "dtg_m": 2.5940000000000003,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "region_goal",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "B"
+        },
+        {
+          "dtg_m": 1.4910000000000005,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "region_goal",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "C"
+        },
+        {
+          "dtg_m": 2.2441580103719083,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 1,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "region_goal",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "D"
+        },
+        {
+          "dtg_m": 59.251054715693286,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 1,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "region_goal",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "E"
+        }
+      ],
+      "collision_total": 0,
+      "episode_digest": "0e031f1a8ae0114130aa561a629bad628e3a0b52021c2a8d6d1f4ae603b405c8",
+      "failure_histogram": {
+        "control_error": 0,
+        "false_arrival": 4,
+        "grounding_error": 1,
+        "none": 4,
+        "planning_error": 0,
+        "refusal": 6,
+        "search_error": 0,
+        "termination": 0
+      },
+      "mean_dtg_m": 13.319288999198843,
+      "n": 15,
+      "scene": "configs/scenes/generated/val_unseen_91012.xml",
+      "scene_id": "val_unseen_91012",
+      "spl": 0.2462661869330204,
+      "sr": 0.26666666666666666,
+      "sr_frozen_rule": 0.0,
+      "successes": [
+        "val_unseen_91012|nav-object_goal-A-00-4caa923b",
+        "val_unseen_91012|nav-object_goal-C-10-68aa2ab8",
+        "val_unseen_91012|nav-object_goal-D-15-109547e2",
+        "val_unseen_91012|nav-region_goal-A-00-1c735162"
+      ]
+    },
+    {
+      "authority_histogram": {
+        "agreement": 10,
+        "authority_disagreement": 1,
+        "false_arrival": 4,
+        "tolerated_boundary": 0,
+        "unknown": 0
+      },
+      "by_family_tier": [
+        {
+          "dtg_m": 0.0,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 1,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_goal",
+          "n": 1,
+          "spl": 1.0,
+          "sr": 1.0,
+          "tier": "A"
+        },
+        {
+          "dtg_m": 0.5873921086317386,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 1,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_goal",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "B"
+        },
+        {
+          "dtg_m": 0.0,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 1,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_goal",
+          "n": 1,
+          "spl": 0.8104966184127868,
+          "sr": 1.0,
+          "tier": "C"
+        },
+        {
+          "dtg_m": 0.0,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 1,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_goal",
+          "n": 1,
+          "spl": 1.0,
+          "sr": 1.0,
+          "tier": "D"
+        },
+        {
+          "dtg_m": 56.159536928923096,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_goal",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "E"
+        },
+        {
+          "dtg_m": 0.7240627145450911,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 1,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_relative",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "A"
+        },
+        {
+          "dtg_m": 3.29652645150634,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_relative",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "B"
+        },
+        {
+          "dtg_m": 8.766987922462947,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_relative",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "C"
+        },
+        {
+          "dtg_m": 8.312763918027985,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 1,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_relative",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "D"
+        },
+        {
+          "dtg_m": 55.2003361982978,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_relative",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "E"
+        },
+        {
+          "dtg_m": 0.0,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 1,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "region_goal",
+          "n": 1,
+          "spl": 1.0,
+          "sr": 1.0,
+          "tier": "A"
+        },
+        {
+          "dtg_m": 3.156,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "region_goal",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "B"
+        },
+        {
+          "dtg_m": 2.081,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "region_goal",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "C"
+        },
+        {
+          "dtg_m": 0.0,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 1,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "region_goal",
+          "n": 1,
+          "spl": 1.0,
+          "sr": 1.0,
+          "tier": "D"
+        },
+        {
+          "dtg_m": 59.3948328712996,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 1,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "region_goal",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "E"
+        }
+      ],
+      "collision_total": 0,
+      "episode_digest": "d12372580cd37fee3becfe06701d583ea8b8be5d4c2ff55f10da31a330d3d775",
+      "failure_histogram": {
+        "control_error": 0,
+        "false_arrival": 4,
+        "grounding_error": 0,
+        "none": 5,
+        "planning_error": 0,
+        "refusal": 6,
+        "search_error": 0,
+        "termination": 0
+      },
+      "mean_dtg_m": 13.178629274246306,
+      "n": 15,
+      "scene": "configs/scenes/generated/val_unseen_91013.xml",
+      "scene_id": "val_unseen_91013",
+      "spl": 0.3206997745608524,
+      "sr": 0.3333333333333333,
+      "sr_frozen_rule": 0.06666666666666667,
+      "successes": [
+        "val_unseen_91013|nav-object_goal-A-00-4caa923b",
+        "val_unseen_91013|nav-object_goal-C-10-68aa2ab8",
+        "val_unseen_91013|nav-object_goal-D-15-109547e2",
+        "val_unseen_91013|nav-region_goal-A-00-1c735162",
+        "val_unseen_91013|nav-region_goal-D-15-1b8b2361"
+      ]
+    },
+    {
+      "authority_histogram": {
+        "agreement": 13,
+        "authority_disagreement": 0,
+        "false_arrival": 2,
+        "tolerated_boundary": 0,
+        "unknown": 0
+      },
+      "by_family_tier": [
+        {
+          "dtg_m": 0.0,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 1,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_goal",
+          "n": 1,
+          "spl": 1.0,
+          "sr": 1.0,
+          "tier": "A"
+        },
+        {
+          "dtg_m": 0.4976250724774225,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 1,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_goal",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "B"
+        },
+        {
+          "dtg_m": 0.0,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 1,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_goal",
+          "n": 1,
+          "spl": 1.0,
+          "sr": 1.0,
+          "tier": "C"
+        },
+        {
+          "dtg_m": 4.5701895588329515,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 1,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_goal",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "D"
+        },
+        {
+          "dtg_m": 56.159536928923096,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_goal",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "E"
+        },
+        {
+          "dtg_m": 0.7232448355521996,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 1,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_relative",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "A"
+        },
+        {
+          "dtg_m": 3.0771301052078472,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_relative",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "B"
+        },
+        {
+          "dtg_m": 7.783530847689365,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_relative",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "C"
+        },
+        {
+          "dtg_m": 5.3375536768840135,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 1,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_relative",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "D"
+        },
+        {
+          "dtg_m": 55.2003361982978,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_relative",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "E"
+        },
+        {
+          "dtg_m": 0.0,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 1,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "region_goal",
+          "n": 1,
+          "spl": 1.0,
+          "sr": 1.0,
+          "tier": "A"
+        },
+        {
+          "dtg_m": 1.9720000000000002,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "region_goal",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "B"
+        },
+        {
+          "dtg_m": 2.08,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "region_goal",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "C"
+        },
+        {
+          "dtg_m": 1.2742061547920969,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 1,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "region_goal",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "D"
+        },
+        {
+          "dtg_m": 59.23587155118761,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 1,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "region_goal",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "E"
+        }
+      ],
+      "collision_total": 0,
+      "episode_digest": "16043830ec8cc4f8022c7fe8f7eeec28871b3e1227907acbdbca1f8fcb3da5e5",
+      "failure_histogram": {
+        "control_error": 0,
+        "false_arrival": 2,
+        "grounding_error": 1,
+        "none": 3,
+        "planning_error": 3,
+        "refusal": 6,
+        "search_error": 0,
+        "termination": 0
+      },
+      "mean_dtg_m": 13.194081661989626,
+      "n": 15,
+      "scene": "configs/scenes/generated/val_unseen_91014.xml",
+      "scene_id": "val_unseen_91014",
+      "spl": 0.2,
+      "sr": 0.2,
+      "sr_frozen_rule": 0.0,
+      "successes": [
+        "val_unseen_91014|nav-object_goal-A-00-4caa923b",
+        "val_unseen_91014|nav-object_goal-C-10-68aa2ab8",
+        "val_unseen_91014|nav-region_goal-A-00-1c735162"
+      ]
+    },
+    {
+      "authority_histogram": {
+        "agreement": 13,
+        "authority_disagreement": 0,
+        "false_arrival": 2,
+        "tolerated_boundary": 0,
+        "unknown": 0
+      },
+      "by_family_tier": [
+        {
+          "dtg_m": 0.0,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 1,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_goal",
+          "n": 1,
+          "spl": 1.0,
+          "sr": 1.0,
+          "tier": "A"
+        },
+        {
+          "dtg_m": 0.7839208152257804,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 1,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_goal",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "B"
+        },
+        {
+          "dtg_m": 0.0,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 1,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_goal",
+          "n": 1,
+          "spl": 1.0,
+          "sr": 1.0,
+          "tier": "C"
+        },
+        {
+          "dtg_m": 3.7923413343368404,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 1,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_goal",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "D"
+        },
+        {
+          "dtg_m": 56.159536928923096,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_goal",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "E"
+        },
+        {
+          "dtg_m": 0.7314453066018309,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 1,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_relative",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "A"
+        },
+        {
+          "dtg_m": 2.7223467408539532,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_relative",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "B"
+        },
+        {
+          "dtg_m": 8.250976207539427,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_relative",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "C"
+        },
+        {
+          "dtg_m": 6.203872251166532,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 1,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_relative",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "D"
+        },
+        {
+          "dtg_m": 55.2003361982978,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "object_relative",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "E"
+        },
+        {
+          "dtg_m": 0.0,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 1,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "region_goal",
+          "n": 1,
+          "spl": 1.0,
+          "sr": 1.0,
+          "tier": "A"
+        },
+        {
+          "dtg_m": 2.5,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "region_goal",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "B"
+        },
+        {
+          "dtg_m": 1.4430000000000005,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "region_goal",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "C"
+        },
+        {
+          "dtg_m": 1.551689732320698,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 0,
+            "grounding_error": 1,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "region_goal",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "D"
+        },
+        {
+          "dtg_m": 59.81079991653065,
+          "failures": {
+            "control_error": 0,
+            "false_arrival": 1,
+            "grounding_error": 0,
+            "none": 0,
+            "planning_error": 0,
+            "refusal": 0,
+            "search_error": 0,
+            "termination": 0
+          },
+          "family": "region_goal",
+          "n": 1,
+          "spl": 0.0,
+          "sr": 0.0,
+          "tier": "E"
+        }
+      ],
+      "collision_total": 0,
+      "episode_digest": "2961c0f0e04f45d7768b4bd74b2866036217215743ff54bd99e03b4fa39744ab",
+      "failure_histogram": {
+        "control_error": 0,
+        "false_arrival": 2,
+        "grounding_error": 1,
+        "none": 3,
+        "planning_error": 3,
+        "refusal": 6,
+        "search_error": 0,
+        "termination": 0
+      },
+      "mean_dtg_m": 13.276684362119774,
+      "n": 15,
+      "scene": "configs/scenes/generated/val_unseen_91015.xml",
+      "scene_id": "val_unseen_91015",
+      "spl": 0.2,
+      "sr": 0.2,
+      "sr_frozen_rule": 0.0,
+      "successes": [
+        "val_unseen_91015|nav-object_goal-A-00-4caa923b",
+        "val_unseen_91015|nav-object_goal-C-10-68aa2ab8",
+        "val_unseen_91015|nav-region_goal-A-00-1c735162"
+      ]
+    }
+  ]
+}

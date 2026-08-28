@@ -219,8 +219,9 @@ def test_prompt_defines_semantics_and_limits_for_conversation_reactions() -> Non
     )
 
     assert "conversation_reaction" in rendered
-    assert "robot has no articulated neck" in rendered
-    assert "tilt never proves" in rendered
+    normalized = " ".join(rendered.split())
+    assert "robot has no articulated neck" in normalized
+    assert "stationary reaction never proves that an object was observed" in normalized
 
 
 def test_velocity_smoother_bounds_acceleration_and_can_force_safety_stop():

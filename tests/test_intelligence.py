@@ -5,14 +5,86 @@ import pytest
 
 from parcel_robot.brain.contracts import PlanIR
 from parcel_robot.brain.observations import build_observation_snapshot
+from parcel_robot.capabilities.commissioning_lifecycle import (
+    CommissioningCurrentStateV1,
+    CommissioningLifecycleV1,
+)
+from parcel_robot.capabilities.manifest import (
+    CapabilityCommissioningV1,
+    CommissionedArtifactV1,
+    DeploymentTargetV1,
+    EffectiveCapabilityProfileV1,
+    TrustedCommissioningAuthenticatorV1,
+)
+from parcel_robot.capabilities.manifest import (
+    generate_effective_manifest as _generate_effective_manifest,
+)
 from parcel_robot.models import ActionProposal, AffectEstimate, AgentDecision, Pose, ToolCall
 from parcel_robot.providers import parse_model_decision
 from parcel_robot.safety import SafetySupervisor
 from parcel_robot.skills.api import Dog
-from parcel_robot.voice.agent import VoiceAgent
+from parcel_robot.skills.capability_manifest import motion_capability_declarations
+from parcel_robot.voice.agent import VoiceAgent as _VoiceAgent
 from parcel_robot.voice.pipeline import VoicePipeline
 
 REPO = Path(__file__).resolve().parents[1]
+_SIM_TARGET = DeploymentTargetV1("intelligence_sim", "simulation", "sim", "c" * 64)
+_COMMISSIONING_AUTH = TrustedCommissioningAuthenticatorV1(
+    authenticator_id="intelligence_test_authority",
+    key=b"test-only-intelligence-commissioning-key",
+)
+_NOW_NS = 10_000_000_000
+_LIFECYCLE = CommissioningLifecycleV1(1, _NOW_NS - 1, _NOW_NS + 1_000_000, "nonce", "rev")
+_CURRENT_STATE = CommissioningCurrentStateV1(1, "nonce")
+
+
+class VoiceAgent(_VoiceAgent):
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("commissioning_authenticator", _COMMISSIONING_AUTH)
+        super().__init__(*args, **kwargs)
+
+
+def generate_effective_manifest(**kwargs):
+    return _generate_effective_manifest(
+        **kwargs,
+        commissioning_state_provider=lambda _lifecycle: _CURRENT_STATE,
+        now_monotonic_ns=_NOW_NS,
+    )
+
+
+def _commissioned_motion_manifest(dog: Dog, names: tuple[str, ...]):
+    gestures, poses = motion_capability_declarations(dog.catalog)
+    gesture_by_name = {entry.name: entry for entry in gestures}
+    pose_by_name = {entry.name: entry for entry in poses}
+    records = tuple(
+        CommissionedArtifactV1(
+            "gesture" if name in gesture_by_name else "pose",
+            name,
+            (gesture_by_name.get(name) or pose_by_name[name]).artifact_digest,
+        )
+        for name in names
+    )
+    commissioning = _COMMISSIONING_AUTH.authenticate(
+        CapabilityCommissioningV1(
+            _SIM_TARGET,
+            "intelligence_test_authority",
+            "e" * 64,
+            _LIFECYCLE,
+            records,
+        )
+    )
+    return generate_effective_manifest(
+        profile=EffectiveCapabilityProfileV1(
+            "intelligence_test",
+            _SIM_TARGET,
+            gestures=tuple(name for name in names if name in gesture_by_name),
+            poses=tuple(name for name in names if name in pose_by_name),
+        ),
+        commissioning=commissioning,
+        commissioning_authenticator=_COMMISSIONING_AUTH,
+        gestures=gestures,
+        poses=poses,
+    )
 
 
 class FakeModel:
@@ -372,10 +444,65 @@ def test_inferred_affect_accepts_personality_social_trajectory():
         action_proposal_publisher=lambda action: proposed.append(action) or "accepted",
         affect_actions={"sad": "play_bow"},
         dog=dog,
+        capability_manifest=_commissioned_motion_manifest(dog, ("play_bow",)),
+        deployment_target=_SIM_TARGET,
+        conversation_motion_authorized=True,
+        commissioning_state_provider=lambda _lifecycle: _CURRENT_STATE,
+        commissioning_clock_ns=lambda: _NOW_NS,
     )
 
     assert agent.handle_text("I feel sad") == "I'm here."
     assert proposed == [proposal]
+
+
+@pytest.mark.parametrize("proposal_name", ["kick_front", "chuckle"])
+def test_model_authored_explicit_trigger_cannot_invent_owner_authority(
+    proposal_name: str,
+) -> None:
+    """A trigger label is model output, not proof that the owner commanded it.
+
+    ``kick_front`` catches the runtime social allowlist boundary; ``chuckle``
+    is on that allowlist and therefore reaches the independent deterministic
+    transcript-authority check.  Neither may move from an affect statement.
+    """
+
+    proposed = []
+    dog = Dog.from_config(REPO / "configs" / "robot.yaml")
+    agent = VoiceAgent(
+        dog.poses(),
+        [],
+        lambda pose: None,
+        language_model=FakeModel(
+            AgentDecision(
+                "I'm here with you.",
+                next_action=ActionProposal(
+                    kind="skill",
+                    name=proposal_name,
+                    trigger="explicit_command",
+                    timing_preference="now",
+                    interruption_request="safe_checkpoint",
+                    reason="model claimed this was explicit",
+                ),
+            )
+        ),
+        action_proposal_publisher=lambda action: proposed.append(action) or "accepted",
+        dog=dog,
+        capability_manifest=_commissioned_motion_manifest(dog, ("chuckle",)),
+        deployment_target=_SIM_TARGET,
+        conversation_motion_authorized=True,
+        commissioning_state_provider=lambda _lifecycle: _CURRENT_STATE,
+        commissioning_clock_ns=lambda: _NOW_NS,
+    )
+
+    assert "couldn't do that safely" in agent.handle_text("I'm sad today")
+    assert proposed == []
+
+    # A genuine exact command is parsed before the conversation model and keeps
+    # the established activity-coordinator behavior.
+    assert agent.handle_text("perform chuckle") == "accepted"
+    assert len(proposed) == 1
+    assert proposed[0].name == "chuckle"
+    assert proposed[0].trigger == "explicit_command"
 
 
 def test_conversation_reaction_accepts_only_non_interrupting_social_trajectory():
@@ -396,6 +523,11 @@ def test_conversation_reaction_accepts_only_non_interrupting_social_trajectory()
         language_model=FakeModel(AgentDecision("Heh!", next_action=proposal)),
         action_proposal_publisher=lambda action: proposed.append(action) or "Accepted",
         dog=dog,
+        capability_manifest=_commissioned_motion_manifest(dog, ("chuckle",)),
+        deployment_target=_SIM_TARGET,
+        conversation_motion_authorized=True,
+        commissioning_state_provider=lambda _lifecycle: _CURRENT_STATE,
+        commissioning_clock_ns=lambda: _NOW_NS,
     )
 
     assert agent.handle_text("That joke always makes me laugh") == "Heh!"
@@ -433,6 +565,11 @@ def test_conversation_reaction_rejects_non_social_or_interrupting_action(
         language_model=FakeModel(AgentDecision("Reaction.", next_action=proposal)),
         action_proposal_publisher=lambda action: proposed.append(action) or "Accepted",
         dog=dog,
+        capability_manifest=_commissioned_motion_manifest(dog, ("chuckle",)),
+        deployment_target=_SIM_TARGET,
+        conversation_motion_authorized=True,
+        commissioning_state_provider=lambda _lifecycle: _CURRENT_STATE,
+        commissioning_clock_ns=lambda: _NOW_NS,
     )
 
     assert "couldn't do that safely" in agent.handle_text("That was surprising")
@@ -449,6 +586,11 @@ def test_explicit_bounded_named_skill_still_uses_activity_coordinator(skill_name
         lambda pose: None,
         action_proposal_publisher=lambda action: proposed.append(action) or "accepted",
         dog=dog,
+        capability_manifest=_commissioned_motion_manifest(dog, (skill_name,)),
+        deployment_target=_SIM_TARGET,
+        conversation_motion_authorized=True,
+        commissioning_state_provider=lambda _lifecycle: _CURRENT_STATE,
+        commissioning_clock_ns=lambda: _NOW_NS,
     )
 
     assert agent.handle_text(f"perform {skill_name.replace('_', ' ')}") == "accepted"
@@ -458,18 +600,25 @@ def test_explicit_bounded_named_skill_still_uses_activity_coordinator(skill_name
 
 def test_coordinated_run_skill_tool_advertises_only_bounded_skills():
     dog = Dog.from_config(REPO / "configs" / "robot.yaml")
+    gestures, poses = motion_capability_declarations(dog.catalog)
+    bounded = tuple(entry.name for entry in (*gestures, *poses))
     agent = VoiceAgent(
         dog.poses(),
         [],
         lambda pose: None,
         action_proposal_publisher=lambda action: "accepted",
         dog=dog,
+        capability_manifest=_commissioned_motion_manifest(dog, bounded),
+        deployment_target=_SIM_TARGET,
+        conversation_motion_authorized=True,
+        commissioning_state_provider=lambda _lifecycle: _CURRENT_STATE,
+        commissioning_clock_ns=lambda: _NOW_NS,
     )
 
     run_skill = next(tool for tool in agent.tool_definitions() if tool["name"] == "run_skill")
     advertised = set(run_skill["parameters"]["properties"]["name"]["enum"])
-    assert {"sit", "play_bow", "jump"} <= advertised
-    assert advertised.isdisjoint({"run", "trot", "walk_forward", "turn_left"})
+    assert {"sit", "play_bow"} <= advertised
+    assert advertised.isdisjoint({"jump", "run", "trot", "walk_forward", "turn_left"})
     assert "bounded" in run_skill["description"]
 
 
@@ -497,7 +646,7 @@ def test_model_cannot_route_velocity_skill_into_activity_coordinator(tool_name: 
     assert "stripped physical" in (agent.last_reasoning_guard or "")
 
 
-def test_follow_and_stay_publish_only_whitelisted_behaviors():
+def test_missing_manifest_disarms_follow_but_still_allows_stay():
     modes = []
     agent = VoiceAgent(
         {},
@@ -506,12 +655,12 @@ def test_follow_and_stay_publish_only_whitelisted_behaviors():
         behavior_publisher=lambda mode: modes.append(mode) or mode,
     )
 
-    assert agent.handle_text("follow me") == "I will follow you."
+    assert "manifest is unavailable" in agent.handle_text("follow me")
     assert agent.handle_text("stay") == "I will stay here."
-    assert modes == ["follow", "stay"]
+    assert modes == ["stay"]
 
 
-def test_explicit_follow_behind_uses_formation_behavior_not_direct_follow():
+def test_missing_manifest_disarms_follow_behind_before_behavior_dispatch():
     modes = []
     agent = VoiceAgent(
         {},
@@ -522,11 +671,11 @@ def test_explicit_follow_behind_uses_formation_behavior_not_direct_follow():
 
     reply = agent.handle_text("follow behind me")
 
-    assert "estimate your direction" in reply
-    assert modes == ["follow_behind"]
+    assert "manifest is unavailable" in reply
+    assert modes == []
 
 
-def test_direct_semantic_navigation_reports_search_without_resolved_goal():
+def test_missing_manifest_disarms_direct_semantic_navigation():
     dog = Dog.from_config(REPO / "configs" / "robot.yaml")
     agent = VoiceAgent(dog.poses(), [], lambda pose: None, dog=dog)
 
@@ -534,15 +683,8 @@ def test_direct_semantic_navigation_reports_search_without_resolved_goal():
         "Can you go to the sidewalk so that you are not on the road. It's dangerous"
     )
 
-    assert reply.startswith("Navigating to sidewalk")
-    # The honest scan indication must be the CURRENT one: K4 renamed the
-    # recovery note semantic_search_scan -> scan_behavior_dwell when the
-    # frustum-only search became the ScanBehavior controller. Pinning both
-    # names would let either lane rot silently, so only the live name passes.
-    assert "scan_behavior_dwell" in reply
-    assert "semantic_search_scan" not in reply
-    assert dog._navigator.mission.status == "searching"
-    assert dog._navigator.mission.goal is None
+    assert "manifest is unavailable" in reply
+    assert dog._navigator is None
 
 
 def test_stop_bypasses_language_model():
@@ -575,9 +717,9 @@ def test_catalog_skill_and_status_bypass_language_model():
         language_model=ForbiddenModel(),
     )
 
-    assert agent.handle_text("do the sit pose") == "Running sit pose"
+    assert "manifest is unavailable" in agent.handle_text("do the sit pose")
     assert agent.handle_text("how are your systems") == "parcel is ready"
-    assert sent == [pose]
+    assert sent == []
     assert agent.last_reasoning_source == "deterministic"
 
 

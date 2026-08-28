@@ -319,11 +319,13 @@ def test_a_terminal_in_the_real_bands_south_arc_is_kept_and_faces_the_owner(
     )
     assert kept is not None, "the guard refuses the threshold, not the errand"
     assert (kept.x, kept.y) == stand
-    assert kept.heading_deg == math.degrees(
-        math.atan2(OWNER_XY[1] - stand[1], OWNER_XY[0] - stand[0])
-    )
+    # Preserve the target-facing approach until live arrival evidence and a
+    # physical stop are verified. Owner-facing etiquette is the bounded,
+    # yaw-only second phase and must not pre-empt target re-sighting here.
+    assert kept.heading_deg == 0.0
     assert navigator.mission is not None
-    assert navigator.mission.metadata["arrival_face_applied"] == FACE_OWNER
+    assert navigator.mission.metadata["arrival_face_applied"] == "deferred"
+    assert navigator.mission.metadata["owner_face_phase"] == "approach_target"
 
 
 # ================================================================= WITNESSES

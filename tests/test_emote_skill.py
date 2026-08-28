@@ -6,6 +6,7 @@ import time
 from pathlib import Path
 
 import pytest
+from commissioned_sim import commissioned_runtime_kwargs
 
 from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
@@ -358,8 +359,17 @@ def _audio() -> AudioDeviceStatus:
     )
 
 
+def _runtime(config: Path) -> RobotRuntime:
+    return RobotRuntime(
+        config,
+        _Backend(),
+        audio_status=_audio(),
+        **commissioned_runtime_kwargs(config),
+    )
+
+
 def test_runtime_admits_only_the_curated_emote_catalog(tmp_path: Path) -> None:
-    runtime = RobotRuntime(_config(tmp_path), _Backend(), audio_status=_audio())
+    runtime = _runtime(_config(tmp_path))
     try:
         catalog = runtime._emote_catalog
         assert "play_bow" in catalog and "paw_wave" in catalog
@@ -374,19 +384,19 @@ def test_runtime_admits_only_the_curated_emote_catalog(tmp_path: Path) -> None:
 def test_runtime_rejects_a_configured_emote_that_is_not_bounded(tmp_path: Path) -> None:
     config = _config(tmp_path, emotes="    emotes: [trot]\n")
     with pytest.raises(ValueError, match="must be bounded"):
-        RobotRuntime(config, _Backend(), audio_status=_audio())
+        _runtime(config)
 
 
 def test_runtime_rejects_an_unknown_configured_emote(tmp_path: Path) -> None:
     config = _config(tmp_path, emotes="    emotes: [backflip]\n")
     with pytest.raises(ValueError, match="unknown emote skill"):
-        RobotRuntime(config, _Backend(), audio_status=_audio())
+        _runtime(config)
 
 
 def test_runtime_gesture_dispatch_goes_through_the_proposal_arbiter(
     tmp_path: Path,
 ) -> None:
-    runtime = RobotRuntime(_config(tmp_path), _Backend(), audio_status=_audio())
+    runtime = _runtime(_config(tmp_path))
     try:
         detail = runtime._brain_gesture("paw_wave", 1.2)
         assert "Accepted" in detail or "Deferred" in detail
@@ -431,7 +441,7 @@ def _pending_activities(runtime: RobotRuntime) -> list[str]:
 def test_emote_fires_at_playback_start_not_at_synthesis(tmp_path: Path) -> None:
     """U6: with a deep queue, synthesis time is seconds ahead of the words."""
 
-    runtime = RobotRuntime(_config(tmp_path), _Backend(), audio_status=_audio())
+    runtime = _runtime(_config(tmp_path))
     try:
         sink = _CapturingSink()
         runtime._speaker_sink = sink
@@ -453,7 +463,7 @@ def test_emote_fires_at_playback_start_not_at_synthesis(tmp_path: Path) -> None:
 def test_superseded_sentence_fires_no_emote(tmp_path: Path) -> None:
     """Barge-in supersedes the epoch, so pending gestures die with their audio."""
 
-    runtime = RobotRuntime(_config(tmp_path), _Backend(), audio_status=_audio())
+    runtime = _runtime(_config(tmp_path))
     try:
         sink = _CapturingSink()
         runtime._speaker_sink = sink
@@ -473,7 +483,7 @@ def test_text_only_path_fires_emotes_immediately(tmp_path: Path) -> None:
     """No synthesizer means no playback clock to anchor to — documented in
     ``_fire_text_mode_emotes``."""
 
-    runtime = RobotRuntime(_config(tmp_path), _Backend(), audio_status=_audio())
+    runtime = _runtime(_config(tmp_path))
     try:
         assert runtime._speaker_sink is None
         runtime._voice_turn_completed(
@@ -485,7 +495,7 @@ def test_text_only_path_fires_emotes_immediately(tmp_path: Path) -> None:
 
 
 def test_a_superseded_text_reply_fires_no_emote(tmp_path: Path) -> None:
-    runtime = RobotRuntime(_config(tmp_path), _Backend(), audio_status=_audio())
+    runtime = _runtime(_config(tmp_path))
     try:
         runtime._voice_turn_completed(
             VoiceTurn(1, "hello", "Hello! [emote:paw_wave]", True)
@@ -498,7 +508,7 @@ def test_a_superseded_text_reply_fires_no_emote(tmp_path: Path) -> None:
 def test_playback_start_survives_an_inadmissible_emote(tmp_path: Path) -> None:
     """Speech and nods must never fail because a gesture could not run."""
 
-    runtime = RobotRuntime(_config(tmp_path), _Backend(), audio_status=_audio())
+    runtime = _runtime(_config(tmp_path))
     try:
         runtime._audio_chunk_started(
             (None, runtime.expression.speech_epoch, (("backflip", 1.0),))
@@ -515,7 +525,7 @@ def test_playback_start_survives_an_inadmissible_emote(tmp_path: Path) -> None:
 
 
 def test_runtime_prompt_exposes_the_emote_policy(tmp_path: Path) -> None:
-    runtime = RobotRuntime(_config(tmp_path), _Backend(), audio_status=_audio())
+    runtime = _runtime(_config(tmp_path))
     try:
         prompt = runtime._render_system_prompt()
         assert "[emote:" in prompt

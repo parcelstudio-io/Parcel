@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Mapping
 from dataclasses import dataclass, field
+from types import MappingProxyType
 from typing import Any, Literal
 
 SkillKind = Literal["pose", "trajectory", "gait", "velocity", "policy"]
@@ -55,7 +57,10 @@ def playback_timing(
 @dataclass(frozen=True)
 class Keyframe:
     t: float
-    joints: dict[str, float]
+    joints: Mapping[str, float]
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "joints", MappingProxyType(dict(self.joints)))
 
 
 @dataclass(frozen=True)
@@ -89,13 +94,21 @@ class SkillSpec:
     enabled: bool = True
     tags: tuple[str, ...] = ()
     duration: float = 1.0
-    joints: dict[str, float] = field(default_factory=dict)
+    joints: Mapping[str, float] = field(default_factory=dict)
     keyframes: tuple[Keyframe, ...] = ()
     velocity: VelocityParams = field(default_factory=VelocityParams)
     gait: GaitParams = field(default_factory=GaitParams)
     rl: RLMeta = field(default_factory=RLMeta)
     source_path: str = ""
     speed: float = 1.0
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "joints", MappingProxyType(dict(self.joints)))
+        object.__setattr__(
+            self,
+            "keyframes",
+            tuple(Keyframe(t=frame.t, joints=frame.joints) for frame in self.keyframes),
+        )
 
     def as_pose_joints(self) -> dict[str, float]:
         if self.kind == "pose":

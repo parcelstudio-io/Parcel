@@ -783,6 +783,12 @@ def _lamppost_observation(position=(0.0, 3.0, 0.0)) -> NavObservation:
                     "bearing_rad": 0.0,
                 }
             ],
+            # The arrival policy for an object-facing wait ends by facing the
+            # owner. Keep that evidence explicit rather than letting this
+            # geometry test depend on an absent owner channel.
+            "owner_track": (
+                {"id": "owner-1", "x": 10.0, "y": 3.0, "vx": 0.0, "vy": 0.0},
+            ),
             "motion_feedback": _settled_motion_feedback(),
         },
     )
@@ -814,9 +820,15 @@ def test_near_object_arrival_requires_vicinity_and_safe_support_region():
     collision_at_approach.extras["collision"] = True
     assert not nav._semantic_arrival_verified(collision_at_approach)
 
+    phase_b = nav.step(at_approach)
     arrived = nav.step(at_approach)
+
+    assert phase_b.note == "owner_face_turn_started"
+    assert phase_b.stop is False
     assert arrived.stop
+    assert arrived.note == "arrived_verified"
     assert mission.status == "arrived"
+    assert mission.metadata["owner_face_phase"] == "complete"
     assert mission.metadata["terminal_behavior"] == "hold"
     nav.close()
 

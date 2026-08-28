@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "frozen_at_utc": "2026-08-26T07:31:12Z",
+  "simulation": {
+    "dt_s": 0.1,
+    "duration_s": 24.0,
+    "robot_radius_m": 0.32,
+    "person_radius_m": 0.28,
+    "nominal_speed_mps": 0.8,
+    "hard_surface_floor_m": 0.15,
+    "near_contact_surface_m": 0.15,
+    "sensor_noise_sigma_m": 0.035,
+    "sensor_dropout_probability": 0.04,
+    "sensor_latency_ticks": 1,
+    "prediction_horizon_s": 2.0,
+    "oracle_horizon_s": 0.5
+  },
+  "splits": {
+    "train": {
+      "seeds": [1101, 1107, 1117, 1123],
+      "template_ids": [
+        "sidewalk_owner_parallel_train", "sidewalk_same_flow_train",
+        "sidewalk_oncoming_train", "sidewalk_crossing_train",
+        "sidewalk_false_positive_train", "crosswalk_lateral_train",
+        "crosswalk_late_entry_train", "crosswalk_persistent_train",
+        "elevator_egress_train", "elevator_temporary_clear_train",
+        "elevator_occupied_train", "elevator_narrow_train"
+      ]
+    },
+    "dev": {
+      "seeds": [2203, 2213, 2221],
+      "template_ids": [
+        "sidewalk_sudden_turn_dev", "sidewalk_group_gap_dev",
+        "sidewalk_false_positive_dev", "crosswalk_owner_group_dev",
+        "crosswalk_late_entry_dev", "elevator_egress_dev",
+        "elevator_occluded_egress_dev", "elevator_narrow_dev"
+      ]
+    },
+    "test": {
+      "seeds": [3301, 3307, 3313, 3319, 3323],
+      "template_ids": [
+        "sidewalk_owner_parallel_test", "sidewalk_same_flow_test",
+        "sidewalk_oncoming_test", "sidewalk_crossing_test",
+        "sidewalk_sudden_stop_test", "sidewalk_group_gap_test",
+        "sidewalk_false_positive_test", "sidewalk_occluded_survivor_test",
+        "crosswalk_unauthorized_test", "crosswalk_lateral_test",
+        "crosswalk_late_entry_test", "crosswalk_owner_group_test",
+        "crosswalk_persistent_test", "elevator_egress_test",
+        "elevator_temporary_clear_test", "elevator_occluded_egress_test",
+        "elevator_occupied_test", "elevator_capacity_full_test",
+        "elevator_narrow_test"
+      ]
+    }
+  },
+  "a4": {
+    "l2": 0.05,
+    "learning_rate": 0.08,
+    "iterations": 700,
+    "candidate_thresholds": [0.02, 0.05, 0.1, 0.2, 0.35, 0.5],
+    "maximum_dev_false_negative_rate": 0.01
+  }
+}

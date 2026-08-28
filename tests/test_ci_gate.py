@@ -645,9 +645,9 @@ def _parity_fixture(tmp_path: Path) -> tuple[Path, Path]:
 def test_release_parity_is_green_on_the_committed_tree() -> None:
     result = evaluate_release_parity()
     assert result.status == "pass", result.detail
-    # LITERAL, per the sentinel convention: 99 packaged assets + 1 side mirror
-    # (FZ-1 added the nine frozen persona snapshots; see task_13).
-    assert result.extra["checked"] == 100
+    # LITERAL, per the sentinel convention: 105 packaged assets + 1 side mirror.
+    # SI v4 and v5 each added three frozen persona snapshots on 2026-08-26.
+    assert result.extra["checked"] == 106
 
 
 def test_release_parity_reddens_when_a_packaged_asset_drifts_from_source(tmp_path: Path) -> None:

@@ -973,6 +973,7 @@ def build_runtime(
     socket_path: Path,
     *,
     use_llm: bool | None = None,
+    runtime_kwargs: dict[str, Any] | None = None,
 ) -> RobotRuntime:
     store = ConfigStore(config_path)
     model_config = store.section("language_model")
@@ -995,6 +996,13 @@ def build_runtime(
         language_model = LlamaCppProvider.from_config(model_config)
     if planner_enabled:
         planner_model = LlamaCppProvider.from_config(planner_config)
+    injected = dict(runtime_kwargs or {})
+    reserved = {"config_path", "backend", "language_model", "planner_model"} & set(injected)
+    if reserved:
+        raise TypeError(
+            "build_runtime owns these RobotRuntime arguments: "
+            + ", ".join(sorted(reserved))
+        )
     return RobotRuntime(
         config_path,
         # ---- CARD HW-2 go2-backend (task_40): the one branch ----
@@ -1002,6 +1010,7 @@ def build_runtime(
         # ---- END CARD HW-2 ----
         language_model=language_model,
         planner_model=planner_model,
+        **injected,
     )
 
 

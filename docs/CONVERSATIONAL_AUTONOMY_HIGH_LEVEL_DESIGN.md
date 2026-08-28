@@ -1,15 +1,15 @@
-# Parcel companion robot engineering handbook — current-code edition
+# Parcel companion robot engineering handbook — long-form architecture reference
 
 **Executive high-level design, as-built audit, robotics textbook, quality and
 procurement snapshot, tradeoff record, and gated delivery roadmap**
 
 | Document control | Value |
 | --- | --- |
-| Status | Canonical living system design; current committed-wave edition, re-audited against the checkout below |
-| Audit date | Base audit 2026-08-22; implementation delta 2026-08-23 |
-| Last audited implementation baseline | `c1b84055bd57`; Wave 3 is committed. The intervening `be86b78` is index-only, while pre-documentation tip `3792288` adds the ARCH-1 review packet and task stubs rather than product behavior. |
-| Worktree scope | PROX-1, SENSE-1 and GATE-1 follow-on work is actively changing proximity, pose/scan evidence, physical configuration, capture preflight and gate paths. A new AWARE-1 addendum proposes bundling the PROX/SENSE runtime wire-ins. This moving plane is experimental and is not promoted into the committed baseline. |
-| Audited scale | Base-audit structure counts remain recorded below; Fable reports a third bounded commit-tier run at `c1b8405` with 9,813 passes. That is recorded desktop evidence, not an independently repeated handbook, aarch64, target or physical result. |
+| Status | Long-form architecture, robotics, and target-design reference; baseline status sections include historical snapshots, and the newest explicitly dated delta governs |
+| Audit date | Base audit 2026-08-22; implementation deltas through 2026-08-26 |
+| Last audited implementation baseline | Current committed tip `f3ecb5cd9e09`; the accompanying 2026-08-26 companion-prompt, research, evaluator, P0 contract, social-progress-shadow, and documentation changes are audited as one change set without physical promotion. |
+| Worktree scope | The 2026-08-26 change set includes the v4 companion relationship retained in current `si-companion-v5`, fresh conversation/navigation evaluation, simulator/generalization research, capability/companion/disarmed-gateway/research/learning contracts, a default-off social-progress observer, and repository-maintenance/safety repairs. Its claims remain limited to dated research and desktop evidence; nothing is promoted to physical motion. |
+| Audited scale | Historical committed counts remain recorded below. The 2026-08-26 one-time commit-tier run reached 10,510 passes before two deterministic maintenance failures; both nodes and a broader affected set passed after repair, but the full gate was not rerun. This is desktop evidence, not aarch64, target, hosted-live, or physical proof. |
 | Handbook length | Approximately 42,600 words, or about 85–107 technical pages at 500–400 words per page before diagrams, tables and code blocks |
 | Product objective | A capable conversational companion that safely executes long-running navigation tasks inside a declared operating design domain (ODD) |
 | First proposed ODD | Supervised, flat, mapped, private indoor routes first; dry conditions, adequate light, walking speed, trained operator, physical tether/clearance as required, and an independent stop |
@@ -31,16 +31,20 @@ does not commission a body; and an accepted command does not prove the body move
 Those distinctions are central to the design.
 
 This edition's architectural audit supersedes the earlier `8862220` cutoff; the
-2026-08-23 delta below advances its implementation baseline to `c1b8405` and records
-the subsequent ARCH-1 decision at `3792288`. Stable equations and robotics
+2026-08-23 delta below remains historical context, while the 2026-08-26 rows and
+dated research ledger govern current worktree status. Stable equations and robotics
 foundations are unchanged. Where older baseline-specific numbers remain as
-historical evidence, the dated delta governs the current status.
+historical evidence, the newest explicitly dated delta governs the current status.
 
 ### Suggested reading paths
 
 - **Executive / procurement:** read the separate
-  [ten-page engineering executive summary](ROBOT_ENGINEERING_EXECUTIVE_SUMMARY.md),
+  [engineering executive summary](ROBOT_ENGINEERING_EXECUTIVE_SUMMARY.md),
   then use sections 1-5 and 10-14 plus Appendices J, M and N here for evidence.
+- **Code orientation:** read the concise
+  [robotics code design](ROBOTICS_CODE_DESIGN.md) for the feedback/authority model,
+  package/process ownership, failure behavior and tradeoffs before using this
+  handbook for subsystem depth.
 - **Robotics engineer:** sections 3-11, then Appendices B-G and K-M.
 - **AI / interaction engineer:** sections 6-10, then Appendices D-E, H-I and N.
 - **Safety / release reviewer:** sections 1, 3, 5, 8-13, then Appendices G, J, M and N.
@@ -592,7 +596,7 @@ deployment contract.
 | Reactive slow-band output is force-fed back into the upstream velocity smoother. | The same safety attenuation compounds across ticks; MOVE-1 measured roughly 2.2x less speed than one policy application intended. This is safe-directional but distorts behavior and every throughput/latency conclusion in the band. | Separate desired-state history from final gated output, add a closed-form steady-state property, and re-run follow/patrol baselines without weakening the stop boundary. |
 | The first patrol acceptance run recorded 10 collision ticks and only narrowly cleared its 5 m path floor. | The dynamic-city collision signal mixes robot-caused contact with agents striking a stationary robot; a single narrow pass cannot establish reliable exploration. | Attribute contact by relative motion/causal responsibility, repeat across seeds, report path coverage and net progress, and keep zero-contact as a separately visible hard metric. |
 | The MOVE-1 status references `evidence/MOVE1_EXIT_GATE.txt`, but that artifact is absent from the current task evidence. | A narrative pass cannot be independently reproduced or promoted from the referenced evidence package. | Regenerate the gate artifact from immutable inputs or mark the claim incomplete; add reference-existence checks to evidence governance. |
-| The 100 packaged runtime assets and 20-path Unitree source pack now have separate closure gates, but installed-wheel and deployed behavior are still distinct claims. | Source hermeticity can coexist with a package/image that omits runtime assets or lacks native libraries. | Keep both source gates, add clean-wheel/container capability smoke, and never equate asset parity with physical safety. |
+| The 105 packaged runtime assets (plus one external side-mirror comparison) and 20-path Unitree source pack now have separate closure gates, but installed-wheel and deployed behavior are still distinct claims. | Source hermeticity can coexist with a package/image that omits runtime assets or lacks native libraries. | Keep both source gates, add clean-wheel/container capability smoke, and never equate asset parity with physical safety. |
 
 ### 5.2 Evidence baseline
 
@@ -720,9 +724,10 @@ marketing TRL:
 | --- | --- | --- |
 | Semantic navigation v4 | 25 episodes, success rate 0.24, SPL 0.1933, zero modeled collisions | General autonomy, physical perception or physical collision safety |
 | Scripted follow/navigation | Follow 7/9; navigation 2/2 | Identity-safe owner following or ecological validity |
-| Gemma conversation calibration | 6/10 machine cases; about 349 ms median first-token latency | Human companion quality or the hosted lane |
-| Live PersonalConvo | 3/13 turns and 1/8 families | Long-horizon personal continuity |
-| Planner quality v2 | 5/5 selected semantic cases; 5.657 s median usable-plan latency | Physical execution or acceptable interactive tail latency |
+| Historical Gemma conversation calibration | 6/10 machine cases; about 349 ms median first-token latency | Current quality, human companion quality or the hosted lane |
+| Fresh PersonalConvo (2026-08-26) | 3/13 turns and 2/8 families | Long-horizon personal continuity; conversation release remains NO-GO |
+| Historical planner quality v2 | 5/5 selected semantic cases; 5.657 s median usable-plan latency | Current admitted quality, physical execution or acceptable interactive tail latency |
+| Fresh admitted planner (2026-08-26) | 3/5 full PlanIR and 3/5 PlanSketch | Release quality; the historical 5/5 result did not reproduce |
 | Synthetic duplex | Five of nine gates fail | Through-air audio, AEC or natural barge-in |
 | Embodied PlanIR | 4/4 supported deterministic MuJoCo cases; moving owner unsupported | Moving-owner behavior, field sensors or deployment readiness |
 | Earlier C-1 MuJoCo camera | Safety gate p99 delta +0.735 ms; 562.6 ms median frame age; all 16 retained frames expired | Current P1-A daemon timing, physical freshness or grounding authority |

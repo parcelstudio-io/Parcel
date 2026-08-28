@@ -18,11 +18,11 @@
     },
     {
       "path": "prompts/system/core.md",
-      "sha256": "fdf3ea28a8a18ec56a885b2ab8ad729ab9ce6b2192dfdff14a49d51daaef624e"
+      "sha256": "5c49d1f79881b2ae9a51c0b3a3370e475daf1de172f9be14ef5f01b2adf66569"
     },
     {
       "path": "prompts/system/action_policy.md",
-      "sha256": "1f3e4258d8ba3779f8d8816523e82184483eb8b40f24f6775d362d1453ba0a1c"
+      "sha256": "a2b59779c7a10bc9b42e425777c3e005479cd4682e5cf8bbf177834bdda2df03"
     },
     {
       "path": "prompts/dynamic/runtime_context.md.tmpl",

@@ -19,10 +19,11 @@ and (optionally) MetaUrban on this machine.
 > supported-version claim as red until IG-2 defines and proves the matrix; the
 > `.parcel` lock is a 3.14 host snapshot, not cross-Python evidence.
 >
-> A second independent blocker is the ignored `third_party/unitree_mujoco` tree.
-> Required Go2 scene assets are neither tracked nor fetched by CI, so a clean
-> checkout cannot run the aggregate gate. See the
-> [integrity TODO](../scrum/20260822/INTEGRITY_GATES_TODO.md).
+> The former independent `third_party/unitree_mujoco` blocker is closed. A
+> license/provenance-reviewed 20-file Go2 subset is tracked and hash-pinned, and
+> the asset-first gate compiles both product scenes from a clean checkout. This
+> is source hermeticity only; it is not SDK2/DDS, articulated-policy, Orin, or
+> physical-robot evidence.
 
 ## Host snapshot (checked 2026-08-04)
 
@@ -236,10 +237,14 @@ PYTHONPATH=src .parcel/bin/python -m parcel_robot.reasoner_gpu \
   --use-cuda-build-output --require-inference-ready
 ```
 
-The frozen five-case GPU planner run passed 5/5 and reduced median usable-plan
-latency from 19,664.294 ms on CPU to 5,657.459 ms, but it executed zero
-physical episodes. The safe staging recipe, exact audit, placement evidence,
-and limitations are in [`REASONER_GPU_PROFILE.md`](REASONER_GPU_PROFILE.md).
+The historical frozen five-case GPU planner run passed 5/5 and reduced median
+usable-plan latency from 19,664.294 ms on CPU to 5,657.459 ms, but it executed
+zero physical episodes. A fresh 2026-08-26 evaluation of the current admitted
+path scored 3/5, so the older row is retained as artifact evidence rather than
+the current capability claim. The safe staging recipe, exact audit, placement
+evidence, and limitations are in
+[`REASONER_GPU_PROFILE.md`](REASONER_GPU_PROFILE.md); current results are in
+[`../research/20260826/system-readiness/RESULTS.md`](../research/20260826/system-readiness/RESULTS.md).
 The OCI path never overwrites the working CPU binary.
 
 ---

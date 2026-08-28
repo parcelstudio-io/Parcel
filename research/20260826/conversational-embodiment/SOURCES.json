@@ -1,0 +1,303 @@
+{
+  "schema_version": "conversational-embodiment-sources-v1",
+  "access_date": "2026-08-26",
+  "selection_policy": "Primary papers, official product/API documentation, and repository-native evidence only. General claims are not treated as Go2 validation.",
+  "external_sources": [
+    {
+      "id": "openai-gpt-realtime-2",
+      "type": "official_model_documentation",
+      "primary": true,
+      "title": "GPT-Realtime-2 Model",
+      "publisher": "OpenAI",
+      "url": "https://developers.openai.com/api/docs/models/gpt-realtime-2",
+      "version_or_snapshot": "live documentation accessed 2026-08-26",
+      "used_for": [
+        "current realtime model modalities and function-calling surface",
+        "128k context and configurable reasoning tradeoff",
+        "text and audio list rates used in the explicitly modelled cost projection"
+      ],
+      "scope_note": "Pricing and features are temporally unstable. No API call or model-quality inference was made. The page says structured outputs are not supported, which strengthens the need for a local typed validator."
+    },
+    {
+      "id": "openai-voice-agents",
+      "type": "official_api_guide",
+      "primary": true,
+      "title": "Voice agents",
+      "publisher": "OpenAI",
+      "url": "https://developers.openai.com/api/docs/guides/voice-agents",
+      "version_or_snapshot": "live documentation accessed 2026-08-26",
+      "used_for": [
+        "live audio path recommendation for barge-in, low first-audio latency, natural turn taking, and realtime tool use",
+        "distinguishing speech-to-speech from chained voice architectures"
+      ],
+      "scope_note": "Architecture guidance, not a latency guarantee for Parcel, Starlink, or mounted audio."
+    },
+    {
+      "id": "openai-realtime-conversations",
+      "type": "official_api_guide",
+      "primary": true,
+      "title": "Realtime conversations",
+      "publisher": "OpenAI",
+      "url": "https://developers.openai.com/api/docs/guides/realtime-conversations",
+      "version_or_snapshot": "live documentation accessed 2026-08-26",
+      "used_for": [
+        "stateful session lifecycle and conversation events",
+        "60-minute session maximum",
+        "tool/result and session-update architecture"
+      ],
+      "scope_note": "Provider session state does not replace robot action, safety, or long-term-memory authority."
+    },
+    {
+      "id": "openai-realtime-vad",
+      "type": "official_api_guide",
+      "primary": true,
+      "title": "Voice activity detection (VAD)",
+      "publisher": "OpenAI",
+      "url": "https://developers.openai.com/api/docs/guides/realtime-vad",
+      "version_or_snapshot": "live documentation accessed 2026-08-26",
+      "used_for": [
+        "server VAD versus semantic VAD",
+        "turn-start/turn-stop events and endpointing controls"
+      ],
+      "scope_note": "The repo's frozen acoustic failures remain the prototype-specific evidence; documentation does not prove mounted endpointing."
+    },
+    {
+      "id": "openai-realtime-costs",
+      "type": "official_api_guide",
+      "primary": true,
+      "title": "Managing costs",
+      "publisher": "OpenAI",
+      "url": "https://developers.openai.com/api/docs/guides/realtime-costs",
+      "version_or_snapshot": "live documentation accessed 2026-08-26",
+      "used_for": [
+        "audio-token assumptions of 1 token/100 ms user audio and 1 token/50 ms assistant audio",
+        "context accumulation and caching caveats"
+      ],
+      "scope_note": "The experiment's price output is arithmetic over authored durations and token counts, not a bill forecast."
+    },
+    {
+      "id": "saycan",
+      "type": "research_paper",
+      "primary": true,
+      "title": "Do As I Can, Not As I Say: Grounding Language in Robotic Affordances",
+      "authors": "Ahn et al.",
+      "url": "https://arxiv.org/abs/2204.01691",
+      "version_or_snapshot": "arXiv:2204.01691v2, 2022-08-16",
+      "used_for": [
+        "combining language relevance with available skills and affordance values",
+        "keeping embodiment grounding outside free-form language generation"
+      ],
+      "scope_note": "Evaluated on a mobile manipulator, not a Go2 companion. It motivates the architecture but supplies no Parcel score."
+    },
+    {
+      "id": "inner-monologue",
+      "type": "research_paper",
+      "primary": true,
+      "title": "Inner Monologue: Embodied Reasoning through Planning with Language Models",
+      "authors": "Huang et al.",
+      "url": "https://arxiv.org/abs/2207.05608",
+      "version_or_snapshot": "arXiv:2207.05608v1, 2022-07-12",
+      "used_for": [
+        "closed-loop success, scene, and human feedback for embodied planning",
+        "typed action receipts rather than one-shot completion narration"
+      ],
+      "scope_note": "Domains and feedback sources differ from Parcel; some evaluations use privileged descriptors."
+    },
+    {
+      "id": "longmemeval",
+      "type": "research_paper",
+      "primary": true,
+      "title": "LongMemEval: Benchmarking Chat Assistants on Long-Term Interactive Memory",
+      "authors": "Wu et al.",
+      "url": "https://arxiv.org/abs/2410.10813",
+      "version_or_snapshot": "arXiv:2410.10813v2, 2025-03-04; ICLR 2025",
+      "used_for": [
+        "separate evaluation of extraction, multi-session reasoning, temporal reasoning, updates, and abstention",
+        "session decomposition, fact-bearing keys, and time-aware queries"
+      ],
+      "scope_note": "Chat-assistant benchmark, not robot-memory validation."
+    },
+    {
+      "id": "routellm",
+      "type": "research_paper",
+      "primary": true,
+      "title": "RouteLLM: Learning to Route LLMs with Preference Data",
+      "authors": "Ong et al.",
+      "url": "https://arxiv.org/abs/2406.18665",
+      "version_or_snapshot": "arXiv:2406.18665v4, 2025-02-23",
+      "used_for": [
+        "motivation to evaluate routing quality and cost jointly",
+        "strong/weak tier routing as a learnable follow-up after deterministic safety routing"
+      ],
+      "scope_note": "General LLM benchmarks; its reported >2x cost reductions in some settings are not transferred to Parcel."
+    },
+    {
+      "id": "robot-dialogue-state-graphs",
+      "type": "peer_reviewed_conference_paper",
+      "primary": true,
+      "title": "Adding Determinism to a Dialogue Agent for a Robotic Environment",
+      "authors": "Oihana Garcia Anakabe, Riccardo Cocola, Cristina Aceta",
+      "url": "https://aclanthology.org/2026.iwsds-1.26/",
+      "version_or_snapshot": "IWSDS 2026, pages 253-261, February 2026",
+      "used_for": [
+        "explicit dialogue state and transition graphs around an LLM",
+        "ambiguous, incomplete, and operator-error scenarios"
+      ],
+      "scope_note": "Robot demonstration dialogue, not social companionship or physical-action safety certification."
+    },
+    {
+      "id": "hri-graph-to-text",
+      "type": "peer_reviewed_journal_paper",
+      "primary": true,
+      "title": "Graph-to-Text Approach to Knowledge-Grounded Response Generation in Human-Robot Interaction",
+      "authors": "Nicholas Thomas Walker, Stefan Ultes, Pierre Lison",
+      "url": "https://aclanthology.org/2025.dnd-16.8/",
+      "version_or_snapshot": "Dialogue & Discourse 16, 2025-12, pages 60-95, DOI 10.5210/dad.2025.304",
+      "used_for": [
+        "continuously updated graph state from language, sensors, and spatial modules",
+        "compact graph-to-text state rendering for grounded HRI answers"
+      ],
+      "scope_note": "Small human-robot study on tour recall; it does not establish long-term companion memory quality."
+    },
+    {
+      "id": "proactivity-group-hri",
+      "type": "research_paper",
+      "primary": true,
+      "title": "When May I Help You? On The Effect of Proactivity on Group Human-Robot Collaboration",
+      "authors": "Thomas Vitry, Vanessa Maeder, Kieran von Valeburg, Asihati Hazaiti, Doga Deniz Ates, Connor Gade, Jan-Gerrit Habekost, Dennis Becker, Stefan Wermter",
+      "url": "https://arxiv.org/abs/2606.28469",
+      "version_or_snapshot": "arXiv:2606.28469v2, 2026-07-08; published at RO-MAN 2026",
+      "used_for": [
+        "evidence that proactive contribution can increase interaction while also disrupting coordination or turn taking",
+        "need to evaluate initiative by owner/group traits and task context rather than maximizing interaction count"
+      ],
+      "scope_note": "Collaborative escape-room study with a humanoid robot, not a domestic quadruped. The abstract reports descriptively higher overall success for the reactive condition, so it supports owner-conditioned initiative and measurement rather than a universal reactive/proactive winner."
+    },
+    {
+      "id": "provox",
+      "type": "research_paper",
+      "primary": true,
+      "title": "ProVox: Personalization and Proactive Planning for Situated Human-Robot Collaboration",
+      "authors": "Jennifer Grannen, Siddharth Karamcheti, Blake Wulfe, Dorsa Sadigh",
+      "url": "https://arxiv.org/abs/2506.12248",
+      "version_or_snapshot": "arXiv:2506.12248v1, 2025-06-13; accepted IEEE Robotics and Automation Letters 2025",
+      "used_for": [
+        "explicit pre-interaction preference/meta-prompting before proactive planning",
+        "measuring user burden, helpfulness, ease of use, reliability, and task efficiency together"
+      ],
+      "scope_note": "Household manipulation collaboration, not companion conversation. The reported task-efficiency/user-burden improvements do not authorize Parcel to infer travel or owner intent without its local consent/capability gate."
+    },
+    {
+      "id": "pact-proactive-asking",
+      "type": "research_paper",
+      "primary": true,
+      "title": "PACT: Proactive Asking for Continual Task Assistance in Human-Robot Collaboration",
+      "authors": "He et al.",
+      "url": "https://arxiv.org/abs/2605.24350",
+      "version_or_snapshot": "arXiv:2605.24350v1, 2026-05-23",
+      "used_for": [
+        "ask-or-act decisions under partial observation and cross-day history",
+        "clarification utility as assistance accuracy balanced against question frequency"
+      ],
+      "scope_note": "Continual task-assistance experiments, not social companionship or physical Go2 validation. It motivates clarification utility and abstention, not unrestricted proactivity."
+    },
+    {
+      "id": "unitree-social-gesture-transfer",
+      "type": "research_paper",
+      "primary": true,
+      "title": "Towards Senior-Robot Interaction: Reactive Robot Dog Gestures",
+      "authors": "Chunyang Meng, Eduardo B. Sandoval, Ricardo Sosa, Francisco Cruz",
+      "url": "https://arxiv.org/abs/2512.17136",
+      "version_or_snapshot": "arXiv:2512.17136v2, 2025-12-22; accepted ACRA 2025",
+      "used_for": [
+        "curriculum-trained social quadruped gestures in Isaac Gym",
+        "explicit evidence that high simulation success still leaves joint-compliance, load-distribution, and balance transfer problems"
+      ],
+      "scope_note": "The abstract reports >95% average simulation success and physical validation of a key paw-lift gesture, not every gesture and not Parcel's Go2 configuration."
+    },
+    {
+      "id": "nvidia-agx-orin-modules",
+      "type": "official_hardware_documentation",
+      "primary": true,
+      "title": "NVIDIA Jetson Modules",
+      "publisher": "NVIDIA",
+      "url": "https://developer.nvidia.com/embedded/jetson-modules",
+      "version_or_snapshot": "live page accessed 2026-08-26",
+      "used_for": [
+        "AGX Orin series edge-compute positioning and up-to-275-TOPS claim"
+      ],
+      "scope_note": "TOPS is not conversational latency and says nothing about the proposed concurrent sensor/audio workload."
+    },
+    {
+      "id": "nvidia-jetson-benchmarks",
+      "type": "official_benchmark_documentation",
+      "primary": true,
+      "title": "Jetson Benchmarks",
+      "publisher": "NVIDIA",
+      "url": "https://developer.nvidia.com/embedded/jetson-benchmarks",
+      "version_or_snapshot": "live page accessed 2026-08-26; AGX Orin MLPerf v4.0 row uses JetPack 5.1.1, TensorRT 9.0.1, CUDA 11.4",
+      "used_for": [
+        "counterexample to assuming any 6B model is naturally realtime: published GPT-J 6B single-stream latency 10204.46 ms on that old stack",
+        "need for exact-model, exact-stack, exact-power-mode Orin benchmarks"
+      ],
+      "scope_note": "Old GPT-J summarization benchmark, not a current optimized streaming conversational model and not a prediction for a chosen Parcel edge model."
+    }
+  ],
+  "repository_sources": [
+    {
+      "id": "current-realtime-prompt",
+      "paths": [
+        "src/parcel_robot/realtime/prompting.py",
+        "src/parcel_robot/realtime/tool_broker.py",
+        "src/parcel_robot/realtime/lane.py"
+      ],
+      "used_for": "SI/DI versioning, realtime companion wording, tool schemas, start/terminal receipts, and response-initiator authority"
+    },
+    {
+      "id": "current-personality-and-capability-surface",
+      "paths": [
+        "configs/robot.yaml",
+        "configs/robot.go2_edu_plus.yaml",
+        "prompts/personalities/calm_guardian.yaml",
+        "prompts/personalities/gentle_companion.yaml",
+        "prompts/personalities/playful_companion.yaml",
+        "src/parcel_robot/prompting/loader.py",
+        "src/parcel_robot/prompting/dynamic.py"
+      ],
+      "used_for": "effective Go2 emote/pose/tool closure and duplicate prompt-plane audit"
+    },
+    {
+      "id": "current-memory",
+      "paths": [
+        "src/parcel_robot/memory/tiered.py",
+        "src/parcel_robot/memory/conversation.py",
+        "src/parcel_robot/memory/store.py"
+      ],
+      "used_for": "tiered memory, turn/provenance snapshots, and current dialogue-context surface"
+    },
+    {
+      "id": "qev-2026-08-24",
+      "paths": [
+        "scrum/20260824/task_4/QUALITY_EVAL_REPORT.md"
+      ],
+      "used_for": "committed conversation, acoustic, navigation, and mount-readiness evidence"
+    },
+    {
+      "id": "opportunity-study-2026-08-24",
+      "paths": [
+        "research/20260824/conversation-opportunity/DESIGN.md",
+        "research/20260824/conversation-opportunity/RESULTS.md",
+        "research/20260824/conversation-opportunity/VERDICT.md",
+        "research/20260824/conversation-opportunity/results.json"
+      ],
+      "used_for": "event-driven initiative baseline and exact owner-identity/untyped-contract refuters"
+    }
+  ],
+  "unavailable_requested_artifact": {
+    "url": "https://claude.ai/code/artifact/5adb2865-5165-4936-b358-bc871687823e",
+    "access_date": "2026-08-26",
+    "reviewable_content_obtained": false,
+    "observation": "The unauthenticated artifact URL did not expose reviewable artifact content in this environment; a rendered attempt showed a not-found page and the inner frame endpoint was inaccessible.",
+    "consequence": "No design, code, result, or readiness claim in this research artifact is attributed to the inaccessible Claude artifact. Only repository-committed Claude/QEV evidence is reviewed."
+  }
+}

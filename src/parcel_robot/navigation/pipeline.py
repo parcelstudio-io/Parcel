@@ -1335,12 +1335,25 @@ class DirectiveNavigator:
 
     def snapshot(self) -> dict[str, object]:
         mission = self.mission
+        route_status = getattr(self._navigator, "last_route_status", None)
         return {
             "paused": self._paused,
             "steps_without_progress": self._steps_without_progress,
             "terminal_verification_steps": self._terminal_verification_steps,
             "mission_status": None if mission is None else mission.status_value(),
             "has_mission": mission is not None,
+            # SOCIAL-PROGRESS-1 reads these typed planner facts in shadow mode.
+            # They deliberately expose no command and do not parse the
+            # free-form MidLevelCommand note.  Frozen policy bundles may call
+            # this method, so the existing keys and control path stay intact.
+            "route_status": None if route_status is None else str(route_status),
+            "body_is_still": self._body_is_still,
+            "steps_gate_blocked": self._steps_gate_blocked,
+            "progress_demand": bool(
+                mission is not None
+                and mission.status_value()
+                not in {"arrived", "failed", "idle", "paused", "verifying"}
+            ),
         }
 
     def step(self, observation: NavObservation) -> MidLevelCommand:
@@ -1354,6 +1367,13 @@ class DirectiveNavigator:
         # recorded (MAP jumps on recovery). Returning first would hide it.
         if self._route_memory is not None:
             self._route_memory_teach(observation)
+        if self._owner_face_turn_active():
+            # Phase B owns LOST as a latch invalidation, not the resumable
+            # travel hold below: once target verification is latched, stale or
+            # unhealthy pose feedback must fail the terminal claim closed.
+            self._update_tracker(observation)
+            self._update_body_stillness(observation)
+            return self._step_owner_face_turn(observation)
         lost = self._pose_lost_hold(observation)
         if lost is not None:
             return lost
@@ -3117,6 +3137,7 @@ class DirectiveNavigator:
         grounding_outcome: str,
     ) -> MidLevelCommand:
         assert self.mission is not None
+        self._clear_terminal_pose_diagnostics()
         if self.lock_on_verify_on_approach:
             refused = self._lock_on_admission_guard(semantic_goal, result, observation)
             if refused is not None:
@@ -3131,6 +3152,8 @@ class DirectiveNavigator:
             tracks=_dynamic_tracks_from_observation(observation),
             cost_out=approach_costs,
         )
+        if pose is not None:
+            self.mission.metadata["approach_pose_source"] = "support_gated"
         if pose is None:
             # Before conceding this instance, try the K0-band approach fallback.
             # ``safe_approach_pose`` plans a ``near`` pose on the object's
@@ -3334,6 +3357,34 @@ class DirectiveNavigator:
             note=self._lock_on_telemetry_note("semantic_target_resolved"),
         )
 
+    def _clear_terminal_pose_diagnostics(self) -> None:
+        """Drop authority/phase facts left by an earlier commitment attempt."""
+
+        assert self.mission is not None
+        for key in (
+            "approach_pose_source",
+            "approach_preference_source",
+            "approach_refused_reason",
+            "support_pose_refused_reason",
+            "arrival_face_applied",
+            "terminal_relation_verified",
+            "owner_face_phase",
+            "owner_face_anchor_xy",
+            "owner_face_target_heading_deg",
+            "owner_face_turn_steps",
+            "owner_face_turn_budget_steps",
+            "owner_face_yaw_clamped",
+            "owner_face_proposed_vyaw",
+            "owner_face_max_vyaw",
+            "owner_face_phase_a_verified",
+            "owner_face_phase_a_goal",
+            "owner_face_phase_a_invalidated_reason",
+            "owner_face_failure_reason",
+            "owner_face_final_pose",
+            "owner_face_final_owner_xy",
+        ):
+            self.mission.metadata.pop(key, None)
+
     def _apply_arrival_etiquette(
         self,
         semantic_goal: Any,
@@ -3352,12 +3403,10 @@ class DirectiveNavigator:
           second failure path. Stopping in a threshold is the social-competency
           violation the Francis et al. principles name, and it is also how a
           companion ends up blocking the one route the owner needs.
-        * ``face == owner``: the terminal heading points back at the owner. The
-          bench measured the model answering ``face=goal`` for the door 6/6 on
-          both tiers, so this cannot be a hint; and REALM's last-3-metre result
-          is that no distance criterion induces a final orientation — it has to
-          be written down. Falls back to the pose's own heading when the owner
-          is not tracked, because a heading toward a guess is worse than none.
+        * ``face == owner``: retain the target-facing approach heading through
+          live semantic/K0 verification, then apply the social final heading as
+          a separately verified zero-translation turn. This prevents etiquette
+          from making its own target re-sight impossible.
         """
 
         face = str(getattr(semantic_goal, "face", "") or "")
@@ -3368,15 +3417,10 @@ class DirectiveNavigator:
             return None
         if face != ARRIVAL_FACE_OWNER:
             return pose
-        owner = self._owner_xy(observation)
-        if owner is None:
-            if self.mission is not None:
-                self.mission.metadata["arrival_face_applied"] = "unavailable"
-            return pose
-        heading = math.degrees(math.atan2(owner[1] - pose.y, owner[0] - pose.x))
         if self.mission is not None:
-            self.mission.metadata["arrival_face_applied"] = ARRIVAL_FACE_OWNER
-        return replace(pose, heading_deg=float(heading))
+            self.mission.metadata["arrival_face_applied"] = "deferred"
+            self.mission.metadata["owner_face_phase"] = "approach_target"
+        return pose
 
     @staticmethod
     def _owner_xy(observation: NavObservation) -> tuple[float, float] | None:
@@ -3411,20 +3455,12 @@ class DirectiveNavigator:
         """Approach pose inside the K0 ``near`` vicinity band when the
         support-gated :func:`safe_approach_pose` solver finds none.
 
-        This is the search-reground fix's honest fallback, and it never widens a
-        band or weakens a gate. It commits only to a point that (1) lies inside
-        the SAME ``near`` vicinity band ``_inside_arrival_goal_region`` verifies
-        against — ``[minimum_vicinity_radius_m, vicinity_radius_m]`` from the
-        candidate's own metadata, the K0 authority — and (2) keeps the full
-        footprint-to-surface collision clearance from every observed non-target
-        obstacle. If no such point exists the instance is genuinely boxed in and
-        this returns ``None``, leaving the existing unreachable-release to fail
-        the mission honestly. Applies to the band relations ``near`` and
-        ``next_to`` — both verify against a distance band around the object, and
-        the ``near`` vicinity ``[minimum_vicinity_radius_m, vicinity_radius_m]``
-        is a subset of the wider ``next_to`` band, so a pose this admits sits
-        inside whichever band the mission then verifies. ``towards`` has its own
-        stop-short waypoint and never reaches the support-gated solver.
+        This search-reground fallback never widens a band or weakens a gate: an
+        admitted point remains inside the candidate's K0 vicinity band and keeps
+        full footprint-to-surface clearance from every non-target obstacle.
+        ``near`` and ``next_to`` share that verified band; ``towards`` uses its
+        own stop-short waypoint. With no admissible collision-clear point this
+        returns ``None`` and leaves the existing unreachable-release to fail honestly.
         """
 
         if near_band_fallback_point is None or GoalPose is None or self.mission is None:
@@ -3433,25 +3469,13 @@ class DirectiveNavigator:
             return None
         if not bool(getattr(result, "reachable", True)):
             return None
-        radius = _metadata_float(
-            result.metadata, "radius_m", default=0.0, minimum=0.0, maximum=5.0
-        )
-        inner = _metadata_float(
+        band = _near_fallback_band(
             result.metadata,
-            "minimum_vicinity_radius_m",
-            default=radius + ROBOT_FOOTPRINT_RADIUS_M + self.collision.obstacle_stop_m,
-            minimum=0.1,
-            maximum=4.0,
+            obstacle_stop_m=self.collision.obstacle_stop_m,
         )
-        outer = _metadata_float(
-            result.metadata,
-            "vicinity_radius_m",
-            default=inner + 0.2,
-            minimum=0.5,
-            maximum=4.0,
-        )
-        if not (0.0 < inner <= outer):
+        if band is None:
             return None
+        inner, outer = band
         robot_map = _pose_in(observation, MAP_FRAME)
         blocked = self._non_target_obstacle_points(observation, result)
         # The same footprint-to-surface clearance the reactive gate enforces, so
@@ -5784,6 +5808,8 @@ class DirectiveNavigator:
         self.mission.metadata["terminal_relation_verified"] = relation_verified
         if _motion_feedback_is_settled(observation):
             if relation_verified:
+                if self._owner_face_turn_required():
+                    return self._begin_owner_face_turn(observation)
                 self.mission.status = "arrived"
                 self.mission.metadata["resolution_state"] = "verified"
                 self.mission.metadata["plan_step"] = "completed"
@@ -5811,6 +5837,249 @@ class DirectiveNavigator:
                 "semantic_stop_requested" if entering else "semantic_waiting_for_stop_confirmation"
             ),
         )
+
+    def _owner_face_turn_required(self) -> bool:
+        mission = self.mission
+        return bool(
+            mission is not None
+            and mission.semantic_goal is not None
+            and str(getattr(mission.semantic_goal, "face", "") or "")
+            == ARRIVAL_FACE_OWNER
+            and mission.metadata.get("owner_face_phase") != "complete"
+        )
+
+    def _owner_face_turn_active(self) -> bool:
+        return bool(
+            self._owner_face_turn_required()
+            and self.mission is not None
+            and self.mission.metadata.get("owner_face_phase") == "turning"
+        )
+
+    def _begin_owner_face_turn(self, observation: NavObservation) -> MidLevelCommand:
+        """Latch a verified target-facing arrival, then commission yaw only."""
+
+        assert self.mission is not None and self.mission.goal is not None
+        robot_map = _pose_in(observation, MAP_FRAME)
+        owner = self._owner_xy(observation)
+        if not robot_map.is_healthy:
+            return self._fail_owner_face_turn("owner_face_pose_unhealthy")
+        if observation.extras.get("perception_fresh") is not True:
+            return self._fail_owner_face_turn("owner_face_pose_stale")
+        if not _motion_feedback_is_fresh(observation):
+            return self._fail_owner_face_turn("owner_face_feedback_stale")
+        if owner is None:
+            return self._fail_owner_face_turn("owner_face_owner_lost")
+
+        anchor = (float(robot_map.x), float(robot_map.y))
+        heading = self._owner_heading_deg(anchor, owner)
+        if heading is None:
+            return self._fail_owner_face_turn("owner_face_owner_coincident")
+        phase_a_goal = self.mission.goal
+        self.mission.goal = replace(
+            phase_a_goal,
+            x=anchor[0],
+            y=anchor[1],
+            heading_deg=heading,
+        )
+        self.mission.metadata.update(
+            {
+                "owner_face_phase": "turning",
+                "owner_face_phase_a_verified": True,
+                "owner_face_phase_a_goal": (
+                    float(phase_a_goal.x),
+                    float(phase_a_goal.y),
+                    float(phase_a_goal.heading_deg),
+                ),
+                "owner_face_anchor_xy": anchor,
+                "owner_face_target_heading_deg": heading,
+                "owner_face_turn_steps": 0,
+                "owner_face_turn_budget_steps": self._owner_face_turn_budget_steps(),
+                "plan_step": "face_owner_after_verified_arrival",
+            }
+        )
+        self.mission.status = "running"
+        self._terminal_verification_steps = 0
+        self._navigator.reset(self.mission)
+        return MidLevelCommand(note="owner_face_turn_started")
+
+    def _step_owner_face_turn(self, observation: NavObservation) -> MidLevelCommand:
+        """Run Phase B through the normal controller, permitting yaw only."""
+
+        assert self.mission is not None and self.mission.goal is not None
+        reason = self._owner_face_guard_reason(observation)
+        if reason is not None:
+            return self._fail_owner_face_turn(reason)
+        owner = self._owner_xy(observation)
+        robot_map = _pose_in(observation, MAP_FRAME)
+        assert owner is not None
+        heading = self._owner_heading_deg(robot_map.xy, owner)
+        if heading is None:
+            return self._fail_owner_face_turn("owner_face_owner_coincident")
+        self.mission.goal = replace(self.mission.goal, heading_deg=heading)
+        self.mission.metadata["owner_face_target_heading_deg"] = heading
+
+        if self._owner_face_completion_ready(observation, heading):
+            return self._complete_owner_face_turn(observation, owner)
+        command = self._navigator.act(self._control_observation(observation), self.mission)
+        try:
+            proposed_vx = float(command.vx)
+            proposed_vy = float(command.vy)
+            proposed_vyaw = float(command.vyaw)
+        except (TypeError, ValueError, OverflowError):
+            return self._fail_owner_face_turn("owner_face_command_invalid")
+        if (
+            not math.isfinite(proposed_vx)
+            or not math.isfinite(proposed_vy)
+            or abs(proposed_vx) > 1e-9
+            or abs(proposed_vy) > 1e-9
+        ):
+            return self._fail_owner_face_turn("owner_face_translation_proposed")
+        if not math.isfinite(proposed_vyaw):
+            return self._fail_owner_face_turn("owner_face_yaw_non_finite")
+        try:
+            max_vyaw = float(self.safety.get("max_vyaw", 1.5))
+        except (TypeError, ValueError, OverflowError):
+            return self._fail_owner_face_turn("owner_face_yaw_limit_invalid")
+        if not math.isfinite(max_vyaw) or max_vyaw < 0.0:
+            return self._fail_owner_face_turn("owner_face_yaw_limit_invalid")
+        bounded_vyaw = max(-max_vyaw, min(max_vyaw, proposed_vyaw))
+        if bounded_vyaw != proposed_vyaw:
+            self.mission.metadata["owner_face_yaw_clamped"] = True
+            self.mission.metadata["owner_face_proposed_vyaw"] = proposed_vyaw
+            self.mission.metadata["owner_face_max_vyaw"] = max_vyaw
+        steps = int(self.mission.metadata.get("owner_face_turn_steps", 0)) + 1
+        self.mission.metadata["owner_face_turn_steps"] = steps
+        budget = int(self.mission.metadata.get("owner_face_turn_budget_steps", 0))
+        if budget <= 0 or steps >= budget:
+            return self._fail_owner_face_turn("owner_face_turn_timeout")
+        if command.stop or self.mission.status == "arrived":
+            self.mission.status = "verifying"
+            return MidLevelCommand(stop=True, note="owner_face_waiting_for_stop_confirmation")
+        self.mission.status = "running"
+        return replace(command, vx=0.0, vy=0.0, vyaw=bounded_vyaw, stop=False)
+
+    def _owner_face_guard_reason(self, observation: NavObservation) -> str | None:
+        assert self.mission is not None and self.mission.semantic_goal is not None
+        robot_map = _pose_in(observation, MAP_FRAME)
+        if not robot_map.is_healthy:
+            return "owner_face_pose_unhealthy"
+        if observation.extras.get("perception_fresh") is not True:
+            return "owner_face_pose_stale"
+        if not _motion_feedback_is_fresh(observation):
+            return "owner_face_feedback_stale"
+        if self._owner_xy(observation) is None:
+            return "owner_face_owner_lost"
+        anchor = _finite_xy(self.mission.metadata.get("owner_face_anchor_xy"))
+        if anchor is None:
+            return "owner_face_anchor_invalid"
+        if math.hypot(robot_map.x - anchor[0], robot_map.y - anchor[1]) > 0.02:
+            return "owner_face_translation_detected"
+        relation = self.mission.semantic_goal.terminal_relation
+        if not self._terminal_environment_is_clear(observation, relation=relation):
+            return "owner_face_environment_invalidated"
+        if not self._owner_face_k0_geometry_holds(robot_map):
+            return "owner_face_geometry_invalidated"
+        return None
+
+    def _owner_face_k0_geometry_holds(self, robot_map: Any) -> bool:
+        assert self.mission is not None and self.mission.semantic_goal is not None
+        region = self._arrival_goal_region()
+        if region is None:
+            return False
+        relation = self.mission.semantic_goal.terminal_relation
+        if relation == "inside":
+            polygon = getattr(region, "polygon", None)
+            if not polygon:
+                return False
+            clearance = float(
+                self.mission.metadata.get(
+                    "terminal_clearance_m", ROBOT_FOOTPRINT_RADIUS_M
+                )
+            )
+            return self._inside_polygon_verified(
+                robot_map,
+                tuple((float(x), float(y)) for x, y in polygon),
+                clearance,
+            )
+        if not region.contains(
+            robot_map.x,
+            robot_map.y,
+            anchor_covariance=self._arrival_anchor_covariance(),
+            probability_threshold=self.inside_probability_threshold,
+        ):
+            return False
+        return relation != "near" or self._on_support_surface(robot_map.x, robot_map.y)
+
+    def _owner_face_completion_ready(
+        self,
+        observation: NavObservation,
+        target_heading_deg: float,
+    ) -> bool:
+        robot_map = _pose_in(observation, MAP_FRAME)
+        tolerance = float(getattr(self._navigator, "align_exit_deg", 7.0))
+        error = abs(_wrapped_degrees(target_heading_deg - math.degrees(robot_map.yaw)))
+        return error <= tolerance and _motion_feedback_is_settled(observation)
+
+    def _owner_face_turn_budget_steps(self) -> int:
+        """A controller-derived full-turn bound plus the stop-settle budget."""
+
+        rate = max(0.1, float(getattr(self._navigator, "max_yaw_rate", 0.8)))
+        accel = max(0.1, float(getattr(self._navigator, "max_yaw_accel", 1.6)))
+        dt = max(0.01, float(getattr(self._navigator, "control_dt_s", 0.1)))
+        cruise = math.ceil(math.pi / (rate * dt))
+        ramps = 2 * math.ceil(rate / (accel * dt))
+        return int(cruise + ramps + self.terminal_stop_timeout_steps)
+
+    @staticmethod
+    def _owner_heading_deg(
+        robot_xy: tuple[float, float],
+        owner_xy: tuple[float, float],
+    ) -> float | None:
+        dx = owner_xy[0] - robot_xy[0]
+        dy = owner_xy[1] - robot_xy[1]
+        if math.hypot(dx, dy) <= 1e-9:
+            return None
+        return math.degrees(math.atan2(dy, dx))
+
+    def _complete_owner_face_turn(
+        self,
+        observation: NavObservation,
+        owner_xy: tuple[float, float],
+    ) -> MidLevelCommand:
+        assert self.mission is not None
+        robot_map = _pose_in(observation, MAP_FRAME)
+        self.mission.status = "arrived"
+        self.mission.metadata.update(
+            {
+                "owner_face_phase": "complete",
+                "arrival_face_applied": ARRIVAL_FACE_OWNER,
+                "owner_face_final_pose": (
+                    float(robot_map.x),
+                    float(robot_map.y),
+                    math.degrees(float(robot_map.yaw)),
+                ),
+                "owner_face_final_owner_xy": owner_xy,
+                "resolution_state": "verified",
+                "plan_step": "completed",
+            }
+        )
+        return MidLevelCommand(stop=True, note="arrived_verified")
+
+    def _fail_owner_face_turn(self, reason: str) -> MidLevelCommand:
+        assert self.mission is not None
+        self.mission.status = "failed"
+        self.mission.metadata.update(
+            {
+                "owner_face_phase": "failed",
+                "owner_face_phase_a_verified": False,
+                "owner_face_phase_a_invalidated_reason": reason,
+                "owner_face_failure_reason": reason,
+                "terminal_relation_verified": False,
+                "resolution_state": "owner_face_verification_failed",
+                "plan_step": "failed",
+            }
+        )
+        return MidLevelCommand(stop=True, note=reason)
 
     def _semantic_arrival_verified(self, observation: NavObservation) -> bool:
         if self.mission is None or self.mission.semantic_goal is None:
@@ -6642,6 +6911,33 @@ def _metadata_float(
     return value if math.isfinite(value) and minimum <= value <= maximum else default
 
 
+def _near_fallback_band(
+    metadata: dict[str, Any],
+    *,
+    obstacle_stop_m: float,
+) -> tuple[float, float] | None:
+    """Read the unchanged K0 vicinity band without widening either bound."""
+
+    radius = _metadata_float(
+        metadata, "radius_m", default=0.0, minimum=0.0, maximum=5.0
+    )
+    inner = _metadata_float(
+        metadata,
+        "minimum_vicinity_radius_m",
+        default=radius + ROBOT_FOOTPRINT_RADIUS_M + obstacle_stop_m,
+        minimum=0.1,
+        maximum=4.0,
+    )
+    outer = _metadata_float(
+        metadata,
+        "vicinity_radius_m",
+        default=inner + 0.2,
+        minimum=0.5,
+        maximum=4.0,
+    )
+    return (inner, outer) if 0.0 < inner <= outer else None
+
+
 def _polygon(value: object) -> tuple[tuple[float, float], ...]:
     if not isinstance(value, (list, tuple)) or len(value) < 3:
         return ()
@@ -6812,12 +7108,28 @@ def _candidate_xy(item: dict[str, Any]) -> tuple[float, float] | None:
     return (x, y) if math.isfinite(x) and math.isfinite(y) else None
 
 
-def _motion_feedback_is_settled(observation: NavObservation) -> bool:
+def _finite_xy(value: object) -> tuple[float, float] | None:
+    if not isinstance(value, (list, tuple)) or len(value) < 2:
+        return None
+    try:
+        x, y = float(value[0]), float(value[1])
+    except (TypeError, ValueError):
+        return None
+    return (x, y) if math.isfinite(x) and math.isfinite(y) else None
+
+
+def _wrapped_degrees(value: float) -> float:
+    return (float(value) + 180.0) % 360.0 - 180.0
+
+
+def _motion_feedback_values(
+    observation: NavObservation,
+) -> tuple[float, float, float, float] | None:
     feedback = observation.extras.get("motion_feedback")
     if not isinstance(feedback, dict):
-        return False
-    if feedback.get("fresh") is not True or feedback.get("stop_confirmed") is not True:
-        return False
+        return None
+    if feedback.get("fresh") is not True:
+        return None
     values = (
         feedback.get("linear_speed_mps"),
         feedback.get("yaw_speed_rad_s"),
@@ -6831,8 +7143,22 @@ def _motion_feedback_is_settled(observation: NavObservation) -> bool:
         or float(value) < 0.0
         for value in values
     ):
+        return None
+    return tuple(float(value) for value in values)  # type: ignore[return-value]
+
+
+def _motion_feedback_is_fresh(observation: NavObservation) -> bool:
+    return _motion_feedback_values(observation) is not None
+
+
+def _motion_feedback_is_settled(observation: NavObservation) -> bool:
+    feedback = observation.extras.get("motion_feedback")
+    if not isinstance(feedback, dict) or feedback.get("stop_confirmed") is not True:
         return False
-    linear, yaw, linear_limit, yaw_limit = (float(value) for value in values)
+    values = _motion_feedback_values(observation)
+    if values is None:
+        return False
+    linear, yaw, linear_limit, yaw_limit = values
     return linear <= linear_limit and yaw <= yaw_limit
 
 

@@ -92,11 +92,21 @@ from parcel_robot.camera_channel.ingress import (
     MAX_RETAINED_DETECTIONS,
     CameraDetectionFrame,
 )
+from parcel_robot.capabilities.commissioning_lifecycle import (
+    CommissioningStateProviderV1,
+    validate_commissioning_lifecycle,
+)
+from parcel_robot.capabilities.manifest import (
+    CapabilityManifestV1,
+    DeploymentTargetV1,
+    TrustedCommissioningAuthenticatorV1,
+)
 from parcel_robot.config import ConfigStore
 from parcel_robot.context.builder import ContextBuilder
 from parcel_robot.context.models import ContextBuildConfig, ContextField
 from parcel_robot.context.providers import CallableContextProvider, ClockContextProvider
 from parcel_robot.contracts.navigation_snapshot_v2 import (
+    RANGE_CONVENTION_BASE_CENTRE,
     RANGE_CONVENTION_BODY_SURFACE,
     LocalizationHealthV1,
     NavigationSnapshotV2,
@@ -250,6 +260,12 @@ from parcel_robot.navigation.semantic_map import (
     lidar_payload_from_observation,
     semantic_candidates_from_observation,
 )
+from parcel_robot.navigation.social_progress_observer import (
+    PlannerFactsV1,
+    SocialProgressObserverConfigV1,
+    SocialProgressObserverV1,
+    VelocityEvidenceV1,
+)
 from parcel_robot.navigation.spatial import (
     SpatialBehaviorConfig,
     SpatialBehaviorController,
@@ -264,7 +280,10 @@ from parcel_robot.observability import (
     resolve_latency_ledger_path,
 )
 from parcel_robot.observation.assembler import SnapshotAssembler
-from parcel_robot.observation.sources import CarrierObservationSource
+from parcel_robot.observation.sources import (
+    CARRIER_TIMESTAMP_INGRESS_MONOTONIC,
+    CarrierObservationSource,
+)
 from parcel_robot.owner_model.notes import known_facts_answer, owner_notes_from_facts
 from parcel_robot.owner_model.policy import CONSENT_GRANTED, CONSENT_PENDING
 from parcel_robot.owner_tracking.install import (
@@ -361,6 +380,7 @@ from parcel_robot.realtime.voice_identity import (
     unenrolled_label,
 )
 from parcel_robot.realtime.voice_identity import gate_decision as voice_gate_decision
+from parcel_robot.realtime.voice_identity import gates_kind as voice_identity_gates_kind
 from parcel_robot.realtime.voice_identity import rejection_fact as voice_rejection_fact
 from parcel_robot.realtime.whisperer import (
     CRITICAL_KINDS,
@@ -396,6 +416,7 @@ from parcel_robot.runtime_channels import (
     SpatialChannel,
 )
 from parcel_robot.skills.api import Dog
+from parcel_robot.skills.capability_manifest import validate_motion_manifest
 from parcel_robot.skills.executor import ExecutionResult
 from parcel_robot.voice.agent import EMERGENCY_STOP_PHRASES, VoiceAgent
 from parcel_robot.voice.amendment import AMEND_SUSPEND_REASON, begin_goal_amend
@@ -1568,6 +1589,31 @@ class CameraStreamConfig:
         }
 
 
+@dataclass(slots=True)
+class _PoseReviewDispatchToken:
+    """One same-thread, single-use commissioning bypass for simulator review."""
+
+    skill_name: str
+    consumed: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class EmoteCapabilityOmissionV1:
+    """Why one configured optional emote was not admitted by the manifest."""
+
+    name: str
+    catalog_kind: str
+    reason_code: str
+
+    def as_dict(self) -> dict[str, str]:
+        return {
+            "schema": "emote-capability-omission-v1",
+            "name": self.name,
+            "catalog_kind": self.catalog_kind,
+            "reason_code": self.reason_code,
+        }
+
+
 class RobotRuntime:
     """Own command arbitration, behavior loops, telemetry, and agent execution."""
 
@@ -1581,11 +1627,41 @@ class RobotRuntime:
         audio_status: AudioDeviceStatus | None = None,
         loop_hz: float = 10.0,
         control_manager: ControlManager | None = None,
+        capability_manifest: CapabilityManifestV1 | None = None,
+        deployment_target: DeploymentTargetV1 | None = None,
+        unsafe_simulator_conversation_motion: bool = False,
+        commissioning_authenticator: TrustedCommissioningAuthenticatorV1 | None = None,
+        commissioning_state_provider: CommissioningStateProviderV1 | None = None,
+        commissioning_clock_ns: Callable[[], int] = time.monotonic_ns,
     ):
         if loop_hz <= 0:
             raise ValueError("loop_hz must be positive")
         self.store = ConfigStore(config_path)
         self.backend = backend
+        self.capability_manifest = capability_manifest
+        self.deployment_target = deployment_target
+        if not isinstance(unsafe_simulator_conversation_motion, bool):
+            raise TypeError("unsafe_simulator_conversation_motion must be a boolean")
+        self.unsafe_simulator_conversation_motion = unsafe_simulator_conversation_motion
+        self.commissioning_authenticator = commissioning_authenticator
+        self.commissioning_state_provider = commissioning_state_provider
+        self.commissioning_clock_ns = commissioning_clock_ns
+        if capability_manifest is not None and deployment_target is None:
+            raise ValueError(
+                "an attested deployment_target is required with a capability manifest"
+            )
+        if capability_manifest is not None:
+            capability_manifest.assert_authenticated_commissioning(
+                commissioning_authenticator
+            )
+            self._assert_manifest_deployment(capability_manifest)
+            self._validate_manifest_lifecycle(capability_manifest)
+        if self.unsafe_simulator_conversation_motion and (
+            deployment_target is None or deployment_target.environment != "simulation"
+        ):
+            raise ValueError(
+                "unsafe_simulator_conversation_motion is restricted to an attested simulation"
+            )
         # The robot: config section is live morphology, not a label: gait,
         # animation retargeting, and future consumers read this profile.
         self.robot_profile = RobotProfile.from_config(self.store.section("robot"))
@@ -2121,6 +2197,36 @@ class RobotRuntime:
         self._command_lock = threading.RLock()
         self._close_lock = threading.Lock()
         self._generation = GenerationTokens()
+        # SOCIAL-PROGRESS-1. The digest-pinned shipped/physical config omits
+        # this section, which parses to disabled and constructs no observer.
+        # The simulator prototype overlay enables the only accepted mode,
+        # ``shadow``. Its distance facts are injected from this deployment's
+        # commissioned envelope/body profile rather than independently tuned.
+        social_progress_config = SocialProgressObserverConfigV1.from_mapping(
+            self.store.section("social_progress")
+            if "social_progress" in self.store.data
+            else None
+        )
+        if social_progress_config.enabled:
+            social_progress_config = dataclasses.replace(
+                social_progress_config,
+                hard_envelope_m=float(self.person_stop_m),
+                corridor_half_width_m=max(
+                    float(social_progress_config.corridor_half_width_m),
+                    float(self.robot_profile.footprint_radius_m),
+                ),
+                robot_footprint_radius_m=float(self.robot_profile.footprint_radius_m),
+            )
+            self._social_progress: SocialProgressObserverV1 | None = (
+                SocialProgressObserverV1(social_progress_config)
+            )
+        else:
+            self._social_progress = None
+        # Observer-local sample lineage only.  This is deliberately not named
+        # a command/intent sequence: the arbiter lease may expire or be
+        # preempted between this diagnostic sample and ``_dispatch_active``.
+        self._social_progress_sample_sequence = 0
+        self._social_progress_error = ""
         self._resume_store = ResumeStore()
         self._preemption_table = PreemptionTable.default()
         self._channels = BehaviorChannelRegistry(
@@ -2248,6 +2354,12 @@ class RobotRuntime:
         # Mark that narrow dispatch window so they do not preempt the
         # coordinator record that launched them.
         self._activity_dispatch_active = False
+        # The simulator's operator-only pose gallery intentionally bypasses
+        # product commissioning for exactly one reviewed catalog action. Keep
+        # that authority on the calling thread and bind it to one skill/callback;
+        # a process-global flag would let a concurrent voice/control call borrow
+        # the review window. No lock edge is added to normal motion dispatch.
+        self._pose_review_dispatch = threading.local()
         self._voice_detail: dict[str, object] = VoiceDetail().as_dict()
 
         motion = build_motion_router(
@@ -2285,14 +2397,20 @@ class RobotRuntime:
         # NavigationSnapshotV2 per tick, published BESIDE the carrier rather
         # than instead of it: the nine migrated modules still receive the
         # carrier until the Gate-4 cutover, and the snapshot is what their
-        # V2 entry points read. The range convention is stamped by the SOURCE
-        # here (A2 NAV-GLUE's handoff): both product scan sources — mujoco_lidar
-        # and the Go2 band seam — publish footprint-subtracted clearance, so the
-        # snapshot says so and carries the footprint that was subtracted.
+        # V2 entry points read. The legacy carrier mixes base-centre planar rays
+        # with already-body-surface analytic obstacles. Declare both source
+        # conventions and normalize to one honest body-surface output before
+        # the traversability stamp is minted.
         self._snapshot_source = CarrierObservationSource(
             self.backend.observe,
             range_convention=RANGE_CONVENTION_BODY_SURFACE,
             footprint_radius_m=float(self.robot_profile.footprint_radius_m),
+            planar_source_convention=RANGE_CONVENTION_BASE_CENTRE,
+            analytic_source_convention=RANGE_CONVENTION_BODY_SURFACE,
+            # SimObservation.timestamp is the backend's clock. HeadlessCity's
+            # starts at zero and is intentionally unrelated to host monotonic
+            # time, so the synchronous in-process boundary owns this mapping.
+            timestamp_domain=CARRIER_TIMESTAMP_INGRESS_MONOTONIC,
         )
         self._snapshot_assembler = SnapshotAssembler()
         self._navigation_snapshot: NavigationSnapshotV2 | None = None
@@ -2333,8 +2451,34 @@ class RobotRuntime:
             )
         # The validator and ReturnToSafePose dispatch must share one pose
         # vocabulary: an empty catalog here rejects every safe-pose plan.
-        self._brain_pose_catalog = dict(self.dog.poses() or self.store.poses())
+        configured_poses = dict(self.dog.poses() or self.store.poses())
+        manifest = (
+            None
+            if self.capability_manifest is None
+            else self._validate_capability_manifest()
+        )
+        commissioned_poses = (
+            set() if manifest is None else {entry.name for entry in manifest.available_poses()}
+        )
+        self._brain_pose_catalog = {
+            name: pose
+            for name, pose in configured_poses.items()
+            if name in commissioned_poses
+        }
         self._emote_catalog = self._resolve_emote_catalog(brain_config)
+        uncommissioned_emotes = tuple(
+            item
+            for item in self._emote_capability_omissions
+            if item.reason_code == "not_commissioned"
+        )
+        if manifest is not None and uncommissioned_emotes:
+            omitted = ", ".join(item.name for item in uncommissioned_emotes)
+            self._emit(
+                "capabilities",
+                f"Optional emotes omitted by capability admission: {omitted}",
+                "warning",
+                detail=self.emote_capability_snapshot(),
+            )
         admitted_registry = SkillContractRegistry.default(
             owner_heading_supported=True,
             pose_names=tuple(sorted(self._brain_pose_catalog)),
@@ -2456,6 +2600,12 @@ class RobotRuntime:
                 self._materialize_brain_planner_output if self._brain_enabled else None
             ),
             dog=self.dog,
+            capability_manifest=self.capability_manifest,
+            deployment_target=self.deployment_target,
+            conversation_motion_authorized=self.unsafe_simulator_conversation_motion,
+            commissioning_authenticator=self.commissioning_authenticator,
+            commissioning_state_provider=self.commissioning_state_provider,
+            commissioning_clock_ns=self.commissioning_clock_ns,
             # Card R20. The typed lane asks the SAME question the hosted
             # ``navigate_to`` tool asks, through the same method, against the
             # same vocabulary — which is what keeps R10's authority parity true
@@ -2627,9 +2777,9 @@ class RobotRuntime:
         self.realtime_gateway: object | None = None
         #: Card F1-SI. The speaker-identity gate the audio gateway feeds and
         #: ``submit_realtime_transcript`` reads. ``None`` in ``mode: text`` and
-        #: on any build that never constructs a gateway — and a gate that exists
-        #: with no enrolled profile is still exactly the pre-card behaviour, the
-        #: difference being that it SAYS so in the snapshot.
+        #: on any build that never constructs a gateway. Missing or unenrolled
+        #: identity leaves non-emergency authority disarmed and says why in the
+        #: snapshot.
         self.realtime_voice_identity: VoiceIdentityGate | None = None
         # Card A7 (DEC-0 pin: no new marked region — the invariants live in
         # `realtime/ear_gate.py` and `realtime/hosted_budget.py`). The ear is the
@@ -3533,13 +3683,12 @@ class RobotRuntime:
     )
 
     def _resolve_emote_catalog(self, brain_config: dict) -> tuple[str, ...]:
-        """The curated allowlist of catalog skills admissible as emotes.
+        """Intersect desired bounded emotes with authenticated capability truth.
 
-        Deliberately narrower than the full catalog: postural skills belong to
-        ReturnToSafePose, and gaits/velocity skills are locomotion, not
-        expression. Every entry must exist in the skill catalog and be a
-        bounded pose/trajectory, so an unknown or unbounded name fails at
-        startup instead of at dispatch.
+        The configured list expresses optional product intent, not commissioning
+        evidence. Unknown names and locomotion skills remain configuration
+        errors; known bounded skills absent from the manifest are retained as
+        typed omissions and excluded from every prompt/validator/dispatch path.
         """
 
         configured = brain_config.get("emotes", self.DEFAULT_EMOTES)
@@ -3547,8 +3696,16 @@ class RobotRuntime:
             isinstance(item, str) for item in configured
         ):
             raise TypeError("agent.brain.emotes must be a list of skill names")
+        self._desired_emote_catalog = tuple(configured)
+        manifest = (
+            None
+            if self.capability_manifest is None
+            else self._validate_capability_manifest()
+        )
+        commissioned = set() if manifest is None else set(manifest.available_embodied_names())
         catalog = self.dog.catalog
         admitted: list[str] = []
+        omissions: list[EmoteCapabilityOmissionV1] = []
         for name in configured:
             try:
                 skill = catalog.get(name)
@@ -3563,8 +3720,32 @@ class RobotRuntime:
                     f"emote {name!r} is a {skill.kind} skill; emotes must be bounded "
                     "pose or trajectory skills"
                 )
+            if name not in commissioned:
+                omissions.append(
+                    EmoteCapabilityOmissionV1(
+                        name=name,
+                        catalog_kind=skill.kind,
+                        reason_code=(
+                            "capability_manifest_unavailable"
+                            if manifest is None
+                            else "not_commissioned"
+                        ),
+                    )
+                )
+                continue
             admitted.append(name)
+        self._emote_capability_omissions = tuple(omissions)
         return tuple(sorted(admitted))
+
+    def emote_capability_snapshot(self) -> dict[str, object]:
+        """Persistent operator view of desired, admitted, and omitted emotes."""
+
+        return {
+            "schema": "emote-capability-selection-v1",
+            "desired": list(self._desired_emote_catalog),
+            "available": list(self._emote_catalog),
+            "omitted": [item.as_dict() for item in self._emote_capability_omissions],
+        }
 
     def _brain_gesture(self, name: str, intensity: float = 1.0) -> str:
         """Expressive gesture dispatch: proposal → cooldown arbiter → skill.
@@ -5475,6 +5656,7 @@ class RobotRuntime:
             raise RuntimeError("runtime is closed")
         self._interrupt_brain("correction", f"owner selected {mode} behavior")
         if mode in {"follow", "follow_behind"}:
+            self._require_commissioned_navigation_mode("follow_owner")
             follow_mode = "behind" if mode == "follow_behind" else "direct"
             return self._enable_owner_follow(follow_mode)
         if mode == "stay":
@@ -5567,6 +5749,7 @@ class RobotRuntime:
         reason ("I'm already exploring", "I'm stopped") instead of a guess.
         """
 
+        self._require_commissioned_navigation_mode("roam")
         if self._closed:
             raise RuntimeError("runtime is closed")
         budget = self._clamped_roam_budget(budget_s)
@@ -6346,6 +6529,7 @@ class RobotRuntime:
         relation: str,
         distance_m: float,
     ) -> str:
+        self._require_commissioned_navigation_mode("follow_owner")
         follow_mode = FollowOwnerController.FORMATION_MODES.get(relation)
         if follow_mode is None:
             raise ValueError(f"unsupported owner formation relation: {relation}")
@@ -6579,6 +6763,7 @@ class RobotRuntime:
     def _start_brain_owner_search(self) -> str:
         """Adapter dispatch: begin or resume the three-state search from the loss point."""
 
+        self._require_commissioned_navigation_mode("owner_search")
         if self._closed:
             raise RuntimeError("runtime is closed")
         if self.arbiter.emergency_stopped:
@@ -6751,6 +6936,7 @@ class RobotRuntime:
         return self._start_brain_navigation(directive)
 
     def _start_brain_navigation(self, directive: str) -> str:
+        self._require_commissioned_navigation_mode("navigate")
         clean = " ".join(str(directive).split())
         if not clean:
             raise ValueError("navigation directive is empty")
@@ -7082,6 +7268,7 @@ class RobotRuntime:
     def _start_brain_spatial_behavior(self, intent: SpatialIntent) -> str:
         """Start one bounded local trajectory under the normal motion arbiter."""
 
+        self._require_commissioned_navigation_mode(intent.behavior)
         if self._closed:
             raise RuntimeError("runtime is closed")
         owner_relative = intent.direction == "away_from_owner" or intent.behavior == "orbit_owner"
@@ -7183,6 +7370,13 @@ class RobotRuntime:
             }
 
     def action(self, name: str) -> str:
+        if (
+            not self.unsafe_simulator_conversation_motion
+            and name not in {"stay", "stop", "emergency_stop"}
+        ):
+            raise RuntimeError(
+                "panel motion authority is unavailable; only stay/stop/emergency_stop are admitted"
+            )
         if name == "follow":
             return self.set_behavior("follow")
         if name == "follow_behind":
@@ -7267,10 +7461,42 @@ class RobotRuntime:
             raise ValueError(f"unknown pose-review skill: {clean!r}") from error
         if skill.kind not in {"pose", "trajectory"}:
             raise ValueError("pose review accepts only bounded pose or trajectory skills")
-        result = self.dog.execute(clean) if speed is None else self.dog.execute(clean, speed=speed)
+        token = self._begin_pose_review_dispatch(clean)
+        try:
+            result = (
+                self.dog.execute(clean)
+                if speed is None
+                else self.dog.execute(clean, speed=speed)
+            )
+        finally:
+            self._end_pose_review_dispatch(token)
         if not result.accepted:
             raise RuntimeError(result.message)
         return result
+
+    def _begin_pose_review_dispatch(self, skill_name: str) -> _PoseReviewDispatchToken:
+        context = self._pose_review_dispatch
+        if getattr(context, "token", None) is not None:
+            raise RuntimeError("pose review dispatch is already active on this thread")
+        token = _PoseReviewDispatchToken(skill_name=skill_name)
+        context.token = token
+        return token
+
+    def _end_pose_review_dispatch(self, token: _PoseReviewDispatchToken) -> None:
+        context = self._pose_review_dispatch
+        if getattr(context, "token", None) is token:
+            del context.token
+
+    def _consume_pose_review_dispatch(self, skill_name: str) -> bool:
+        token = getattr(self._pose_review_dispatch, "token", None)
+        if (
+            not isinstance(token, _PoseReviewDispatchToken)
+            or token.consumed
+            or token.skill_name != skill_name
+        ):
+            return False
+        token.consumed = True
+        return True
 
     def run_pose_review(self, name: str, *, speed: float | None = None) -> str:
         """Compatibility wrapper returning the pose-review status message."""
@@ -7300,6 +7526,7 @@ class RobotRuntime:
     def propose_action(self, proposal: ActionProposal) -> str:
         if proposal.kind != "skill":
             raise ValueError("only semantic skill proposals are supported")
+        self._require_commissioned_embodied_action(proposal.name)
         try:
             skill = self.dog.catalog.get(proposal.name)
         except KeyError as error:
@@ -7317,6 +7544,40 @@ class RobotRuntime:
             "skip": "Skipped",
         }.get(result.disposition, "Rejected")
         return f"{status}: {result.message}"
+
+    def _validate_capability_manifest(self) -> CapabilityManifestV1:
+        manifest = self.capability_manifest
+        if manifest is None:
+            raise RuntimeError("capability manifest is unavailable; motion is disarmed")
+        manifest.assert_authenticated_commissioning(self.commissioning_authenticator)
+        self._assert_manifest_deployment(manifest)
+        self._validate_manifest_lifecycle(manifest)
+        validate_motion_manifest(manifest, self.dog.catalog)
+        return manifest
+
+    def _assert_manifest_deployment(self, manifest: CapabilityManifestV1) -> None:
+        target = self.deployment_target
+        if target is None or target != manifest.deployment_target:
+            raise RuntimeError(
+                "capability manifest deployment target does not match the attested runtime"
+            )
+
+    def _validate_manifest_lifecycle(self, manifest: CapabilityManifestV1) -> None:
+        validate_commissioning_lifecycle(
+            manifest.commissioning_lifecycle,
+            state_provider=self.commissioning_state_provider,
+            now_monotonic_ns=self.commissioning_clock_ns(),
+        )
+
+    def _require_commissioned_embodied_action(self, name: str) -> None:
+        manifest = self._validate_capability_manifest()
+        if name not in manifest.available_embodied_names():
+            raise RuntimeError(f"embodied action is not commissioned: {name}")
+
+    def _require_commissioned_navigation_mode(self, name: str) -> None:
+        manifest = self._validate_capability_manifest()
+        if not manifest.navigation_mode_available(name):
+            raise RuntimeError(f"navigation mode is not commissioned: {name}")
 
     def _activity_context(self) -> ActivityContext:
         arbitration = self.arbiter.snapshot()
@@ -7426,6 +7687,7 @@ class RobotRuntime:
                 # command lock is released instead of inside it.
             else:
                 try:
+                    self._require_commissioned_embodied_action(record.proposal.name)
                     self._activity_dispatch_active = True
                     try:
                         result = self.dog.execute(record.proposal.name)
@@ -7750,11 +8012,14 @@ class RobotRuntime:
             interruptibility = "safe_checkpoint"
         command = arbitration["command"]
         assert isinstance(command, dict)
-        available_social = [
-            skill.id
-            for skill in self.dog.list_skills(tag="social")
-            if skill.kind in {"pose", "trajectory"}
-        ]
+        available_social: list[str] = []
+        if self.capability_manifest is not None:
+            manifest = self._validate_capability_manifest()
+            available_social = list(
+                manifest.available_embodied_names(
+                    required_tags=("social",)
+                )
+            )
         result: dict[str, object] = {
             "active_activity": {
                 "kind": active_kind,
@@ -7782,6 +8047,8 @@ class RobotRuntime:
             "perception": self.perception.snapshot(self.maps),
             "personality": personality,
         }
+        if self.capability_manifest is not None:
+            result["capability_manifest"] = manifest.prompt_context()
         context = self.context_builder.build()
         if context.fields or context.errors:
             result["query_context"] = context.prompt_data(
@@ -7839,6 +8106,8 @@ class RobotRuntime:
         return f"Owner moved by ({dx:.2f}, {dy:.2f}) m"
 
     def _run_pose(self, pose: Pose) -> None:
+        if not self._consume_pose_review_dispatch(pose.name):
+            self._require_commissioned_embodied_action(pose.name)
         if self.arbiter.emergency_stopped:
             self._refuse_under_latch("pose")
         with self._command_lock:
@@ -7866,6 +8135,11 @@ class RobotRuntime:
             self._last_posture = pose.name
 
     def _run_trajectory(self, skill: object) -> None:
+        name = getattr(skill, "id", None)
+        if not isinstance(name, str):
+            raise TypeError("trajectory carries no commissioned skill identity")
+        if not self._consume_pose_review_dispatch(name):
+            self._require_commissioned_embodied_action(name)
         if self.arbiter.emergency_stopped:
             self._refuse_under_latch("trajectory")
         with self._command_lock:
@@ -8116,7 +8390,21 @@ class RobotRuntime:
         # branches: the scan is what decides whether this is an emergency at
         # all, and it is ingress's alone (R9/R21 law — this card does not touch
         # it, and gating ARMING is how the asymmetry is enforced instead).
-        arming = self._voice_arming_for(found.kind)
+        positive_closed_intent = found.intent in {
+            ClosedIntent.COME,
+            ClosedIntent.FASTER,
+            ClosedIntent.RESUME,
+        }
+        identity_required = found.kind in {KIND_FOLLOW, KIND_ROAM} or positive_closed_intent
+        if found.kind == KIND_EMERGENCY or identity_required:
+            arming = self._voice_arming_for(found.kind)
+        else:
+            arming = VoiceArmingDecision(
+                armed=True,
+                code="non_motion_not_gated",
+                reason="conversation or authority-reducing ingress does not arm motion",
+                kind=found.kind,
+            )
         if not arming.armed:
             return self._refuse_unverified_voice(found, arming, ledger_text, item_id, session_id)
 
@@ -8829,21 +9117,22 @@ class RobotRuntime:
     def _voice_arming_for(self, kind: str) -> VoiceArmingDecision:
         """May a turn of class ``kind`` act, given whose voice it was? Card F1-SI.
 
-        Total and never raises. With no gate constructed — ``mode: text``, a
-        build with no gateway, a lane that was never built — it returns the
-        ``verify_disabled`` decision, which arms: this method may not become a
-        second way for a text-mode session to stop working.
+        Total and never raises. Emergency is answered before touching the gate.
+        With no gate constructed — ``mode: text``, a build with no gateway, a
+        lane that was never built — non-emergency authority fails closed with
+        ``verify_disabled``.
         """
 
+        if not voice_identity_gates_kind(kind):
+            return voice_gate_decision(kind, None)
         gate = self.realtime_voice_identity
         if gate is None:
             return voice_gate_decision(kind, None)
         try:
-            return gate.decide(kind)
+            decision = gate.decide(kind)
         except Exception as error:  # noqa: BLE001 - a broken gate may not eat a stop
-            # The emergency class never reaches the gate at all, so a failure
-            # here can only be about a command — and a command whose identity
-            # check exploded is exactly the one that must not run.
+            # Emergency returned above. A command whose identity check exploded
+            # is exactly the one that must not run.
             self._emit("realtime", f"voice identity gate failed: {error}", "warning")
             return VoiceArmingDecision(
                 armed=False,
@@ -8851,6 +9140,18 @@ class RobotRuntime:
                 reason=f"the speaker-identity gate failed and therefore refused to arm: {error}",
                 kind=str(kind),
             )
+        if decision.armed:
+            return VoiceArmingDecision(
+                armed=False,
+                code="voice_binding_unavailable",
+                reason=(
+                    "speaker verification passed, but this hosted transcript/tool call "
+                    "has no authenticated one-shot binding to that audio turn"
+                ),
+                kind=str(kind),
+                verdict=decision.verdict,
+            )
+        return decision
 
     def _refuse_unverified_voice(
         self,
@@ -9316,17 +9617,17 @@ class RobotRuntime:
         THE THREE OUTCOMES, AND WHY NONE OF THEM IS AN EXCEPTION THE OWNER EATS
         ----------------------------------------------------------------------
         1. **The block is off** (``voice_identity.enabled: false``) ⇒ ``None``.
-           An operator who wrote that down gets exactly what they asked for.
+           Non-emergency authority remains disarmed; stop remains ungated.
         2. **No enrolled profile** ⇒ a gate with no profile. It reports
            ``verify_disabled`` in the snapshot, in a boot event, and in every
-           arming decision, and the runtime behaves exactly as it did before
-           this card. This is the common case today: no owner audio exists on
-           this host yet (``bench_doa.md``'s material caveat), so the shipped
-           default state of the feature is on-and-inert-and-loud.
+           arming decision. It cannot arm non-emergency motion. This is the
+           common case today: no owner audio exists on this host yet
+           (``bench_doa.md``'s material caveat), so the shipped default state is
+           disarmed-and-loud.
         3. **A profile that exists and cannot be trusted, or a model that
            cannot be loaded** ⇒ the reason is emitted at WARNING and the gate is
-           built WITHOUT an embedder, which refuses nothing and arms nothing —
-           i.e. it degrades to (2) *with the failure printed*, rather than
+           built WITHOUT an embedder, which arms nothing — i.e. it degrades to
+           (2) *with the failure printed*, rather than
            taking a household's robot down at boot because a 40 MB model file
            moved. The one thing it must never do is degrade SILENTLY, and the
            snapshot's ``reason`` is what stops that.
@@ -9400,8 +9701,8 @@ class RobotRuntime:
             if gate.enabled
             else (
                 "voice identity: NO ENROLLED OWNER VOICE PROFILE — speaker "
-                "verification is OFF and any voice can arm a command, exactly as "
-                f"before card F1-SI. Expected profile at {profile_path}."
+                "verification is OFF and non-emergency motion is DISARMED; "
+                f"emergency stop remains ungated. Expected profile at {profile_path}."
             ),
             "info" if gate.enabled else "warning",
         )
@@ -10123,7 +10424,8 @@ class RobotRuntime:
         """Catalog skills whose kind is literally ``pose``. Nothing else."""
 
         try:
-            return tuple(sorted(skill.id for skill in self.dog.catalog.list() if skill.kind == "pose"))
+            manifest = self._validate_capability_manifest()
+            return tuple(entry.name for entry in manifest.available_poses())
         except (AttributeError, KeyError, RuntimeError, TypeError, ValueError):
             return ()
 
@@ -10550,6 +10852,7 @@ class RobotRuntime:
                 frame,
                 directive_text,
                 None,
+                capability_name="orbit_owner",
                 reply="Okay—I'll walk a circle around you.",
             )
             if self.agent.last_reasoning_source != "local_plan_sketch":
@@ -10684,6 +10987,7 @@ class RobotRuntime:
                 frame,
                 directive_text,
                 None,
+                capability_name="follow_owner",
                 reply="Okay—I'll come along with you.",
             )
             if self.agent.last_reasoning_source != "local_plan_sketch":
@@ -10816,6 +11120,7 @@ class RobotRuntime:
                 frame,
                 directive_text,
                 None,
+                capability_name="navigate",
                 reply=f"Okay—I'll navigate toward {nav_directive} safely.",
             )
             if self.agent.last_reasoning_source != "local_plan_sketch":
@@ -11172,6 +11477,7 @@ class RobotRuntime:
                 "architecture": "deterministic_router_shared_backbone_semantic_planner",
                 "planner_output_contract": self._planner_output_contract,
                 "admitted_skills": list(self.brain_registry.names()),
+                "emote_capabilities": self.emote_capability_snapshot(),
                 "last_plan": last_brain_plan,
                 "active_invariants": list(self._active_invariants),
                 "battery": self._battery_snapshot().as_dict(),
@@ -11268,6 +11574,14 @@ class RobotRuntime:
         camera_stream = self.camera_stream_snapshot()
         if camera_stream is not None:
             state["camera_ingress"] = camera_stream
+        # SOCIAL-PROGRESS-1 follows the same optional-wire discipline: absent
+        # (not null) on the shipped/default-off path. The view is a bounded
+        # in-memory shadow trace and contains no actuator command surface.
+        if self._social_progress is not None:
+            social_progress = self._social_progress.snapshot()
+            if self._social_progress_error:
+                social_progress["last_error"] = self._social_progress_error
+            state["social_progress"] = social_progress
         # ---- CARD CAP-1: what the product admits, on the panel ---------------
         # Two keys, both APPENDED, neither replacing anything.
         #
@@ -11548,9 +11862,35 @@ class RobotRuntime:
             self._step_activities()
             self.component_metrics.elapsed("ActivityCoordinator", activity_started)
 
+            social_progress_requested = None
+            if self._social_progress is not None:
+                social_progress_sampled_at = time.monotonic()
+                try:
+                    social_progress_requested = self._social_progress_requested_velocity(
+                        now=social_progress_sampled_at
+                    )
+                except Exception as error:  # noqa: BLE001 - diagnostic isolation boundary
+                    # Shadow diagnostics must never stand between the producers
+                    # above and the sole-writer dispatch below.  Keep the failure
+                    # visible on the optional observer surface and dispatch anyway.
+                    self._record_social_progress_error(error)
             dispatch_started = time.monotonic()
             self._dispatch_active()
             self.component_metrics.elapsed("MotionDispatch", dispatch_started)
+            if self._social_progress is not None:
+                social_progress_started = time.monotonic()
+                try:
+                    self._observe_social_progress(
+                        requested=social_progress_requested,
+                        now=social_progress_started,
+                    )
+                except Exception as error:  # noqa: BLE001 - diagnostic isolation boundary
+                    # Belt around the observer's own containment: even a future
+                    # regression before its inner try cannot skip duplex/whisperer.
+                    self._record_social_progress_error(error)
+                self.component_metrics.elapsed(
+                    "SocialProgressObserver", social_progress_started
+                )
             duplex_started = time.monotonic()
             self._step_duplex(observation)
             self.component_metrics.elapsed("DuplexProducer", duplex_started)
@@ -11618,6 +11958,140 @@ class RobotRuntime:
             self._model_status = "ready"
         else:
             self._model_status = "configured"
+
+    def _social_progress_requested_velocity(
+        self, *, now: float
+    ) -> VelocityEvidenceV1 | None:
+        """Sample the pre-dispatch arbiter winner for the shadow observer.
+
+        This is explicitly a pre-sample, not a claim that the same lease will
+        still win inside ``_dispatch_active``. Source, age and sample time let
+        the trace attribute an expiry or concurrent preemption instead of
+        silently treating the two observations as one command.
+        """
+
+        if self._social_progress is None:
+            return None
+        active = self.arbiter.current(now)
+        self._social_progress_sample_sequence += 1
+        return VelocityEvidenceV1.from_value(
+            None if active is None else active.command,
+            source=(
+                "arbiter_sample:none"
+                if active is None
+                else f"arbiter_sample:{active.source}"
+            ),
+            sequence=self._social_progress_sample_sequence,
+            sample_monotonic_s=now,
+            age_s=0.0 if active is None else max(0.0, now - active.issued_at),
+            fresh=active is not None and not active.expired(now),
+        )
+
+    def _record_social_progress_error(self, error: Exception) -> None:
+        """Expose one bounded single-line diagnostic without trusting ``str``."""
+
+        error_type = type(error).__name__[:64] or "Exception"
+        try:
+            detail = " ".join(str(error).split())
+        except Exception:  # noqa: BLE001 - an exception may have a broken __str__
+            detail = "unprintable shadow diagnostic failure"
+        if not detail:
+            detail = "shadow diagnostic failure"
+        if len(detail) > 240:
+            detail = f"{detail[:237]}..."
+        self._social_progress_error = f"{error_type}: {detail}"
+
+    def _social_progress_planner_facts(self) -> PlannerFactsV1:
+        """Read the navigator's typed liveness surface without command notes."""
+
+        # Read runtime demand first and release ``_lock`` before reaching the
+        # navigator.  The established graph permits ``_navigation_lock`` to
+        # reach collaborator callbacks that take ``_lock``; nesting the two in
+        # the opposite direction here would add a cycle.
+        with self._lock:
+            demanded = self._navigation_directive is not None
+        with self._navigation_lock:
+            navigator = getattr(self.dog, "_navigator", None)
+            snapshot = getattr(navigator, "snapshot", None)
+            if callable(snapshot):
+                return PlannerFactsV1.from_mapping(snapshot())
+        return PlannerFactsV1(
+            mission_status="unresolved" if demanded else None,
+            route_status="unavailable" if demanded else None,
+            progress_demand=demanded,
+            has_mission=demanded,
+        )
+
+    def _observe_social_progress(
+        self,
+        *,
+        requested: VelocityEvidenceV1 | None,
+        now: float,
+    ) -> None:
+        """Record one post-dispatch shadow sample; never return a command."""
+
+        observer = self._social_progress
+        if observer is None or requested is None:
+            return
+        try:
+            # One injected-clock snapshot owns the final target and every item
+            # of its lineage.  Do not combine ``_last_sent`` with metadata from
+            # this record: a watchdog/clear can make those different facts.
+            status = self.control_manager.snapshot(now=now)
+            command_age_s = (
+                0.0
+                if status.command_age_ms is None
+                else max(0.0, float(status.command_age_ms) / 1000.0)
+            )
+            feedback_age_s = (
+                0.0
+                if status.feedback_age_ms is None
+                else max(0.0, float(status.feedback_age_ms) / 1000.0)
+            )
+            final = VelocityEvidenceV1.from_value(
+                status.target,
+                source=(
+                    "control:none"
+                    if status.target_source is None
+                    else f"control:{status.target_source}"
+                ),
+                sequence=0 if status.target_sequence is None else status.target_sequence,
+                sample_monotonic_s=max(0.0, now - command_age_s),
+                age_s=command_age_s,
+                fresh=(
+                    status.target_sequence is not None
+                    and status.command_age_ms is not None
+                    and command_age_s <= self.control_manager.timing.command_timeout_s
+                ),
+            )
+            achieved = VelocityEvidenceV1.from_value(
+                status.measured,
+                source=f"feedback:{status.controller}",
+                # ControllerStatus exposes no feedback sequence. Zero says
+                # "unstamped" rather than falsely borrowing the target's id.
+                sequence=0,
+                sample_monotonic_s=max(0.0, now - feedback_age_s),
+                age_s=feedback_age_s,
+                fresh=(
+                    status.feedback_age_ms is not None
+                    and feedback_age_s <= self.control_manager.timing.state_timeout_s
+                ),
+            )
+            observer.observe(
+                navigation_generation=self._generation.current("navigation"),
+                now_monotonic_s=now,
+                snapshot=self._navigation_snapshot,
+                requested_velocity=requested,
+                final_velocity=final,
+                achieved_velocity=achieved,
+                planner=self._social_progress_planner_facts(),
+            )
+        except Exception as error:  # noqa: BLE001 - shadow diagnostics cannot stop control
+            # This lane has no authority. A malformed research sample is made
+            # visible and dropped; it may never take down the 10 Hz loop.
+            self._record_social_progress_error(error)
+        else:
+            self._social_progress_error = ""
 
     def _dispatch_active(self) -> None:
         with self._command_lock:
@@ -14973,11 +15447,14 @@ class RobotRuntime:
         """
 
         try:
+            captured_at_ns = time.monotonic_ns()
             snapshot = self._stamp_localization_health(
-                self._snapshot_source.snapshot_for(observation)
+                self._snapshot_source.snapshot_for(
+                    observation, now_monotonic_ns=captured_at_ns
+                )
             )
             reviewed = self._snapshot_assembler.review(
-                snapshot, now_monotonic_ns=snapshot.assembled_monotonic_ns
+                snapshot, now_monotonic_ns=captured_at_ns
             )
         except (TypeError, ValueError) as exc:
             self._navigation_snapshot_error = str(exc)

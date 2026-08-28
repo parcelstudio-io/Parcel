@@ -114,8 +114,8 @@ class AwarenessLimits:
     """
 
     #: DEFAULT OFF. The shipped ``configs/robot.yaml`` is an input to the
-    #: digest-pinned ``embodied_plan_v1`` eval (997 simulator steps, minimum
-    #: clearance 0.883147 m), and that eval has idle stretches. A robot that
+    #: digest-pinned ``embodied_plan_v1`` eval (1051 simulator steps, minimum
+    #: clearance 0.865683 m), and that eval has idle stretches. A robot that
     #: turned itself during them would move a pinned row silently, which is
     #: exactly the class of baseline drift this repo's re-pin protocol exists
     #: to prevent. Flipping this default is a one-line change plus a

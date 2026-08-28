@@ -65,6 +65,43 @@ ALLOWED: dict[str, str] = {
         "compile at gate time and derives its scene list, so it does not need a "
         "seat of its own."
     ),
+    "research/20260823/localization-delegation-bench/RESULTS.md": (
+        "H7's report names the geometry-only planar-LiDAR localization arm; it "
+        "contains no rendered pixels and does not tune a camera perception model"
+    ),
+    "research/20260823/localization-delegation-bench/bench.py": (
+        "H7's research harness runs scan matching over planar LiDAR geometry only; "
+        "it constructs no renderer and exposes no pixels to a perception model"
+    ),
+    "research/20260823/localization-delegation-bench/traverse.py": (
+        "H7's scripted traverse loads MJCF geometry and raycasts planar LiDAR only; "
+        "the held-out quantity is appearance, and no renderer is constructed"
+    ),
+    "research/20260823/localization-delegation-bench/results/"
+    "dropout-city_block_b-20260824T024423Z.json": (
+        "frozen H7 dropout rows contain geometry-only LiDAR localization evidence, "
+        "not rendered appearance or camera-model output"
+    ),
+    "research/20260823/localization-delegation-bench/results/"
+    "fake_quadruped-city_block_b-20260824T024423Z.json": (
+        "frozen H7 body-neutral rows contain geometry-only LiDAR localization "
+        "evidence, not rendered appearance or camera-model output"
+    ),
+    "research/20260823/localization-delegation-bench/results/"
+    "nominal-city_block_b-20260824T024423Z.json": (
+        "frozen H7 nominal rows contain geometry-only LiDAR localization evidence, "
+        "not rendered appearance or camera-model output"
+    ),
+    "research/20260823/localization-delegation-bench/results/"
+    "teleport-city_block_b-20260824T024423Z.json": (
+        "frozen H7 kidnapping rows contain geometry-only LiDAR localization evidence, "
+        "not rendered appearance or camera-model output"
+    ),
+    "research/20260823/localization-delegation-bench/results/"
+    "teleport_far-city_block_b-20260824T024423Z.json": (
+        "frozen H7 far-kidnapping rows contain geometry-only LiDAR localization "
+        "evidence, not rendered appearance or camera-model output"
+    ),
     "scrum/20260821/task_10/README.md": "the card that created it",
     "scrum/20260821/task_10/W1_STATUS.md": "the card's status document",
     "scrum/20260821/task_14/README.md": (

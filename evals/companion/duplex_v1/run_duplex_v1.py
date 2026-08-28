@@ -165,10 +165,13 @@ FOLLOW_BENCH_POST_SPEED = {
 # "inside" convergence + terminal creep floor). All five cases still pass; the
 # two invariants this gate actually guards — zero collisions and a 1.0
 # supported-case success rate — are unchanged, which is why this stays a pacing
-# re-freeze and not a nav regression. _embodied_suite_freeze_agrees() keeps
-# the mirror and the suite from drifting apart silently.
+# re-freeze and not a nav regression. On 2026-08-28 the two-phase owner-facing
+# terminal and headless/runtime owner-track parity moved 997 -> 1051 while all
+# five outcome classes, collision count, and supported-case success stayed
+# unchanged. _embodied_suite_freeze_agrees() keeps the mirror and the suite
+# from drifting apart silently.
 EMBODIED_POST_SPEED = {
-    "simulator_step_count": 997,
+    "simulator_step_count": 1051,
     "collision_count": 0,
     "supported_case_success_rate": 1.0,
 }
@@ -545,9 +548,11 @@ def _nav_regression_gate() -> dict[str, object]:
     embodied_pin_ok = (
         # 1146 -> 1072 (2026-08-06) -> 1250 (2026-08-07 region-instance
         # selection) -> 1219 -> 997 (2026-08-09 Wave-2 near-band-inset +
-        # seamless-pacing); the two invariants below are what this gate guards
-        # and neither moved (zero collisions, 1.0 supported success rate).
-        EMBODIED_POST_SPEED["simulator_step_count"] == 997
+        # seamless-pacing) -> 1051 (2026-08-28 verified owner-facing terminal
+        # plus headless/runtime owner-track parity). The two invariants below
+        # are what this gate guards and neither moved (zero collisions, 1.0
+        # supported success rate).
+        EMBODIED_POST_SPEED["simulator_step_count"] == 1051
         and EMBODIED_POST_SPEED["collision_count"] == 0
         and EMBODIED_POST_SPEED["supported_case_success_rate"] == 1.0
         and _embodied_suite_freeze_agrees()

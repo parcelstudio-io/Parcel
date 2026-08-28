@@ -35,9 +35,12 @@ import time
 from pathlib import Path
 
 import pytest
+import yaml
 
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO))
+
+from commissioned_sim import commissioned_runtime_kwargs
 
 from evals.nav_instruct.generator import _object_goal, _region_goal
 from evals.nav_instruct.scene_truth import derived_landmark_table
@@ -123,8 +126,21 @@ class _LiveRuntime:
                 if time.monotonic() > deadline:
                     raise RuntimeError("sim socket never appeared")
                 time.sleep(0.1)
+            # Positive-motion E2E is an explicitly commissioned simulator
+            # fixture. The ordinary ``web_panel.build_runtime`` intentionally
+            # receives no manifest and remains fail-closed. The shipped emote
+            # list is a desired optional set; its uncommissioned aerial ``hop``
+            # entry is excluded visibly by the runtime capability intersection.
+            runtime_config = yaml.safe_load(
+                (REPO / "configs" / "robot.yaml").read_text(encoding="utf-8")
+            )
+            config_path = tmp_path / "voice-nav-commissioned.yaml"
+            config_path.write_text(yaml.safe_dump(runtime_config), encoding="utf-8")
             self.runtime = build_runtime(
-                REPO / "configs" / "robot.yaml", self.socket, use_llm=False
+                config_path,
+                self.socket,
+                use_llm=False,
+                runtime_kwargs=commissioned_runtime_kwargs(config_path),
             )
             self.runtime.start()
             deadline = time.monotonic() + 10.0
@@ -145,18 +161,33 @@ class _LiveRuntime:
             raise
 
     def pose(self) -> tuple[float, float]:
-        robot = self.runtime._observation.robot
+        robot = self._live_observation().robot
         return (float(robot.x), float(robot.y))
+
+    def _live_observation(self):
+        """Wait briefly for a fresh tick after a transient local IPC refusal."""
+
+        deadline = time.monotonic() + 2.0
+        observation = self.runtime._observation
+        while observation is None and self.sim.poll() is None and time.monotonic() < deadline:
+            time.sleep(0.05)
+            observation = self.runtime._observation
+        assert observation is not None, (
+            "simulator observation disappeared: "
+            f"status={self.runtime._sim_status!r} error={self.runtime._sim_error!r} "
+            f"process_exit={self.sim.poll()!r}"
+        )
+        return observation
 
     def heading(self) -> float:
         """Body yaw in radians (``snapshot()["robot"]["heading"]`` is degrees)."""
 
-        return float(self.runtime._observation.robot.yaw)
+        return float(self._live_observation().robot.yaw)
 
     def owner(self) -> tuple[float, float, bool]:
         """Observed owner position + visibility (never ``None``; see OwnerTrack)."""
 
-        owner = self.runtime._observation.owner
+        owner = self._live_observation().owner
         return (float(owner.x), float(owner.y), bool(owner.visible))
 
     def posture(self) -> str:
@@ -915,7 +946,9 @@ def test_sit_next_to_the_bench_settles_beside_it_in_a_sit(
     assert all(state == "succeeded" for state in result["states"]), (
         f"compound navigate+settle did not verify success: "
         f"states={result['states']} details={result['details']} "
-        f"navigation={result['navigation']}"
+        f"navigation={result['navigation']} end={result['end']} "
+        f"mission={result['mission']} track_tail={result['track'][-5:]} "
+        f"events={result['events'][-5:]}"
     )
 
     owner_x, owner_y, owner_visible = result["owner"]
@@ -975,7 +1008,9 @@ def test_sit_next_to_the_lamppost_settles_beside_it_in_a_sit(
     assert all(state == "succeeded" for state in result["states"]), (
         f"compound navigate+settle did not verify success: "
         f"states={result['states']} details={result['details']} "
-        f"navigation={result['navigation']}"
+        f"navigation={result['navigation']} end={result['end']} "
+        f"mission={result['mission']} track_tail={result['track'][-5:]} "
+        f"events={result['events'][-5:]}"
     )
 
     owner_x, owner_y, owner_visible = result["owner"]
@@ -1029,7 +1064,9 @@ def test_go_to_the_lamppost_grounds_plans_and_arrives(live: _LiveRuntime) -> Non
     details = " ".join(str(item) for item in result["details"])
     assert "semantic_arrival_verification_failed" not in (nav_reason + " " + details), (
         f"the near-band arrival defect recurred: states={result['states']} "
-        f"details={result['details']} navigation={result['navigation']}"
+        f"details={result['details']} navigation={result['navigation']} "
+        f"end={result['end']} mission={result['mission']} "
+        f"track_tail={result['track'][-5:]} events={result['events'][-5:]}"
     )
 
     if result["states"] and all(state == "succeeded" for state in result["states"]):
@@ -1070,10 +1107,13 @@ def test_go_to_the_lamppost_grounds_plans_and_arrives(live: _LiveRuntime) -> Non
         # navigation_no_progress during that pre-translation scan. Pinned
         # honestly here (never the near-band failure) rather than as a flaky
         # hard gate on a stall two other cards own.
-        assert "no_progress" in nav_reason or "step_timeout" in nav_reason, (
-            f"'go to the lamppost' failed for an unexpected reason (not the "
-            f"near-band arrival, not the scan-phase stall): {result['navigation']}"
-        )
+            assert "no_progress" in nav_reason or "step_timeout" in nav_reason, (
+                f"'go to the lamppost' failed for an unexpected reason (not the "
+                f"near-band arrival, not the scan-phase stall): "
+                f"navigation={result['navigation']} end={result['end']} "
+                f"mission={result['mission']} track_tail={result['track'][-5:]} "
+                f"events={result['events'][-5:]}"
+            )
 
 
 def test_go_to_the_fountain_is_asked_about_rather_than_searched_for(

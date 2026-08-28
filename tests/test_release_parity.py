@@ -36,7 +36,12 @@ PACKAGED = packaged_assets_root()
 # prompts/personalities/_frozen/<si_version>/ (3 versions × 3 personalities),
 # which a wheel must carry or a packaged install cannot render any historical
 # si_version at all. Moved deliberately, which is what this pin is for.
-EXPECTED_ASSET_COUNT = 99
+# 2026-08-26, SI v4: 99 → 102 for the fourth version's three frozen persona
+# files. The relationship block lives in version-selected code; persona bytes
+# are still snapshotted so retiring v4 later cannot move its recorded renders.
+# 2026-08-26, SI v5: 102 → 105 for the fifth version's three frozen persona
+# files. v5 retains v4's relationship and hardens embedded developer-note data.
+EXPECTED_ASSET_COUNT = 105
 
 # Every asset a product entry point resolves by a repo-relative name.
 DEFAULT_FILE_ASSETS = (

@@ -43,6 +43,10 @@ import time
 from pathlib import Path
 
 import pytest
+from commissioned_sim import (
+    authorize_commissioned_voice_binding,
+    commissioned_runtime_kwargs,
+)
 
 from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
@@ -468,7 +472,9 @@ modules: []
             connected_output=False,
             detail="r20 fixture",
         ),
+        **commissioned_runtime_kwargs(path),
     )
+    authorize_commissioned_voice_binding(runtime)
     runtime._observation = runtime.backend.observe()
     try:
         yield runtime

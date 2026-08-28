@@ -182,7 +182,11 @@ def card_markers(path: Path) -> list[tuple[int, str]]:
                     and REGION_RE.search(stripped) is not None
                 )
                 if is_delimiter:
-                    text = stripped.lstrip("#/<!- ").rstrip("->")
+                    # Delimiter rules often end in a run of ``-`` characters.
+                    # Removing those characters can expose the separating space;
+                    # strip it too so the generated Markdown passes ``git diff
+                    # --check`` instead of manufacturing trailing whitespace.
+                    text = stripped.lstrip("#/<!- ").rstrip("->").rstrip()
                     hits.append((number, text[:DOC_WIDTH]))
     except OSError:
         pass

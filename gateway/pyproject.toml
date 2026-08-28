@@ -15,11 +15,13 @@
 # vendor's venv, which is the thing the whole package boundary exists to
 # prevent.
 #
-# THE ONE DEPENDENCY IS REAL, NOT A PLACEHOLDER. Every deployable gateway
-# module imports exactly one non-stdlib name, ``parcel_robot.bridge.protocol``
-# — the frozen V1 wire contract both sides of the socket must agree on, itself
-# pure stdlib. That module ships inside ``parcel-robot-dog``, so that is what
-# is declared. Neither distribution is published to an index; the install
+# THE ONE DEPENDENCY IS REAL, NOT A PLACEHOLDER. Deployable gateway modules
+# import the frozen V1 wire contract and the product-owned Unix client through
+# ``parcel_robot.bridge``. Both are pure-stdlib seams that ship inside
+# ``parcel-robot-dog``; the historical ``gateway.seam.client`` path is only a
+# compatibility re-export. That is why the product is declared here, while the
+# product distribution does not depend on this gateway package. Neither
+# distribution is published to an index; the install
 # proof resolves both from locally built artifacts
 # (``pip install --no-index --find-links <dist>``), and the gateway's venv
 # deliberately does NOT carry the product's mujoco/numpy/PyYAML — see

@@ -211,6 +211,7 @@ def test_g2_the_shipped_prototype_overlay_still_loads() -> None:
     store = ConfigStore(resolve_config_yaml(), profile="prototype")
     assert store.overlay_path is not None
     assert store.section("roam"), "the prototype overlay's roam block did not merge"
+    assert store.section("social_progress") == {"enabled": True, "mode": "shadow"}
 
 
 def test_g2_config_key_rows_carry_the_reason_and_the_door() -> None:

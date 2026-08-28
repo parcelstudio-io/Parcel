@@ -10,6 +10,21 @@ import pytest
 
 from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.backends.base import LidarObstacle, OwnerTrack, RobotPose, SimObservation
+from parcel_robot.capabilities.commissioning_lifecycle import (
+    CommissioningCurrentStateV1,
+    CommissioningLifecycleV1,
+)
+from parcel_robot.capabilities.manifest import (
+    CapabilityCommissioningV1,
+    CommissionedArtifactV1,
+    DeploymentTargetV1,
+    EffectiveCapabilityProfileV1,
+    NavigationModeCapabilityV1,
+    TrustedCommissioningAuthenticatorV1,
+)
+from parcel_robot.capabilities.manifest import (
+    generate_effective_manifest as _generate_effective_manifest,
+)
 from parcel_robot.control.factory import build_backend_control_manager
 from parcel_robot.core.arbiter import CommandArbiter
 from parcel_robot.core.commands import MotionIntent
@@ -17,7 +32,6 @@ from parcel_robot.core.resume import ResumeIntent
 from parcel_robot.models import (
     ActionProposal,
     AgentDecision,
-    Pose,
     SpatialIntent,
     ToolCall,
     VelocityCommand,
@@ -31,12 +45,114 @@ from parcel_robot.navigation.reactive_safety import (
     apply_reactive_safety,
 )
 from parcel_robot.navigation.spatial import SpatialDecision
-from parcel_robot.runtime import RobotRuntime
+from parcel_robot.runtime import RobotRuntime as _RobotRuntime
 from parcel_robot.safety import SafetyLimits
+from parcel_robot.skills.api import Dog
+from parcel_robot.skills.capability_manifest import motion_capability_declarations
 from parcel_robot.voice.pipeline import VoiceStage
 from scripts import load_guard
 
 REPO = Path(__file__).resolve().parents[1]
+_SIM_TARGET = DeploymentTargetV1("runtime_test", "simulation", "fake", "c" * 64)
+_COMMISSIONING_AUTH = TrustedCommissioningAuthenticatorV1(
+    authenticator_id="runtime_test_authority",
+    key=b"test-only-runtime-commissioning-key",
+)
+_NOW_NS = 10_000_000_000
+_LIFECYCLE = CommissioningLifecycleV1(1, _NOW_NS - 1, _NOW_NS + 1_000_000, "nonce", "rev")
+_CURRENT_STATE = CommissioningCurrentStateV1(1, "nonce")
+
+
+def generate_effective_manifest(**kwargs):
+    return _generate_effective_manifest(
+        **kwargs,
+        commissioning_state_provider=lambda _lifecycle: _CURRENT_STATE,
+        now_monotonic_ns=_NOW_NS,
+    )
+_NAVIGATION_MODES = (
+    "follow_owner",
+    "move_steps",
+    "navigate",
+    "orbit_owner",
+    "owner_search",
+    "roam",
+    "turn_left",
+    "turn_right",
+    "walk_backward",
+    "walk_forward",
+)
+
+
+def _commissioned_sim_manifest(config_path: Path):
+    dog = Dog.from_config(config_path)
+    gestures, poses = motion_capability_declarations(dog.catalog)
+    navigation = tuple(
+        NavigationModeCapabilityV1(name, ("locomotion",), ("fresh_lidar",))
+        for name in _NAVIGATION_MODES
+    )
+    artifacts = tuple(
+        CommissionedArtifactV1(kind, entry.name, entry.artifact_digest)
+        for kind, entries in (
+            ("gesture", gestures),
+            ("pose", poses),
+            ("navigation_mode", navigation),
+        )
+        for entry in entries
+    )
+    commissioning = _COMMISSIONING_AUTH.authenticate(
+        CapabilityCommissioningV1(
+            _SIM_TARGET,
+            "runtime_test_authority",
+            "e" * 64,
+            _LIFECYCLE,
+            artifacts,
+        )
+    )
+    return generate_effective_manifest(
+        profile=EffectiveCapabilityProfileV1(
+            "runtime_test",
+            _SIM_TARGET,
+            gestures=tuple(entry.name for entry in gestures),
+            poses=tuple(entry.name for entry in poses),
+            navigation_modes=_NAVIGATION_MODES,
+        ),
+        commissioning=commissioning,
+        commissioning_authenticator=_COMMISSIONING_AUTH,
+        gestures=gestures,
+        poses=poses,
+        navigation_modes=navigation,
+    )
+
+
+class RobotRuntime(_RobotRuntime):
+    """Runtime-under-test with explicit, authenticated simulation commissioning."""
+
+    def __init__(self, config_path, backend, **kwargs):
+        kwargs.setdefault(
+            "capability_manifest",
+            _commissioned_sim_manifest(Path(config_path)),
+        )
+        kwargs.setdefault("deployment_target", _SIM_TARGET)
+        kwargs.setdefault("commissioning_authenticator", _COMMISSIONING_AUTH)
+        kwargs.setdefault("commissioning_state_provider", lambda _lifecycle: _CURRENT_STATE)
+        kwargs.setdefault("commissioning_clock_ns", lambda: _NOW_NS)
+        kwargs.setdefault("unsafe_simulator_conversation_motion", True)
+        super().__init__(config_path, backend, **kwargs)
+
+
+@pytest.mark.parametrize("bad", ("false", 0, 1, None))
+def test_unsafe_simulator_conversation_motion_requires_exact_bool(
+    runtime_config,
+    audio_status,
+    bad,
+) -> None:
+    with pytest.raises(TypeError, match="must be a boolean"):
+        RobotRuntime(
+            runtime_config,
+            FakeSimulatorBackend(_observation(0.0)),
+            audio_status=audio_status,
+            unsafe_simulator_conversation_motion=bad,
+        )
 
 
 def _observation(
@@ -331,9 +447,9 @@ def test_external_controller_blocks_direct_pose_and_trajectory_actuation(
     )
     try:
         with pytest.raises(RuntimeError, match="physical poses must be implemented"):
-            runtime._run_pose(Pose("test", {}, 0.1))
+            runtime._run_pose(runtime.dog.poses()["sit"])
         with pytest.raises(RuntimeError, match="physical trajectories must be implemented"):
-            runtime._run_trajectory(object())
+            runtime._run_trajectory(runtime.dog.catalog.get("chuckle"))
         assert backend.poses == []
         assert backend.trajectories == []
     finally:
@@ -348,6 +464,7 @@ def test_runtime_executes_bounded_owner_relative_steps_and_manual_preempts(
     runtime = RobotRuntime(runtime_config, backend, audio_status=audio_status, loop_hz=30)
     runtime.start()
     try:
+        _seed_owner_track(runtime, owner_x=2.0)
         reply = runtime.handle_text("Can you walk away from the owner 5 steps?")
         # K6 admission-lane reply (was "5 small steps" from direct dispatch).
         # The bound itself is still pinned below by the executed step count.
@@ -1731,6 +1848,56 @@ def test_simulator_pose_review_lists_only_bounded_motions_and_allows_replay(
             runtime.run_pose_review("does_not_exist")
     finally:
         runtime.close()
+
+
+def test_pose_review_authority_cannot_leak_to_a_concurrent_skill_dispatch(
+    runtime_config: Path,
+    audio_status: AudioDeviceStatus,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class PoseReviewBackend(FakeSimulatorBackend):
+        name = "mujoco"
+
+    backend = PoseReviewBackend(_observation(0.0))
+    runtime = RobotRuntime(runtime_config, backend, audio_status=audio_status)
+    review_entered = threading.Event()
+    release_review = threading.Event()
+    review_results: list[str] = []
+    review_errors: list[BaseException] = []
+    review_thread: threading.Thread | None = None
+    original_execute = runtime.dog.execute
+
+    def gated_execute(skill_id: str, **overrides: float):
+        if threading.current_thread() is review_thread:
+            review_entered.set()
+            assert release_review.wait(timeout=2.0)
+        return original_execute(skill_id, **overrides)
+
+    monkeypatch.setattr(runtime.dog, "execute", gated_execute)
+    # Pose review is the only path allowed to bypass this missing manifest.
+    runtime.capability_manifest = None
+
+    def review() -> None:
+        try:
+            review_results.append(runtime.run_pose_review("sit"))
+        except (AssertionError, RuntimeError, TypeError, ValueError) as error:
+            review_errors.append(error)
+
+    review_thread = threading.Thread(target=review, name="pose-review-test")
+    try:
+        review_thread.start()
+        assert review_entered.wait(timeout=2.0)
+        with pytest.raises(RuntimeError, match="capability manifest is unavailable"):
+            runtime.dog.execute("sit")
+    finally:
+        release_review.set()
+        review_thread.join(timeout=2.0)
+        runtime.close()
+
+    assert not review_thread.is_alive()
+    assert review_errors == []
+    assert review_results == ["Pose sit"]
+    assert [pose.name for pose in backend.poses] == ["sit"]
 
 
 def test_pose_review_rejects_non_mujoco_runtime(

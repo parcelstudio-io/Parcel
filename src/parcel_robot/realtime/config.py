@@ -594,15 +594,13 @@ class VoiceIdentityConfig:
     before it looks at any configuration at all. Anyone in the room may stop the
     dog; only commands need the owner's voice.
 
-    DEFAULT ON, AND WHY THAT IS NOT RECKLESS
-    ----------------------------------------
-    ``enabled: true`` is the default and it changes NOTHING on a host with no
-    enrolled profile: with no profile the gate reports ``verify_disabled`` and
-    the runtime behaves exactly as it did before this card, loudly, in the
-    snapshot. The switch that actually turns verification on is the existence of
-    an enrolled profile — an owner action, taken once, with their own voice.
-    Defaulting the block to ``false`` would mean an owner who enrolled still had
-    to find a second key before anything happened.
+    DEFAULT ON, FAIL CLOSED
+    -----------------------
+    ``enabled: true`` is the default. With no enrolled profile the gate reports
+    ``verify_disabled`` and refuses non-emergency authority; missing identity
+    evidence never promotes an arbitrary speaker to owner. The switch that
+    enables owner commands is the existence of a valid enrolled profile. The
+    emergency latch remains outside this block and available to anyone.
     """
 
     enabled: bool = True

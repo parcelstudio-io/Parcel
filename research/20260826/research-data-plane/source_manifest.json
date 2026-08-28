@@ -1,0 +1,236 @@
+{
+  "manifest_version": "parcel.research_sources.v1",
+  "checked_at": "2026-08-26",
+  "selection_policy": "Primary specifications, standards, official documentation, and official legal/policy pages only.",
+  "caveats": [
+    "Prices, service limits, beta status, and network performance are time-sensitive and must be rechecked before procurement or deployment.",
+    "Privacy sources inform engineering controls; this report is not legal advice and does not claim regulatory compliance.",
+    "Starlink terms and plans vary by jurisdiction and account type; the operator must supply the actual plan and measured link budget."
+  ],
+  "sources": [
+    {
+      "id": "mcap-spec",
+      "authority": "Foxglove / MCAP",
+      "title": "MCAP file format specification",
+      "url": "https://mcap.dev/spec",
+      "supports": ["append-oriented robotics records", "chunks and compression", "message/chunk indexes", "summary sections", "CRC integrity fields"]
+    },
+    {
+      "id": "mcap-notes",
+      "authority": "Foxglove / MCAP",
+      "title": "MCAP implementation notes",
+      "url": "https://mcap.dev/spec/notes",
+      "supports": ["reader and writer implementation guidance", "index and recovery tradeoffs"]
+    },
+    {
+      "id": "rosbag2",
+      "authority": "Open Robotics / ROS 2",
+      "title": "rosbag2 official repository",
+      "url": "https://github.com/ros2/rosbag2",
+      "supports": ["ROS 2 recording and replay", "storage plugins", "split, compression, conversion, pause and resume"]
+    },
+    {
+      "id": "rosbag2-mcap",
+      "authority": "Open Robotics / ROS 2",
+      "title": "rosbag2 MCAP storage plugin",
+      "url": "https://github.com/ros2/rosbag2/blob/rolling/rosbag2_storage_mcap/README.md",
+      "supports": ["ros2 bag record -s mcap", "storage profiles", "indexed compressed archival recommendation", "fastwrite limitations"]
+    },
+    {
+      "id": "rosbag2-record-options",
+      "authority": "Open Robotics / ROS 2",
+      "title": "rosbag2_transport RecordOptions",
+      "url": "https://docs.ros.org/en/ros2_packages/jazzy/api/rosbag2_transport/generated/structrosbag2__transport_1_1RecordOptions.html",
+      "supports": ["recording option semantics", "topic selection and splitting controls"]
+    },
+    {
+      "id": "cloudevents",
+      "authority": "Cloud Native Computing Foundation",
+      "title": "CloudEvents specification",
+      "url": "https://github.com/cloudevents/spec/blob/main/cloudevents/spec.md",
+      "supports": ["required event identity and type attributes", "source plus id uniqueness", "extension attributes"]
+    },
+    {
+      "id": "cloudevents-json",
+      "authority": "Cloud Native Computing Foundation",
+      "title": "CloudEvents JSON event format",
+      "url": "https://github.com/cloudevents/spec/blob/main/cloudevents/formats/json-format.md",
+      "supports": ["canonical event interchange structure", "JSON encoding rules"]
+    },
+    {
+      "id": "json-schema-2020-12",
+      "authority": "JSON Schema",
+      "title": "JSON Schema Draft 2020-12",
+      "url": "https://json-schema.org/draft/2020-12",
+      "supports": ["versioned validation vocabulary", "schema and meta-schema identifiers"]
+    },
+    {
+      "id": "croissant-1-1",
+      "authority": "MLCommons",
+      "title": "Croissant specification 1.1",
+      "url": "https://docs.mlcommons.org/croissant/docs/croissant-spec-1.1.html",
+      "supports": ["versioned JSON-LD dataset metadata", "file, record, and field identity and references"]
+    },
+    {
+      "id": "iceberg-spec",
+      "authority": "Apache Iceberg",
+      "title": "Apache Iceberg table specification",
+      "url": "https://iceberg.apache.org/spec/",
+      "supports": ["immutable data files", "snapshot commits", "schema and partition evolution"]
+    },
+    {
+      "id": "r2-data-catalog",
+      "authority": "Cloudflare",
+      "title": "R2 Data Catalog",
+      "url": "https://developers.cloudflare.com/r2-data-catalog/",
+      "supports": ["managed Iceberg REST catalog", "R2-backed metadata and data", "public beta status"]
+    },
+    {
+      "id": "r2-pricing",
+      "authority": "Cloudflare",
+      "title": "R2 pricing",
+      "url": "https://developers.cloudflare.com/r2/pricing/",
+      "supports": ["storage and request unit prices", "free tier", "no R2 egress charge"]
+    },
+    {
+      "id": "r2-catalog-pricing",
+      "authority": "Cloudflare",
+      "title": "R2 Data Catalog pricing",
+      "url": "https://developers.cloudflare.com/r2-data-catalog/platform/pricing/",
+      "supports": ["catalog operation and compaction pricing", "included monthly allowances"]
+    },
+    {
+      "id": "r2-data-security",
+      "authority": "Cloudflare",
+      "title": "R2 data security",
+      "url": "https://developers.cloudflare.com/r2/reference/data-security/",
+      "supports": ["service-side encryption at rest", "TLS transport protection"]
+    },
+    {
+      "id": "r2-ssec",
+      "authority": "Cloudflare",
+      "title": "R2 server-side encryption with customer-provided keys",
+      "url": "https://developers.cloudflare.com/r2/examples/ssec/",
+      "supports": ["customer-provided encryption keys", "key-loss implications"]
+    },
+    {
+      "id": "s3-pricing",
+      "authority": "Amazon Web Services",
+      "title": "Amazon S3 pricing",
+      "url": "https://aws.amazon.com/s3/pricing/",
+      "supports": ["storage, request, retrieval, and transfer cost dimensions"]
+    },
+    {
+      "id": "s3-checksums",
+      "authority": "Amazon Web Services",
+      "title": "Checking object integrity in Amazon S3",
+      "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/checking-object-integrity.html",
+      "supports": ["object checksums", "SHA-256 and CRC integrity options"]
+    },
+    {
+      "id": "s3-lifecycle",
+      "authority": "Amazon Web Services",
+      "title": "Managing the lifecycle of objects",
+      "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lifecycle-mgmt.html",
+      "supports": ["expiry and storage transition policies"]
+    },
+    {
+      "id": "s3-object-lock",
+      "authority": "Amazon Web Services",
+      "title": "S3 Object Lock",
+      "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock.html",
+      "supports": ["WORM retention", "versioning and legal holds"]
+    },
+    {
+      "id": "s3-client-encryption",
+      "authority": "Amazon Web Services",
+      "title": "Client-side and server-side encryption",
+      "url": "https://docs.aws.amazon.com/amazon-s3-encryption-client/latest/developerguide/client-server-side.html",
+      "supports": ["client-side envelope encryption", "unique data keys", "defense-in-depth with server-side encryption"]
+    },
+    {
+      "id": "openlineage",
+      "authority": "OpenLineage",
+      "title": "OpenLineage documentation",
+      "url": "https://openlineage.io/docs/",
+      "supports": ["job, run, input, and output dataset lineage model", "extensible facets"]
+    },
+    {
+      "id": "openlineage-facets",
+      "authority": "OpenLineage",
+      "title": "OpenLineage facets",
+      "url": "https://openlineage.io/docs/spec/facets/",
+      "supports": ["versioned lineage extensions", "dataset and run facets"]
+    },
+    {
+      "id": "openlineage-dataset-lineage",
+      "authority": "OpenLineage",
+      "title": "Dataset lineage facet",
+      "url": "https://openlineage.io/docs/next/spec/facets/dataset-facets/lineage/",
+      "supports": ["input dataset, job, field, and transformation relationships"]
+    },
+    {
+      "id": "w3c-prov-o",
+      "authority": "World Wide Web Consortium",
+      "title": "PROV-O: The PROV Ontology",
+      "url": "https://www.w3.org/TR/prov-o/",
+      "supports": ["entities, activities, and agents for interoperable provenance"]
+    },
+    {
+      "id": "gdpr",
+      "authority": "European Union",
+      "title": "Regulation (EU) 2016/679, consolidated text",
+      "url": "https://eur-lex.europa.eu/eli/reg/2016/679/oj/eng",
+      "supports": ["purpose limitation", "data minimisation", "storage limitation", "integrity and confidentiality", "consent and erasure principles"]
+    },
+    {
+      "id": "nist-privacy-framework",
+      "authority": "NIST",
+      "title": "NIST Privacy Framework 1.0",
+      "url": "https://www.nist.gov/privacy-framework/privacy-framework",
+      "supports": ["stable privacy risk management framework"]
+    },
+    {
+      "id": "nistir-8053",
+      "authority": "NIST",
+      "title": "NISTIR 8053: De-Identification of Personal Information",
+      "url": "https://nvlpubs.nist.gov/nistpubs/ir/2015/nist.ir.8053.pdf",
+      "supports": ["de-identification risk", "structured and unstructured data challenges"]
+    },
+    {
+      "id": "nist-sp-800-111",
+      "authority": "NIST",
+      "title": "SP 800-111: Guide to Storage Encryption Technologies for End User Devices",
+      "url": "https://csrc.nist.gov/pubs/sp/800/111/final",
+      "supports": ["storage encryption and key protection guidance"]
+    },
+    {
+      "id": "nist-sp-800-38d",
+      "authority": "NIST",
+      "title": "SP 800-38D: GCM and GMAC",
+      "url": "https://csrc.nist.gov/pubs/sp/800/38/d/final",
+      "supports": ["AES-GCM authenticated encryption"]
+    },
+    {
+      "id": "nist-key-management",
+      "authority": "NIST",
+      "title": "Key Management Guidelines",
+      "url": "https://csrc.nist.gov/projects/key-management/key-management-guidelines",
+      "supports": ["cryptographic key lifecycle guidance", "stable and draft revision status"]
+    },
+    {
+      "id": "starlink-fair-use",
+      "authority": "Starlink",
+      "title": "Starlink Fair Use Policy",
+      "url": "https://starlink.com/legal/documents/DOC-1726-51199-77",
+      "supports": ["priority-data buckets", "standard-data fallback", "network management", "usage tracking and opt-in additional data"]
+    },
+    {
+      "id": "starlink-specifications",
+      "authority": "Starlink",
+      "title": "Starlink specifications",
+      "url": "https://starlink.com/legal/documents/DOC-1470-99699-90",
+      "supports": ["typical upload, download, and latency ranges", "performance variability"]
+    }
+  ]
+}

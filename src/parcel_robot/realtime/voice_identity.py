@@ -56,10 +56,10 @@ exists at all.
 
 THE FOUR FAIL-CLOSED RULES
 --------------------------
-1. **No profile ⇒ verify DISABLED ⇒ exactly the pre-card behaviour**, said out
-   loud in the snapshot and in a boot event. This is the one direction where
-   "off" is right: a household that has not enrolled cannot be locked out of
-   its own robot by a feature it never turned on.
+1. **No profile ⇒ verify DISABLED ⇒ motion remains disarmed**, said out
+   loud in the snapshot and in a boot event. Owner authority is evidence, not
+   a configuration fallback; an absent verifier cannot turn any nearby voice
+   into the owner. The emergency latch remains available to everyone.
 2. **A profile that exists and cannot be trusted is a REFUSAL, never a silent
    downgrade to (1).** A truncated file, a different embedding model, a wrong
    dimension: an operator gets an exception naming the file, because a corrupt
@@ -195,6 +195,11 @@ DEFAULT_BUDGET_MS = 50.0
 #: television talking to the robot for ten minutes must not become ten minutes
 #: of the robot talking about it.
 DEFAULT_NARRATION_INTERVAL_S = 60.0
+
+#: Maximum age of a passing acoustic verdict at authority consumption. A
+#: transcript normally follows end-of-turn VAD within a fraction of a second;
+#: anything older is context, not authorization for a later command.
+DEFAULT_VERDICT_TTL_S = 2.0
 
 # ------------------------------------------------------------- verdict codes
 CODE_ARMED = "armed"
@@ -384,8 +389,8 @@ def load_owner_profile(path: str | Path) -> OwnerVoiceProfile | None:
     The two outcomes are deliberately different, and the difference is the whole
     fail-closed story of the card:
 
-    * an absent file is a household that has not enrolled, and the answer is the
-      pre-card behaviour with the fact stated out loud (rule 1);
+    * an absent file is a household that has not enrolled, and the answer is a
+      disabled verdict that cannot arm motion, stated out loud (rule 1);
     * a file that exists and does not parse, or carries the wrong schema, the
       wrong model or a degenerate vector, is an operator error that must be
       READ, not absorbed (rule 2). Silently treating it as "no profile" would
@@ -779,6 +784,7 @@ class VoiceVerdict:
     verify_ms: float = 0.0
     doa_deg: int | None = None
     detail: str = ""
+    issued_monotonic_s: float = 0.0
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -791,6 +797,7 @@ class VoiceVerdict:
             "verify_ms": round(self.verify_ms, 2),
             "doa_deg": self.doa_deg,
             "detail": self.detail,
+            "issued_monotonic_s": self.issued_monotonic_s,
         }
 
 
@@ -840,7 +847,7 @@ def gate_decision(kind: str, verdict: VoiceVerdict | None) -> VoiceArmingDecisio
     Order matters and is the order of the card:
 
     1. the emergency class is answered BEFORE the verdict is even looked at;
-    2. no gate object / no profile ⇒ armed, with the code that says so;
+    2. no gate object / no profile ⇒ refused, with the code that says so;
     3. a passing verdict ⇒ armed;
     4. everything else ⇒ refused, carrying the code that explains it.
     """
@@ -859,11 +866,11 @@ def gate_decision(kind: str, verdict: VoiceVerdict | None) -> VoiceArmingDecisio
         )
     if verdict is None or verdict.code == CODE_DISABLED:
         return VoiceArmingDecision(
-            armed=True,
+            armed=False,
             code=CODE_DISABLED,
             reason=(
-                "speaker verification is disabled (no enrolled owner profile); "
-                "this is the pre-card behaviour and it is stated, not implied"
+                "speaker verification is unavailable (no authenticated owner "
+                "verdict); non-emergency motion remains disarmed"
             ),
             kind=kind_text,
             verdict=verdict,
@@ -1130,6 +1137,7 @@ class VoiceIdentityGate:
         max_utterance_s: float = DEFAULT_MAX_UTTERANCE_S,
         budget_ms: float = DEFAULT_BUDGET_MS,
         narration_interval_s: float = DEFAULT_NARRATION_INTERVAL_S,
+        verdict_ttl_s: float = DEFAULT_VERDICT_TTL_S,
         doa: DoaReader | None = None,
         rejected_sector: tuple[float, float] | None = None,
         on_event: Callable[[str], None] | None = None,
@@ -1146,6 +1154,7 @@ class VoiceIdentityGate:
         self.max_utterance_s = max(self.min_utterance_s, float(max_utterance_s))
         self.budget_ms = max(0.0, float(budget_ms))
         self.narration_interval_s = max(0.0, float(narration_interval_s))
+        self.verdict_ttl_s = max(0.0, float(verdict_ttl_s))
         self._doa = doa
         self._sector = rejected_sector
         self._on_event = on_event
@@ -1155,6 +1164,7 @@ class VoiceIdentityGate:
         self._turn: _Turn | None = None
         self._turns = 0
         self._verdict: VoiceVerdict = self._disabled_verdict()
+        self._last_consumed_turn = 0
         self._last_narration_at: float | None = None
 
         # ------------------------------------------------------------ counters
@@ -1301,7 +1311,32 @@ class VoiceIdentityGate:
 
         if not gates_kind(kind):
             return gate_decision(kind, None)
-        return gate_decision(kind, self.current(wall))
+        now = self._wall(wall)
+        verdict = self.current(now)
+        with self._lock:
+            if verdict.passed and verdict.code == CODE_ARMED:
+                if verdict.issued_monotonic_s <= 0.0:
+                    return self._unbound_verdict_decision(kind, verdict, "has no issue time")
+                if now - verdict.issued_monotonic_s > self.verdict_ttl_s:
+                    return self._unbound_verdict_decision(kind, verdict, "is stale")
+                if verdict.turn <= self._last_consumed_turn:
+                    return self._unbound_verdict_decision(kind, verdict, "was already consumed")
+                self._last_consumed_turn = verdict.turn
+            return gate_decision(kind, verdict)
+
+    @staticmethod
+    def _unbound_verdict_decision(
+        kind: str,
+        verdict: VoiceVerdict,
+        failure: str,
+    ) -> VoiceArmingDecision:
+        return VoiceArmingDecision(
+            armed=False,
+            code=CODE_VERIFY_ERROR,
+            reason=f"the passing speaker verdict {failure} and cannot authorize this command",
+            kind=str(kind),
+            verdict=verdict,
+        )
 
     def label(self, kind: str, wall: float | None = None) -> SpeakerLabel:
         """Name the speaker of one turn of class ``kind``. Card P2-B.
@@ -1363,13 +1398,10 @@ class VoiceIdentityGate:
         owner's cost knob and this is a security fact, not chatter.
 
         **Card P2-B: an unenrolled gate never buys a narration slot.** With no
-        profile the gate cannot refuse anything (``gate_decision`` arms on
-        ``verify_disabled``), so this is defence in depth rather than a change of
-        outcome — but it is the structural form of "the gate is silent about
-        itself": a build that has never been enrolled has no path from this
-        object to a spoken sentence, and it does not depend on every caller
-        remembering to check. The count still moves, because a refusal that
-        happened is a refusal that happened.
+        profile ``gate_decision`` refuses non-emergency authority, but the boot
+        event and snapshot already explain why. This keeps an unenrolled build
+        from narrating the same configuration fact on every attempted command.
+        The count still moves, because a refusal that happened is a refusal.
         """
 
         now = self._wall(wall)
@@ -1498,17 +1530,7 @@ class VoiceIdentityGate:
         doa = self._read_doa()
         passed = score >= self.threshold
         if passed:
-            self._verdict = VoiceVerdict(
-                code=CODE_ARMED,
-                passed=True,
-                score=score,
-                threshold=self.threshold,
-                seconds=seconds,
-                turn=turn.index,
-                verify_ms=elapsed,
-                doa_deg=None if doa is None else doa.angle_deg,
-                detail="the enrolled owner",
-            )
+            self._accept_locked(turn, score, seconds, elapsed, doa, wall)
             return
         # The sector prefilter only ever explains a refusal that the embedding
         # had already earned; it can never overturn a pass. Reporting it as the
@@ -1546,6 +1568,28 @@ class VoiceIdentityGate:
                 f"the speaker embedding scored {score:.3f}, below the "
                 f"{self.threshold:.2f} threshold for the enrolled owner"
             ),
+        )
+
+    def _accept_locked(
+        self,
+        turn: _Turn,
+        score: float,
+        seconds: float,
+        elapsed: float,
+        doa: DoaSample | None,
+        wall: float,
+    ) -> None:
+        self._verdict = VoiceVerdict(
+            code=CODE_ARMED,
+            passed=True,
+            score=score,
+            threshold=self.threshold,
+            seconds=seconds,
+            turn=turn.index,
+            verify_ms=elapsed,
+            doa_deg=None if doa is None else doa.angle_deg,
+            detail="the enrolled owner",
+            issued_monotonic_s=wall,
         )
 
     def _read_doa(self) -> DoaSample | None:
@@ -1599,9 +1643,9 @@ class VoiceIdentityGate:
                 "an enrolled owner profile is loaded; unverified voices cannot arm "
                 "a command (the emergency latch is never identity-gated)"
                 if enabled
-                else "NO ENROLLED OWNER VOICE PROFILE: speaker verification is OFF and "
-                "any voice in the room can arm a command, exactly as before this "
-                "card. Run tools/enroll_owner_voice.py to turn it on."
+                else "NO ENROLLED OWNER VOICE PROFILE: speaker verification is OFF, "
+                "so non-emergency motion is DISARMED. Emergency stop remains "
+                "available to anyone. Run tools/enroll_owner_voice.py to enroll."
             ),
             "threshold": self.threshold,
             "profile": None if profile is None else profile.describe(),
@@ -1684,6 +1728,7 @@ __all__ = [
     "DEFAULT_NARRATION_INTERVAL_S",
     "DEFAULT_THRESHOLD",
     "DEFAULT_TURN_GAP_S",
+    "DEFAULT_VERDICT_TTL_S",
     "DOA_COMMAND_ID",
     "DOA_RESOURCE_ID",
     "LABEL_NOT_OWNER",

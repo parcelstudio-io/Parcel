@@ -347,6 +347,10 @@ def test_introducible_keys_are_exactly_the_three_documented_families() -> None:
                 # site, asserted below.
                 "planner_model",
                 # ---- END CARD TRUTH-1 --------------------------------------
+                # SOCIAL-PROGRESS-1: one shadow-only subtree. Its strict
+                # observer config parser is the downstream spelling/value
+                # guard; the digest-pinned base intentionally omits it.
+                "social_progress",
                 # ---- CARD HW-4 (task_37): the sixth family, one subtree -----
                 # `audio.gateway: browser|array` picks which ear the hosted
                 # lane has — a Chrome tab (`BrowserAudioGateway`, the shipped
@@ -467,6 +471,13 @@ def test_introducible_keys_are_exactly_the_three_documented_families() -> None:
         "listing planner_model's children would look like a spelling guard and be inert"
     )
     check_overlay_keys(base, {"planner_model": {"plan_timeoutt": 5}})  # merges; not the guard
+
+    # SOCIAL-PROGRESS-1 follows the same subtree/read-site split.
+    assert "social_progress" in OVERLAY_INTRODUCIBLE_KEYS
+    assert not any(
+        key.startswith("social_progress.") for key in OVERLAY_INTRODUCIBLE_KEYS
+    )
+    check_overlay_keys(base, {"social_progress": {"modee": "shadow"}})
 
     # ---- CARD HW-5 (task_41): both shapes, and where each one's guard is ----
     # `venue` is a scalar and the LOADER is its guard; `backend` is a subtree
@@ -896,6 +907,8 @@ def test_the_shipped_prototype_overlay_boots_a_runtime(
         assert runtime._camera_stream_config is not None
         assert "person" in runtime._camera_stream_config.queries
         assert runtime._affect_minimum_confidence == 0.5
+        assert runtime._social_progress is not None
+        assert runtime.snapshot()["social_progress"]["mode"] == "shadow"
         # The indoor person stand-off, landed by card P1-E: the final gate and
         # the owner keepout ring both move with the overlay's person_stop_m.
         assert runtime.person_stop_m == 0.7

@@ -1,18 +1,23 @@
 # Parcel documentation
 
-Executives should start with the ten-page engineering summary, then use the
-engineering handbook for the canonical architecture and textbook detail. Together
-they provide the current decision brief, implementation/quality audit, robotics
-foundations, tradeoff record, and roadmap for this checkout. This index was
+Executives should start with the engineering summary. Engineers should use
+the concise robotics code design for the as-built package/process and authority map,
+then use the engineering handbook for long-form target architecture and textbook
+detail. Together they provide the current decision brief, implementation/quality
+audit, robotics foundations, tradeoff record, and roadmap for this checkout. This index was
 reconciled on **2026-08-22** against committed
 baseline `904edd2` plus the visible experimental P1-A–P1-E and P2-A/P2-B worktree.
 Specialist pages retain their original audit dates; a dated design or evidence
-record does not become current merely because it is linked here.
+record does not become current merely because it is linked here. The living
+handbook and executive brief were re-audited on **2026-08-26** against committed
+tip `f3ecb5c` plus the explicitly labeled worktree research/implementation delta.
 
 | Doc | Authority | Role |
 | --- | --- | --- |
-| [ROBOT_ENGINEERING_EXECUTIVE_SUMMARY.md](ROBOT_ENGINEERING_EXECUTIVE_SUMMARY.md) | **Living/current summary** | Approximately ten-page decision brief covering the product verdict, architecture, quality, Unitree readiness, tradeoffs, risks, procurement gate and delivery sequence |
-| [CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md) | **Living/current** | Canonical executive architecture, worktree-aware capability and quality snapshot, robotics foundations, tradeoffs, risks and delivery gates |
+| [ROBOT_ENGINEERING_EXECUTIVE_SUMMARY.md](ROBOT_ENGINEERING_EXECUTIVE_SUMMARY.md) | **Living/current summary** | Decision brief covering the product verdict, architecture, quality, Unitree readiness, tradeoffs, risks, procurement gate and delivery sequence |
+| [PRODUCTION_RUNTIME_CODE_MAP.md](PRODUCTION_RUNTIME_CODE_MAP.md) | **Living/current runtime map** | One-page call and authority path from startup and conversation ingress through observation, planning, safety, control, and feedback, including the current fail-closed physical seams |
+| [ROBOTICS_CODE_DESIGN.md](ROBOTICS_CODE_DESIGN.md) | **Living/current code design** | Concise guide to the feedback/authority model, package and process boundaries, failure behavior, design rationale, tradeoffs, and extension rules |
+| [CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md) | **Long-form reference** | Detailed architecture, robotics foundations, target subsystem designs, tradeoffs and gates; its baseline status passages are dated, so use the newest delta and August 26 research ledger for current claims |
 | [DESIGN_DECISIONS.md](DESIGN_DECISIONS.md) | **Living decision record** | Crucial choices, advantages, limitations and evidence required to revisit them |
 | [../backlog/](../backlog/) | **Operational queue** | Unverified claims, blocked work and ready repository cards; dated/closed material below its front door is history |
 | [REDESIGN_2026_ASSESSMENT.md](REDESIGN_2026_ASSESSMENT.md) | **Dated rationale** | Why the 2026 redesign happened and what was adjudicated; later implementation facts defer to the handbook |
@@ -42,7 +47,7 @@ the handbook is the current product authority.
 | [DYNAMIC_CITY_AND_BEHAVIOR.md](DYNAMIC_CITY_AND_BEHAVIOR.md) | Dated living-city MuJoCo and social-action specialist record |
 | [EMBODIED_EXPRESSION.md](EMBODIED_EXPRESSION.md) | Simulator pose/gesture palette, reaction arbitration, and physical Unitree commissioning boundary |
 | [DEVELOPMENT_STACK.md](DEVELOPMENT_STACK.md) | Simulator/local-development profile; hosted Realtime is implemented but an unconfigured checkout has no active `configs/realtime.yaml` |
-| [CI.md](CI.md) | **Operational reference needing integrity reconciliation:** intended commit/nightly tiers and commands; current clean-checkout abort and hosted status defer to the handbook/integrity TODO |
+| [CI.md](CI.md) | Commit/nightly tiers and commands; the former clean-checkout Go2-asset abort is closed, while current gate evidence and hosted status defer to the handbook/research ledger |
 | [VOICE_AI_MODELS.md](VOICE_AI_MODELS.md) | STT/TTS/reasoner model choices and trust boundary |
 | [VOICE_PROVIDER_ARCHITECTURE.md](VOICE_PROVIDER_ARCHITECTURE.md) | **Current voice-provider decision:** public benchmark/review evidence, normalized pricing, robot-specific scorecard, shortlist, and replaceable provider contracts |
 | [AUDIO_LATENCY_AND_SPATIAL_INTELLIGENCE.md](AUDIO_LATENCY_AND_SPATIAL_INTELLIGENCE.md) | Latency metrics and owner-relative spatial commands |

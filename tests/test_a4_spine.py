@@ -42,6 +42,7 @@ from parcel_robot.contracts.evidence_header import (
     physical_profile,
 )
 from parcel_robot.contracts.navigation_snapshot_v2 import (
+    RANGE_CONVENTION_BASE_CENTRE,
     RANGE_CONVENTION_BODY_SURFACE,
     RANGE_CONVENTION_RAW_SENSOR,
     NavigationSnapshotV2,
@@ -209,7 +210,11 @@ def test_a_source_that_will_not_state_its_range_convention_cannot_publish() -> N
     with pytest.raises(ValueError, match="range_convention"):
         snapshot_from_carrier(_carrier(), range_convention="metres_probably")
     # The control: each of the three real conventions publishes.
-    for convention in (RANGE_CONVENTION_BODY_SURFACE, RANGE_CONVENTION_RAW_SENSOR):
+    for convention in (
+        RANGE_CONVENTION_BODY_SURFACE,
+        RANGE_CONVENTION_BASE_CENTRE,
+        RANGE_CONVENTION_RAW_SENSOR,
+    ):
         snapshot = snapshot_from_carrier(_carrier(), range_convention=convention)
         assert snapshot.traversability.range_convention == convention
 
@@ -228,6 +233,147 @@ def test_only_a_body_surface_source_may_claim_a_subtracted_footprint() -> None:
         ).footprint_radius_m
         == 0.32
     )
+
+
+def test_mixed_carrier_ranges_are_normalized_before_one_body_surface_stamp() -> None:
+    carrier = _carrier(
+        nearest_obstacle_m=0.98,
+        lidar_obstacles=(LidarObstacle(0.98, 0.0, "wall"),),
+        lidar_ranges=(1.30, float("nan"), float("inf")),
+        lidar_range_min_m=0.40,
+        lidar_range_max_m=1.30,
+    )
+    source = CarrierObservationSource(
+        lambda: carrier,
+        range_convention=RANGE_CONVENTION_BODY_SURFACE,
+        footprint_radius_m=0.32,
+        planar_source_convention=RANGE_CONVENTION_BASE_CENTRE,
+        analytic_source_convention=RANGE_CONVENTION_BODY_SURFACE,
+    )
+
+    snapshot = source.poll(now_monotonic_ns=round(carrier.timestamp * 1_000_000_000))
+    assert snapshot is not None
+    scan = snapshot.traversability
+    assert scan.range_convention == RANGE_CONVENTION_BODY_SURFACE
+    assert scan.footprint_radius_m == pytest.approx(0.32)
+    assert scan.nearest_obstacle_m == pytest.approx(0.98)
+    assert scan.obstacles[0].distance_m == pytest.approx(0.98)
+    assert scan.ranges[0] == pytest.approx(0.98)
+    assert math.isnan(scan.ranges[1])
+    assert scan.ranges[2] == float("inf")
+    assert scan.range_min_m == pytest.approx(0.08)
+    assert scan.range_max_m == pytest.approx(0.98)
+
+
+@pytest.mark.parametrize("malformed", (True, "1.30"))
+@pytest.mark.parametrize(
+    "planar_source_convention",
+    (RANGE_CONVENTION_BASE_CENTRE, RANGE_CONVENTION_BODY_SURFACE),
+)
+def test_range_normalization_never_coerces_malformed_carrier_scalars(
+    malformed: object,
+    planar_source_convention: str,
+) -> None:
+    carrier = _carrier(lidar_ranges=(malformed,))
+    source = CarrierObservationSource(
+        lambda: carrier,
+        range_convention=RANGE_CONVENTION_BODY_SURFACE,
+        footprint_radius_m=0.32,
+        planar_source_convention=planar_source_convention,
+        analytic_source_convention=RANGE_CONVENTION_BODY_SURFACE,
+    )
+
+    with pytest.raises(TypeError, match="range values must be numbers"):
+        source.poll(now_monotonic_ns=round(carrier.timestamp * 1_000_000_000))
+
+
+@pytest.mark.parametrize(
+    ("footprint", "error_type"),
+    (
+        (True, TypeError),
+        ("0.32", TypeError),
+        (float("nan"), ValueError),
+        (float("inf"), ValueError),
+        (-0.01, ValueError),
+    ),
+)
+def test_conversion_footprint_is_rejected_before_scan_iteration(
+    footprint: object,
+    error_type: type[Exception],
+) -> None:
+    class RangesMustNotIterate(tuple):
+        def __iter__(self):
+            raise AssertionError("scan iterated before footprint validation")
+
+    carrier = _carrier(lidar_ranges=RangesMustNotIterate((1.30,)))
+    source = CarrierObservationSource(
+        lambda: carrier,
+        range_convention=RANGE_CONVENTION_BODY_SURFACE,
+        footprint_radius_m=footprint,  # type: ignore[arg-type]
+        planar_source_convention=RANGE_CONVENTION_BASE_CENTRE,
+        analytic_source_convention=RANGE_CONVENTION_BODY_SURFACE,
+    )
+
+    with pytest.raises(error_type, match="footprint_radius_m"):
+        source.poll(now_monotonic_ns=round(carrier.timestamp * 1_000_000_000))
+
+
+@pytest.mark.parametrize("sentinel", (float("nan"), float("inf")))
+def test_nonfinite_scan_cannot_bypass_an_unsupported_raw_conversion(
+    sentinel: float,
+) -> None:
+    carrier = _carrier(
+        nearest_obstacle_m=None,
+        nearest_obstacle_bearing_rad=None,
+        lidar_ranges=(sentinel,) * 360,
+        lidar_range_min_m=None,
+        lidar_range_max_m=sentinel,
+    )
+    source = CarrierObservationSource(
+        lambda: carrier,
+        range_convention=RANGE_CONVENTION_BODY_SURFACE,
+        footprint_radius_m=0.32,
+        planar_source_convention=RANGE_CONVENTION_RAW_SENSOR,
+        analytic_source_convention=RANGE_CONVENTION_BODY_SURFACE,
+    )
+
+    with pytest.raises(ValueError, match="commissioned sensor extrinsic"):
+        source.poll(now_monotonic_ns=round(carrier.timestamp * 1_000_000_000))
+
+
+@pytest.mark.parametrize(
+    ("output_convention", "source_convention"),
+    (
+        (RANGE_CONVENTION_BODY_SURFACE, RANGE_CONVENTION_BASE_CENTRE),
+        (RANGE_CONVENTION_BASE_CENTRE, RANGE_CONVENTION_BODY_SURFACE),
+        (RANGE_CONVENTION_RAW_SENSOR, RANGE_CONVENTION_RAW_SENSOR),
+    ),
+)
+def test_supported_convention_pairs_preserve_nan_and_infinity_sentinels(
+    output_convention: str,
+    source_convention: str,
+) -> None:
+    carrier = _carrier(
+        nearest_obstacle_m=None,
+        nearest_obstacle_bearing_rad=None,
+        lidar_ranges=(float("nan"), float("inf")),
+        lidar_range_min_m=float("nan"),
+        lidar_range_max_m=float("inf"),
+    )
+    source = CarrierObservationSource(
+        lambda: carrier,
+        range_convention=output_convention,
+        footprint_radius_m=0.32,
+        planar_source_convention=source_convention,
+        analytic_source_convention=output_convention,
+    )
+
+    snapshot = source.poll(now_monotonic_ns=round(carrier.timestamp * 1_000_000_000))
+    assert snapshot is not None
+    assert math.isnan(snapshot.traversability.ranges[0])
+    assert snapshot.traversability.ranges[1] == float("inf")
+    assert math.isnan(snapshot.traversability.range_min_m)
+    assert snapshot.traversability.range_max_m == float("inf")
 
 
 # --------------------------------------------------------------------------
