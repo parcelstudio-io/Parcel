@@ -1,0 +1,152 @@
+{
+  "hypothesis": "H-DS1b (AMENDMENTS.md D2)",
+  "moshi_git_rev": "e6a55d2722a65870ef52a6c9f6ecfc0e90f38362",
+  "baseline_params": 7687729152,
+  "note": "act_last needs a NEW 2049-row depformer_emb (to embed audio codebook 7, which becomes an input once a 9th step exists); act_first needs only a 91-row one. That single table is the whole difference between the two orders.",
+  "rows": [
+    {
+      "act_card": 90,
+      "stream_order": "act_last (amended)",
+      "act_depformer_index": 8,
+      "depformer_slice": "shared_slice",
+      "config_flag": "depformer_weights_per_step_schedule=[0, 1, 2, 3, 4, 5, 6, 7, 7]",
+      "baseline_params": 7687729152,
+      "variant_params": 7690292224,
+      "delta_params": 2563072,
+      "delta_millions": 2.5631,
+      "bar_le_1M": false
+    },
+    {
+      "act_card": 90,
+      "stream_order": "act_last (amended)",
+      "act_depformer_index": 8,
+      "depformer_slice": "per_step_slice",
+      "config_flag": "depformer_weights_per_step=True, no schedule (mult=dep_q=9)",
+      "baseline_params": 7687729152,
+      "variant_params": 7771556864,
+      "delta_params": 83827712,
+      "delta_millions": 83.8277,
+      "bar_le_1M": false
+    },
+    {
+      "act_card": 90,
+      "stream_order": "act_first",
+      "act_depformer_index": 0,
+      "depformer_slice": "shared_slice",
+      "config_flag": "depformer_weights_per_step_schedule=[0, 0, 1, 2, 3, 4, 5, 6, 7]",
+      "baseline_params": 7687729152,
+      "variant_params": 7688287232,
+      "delta_params": 558080,
+      "delta_millions": 0.5581,
+      "bar_le_1M": true
+    },
+    {
+      "act_card": 90,
+      "stream_order": "act_first",
+      "act_depformer_index": 0,
+      "depformer_slice": "per_step_slice",
+      "config_flag": "depformer_weights_per_step=True, no schedule (mult=dep_q=9)",
+      "baseline_params": 7687729152,
+      "variant_params": 7769551872,
+      "delta_params": 81822720,
+      "delta_millions": 81.8227,
+      "bar_le_1M": false
+    },
+    {
+      "act_card": 54,
+      "stream_order": "act_last (amended)",
+      "act_depformer_index": 8,
+      "depformer_slice": "shared_slice",
+      "config_flag": "depformer_weights_per_step_schedule=[0, 1, 2, 3, 4, 5, 6, 7, 7]",
+      "baseline_params": 7687729152,
+      "variant_params": 7690107904,
+      "delta_params": 2378752,
+      "delta_millions": 2.3788,
+      "bar_le_1M": false
+    },
+    {
+      "act_card": 54,
+      "stream_order": "act_last (amended)",
+      "act_depformer_index": 8,
+      "depformer_slice": "per_step_slice",
+      "config_flag": "depformer_weights_per_step=True, no schedule (mult=dep_q=9)",
+      "baseline_params": 7687729152,
+      "variant_params": 7771372544,
+      "delta_params": 83643392,
+      "delta_millions": 83.6434,
+      "bar_le_1M": false
+    },
+    {
+      "act_card": 54,
+      "stream_order": "act_first",
+      "act_depformer_index": 0,
+      "depformer_slice": "shared_slice",
+      "config_flag": "depformer_weights_per_step_schedule=[0, 0, 1, 2, 3, 4, 5, 6, 7]",
+      "baseline_params": 7687729152,
+      "variant_params": 7688066048,
+      "delta_params": 336896,
+      "delta_millions": 0.3369,
+      "bar_le_1M": true
+    },
+    {
+      "act_card": 54,
+      "stream_order": "act_first",
+      "act_depformer_index": 0,
+      "depformer_slice": "per_step_slice",
+      "config_flag": "depformer_weights_per_step=True, no schedule (mult=dep_q=9)",
+      "baseline_params": 7687729152,
+      "variant_params": 7769330688,
+      "delta_params": 81601536,
+      "delta_millions": 81.6015,
+      "bar_le_1M": false
+    },
+    {
+      "act_card": 68,
+      "stream_order": "act_last (amended)",
+      "act_depformer_index": 8,
+      "depformer_slice": "shared_slice",
+      "config_flag": "depformer_weights_per_step_schedule=[0, 1, 2, 3, 4, 5, 6, 7, 7]",
+      "baseline_params": 7687729152,
+      "variant_params": 7690179584,
+      "delta_params": 2450432,
+      "delta_millions": 2.4504,
+      "bar_le_1M": false
+    },
+    {
+      "act_card": 68,
+      "stream_order": "act_last (amended)",
+      "act_depformer_index": 8,
+      "depformer_slice": "per_step_slice",
+      "config_flag": "depformer_weights_per_step=True, no schedule (mult=dep_q=9)",
+      "baseline_params": 7687729152,
+      "variant_params": 7771444224,
+      "delta_params": 83715072,
+      "delta_millions": 83.7151,
+      "bar_le_1M": false
+    },
+    {
+      "act_card": 68,
+      "stream_order": "act_first",
+      "act_depformer_index": 0,
+      "depformer_slice": "shared_slice",
+      "config_flag": "depformer_weights_per_step_schedule=[0, 0, 1, 2, 3, 4, 5, 6, 7]",
+      "baseline_params": 7687729152,
+      "variant_params": 7688152064,
+      "delta_params": 422912,
+      "delta_millions": 0.4229,
+      "bar_le_1M": true
+    },
+    {
+      "act_card": 68,
+      "stream_order": "act_first",
+      "act_depformer_index": 0,
+      "depformer_slice": "per_step_slice",
+      "config_flag": "depformer_weights_per_step=True, no schedule (mult=dep_q=9)",
+      "baseline_params": 7687729152,
+      "variant_params": 7769416704,
+      "delta_params": 81687552,
+      "delta_millions": 81.6876,
+      "bar_le_1M": false
+    }
+  ]
+}

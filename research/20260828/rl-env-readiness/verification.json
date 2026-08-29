@@ -1,0 +1,189 @@
+{
+  "artifact_integrity": "PASS",
+  "checks": [
+    {
+      "detail": {
+        "byte_identical": true,
+        "first_file_sha256": "e70f7357db537c0f54a155518883f332c14df1ddbe6294040bf92096d9292d19",
+        "second_file_sha256": "e70f7357db537c0f54a155518883f332c14df1ddbe6294040bf92096d9292d19"
+      },
+      "name": "deterministic_raw_json",
+      "status": "PASS"
+    },
+    {
+      "detail": {
+        "computed": "9e5f35fee28ac370cf97b08ee73dcfb4c76b63946b7d9242e07dcd2365be15d4",
+        "embedded": "9e5f35fee28ac370cf97b08ee73dcfb4c76b63946b7d9242e07dcd2365be15d4"
+      },
+      "name": "payload_digest",
+      "status": "PASS"
+    },
+    {
+      "detail": {
+        "current": {
+          "src/parcel_robot/rl/env.py": "16c461bb93257ad8a70b0d54e61cd9ccbf0354c12881bfc448045591f0282c00",
+          "src/parcel_robot/rl/spaces.py": "f739cc3b94058c2c6e8297a7f82a13ddefa514cace227c23267966ada4c9f400",
+          "third_party/unitree_mujoco/unitree_robots/go2/go2.xml": "2014a3d76e30f17ab9447d8a67bd015291f74fa4d71ae30d005f1a32bd693d4b",
+          "third_party/unitree_mujoco/unitree_robots/go2/scene.xml": "6c1fda780e7883665d1c84113b9275b6d448f586a8b1c110e438a37417cbccd0"
+        },
+        "embedded_observed": {
+          "src/parcel_robot/rl/env.py": "16c461bb93257ad8a70b0d54e61cd9ccbf0354c12881bfc448045591f0282c00",
+          "src/parcel_robot/rl/spaces.py": "f739cc3b94058c2c6e8297a7f82a13ddefa514cace227c23267966ada4c9f400",
+          "third_party/unitree_mujoco/unitree_robots/go2/go2.xml": "2014a3d76e30f17ab9447d8a67bd015291f74fa4d71ae30d005f1a32bd693d4b",
+          "third_party/unitree_mujoco/unitree_robots/go2/scene.xml": "6c1fda780e7883665d1c84113b9275b6d448f586a8b1c110e438a37417cbccd0"
+        },
+        "expected": {
+          "src/parcel_robot/rl/env.py": "16c461bb93257ad8a70b0d54e61cd9ccbf0354c12881bfc448045591f0282c00",
+          "src/parcel_robot/rl/spaces.py": "f739cc3b94058c2c6e8297a7f82a13ddefa514cace227c23267966ada4c9f400",
+          "third_party/unitree_mujoco/unitree_robots/go2/go2.xml": "2014a3d76e30f17ab9447d8a67bd015291f74fa4d71ae30d005f1a32bd693d4b",
+          "third_party/unitree_mujoco/unitree_robots/go2/scene.xml": "6c1fda780e7883665d1c84113b9275b6d448f586a8b1c110e438a37417cbccd0"
+        }
+      },
+      "name": "frozen_subject",
+      "status": "PASS"
+    },
+    {
+      "detail": {
+        "gate_ids": [
+          "G0",
+          "G1",
+          "G2",
+          "G3",
+          "G4",
+          "G5",
+          "G6",
+          "G7",
+          "G8"
+        ]
+      },
+      "name": "gate_set",
+      "status": "PASS"
+    },
+    {
+      "detail": {
+        "recomputed_pass": false,
+        "recorded_status": "FAIL"
+      },
+      "name": "G0_recomputed",
+      "status": "PASS"
+    },
+    {
+      "detail": {
+        "checks": {
+          "declared_action_shape": true,
+          "declared_observation_shape": true,
+          "joint_dq_block_width": true,
+          "joint_q_block_width": true,
+          "model_nq": true,
+          "model_nu": true,
+          "model_nv": true,
+          "module_action_dim": true,
+          "module_observation_dim": true,
+          "one_free_joint": true,
+          "returned_observation_shape": true,
+          "twelve_leg_joints": true,
+          "unique_actuated_leg_joints": true
+        },
+        "recomputed_pass": true
+      },
+      "name": "G1_recomputed",
+      "status": "PASS"
+    },
+    {
+      "detail": {
+        "checks": {
+          "action_meaning_matches_actuators": true,
+          "observation_dq_matches_actuators": false,
+          "observation_q_matches_actuators": false
+        },
+        "recomputed_pass": false
+      },
+      "name": "G2_recomputed",
+      "status": "PASS"
+    },
+    {
+      "detail": {
+        "matches": [
+          false,
+          false,
+          false
+        ],
+        "recomputed_pass": false
+      },
+      "name": "G3_recomputed",
+      "status": "PASS"
+    },
+    {
+      "detail": {
+        "matches": [
+          false,
+          false
+        ],
+        "recomputed_pass": false
+      },
+      "name": "G4_recomputed",
+      "status": "PASS"
+    },
+    {
+      "detail": {
+        "matches": [
+          true,
+          false
+        ],
+        "recomputed_pass": false
+      },
+      "name": "G5_recomputed",
+      "status": "PASS"
+    },
+    {
+      "detail": {
+        "recomputed_pass": false,
+        "terminated": false
+      },
+      "name": "G6_recomputed",
+      "status": "PASS"
+    },
+    {
+      "detail": {
+        "recomputed_pass": false,
+        "record_digests_differ": true,
+        "records_equal": false
+      },
+      "name": "G7_recomputed",
+      "status": "PASS"
+    },
+    {
+      "detail": {
+        "final_qpos_l2_distance": 0.3541956458920197,
+        "recomputed_pass": true
+      },
+      "name": "G8_recomputed",
+      "status": "PASS"
+    },
+    {
+      "detail": {
+        "expected_decision": "REFUTED",
+        "expected_summary": {
+          "fail": 7,
+          "not_evaluated": 0,
+          "pass": 2,
+          "total": 9
+        },
+        "recorded_decision": "REFUTED",
+        "recorded_summary": {
+          "fail": 7,
+          "not_evaluated": 0,
+          "pass": 2,
+          "total": 9
+        }
+      },
+      "name": "summary_and_decision",
+      "status": "PASS"
+    }
+  ],
+  "checks_passed": 14,
+  "checks_total": 14,
+  "experiment_id": "RL-ENV-READINESS-1",
+  "schema_version": 1,
+  "underlying_hypothesis_decision": "REFUTED"
+}

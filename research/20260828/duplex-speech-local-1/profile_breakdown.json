@@ -1,0 +1,20 @@
+{
+  "note": "phase split of the DS-1 streaming step; same loop as run.py",
+  "n_steps": 202,
+  "dep_q": 8,
+  "temporal_transformer_params": 6576930816,
+  "depformer_stack_params": 714362880,
+  "mimi_encode_ms_p50": 1.833,
+  "lm_step_ms_p50": 38.494,
+  "mimi_decode_ms_p50": 1.774,
+  "total_ms_p50": 42.101,
+  "mimi_encode_ms_mean": 1.843,
+  "lm_step_ms_mean": 38.819,
+  "mimi_decode_ms_mean": 1.781,
+  "frame_budget_ms": 80.0,
+  "share_pct": {
+    "mimi_encode": 4.4,
+    "lm_step_temporal_plus_depformer": 91.4,
+    "mimi_decode": 4.2
+  }
+}

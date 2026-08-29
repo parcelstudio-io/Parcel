@@ -1,0 +1,30 @@
+{
+  "checks": {
+    "canonical_is_run1": true,
+    "evidence_scope_is_explicit": true,
+    "expected_matrix_size": true,
+    "experiment_hash_recomputed": true,
+    "fixture_hash_recomputed": true,
+    "fresh_in_process_replay_matches": true,
+    "hypothesis_verdicts_frozen": true,
+    "independent_runs_byte_equivalent_json": true,
+    "planner_hash_recomputed": true,
+    "run1_digest_recomputed": true,
+    "run2_digest_recomputed": true,
+    "three_unreachable_cases_over_abstain": true
+  },
+  "deterministic_payload_sha256": "41842b1ee713cd6032923ee7a2db8afce3563e8e2212962d4c0c5eb5cdd52073",
+  "evidence_class": "authored_symbolic_shadow_only_no_physics_no_hardware_no_motion",
+  "file_sha256": {
+    "experiment.py": "3fef1453272c268c5aa3372fa7f4fd2ffb5ad0bd5be9ba9f748530ad279856ad",
+    "fixtures.json": "ddd584c5abdd2ddbeb3ef7bb9f7549d976f88ae8d40e70b0e0197eb44a5d0c7f",
+    "results-run1.json": "24b556e4ccdab8a37bb7be43edbe306d7fc5f88ed3bfbaf068aa197006ab839e",
+    "results-run2.json": "24b556e4ccdab8a37bb7be43edbe306d7fc5f88ed3bfbaf068aa197006ab839e",
+    "results.json": "24b556e4ccdab8a37bb7be43edbe306d7fc5f88ed3bfbaf068aa197006ab839e"
+  },
+  "hardware_used": "none",
+  "physical_motion_authorized": false,
+  "physics_simulator_used": "none",
+  "schema": "parcel.sim-plan-1.verification.v1",
+  "verdict": "PASS"
+}

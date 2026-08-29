@@ -1,0 +1,440 @@
+{
+  "master_seed": 20260828,
+  "frame_hz": 10.0,
+  "n_channels": 29,
+  "channels": [
+    {
+      "name": "dlg",
+      "size": 4
+    },
+    {
+      "name": "cue",
+      "size": 19
+    },
+    {
+      "name": "cue_conf",
+      "size": 4
+    },
+    {
+      "name": "val",
+      "size": 5
+    },
+    {
+      "name": "aro",
+      "size": 3
+    },
+    {
+      "name": "own_vis",
+      "size": 3
+    },
+    {
+      "name": "own_dist",
+      "size": 4
+    },
+    {
+      "name": "own_bear",
+      "size": 9
+    },
+    {
+      "name": "own_gaze",
+      "size": 3
+    },
+    {
+      "name": "own_motion",
+      "size": 4
+    },
+    {
+      "name": "t_since_seen",
+      "size": 5
+    },
+    {
+      "name": "self_act",
+      "size": 31
+    },
+    {
+      "name": "base_busy",
+      "size": 3
+    },
+    {
+      "name": "loc_health",
+      "size": 3
+    },
+    {
+      "name": "task",
+      "size": 6
+    },
+    {
+      "name": "task_state",
+      "size": 4
+    },
+    {
+      "name": "env",
+      "size": 4
+    },
+    {
+      "name": "obstacle",
+      "size": 3
+    },
+    {
+      "name": "people",
+      "size": 3
+    },
+    {
+      "name": "hist0",
+      "size": 13
+    },
+    {
+      "name": "hist1",
+      "size": 13
+    },
+    {
+      "name": "hist2",
+      "size": 13
+    },
+    {
+      "name": "hist3",
+      "size": 13
+    },
+    {
+      "name": "hist4",
+      "size": 13
+    },
+    {
+      "name": "hist5",
+      "size": 13
+    },
+    {
+      "name": "prof_greet",
+      "size": 3
+    },
+    {
+      "name": "prof_praise",
+      "size": 3
+    },
+    {
+      "name": "prof_pace",
+      "size": 3
+    },
+    {
+      "name": "prof_sens",
+      "size": 3
+    }
+  ],
+  "n_acts": 81,
+  "act_vocab": [
+    "<emote:attentive_nod>",
+    "<emote:bow>",
+    "<emote:chuckle>",
+    "<emote:comfort_bow>",
+    "<emote:confused_head_tilt>",
+    "<emote:curious_look>",
+    "<emote:excited_paw_taps>",
+    "<emote:happy_wiggle>",
+    "<emote:head_nod>",
+    "<emote:head_shake>",
+    "<emote:hello_pose>",
+    "<emote:hop>",
+    "<emote:look_left>",
+    "<emote:look_right>",
+    "<emote:observing_head_tilt>",
+    "<emote:paw_wave>",
+    "<emote:play_bow>",
+    "<emote:shake>",
+    "<emote:shrug>",
+    "<emote:stretch>",
+    "<filler_gesture_0>",
+    "<filler_gesture_1>",
+    "<filler_gesture_2>",
+    "<filler_gesture_3>",
+    "<filler_speech_0>",
+    "<filler_speech_1>",
+    "<filler_speech_2>",
+    "<filler_speech_3>",
+    "<gaze_bearing_0>",
+    "<gaze_bearing_1>",
+    "<gaze_bearing_2>",
+    "<gaze_bearing_3>",
+    "<gaze_bearing_4>",
+    "<gaze_bearing_5>",
+    "<gaze_bearing_6>",
+    "<gaze_bearing_7>",
+    "<gaze_owner>",
+    "<gaze_release>",
+    "<idle>",
+    "<skill:come>",
+    "<skill:fetch>",
+    "<skill:follow>",
+    "<skill:go_to>",
+    "<skill:shake_paw>",
+    "<skill:sit>",
+    "<skill:stay>",
+    "<twist:0:0>",
+    "<twist:0:1>",
+    "<twist:0:2>",
+    "<twist:0:3>",
+    "<twist:0:4>",
+    "<twist:1:0>",
+    "<twist:1:1>",
+    "<twist:1:2>",
+    "<twist:1:3>",
+    "<twist:1:4>",
+    "<twist:2:0>",
+    "<twist:2:1>",
+    "<twist:2:2>",
+    "<twist:2:3>",
+    "<twist:2:4>",
+    "<twist:3:0>",
+    "<twist:3:1>",
+    "<twist:3:2>",
+    "<twist:3:3>",
+    "<twist:3:4>",
+    "<twist:4:0>",
+    "<twist:4:1>",
+    "<twist:4:2>",
+    "<twist:4:3>",
+    "<twist:4:4>",
+    "<twist:5:0>",
+    "<twist:5:1>",
+    "<twist:5:2>",
+    "<twist:5:3>",
+    "<twist:5:4>",
+    "<twist:6:0>",
+    "<twist:6:1>",
+    "<twist:6:2>",
+    "<twist:6:3>",
+    "<twist:6:4>"
+  ],
+  "families": [
+    "chat_at_home",
+    "joke_while_following",
+    "lost_outdoors",
+    "command_during_emote",
+    "sad_owner_far",
+    "busy_navigation",
+    "greeting_and_praise",
+    "joke_while_lost",
+    "command_during_chuckle"
+  ],
+  "held_out_families": [
+    "joke_while_lost",
+    "command_during_chuckle"
+  ],
+  "taste_masks_total": 50,
+  "taste_masks_train": 40,
+  "taste_masks_held": 10,
+  "phrase_strings": 4320,
+  "phrasing_held_frac": 0.3,
+  "windows_frames": {
+    "chuckle": [
+      3,
+      15
+    ],
+    "lookback": [
+      30,
+      50
+    ],
+    "comply": [
+      0,
+      5
+    ],
+    "comfort": [
+      0,
+      20
+    ]
+  },
+  "splits": {
+    "train": {
+      "episodes": 3000,
+      "frames": 3619357,
+      "families": [
+        "busy_navigation",
+        "chat_at_home",
+        "command_during_emote",
+        "greeting_and_praise",
+        "joke_while_following",
+        "lost_outdoors",
+        "sad_owner_far"
+      ],
+      "held_out_profile": false,
+      "held_out_phrasing": false,
+      "nonidle_frame_frac": 0.03102,
+      "critical_frame_frac": 0.06258,
+      "events": {
+        "chuckle": 3874,
+        "lookback": 2377,
+        "comply": 8848,
+        "comfort": 2663,
+        "nonfunny_punchlines": 4029,
+        "punchlines": 8695,
+        "anticipatable_punchlines": 922,
+        "stop_cues": 1156,
+        "chuckle_detected_anchor": 3424,
+        "comply_detected_anchor": 7710,
+        "comfort_detected_anchor": 2337,
+        "lookback_front_anchor": 311
+      },
+      "ceiling_agreement_frames": 0.98864
+    },
+    "dev": {
+      "episodes": 500,
+      "frames": 604168,
+      "families": [
+        "busy_navigation",
+        "chat_at_home",
+        "command_during_emote",
+        "greeting_and_praise",
+        "joke_while_following",
+        "lost_outdoors",
+        "sad_owner_far"
+      ],
+      "held_out_profile": false,
+      "held_out_phrasing": false,
+      "nonidle_frame_frac": 0.03081,
+      "critical_frame_frac": 0.0603,
+      "events": {
+        "chuckle": 681,
+        "lookback": 397,
+        "comply": 1449,
+        "comfort": 456,
+        "nonfunny_punchlines": 673,
+        "punchlines": 1506,
+        "anticipatable_punchlines": 174,
+        "stop_cues": 196,
+        "chuckle_detected_anchor": 593,
+        "comply_detected_anchor": 1280,
+        "comfort_detected_anchor": 390,
+        "lookback_front_anchor": 58
+      },
+      "ceiling_agreement_frames": 0.98921
+    },
+    "frozen_core": {
+      "episodes": 300,
+      "frames": 356744,
+      "families": [
+        "busy_navigation",
+        "chat_at_home",
+        "command_during_emote",
+        "greeting_and_praise",
+        "joke_while_following",
+        "lost_outdoors",
+        "sad_owner_far"
+      ],
+      "held_out_profile": false,
+      "held_out_phrasing": false,
+      "nonidle_frame_frac": 0.03126,
+      "critical_frame_frac": 0.06417,
+      "events": {
+        "chuckle": 390,
+        "lookback": 243,
+        "comply": 871,
+        "comfort": 268,
+        "nonfunny_punchlines": 371,
+        "punchlines": 844,
+        "anticipatable_punchlines": 91,
+        "stop_cues": 102,
+        "chuckle_detected_anchor": 338,
+        "comply_detected_anchor": 763,
+        "comfort_detected_anchor": 231,
+        "lookback_front_anchor": 34
+      },
+      "ceiling_agreement_frames": 0.98918
+    },
+    "frozen_family": {
+      "episodes": 260,
+      "frames": 313913,
+      "families": [
+        "command_during_chuckle",
+        "joke_while_lost"
+      ],
+      "held_out_profile": false,
+      "held_out_phrasing": false,
+      "nonidle_frame_frac": 0.02985,
+      "critical_frame_frac": 0.05411,
+      "events": {
+        "chuckle": 637,
+        "lookback": 346,
+        "comply": 1616,
+        "comfort": 0,
+        "nonfunny_punchlines": 877,
+        "punchlines": 1816,
+        "anticipatable_punchlines": 163,
+        "stop_cues": 229,
+        "chuckle_detected_anchor": 544,
+        "comply_detected_anchor": 1417,
+        "comfort_detected_anchor": 0,
+        "lookback_front_anchor": 45
+      },
+      "ceiling_agreement_frames": 0.98711
+    },
+    "frozen_profile": {
+      "episodes": 360,
+      "frames": 436972,
+      "families": [
+        "busy_navigation",
+        "chat_at_home",
+        "command_during_emote",
+        "greeting_and_praise",
+        "joke_while_following",
+        "lost_outdoors",
+        "sad_owner_far"
+      ],
+      "held_out_profile": true,
+      "held_out_phrasing": false,
+      "nonidle_frame_frac": 0.03081,
+      "critical_frame_frac": 0.06276,
+      "events": {
+        "chuckle": 468,
+        "lookback": 291,
+        "comply": 1096,
+        "comfort": 337,
+        "nonfunny_punchlines": 502,
+        "punchlines": 1070,
+        "anticipatable_punchlines": 106,
+        "stop_cues": 116,
+        "chuckle_detected_anchor": 410,
+        "comply_detected_anchor": 957,
+        "comfort_detected_anchor": 294,
+        "lookback_front_anchor": 34
+      },
+      "ceiling_agreement_frames": 0.98905
+    },
+    "frozen_phrasing": {
+      "episodes": 360,
+      "frames": 434095,
+      "families": [
+        "busy_navigation",
+        "chat_at_home",
+        "command_during_emote",
+        "greeting_and_praise",
+        "joke_while_following",
+        "lost_outdoors",
+        "sad_owner_far"
+      ],
+      "held_out_profile": false,
+      "held_out_phrasing": true,
+      "nonidle_frame_frac": 0.03083,
+      "critical_frame_frac": 0.05928,
+      "events": {
+        "chuckle": 454,
+        "lookback": 283,
+        "comply": 1014,
+        "comfort": 323,
+        "nonfunny_punchlines": 525,
+        "punchlines": 1073,
+        "anticipatable_punchlines": 108,
+        "stop_cues": 127,
+        "chuckle_detected_anchor": 400,
+        "comply_detected_anchor": 893,
+        "comfort_detected_anchor": 284,
+        "lookback_front_anchor": 32
+      },
+      "ceiling_agreement_frames": 0.98943
+    }
+  },
+  "frozen_splits": [
+    "frozen_core",
+    "frozen_family",
+    "frozen_profile",
+    "frozen_phrasing"
+  ]
+}

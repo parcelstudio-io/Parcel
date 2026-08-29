@@ -1,0 +1,870 @@
+{
+  "claim_limits": [
+    "No policy was trained or compared.",
+    "No generalized locomotion capability was measured.",
+    "No sim-to-real transfer or physical safety was measured.",
+    "No ROS, Unitree SDK, robot, viewer, network, or live socket was used."
+  ],
+  "diagnostics": {
+    "action_effect": {
+      "final_home_qpos": [
+        -0.0016953162830287878,
+        1.8902468761949988e-07,
+        0.26493667795540415,
+        0.9999779126836168,
+        -4.872357298043406e-06,
+        0.006646361487968712,
+        3.8398818645962165e-07,
+        0.00492269207651717,
+        0.9421566052432852,
+        -1.9254650290524147,
+        -0.0049069394062495756,
+        0.9421534495500395,
+        -1.9254582608111126,
+        0.002299768373756652,
+        0.9283447127599007,
+        -1.8964847640555011,
+        -0.0022816158827453537,
+        0.9283422801073216,
+        -1.8964789400555246
+      ],
+      "final_perturbed_qpos": [
+        -0.002323453115330727,
+        0.003532749280401584,
+        0.26963461286722934,
+        0.998399289386141,
+        -0.05502328670923174,
+        0.010529003003825161,
+        -0.0077741217321803235,
+        -0.06622506598547481,
+        1.0553950229963407,
+        -2.0684574386506367,
+        0.10402718745080153,
+        0.8921506156455611,
+        -1.8714543853984142,
+        -0.10135970275582232,
+        1.0487955966563323,
+        -2.0478290476626224,
+        0.08495861210624873,
+        0.864154530933283,
+        -1.8139577933891076
+      ],
+      "final_qpos_l2_distance": 0.3541956458920197,
+      "finite": true,
+      "home_action": [
+        0.0,
+        0.9,
+        -1.8,
+        0.0,
+        0.9,
+        -1.8,
+        0.0,
+        0.9,
+        -1.8,
+        0.0,
+        0.9,
+        -1.8
+      ],
+      "perturbed_action": [
+        0.25,
+        0.65,
+        -1.55,
+        -0.25,
+        1.15,
+        -2.05,
+        0.25,
+        0.65,
+        -1.55,
+        -0.25,
+        1.15,
+        -2.05
+      ],
+      "steps": 25
+    },
+    "model": {
+      "action_meaning": "joint position targets (rad) for FR/FL/RR/RL hip,thigh,calf order in actuators",
+      "actuator_joint_names": [
+        "FR_hip_joint",
+        "FR_thigh_joint",
+        "FR_calf_joint",
+        "FL_hip_joint",
+        "FL_thigh_joint",
+        "FL_calf_joint",
+        "RR_hip_joint",
+        "RR_thigh_joint",
+        "RR_calf_joint",
+        "RL_hip_joint",
+        "RL_thigh_joint",
+        "RL_calf_joint"
+      ],
+      "dimension_checks": {
+        "declared_action_shape": true,
+        "declared_observation_shape": true,
+        "joint_dq_block_width": true,
+        "joint_q_block_width": true,
+        "model_nq": true,
+        "model_nu": true,
+        "model_nv": true,
+        "module_action_dim": true,
+        "module_observation_dim": true,
+        "one_free_joint": true,
+        "returned_observation_shape": true,
+        "twelve_leg_joints": true,
+        "unique_actuated_leg_joints": true
+      },
+      "expected_from_action_meaning": [
+        "FR_hip_joint",
+        "FR_thigh_joint",
+        "FR_calf_joint",
+        "FL_hip_joint",
+        "FL_thigh_joint",
+        "FL_calf_joint",
+        "RR_hip_joint",
+        "RR_thigh_joint",
+        "RR_calf_joint",
+        "RL_hip_joint",
+        "RL_thigh_joint",
+        "RL_calf_joint"
+      ],
+      "free_joint_ids": [
+        0
+      ],
+      "leg_joint_names_model_order": [
+        "FL_hip_joint",
+        "FL_thigh_joint",
+        "FL_calf_joint",
+        "FR_hip_joint",
+        "FR_thigh_joint",
+        "FR_calf_joint",
+        "RL_hip_joint",
+        "RL_thigh_joint",
+        "RL_calf_joint",
+        "RR_hip_joint",
+        "RR_thigh_joint",
+        "RR_calf_joint"
+      ],
+      "njnt": 13,
+      "nkey": 1,
+      "nq": 19,
+      "nu": 12,
+      "nv": 18,
+      "qpos_joint_names": [
+        "FL_hip_joint",
+        "FL_thigh_joint",
+        "FL_calf_joint",
+        "FR_hip_joint",
+        "FR_thigh_joint",
+        "FR_calf_joint",
+        "RL_hip_joint",
+        "RL_thigh_joint",
+        "RL_calf_joint",
+        "RR_hip_joint",
+        "RR_thigh_joint",
+        "RR_calf_joint"
+      ],
+      "qvel_joint_names": [
+        "FL_hip_joint",
+        "FL_thigh_joint",
+        "FL_calf_joint",
+        "FR_hip_joint",
+        "FR_thigh_joint",
+        "FR_calf_joint",
+        "RL_hip_joint",
+        "RL_thigh_joint",
+        "RL_calf_joint",
+        "RR_hip_joint",
+        "RR_thigh_joint",
+        "RR_calf_joint"
+      ],
+      "timestep_s": 0.002
+    },
+    "mujoco_reset_info": {
+      "skill_id": "stand"
+    },
+    "offline": {
+      "fall_detection_explicitly_invalid": false,
+      "labelled_nonphysics": false,
+      "mode_values": {},
+      "physics_claims": {
+        "actual_vx": {
+          "explicitly_invalid": false,
+          "field_valid": null,
+          "physics_valid": null,
+          "value": 0.0
+        },
+        "base_height": {
+          "explicitly_invalid": false,
+          "field_valid": null,
+          "physics_valid": null,
+          "value": 0.0
+        },
+        "upright": {
+          "explicitly_invalid": false,
+          "field_valid": null,
+          "physics_valid": null,
+          "value": true
+        }
+      },
+      "reset_info": {
+        "skill_id": "stand"
+      },
+      "reset_observation_shape": [
+        48
+      ],
+      "reward": -0.0,
+      "step_observation_shape": [
+        48
+      ],
+      "terminated": false,
+      "truncated": false
+    },
+    "posture_cases": [
+      {
+        "body_z_world_z_projection": 0.999999997862402,
+        "case": "home",
+        "derived_upright": true,
+        "height_matches": false,
+        "reported_base_height": 3.2692456093797e-05,
+        "reported_upright": true,
+        "root_height_m": 0.2699880889750112,
+        "root_quat_wxyz": [
+          0.9999999994656005,
+          -4.776570716344962e-08,
+          3.2692456093797e-05,
+          1.9023954158218353e-09
+        ],
+        "terminated": false,
+        "truncated": false,
+        "upright_matches": true
+      },
+      {
+        "body_z_world_z_projection": -1.0,
+        "case": "forced_fall",
+        "derived_upright": false,
+        "height_matches": false,
+        "reported_base_height": 0.0,
+        "reported_upright": true,
+        "root_height_m": 0.07996076,
+        "root_quat_wxyz": [
+          -3.647920329830784e-21,
+          1.0,
+          0.0,
+          0.0
+        ],
+        "terminated": false,
+        "truncated": false,
+        "upright_matches": false
+      }
+    ],
+    "reset_determinism": {
+      "first_record_sha256": "c7ec8e5bb7d48984774e7ee397dc763f12c20efe39bbe3154f2bc290ce60f4c0",
+      "first_reset_last_action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "records_equal": false,
+      "reset_differing_indices": [
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42
+      ],
+      "reset_observation_max_abs_difference": 0.3,
+      "second_record_sha256": "43fa7c4515db18c508abbc36a0e759dd39a32f35644c1becda7847eb070314ee",
+      "second_reset_last_action": [
+        -0.3,
+        -0.24545454545454545,
+        -0.19090909090909092,
+        -0.13636363636363635,
+        -0.08181818181818182,
+        -0.027272727272727282,
+        0.027272727272727282,
+        0.08181818181818179,
+        0.13636363636363635,
+        0.19090909090909092,
+        0.24545454545454543,
+        0.3
+      ]
+    },
+    "velocity_trials": [
+      {
+        "finite_difference_vx_mps": 0.46136846018806343,
+        "matches": false,
+        "reported_actual_vx_mps": 0.0,
+        "step": 1,
+        "x_after_m": 0.0009227369203761269,
+        "x_before_m": 0.0
+      },
+      {
+        "finite_difference_vx_mps": 0.42404698319935713,
+        "matches": false,
+        "reported_actual_vx_mps": 0.0,
+        "step": 2,
+        "x_after_m": 0.0017708308867748412,
+        "x_before_m": 0.0009227369203761269
+      },
+      {
+        "finite_difference_vx_mps": 0.38803486332782977,
+        "matches": false,
+        "reported_actual_vx_mps": 0.0,
+        "step": 3,
+        "x_after_m": 0.002546900613430501,
+        "x_before_m": 0.0017708308867748412
+      }
+    ]
+  },
+  "environment": {
+    "config_relative": "configs/robot.yaml",
+    "mujoco": "3.11.0",
+    "mujoco_available": true,
+    "numpy": "2.5.1",
+    "python": "3.14.4",
+    "scene_relative": "third_party/unitree_mujoco/unitree_robots/go2/scene.xml"
+  },
+  "evidence_tier": "local_executable_contract_plus_mujoco_no_policy_no_hardware",
+  "experiment_id": "RL-ENV-READINESS-1",
+  "gate_statuses": {
+    "G0": "FAIL",
+    "G1": "PASS",
+    "G2": "FAIL",
+    "G3": "FAIL",
+    "G4": "FAIL",
+    "G5": "FAIL",
+    "G6": "FAIL",
+    "G7": "FAIL",
+    "G8": "PASS"
+  },
+  "gates": {
+    "G0": {
+      "actual": {
+        "fall_detection_explicitly_invalid": false,
+        "labelled_nonphysics": false,
+        "mode_values": {},
+        "physics_claims": {
+          "actual_vx": {
+            "explicitly_invalid": false,
+            "field_valid": null,
+            "physics_valid": null,
+            "value": 0.0
+          },
+          "base_height": {
+            "explicitly_invalid": false,
+            "field_valid": null,
+            "physics_valid": null,
+            "value": 0.0
+          },
+          "upright": {
+            "explicitly_invalid": false,
+            "field_valid": null,
+            "physics_valid": null,
+            "value": true
+          }
+        },
+        "reset_info": {
+          "skill_id": "stand"
+        },
+        "reset_observation_shape": [
+          48
+        ],
+        "reward": -0.0,
+        "step_observation_shape": [
+          48
+        ],
+        "terminated": false,
+        "truncated": false
+      },
+      "criterion": "offline mode labels non-physics evidence and invalidates physics-derived claims",
+      "status": "FAIL"
+    },
+    "G1": {
+      "actual": {
+        "action_meaning": "joint position targets (rad) for FR/FL/RR/RL hip,thigh,calf order in actuators",
+        "actuator_joint_names": [
+          "FR_hip_joint",
+          "FR_thigh_joint",
+          "FR_calf_joint",
+          "FL_hip_joint",
+          "FL_thigh_joint",
+          "FL_calf_joint",
+          "RR_hip_joint",
+          "RR_thigh_joint",
+          "RR_calf_joint",
+          "RL_hip_joint",
+          "RL_thigh_joint",
+          "RL_calf_joint"
+        ],
+        "dimension_checks": {
+          "declared_action_shape": true,
+          "declared_observation_shape": true,
+          "joint_dq_block_width": true,
+          "joint_q_block_width": true,
+          "model_nq": true,
+          "model_nu": true,
+          "model_nv": true,
+          "module_action_dim": true,
+          "module_observation_dim": true,
+          "one_free_joint": true,
+          "returned_observation_shape": true,
+          "twelve_leg_joints": true,
+          "unique_actuated_leg_joints": true
+        },
+        "expected_from_action_meaning": [
+          "FR_hip_joint",
+          "FR_thigh_joint",
+          "FR_calf_joint",
+          "FL_hip_joint",
+          "FL_thigh_joint",
+          "FL_calf_joint",
+          "RR_hip_joint",
+          "RR_thigh_joint",
+          "RR_calf_joint",
+          "RL_hip_joint",
+          "RL_thigh_joint",
+          "RL_calf_joint"
+        ],
+        "free_joint_ids": [
+          0
+        ],
+        "leg_joint_names_model_order": [
+          "FL_hip_joint",
+          "FL_thigh_joint",
+          "FL_calf_joint",
+          "FR_hip_joint",
+          "FR_thigh_joint",
+          "FR_calf_joint",
+          "RL_hip_joint",
+          "RL_thigh_joint",
+          "RL_calf_joint",
+          "RR_hip_joint",
+          "RR_thigh_joint",
+          "RR_calf_joint"
+        ],
+        "njnt": 13,
+        "nkey": 1,
+        "nq": 19,
+        "nu": 12,
+        "nv": 18,
+        "qpos_joint_names": [
+          "FL_hip_joint",
+          "FL_thigh_joint",
+          "FL_calf_joint",
+          "FR_hip_joint",
+          "FR_thigh_joint",
+          "FR_calf_joint",
+          "RL_hip_joint",
+          "RL_thigh_joint",
+          "RL_calf_joint",
+          "RR_hip_joint",
+          "RR_thigh_joint",
+          "RR_calf_joint"
+        ],
+        "qvel_joint_names": [
+          "FL_hip_joint",
+          "FL_thigh_joint",
+          "FL_calf_joint",
+          "FR_hip_joint",
+          "FR_thigh_joint",
+          "FR_calf_joint",
+          "RL_hip_joint",
+          "RL_thigh_joint",
+          "RL_calf_joint",
+          "RR_hip_joint",
+          "RR_thigh_joint",
+          "RR_calf_joint"
+        ],
+        "timestep_s": 0.002
+      },
+      "criterion": "12 actions, 48 observations, and exact Go2 nq/nv/nu plus one-to-one joints",
+      "status": "PASS"
+    },
+    "G2": {
+      "actual": {
+        "actuator_joint_names": [
+          "FR_hip_joint",
+          "FR_thigh_joint",
+          "FR_calf_joint",
+          "FL_hip_joint",
+          "FL_thigh_joint",
+          "FL_calf_joint",
+          "RR_hip_joint",
+          "RR_thigh_joint",
+          "RR_calf_joint",
+          "RL_hip_joint",
+          "RL_thigh_joint",
+          "RL_calf_joint"
+        ],
+        "checks": {
+          "action_meaning_matches_actuators": true,
+          "observation_dq_matches_actuators": false,
+          "observation_q_matches_actuators": false
+        },
+        "expected_from_action_meaning": [
+          "FR_hip_joint",
+          "FR_thigh_joint",
+          "FR_calf_joint",
+          "FL_hip_joint",
+          "FL_thigh_joint",
+          "FL_calf_joint",
+          "RR_hip_joint",
+          "RR_thigh_joint",
+          "RR_calf_joint",
+          "RL_hip_joint",
+          "RL_thigh_joint",
+          "RL_calf_joint"
+        ],
+        "observation_joint_dq_names": [
+          "FL_hip_joint",
+          "FL_thigh_joint",
+          "FL_calf_joint",
+          "FR_hip_joint",
+          "FR_thigh_joint",
+          "FR_calf_joint",
+          "RL_hip_joint",
+          "RL_thigh_joint",
+          "RL_calf_joint",
+          "RR_hip_joint",
+          "RR_thigh_joint",
+          "RR_calf_joint"
+        ],
+        "observation_joint_q_names": [
+          "FL_hip_joint",
+          "FL_thigh_joint",
+          "FL_calf_joint",
+          "FR_hip_joint",
+          "FR_thigh_joint",
+          "FR_calf_joint",
+          "RL_hip_joint",
+          "RL_thigh_joint",
+          "RL_calf_joint",
+          "RR_hip_joint",
+          "RR_thigh_joint",
+          "RR_calf_joint"
+        ]
+      },
+      "criterion": "action, joint_q, and joint_dq orders all equal actuator-to-joint order",
+      "status": "FAIL"
+    },
+    "G3": {
+      "actual": {
+        "trials": [
+          {
+            "finite_difference_vx_mps": 0.46136846018806343,
+            "matches": false,
+            "reported_actual_vx_mps": 0.0,
+            "step": 1,
+            "x_after_m": 0.0009227369203761269,
+            "x_before_m": 0.0
+          },
+          {
+            "finite_difference_vx_mps": 0.42404698319935713,
+            "matches": false,
+            "reported_actual_vx_mps": 0.0,
+            "step": 2,
+            "x_after_m": 0.0017708308867748412,
+            "x_before_m": 0.0009227369203761269
+          },
+          {
+            "finite_difference_vx_mps": 0.38803486332782977,
+            "matches": false,
+            "reported_actual_vx_mps": 0.0,
+            "step": 3,
+            "x_after_m": 0.002546900613430501,
+            "x_before_m": 0.0017708308867748412
+          }
+        ]
+      },
+      "criterion": "reported actual_vx matches finite-difference root velocity for all three steps",
+      "status": "FAIL"
+    },
+    "G4": {
+      "actual": {
+        "cases": [
+          {
+            "body_z_world_z_projection": 0.999999997862402,
+            "case": "home",
+            "derived_upright": true,
+            "height_matches": false,
+            "reported_base_height": 3.2692456093797e-05,
+            "reported_upright": true,
+            "root_height_m": 0.2699880889750112,
+            "root_quat_wxyz": [
+              0.9999999994656005,
+              -4.776570716344962e-08,
+              3.2692456093797e-05,
+              1.9023954158218353e-09
+            ],
+            "terminated": false,
+            "truncated": false,
+            "upright_matches": true
+          },
+          {
+            "body_z_world_z_projection": -1.0,
+            "case": "forced_fall",
+            "derived_upright": false,
+            "height_matches": false,
+            "reported_base_height": 0.0,
+            "reported_upright": true,
+            "root_height_m": 0.07996076,
+            "root_quat_wxyz": [
+              -3.647920329830784e-21,
+              1.0,
+              0.0,
+              0.0
+            ],
+            "terminated": false,
+            "truncated": false,
+            "upright_matches": false
+          }
+        ]
+      },
+      "criterion": "reported base_height matches post-step free-joint root qpos[2] in both cases",
+      "status": "FAIL"
+    },
+    "G5": {
+      "actual": {
+        "cases": [
+          {
+            "body_z_world_z_projection": 0.999999997862402,
+            "case": "home",
+            "derived_upright": true,
+            "height_matches": false,
+            "reported_base_height": 3.2692456093797e-05,
+            "reported_upright": true,
+            "root_height_m": 0.2699880889750112,
+            "root_quat_wxyz": [
+              0.9999999994656005,
+              -4.776570716344962e-08,
+              3.2692456093797e-05,
+              1.9023954158218353e-09
+            ],
+            "terminated": false,
+            "truncated": false,
+            "upright_matches": true
+          },
+          {
+            "body_z_world_z_projection": -1.0,
+            "case": "forced_fall",
+            "derived_upright": false,
+            "height_matches": false,
+            "reported_base_height": 0.0,
+            "reported_upright": true,
+            "root_height_m": 0.07996076,
+            "root_quat_wxyz": [
+              -3.647920329830784e-21,
+              1.0,
+              0.0,
+              0.0
+            ],
+            "terminated": false,
+            "truncated": false,
+            "upright_matches": false
+          }
+        ]
+      },
+      "criterion": "reported upright equals height-and-orientation-derived upright in both cases",
+      "status": "FAIL"
+    },
+    "G6": {
+      "actual": {
+        "forced_fall": {
+          "body_z_world_z_projection": -1.0,
+          "case": "forced_fall",
+          "derived_upright": false,
+          "height_matches": false,
+          "reported_base_height": 0.0,
+          "reported_upright": true,
+          "root_height_m": 0.07996076,
+          "root_quat_wxyz": [
+            -3.647920329830784e-21,
+            1.0,
+            0.0,
+            0.0
+          ],
+          "terminated": false,
+          "truncated": false,
+          "upright_matches": false
+        }
+      },
+      "criterion": "forced fall terminates no later than the immediately following step",
+      "status": "FAIL"
+    },
+    "G7": {
+      "actual": {
+        "first_record_sha256": "c7ec8e5bb7d48984774e7ee397dc763f12c20efe39bbe3154f2bc290ce60f4c0",
+        "first_reset_last_action": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "records_equal": false,
+        "reset_differing_indices": [
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42
+        ],
+        "reset_observation_max_abs_difference": 0.3,
+        "second_record_sha256": "43fa7c4515db18c508abbc36a0e759dd39a32f35644c1becda7847eb070314ee",
+        "second_reset_last_action": [
+          -0.3,
+          -0.24545454545454545,
+          -0.19090909090909092,
+          -0.13636363636363635,
+          -0.08181818181818182,
+          -0.027272727272727282,
+          0.027272727272727282,
+          0.08181818181818179,
+          0.13636363636363635,
+          0.19090909090909092,
+          0.24545454545454543,
+          0.3
+        ]
+      },
+      "criterion": "same seed and actions match exactly after distinct prior histories",
+      "status": "FAIL"
+    },
+    "G8": {
+      "actual": {
+        "final_home_qpos": [
+          -0.0016953162830287878,
+          1.8902468761949988e-07,
+          0.26493667795540415,
+          0.9999779126836168,
+          -4.872357298043406e-06,
+          0.006646361487968712,
+          3.8398818645962165e-07,
+          0.00492269207651717,
+          0.9421566052432852,
+          -1.9254650290524147,
+          -0.0049069394062495756,
+          0.9421534495500395,
+          -1.9254582608111126,
+          0.002299768373756652,
+          0.9283447127599007,
+          -1.8964847640555011,
+          -0.0022816158827453537,
+          0.9283422801073216,
+          -1.8964789400555246
+        ],
+        "final_perturbed_qpos": [
+          -0.002323453115330727,
+          0.003532749280401584,
+          0.26963461286722934,
+          0.998399289386141,
+          -0.05502328670923174,
+          0.010529003003825161,
+          -0.0077741217321803235,
+          -0.06622506598547481,
+          1.0553950229963407,
+          -2.0684574386506367,
+          0.10402718745080153,
+          0.8921506156455611,
+          -1.8714543853984142,
+          -0.10135970275582232,
+          1.0487955966563323,
+          -2.0478290476626224,
+          0.08495861210624873,
+          0.864154530933283,
+          -1.8139577933891076
+        ],
+        "final_qpos_l2_distance": 0.3541956458920197,
+        "finite": true,
+        "home_action": [
+          0.0,
+          0.9,
+          -1.8,
+          0.0,
+          0.9,
+          -1.8,
+          0.0,
+          0.9,
+          -1.8,
+          0.0,
+          0.9,
+          -1.8
+        ],
+        "perturbed_action": [
+          0.25,
+          0.65,
+          -1.55,
+          -0.25,
+          1.15,
+          -2.05,
+          0.25,
+          0.65,
+          -1.55,
+          -0.25,
+          1.15,
+          -2.05
+        ],
+        "steps": 25
+      },
+      "criterion": "25-step action branches produce finite final qpos L2 distance >= 1e-3",
+      "status": "PASS"
+    }
+  },
+  "hypothesis": {
+    "decision": "REFUTED",
+    "id": "H-RL-READY",
+    "rule": "all G0-G8 pass; any fail refutes; missing MuJoCo is inconclusive"
+  },
+  "payload_sha256": "9e5f35fee28ac370cf97b08ee73dcfb4c76b63946b7d9242e07dcd2365be15d4",
+  "schema_version": 1,
+  "seed": 20260828,
+  "subject": {
+    "expected_sha256": {
+      "src/parcel_robot/rl/env.py": "16c461bb93257ad8a70b0d54e61cd9ccbf0354c12881bfc448045591f0282c00",
+      "src/parcel_robot/rl/spaces.py": "f739cc3b94058c2c6e8297a7f82a13ddefa514cace227c23267966ada4c9f400",
+      "third_party/unitree_mujoco/unitree_robots/go2/go2.xml": "2014a3d76e30f17ab9447d8a67bd015291f74fa4d71ae30d005f1a32bd693d4b",
+      "third_party/unitree_mujoco/unitree_robots/go2/scene.xml": "6c1fda780e7883665d1c84113b9275b6d448f586a8b1c110e438a37417cbccd0"
+    },
+    "matches_preregistration": true,
+    "observed_sha256": {
+      "src/parcel_robot/rl/env.py": "16c461bb93257ad8a70b0d54e61cd9ccbf0354c12881bfc448045591f0282c00",
+      "src/parcel_robot/rl/spaces.py": "f739cc3b94058c2c6e8297a7f82a13ddefa514cace227c23267966ada4c9f400",
+      "third_party/unitree_mujoco/unitree_robots/go2/go2.xml": "2014a3d76e30f17ab9447d8a67bd015291f74fa4d71ae30d005f1a32bd693d4b",
+      "third_party/unitree_mujoco/unitree_robots/go2/scene.xml": "6c1fda780e7883665d1c84113b9275b6d448f586a8b1c110e438a37417cbccd0"
+    }
+  },
+  "summary": {
+    "fail": 7,
+    "not_evaluated": 0,
+    "pass": 2,
+    "total": 9
+  }
+}

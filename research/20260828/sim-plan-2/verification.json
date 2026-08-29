@@ -1,0 +1,30 @@
+{
+  "checks": {
+    "all_18_symbolic_plans_retained": true,
+    "all_29_dispositions_exact": true,
+    "all_hypotheses_supported_at_regression_shadow_tier": true,
+    "all_source_hashes_recomputed": true,
+    "canonical_is_run1": true,
+    "evidence_scope_is_explicit": true,
+    "expected_matrix_size": true,
+    "fresh_in_process_replay_matches": true,
+    "independent_runs_json_equivalent": true,
+    "run1_digest_recomputed": true,
+    "run2_digest_recomputed": true,
+    "three_named_regressions_are_unreachable_without_unknowns": true
+  },
+  "deterministic_payload_sha256": "29a345e8dea589b5a45f408f03d00021b2392d5004903b755bfe198d523c0007",
+  "evidence_class": "authored_symbolic_regression_shadow_only_no_physics_no_hardware_no_motion",
+  "file_sha256": {
+    "experiment.py": "7419577e950ccce4639f211f54c1985506cf1843ae6d0220733fe8cef246b1e8",
+    "observability.json": "ba90f5177bd5eac1db0d34305cb6b01b24b9a939bf7e2ae460c1f0de8c390fc5",
+    "results-run1.json": "6bec6c783238934e545c9b2573866264f3f147197133fd9aaa506bddff13a497",
+    "results-run2.json": "6bec6c783238934e545c9b2573866264f3f147197133fd9aaa506bddff13a497",
+    "results.json": "6bec6c783238934e545c9b2573866264f3f147197133fd9aaa506bddff13a497"
+  },
+  "hardware_used": "none",
+  "physical_motion_authorized": false,
+  "physics_simulator_used": "none",
+  "schema": "parcel.sim-plan-2.verification.v1",
+  "verdict": "PASS"
+}

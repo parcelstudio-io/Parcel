@@ -1,0 +1,75 @@
+FL-1 sample owners and event traces
+taste prior (AMENDMENTS F1): {'kind': 'beta-mixture', 'w_like': 0.45, 'like': (12.0, 2.0), 'dislike': (1.2, 10.0), 'clip': (0.05, 0.95)}
+detector (F5): {'false_negative': 0.2, 'false_positive': 0.05, 'onset_latency_s': 0.5, 'echo_guard_s': 1.0, 'source': 'AMENDMENTS.md F5 default (no humor-signal-1/results.json at run time)'}
+decision threshold (F4): 0.6667   reward: +1 hit / -2 false / 0 silent
+FL-1 frame schema: 42 channels = 19 worldsim world + 4 profile + joke_cat + 18 per-category history
+
+=== six evaluation owners (seeds 20260828 + 1,000,000 + i) ===
+owner 0 seed=21260828 L*=2s resets_table=True
+    p_laugh : pun=0.06   slapstick=0.06   absurd=0.13   dry=0.05   wordplay=0.93*  callback=0.92*      (* = oracle chuckles, p >= 2/3)
+    look-back true reward per arm: 2s=+0.90  4s=+0.90  6s=+0.90  8s=+0.90   best=2s
+owner 1 seed=21260829 L*=6s resets_table=False
+    p_laugh : pun=0.90*  slapstick=0.07   absurd=0.05   dry=0.14   wordplay=0.18   callback=0.11       (* = oracle chuckles, p >= 2/3)
+    look-back true reward per arm: 2s=+0.30  4s=+0.40  6s=+0.90  8s=+0.90   best=6s
+owner 2 seed=21260830 L*=8s resets_table=False
+    p_laugh : pun=0.21   slapstick=0.86*  absurd=0.09   dry=0.34   wordplay=0.10   callback=0.88*      (* = oracle chuckles, p >= 2/3)
+    look-back true reward per arm: 2s=+0.20  4s=+0.30  6s=+0.40  8s=+0.90   best=8s
+owner 3 seed=21260831 L*=8s resets_table=True
+    p_laugh : pun=0.93*  slapstick=0.88*  absurd=0.05   dry=0.75*  wordplay=0.95*  callback=0.05       (* = oracle chuckles, p >= 2/3)
+    look-back true reward per arm: 2s=+0.20  4s=+0.30  6s=+0.40  8s=+0.90   best=8s
+owner 4 seed=21260832 L*=2s resets_table=False
+    p_laugh : pun=0.91*  slapstick=0.10   absurd=0.06   dry=0.05   wordplay=0.05   callback=0.91*      (* = oracle chuckles, p >= 2/3)
+    look-back true reward per arm: 2s=+0.90  4s=+0.90  6s=+0.90  8s=+0.90   best=2s
+owner 5 seed=21260833 L*=6s resets_table=False
+    p_laugh : pun=0.77*  slapstick=0.81*  absurd=0.25   dry=0.06   wordplay=0.17   callback=0.12       (* = oracle chuckles, p >= 2/3)
+    look-back true reward per arm: 2s=+0.30  4s=+0.40  6s=+0.90  8s=+0.90   best=6s
+
+=== one joke event (frames rendered by worldsim.frame_line) ===
+owner 0  category=callback p_laugh=0.92  punch_ref=526 decision=529 laugh_ref=541 laughed=True evaluable=True
+  per-category history at the decision frame (F2): pun=0/1[silent]  slapstick=0/0[none]  absurd=0/0[none]  dry=0/0[none]  wordplay=0/0[none]  callback=0/0[none]
+  lis own=near,b7,away,walk > <idle>
+  idle own=occ,t0 > <idle>
+  idle own=occ,t0 > <idle>
+  idle own=occ,t0 > <idle>
+  lis own=near,b7,away,walk > <idle>
+  lis own=near,b7,away,walk > <gaze_owner>
+  lis cue=joke_punchline/hi v1a1 own=near,b7,away,walk > <idle>   <-- punchline reference
+  lis own=near,b7,away,walk > <idle>
+  lis own=near,b7,away,walk > <idle>
+  lis own=near,b7,away,walk > <emote:chuckle>   <-- ANTICIPATORY DECISION FRAME (0.3 s)
+  lis own=near,b7,away,walk self=emote:chuckle > <idle>
+  lis own=near,b7,away,walk self=emote:chuckle > <idle>
+  lis own=near,b7,away,walk self=emote:chuckle > <idle>
+  lis own=near,b7,away,walk self=emote:chuckle > <idle>
+  lis own=near,b6,eye,walk self=emote:chuckle > <idle>
+  lis own=near,b6,eye,walk self=emote:chuckle > <idle>
+  lis own=near,b6,eye,walk self=emote:chuckle > <idle>
+  lis own=near,b6,eye,walk self=emote:chuckle > <idle>
+  lis own=near,b6,eye,walk self=emote:chuckle > <idle>
+  lis own=near,b6,eye,walk self=emote:chuckle > <idle>
+  lis own=near,b6,eye,walk self=emote:chuckle > <idle>
+  lis cue=laugh/mid v2a2 own=near,b6,eye,walk self=emote:chuckle > <idle>   <-- owner laughs (the reward)
+  lis own=near,b6,eye,walk > <idle>
+  lis own=near,b6,eye,walk > <idle>
+  lis own=near,b6,eye,walk > <idle>
+  lis own=near,b6,eye,walk > <idle>
+  lis own=near,b6,eye,walk > <idle>
+  lis own=near,b6,away,walk > <idle>
+  lis own=near,b6,away,walk > <idle>
+  lis own=near,b6,away,walk > <idle>
+  lis own=near,b6,away,walk > <idle>
+  spk own=near,b6,away,walk > <idle>
+  spk own=near,b6,away,walk > <idle>
+
+=== one loss / look-back event stream (H-FL1c, F6) ===
+owner 2 L*=8s   loss onsets from worldsim occlusions while following: [252, 592, 727, 804, 48, 296, 694, 85]
+  loss 0: check-in at 2s -> reacquired<=5s=True annoyance=False reward=+1.0  (true E[r] for this arm = +0.20)
+  loss 1: check-in at 8s -> reacquired<=5s=True annoyance=False reward=+1.0  (true E[r] for this arm = +0.90)
+  loss 2: check-in at 4s -> reacquired<=5s=True annoyance=False reward=+1.0  (true E[r] for this arm = +0.30)
+  loss 3: check-in at 8s -> reacquired<=5s=True annoyance=False reward=+1.0  (true E[r] for this arm = +0.90)
+  loss 4: check-in at 6s -> reacquired<=5s=False annoyance=False reward=+0.0  (true E[r] for this arm = +0.40)
+  loss 5: check-in at 8s -> reacquired<=5s=True annoyance=False reward=+1.0  (true E[r] for this arm = +0.90)
+  loss 6: check-in at 2s -> reacquired<=5s=True annoyance=True reward=+0.5  (true E[r] for this arm = +0.20)
+  loss 7: check-in at 8s -> reacquired<=5s=True annoyance=False reward=+1.0  (true E[r] for this arm = +0.90)
+
+The learned quantity for H-FL1c is the follow-skill parameter `check_in_latency_s` (a config value the executive owns), never an act token.

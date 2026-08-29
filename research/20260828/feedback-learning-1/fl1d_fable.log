@@ -1,0 +1,7 @@
+[FL1d] corpus 1,551,615 frames, 6000 jokes [9s]
+[FL1d] frozen split 61,048 frames, 594 windows; BEFORE {'compliance_f1': 0.75, 'compliance_events': 117, 'cmd_stop_compliance': 1.0, 'cmd_stop_events': 15, 'raw_m3_body_rate_by_busy': {'free': 0.009456694703341668, 'busy': 0.010431276297335203, 'critical': 0.0}} [10s]
+[FL1d] clean          reinforce_head_masked  F1=0.689 to_bar=None dComply=+0.0000 [18s]
+[FL1d] clean          reinforce_head_full    F1=0.692 to_bar=None dComply=+0.0000 [25s]
+[FL1d] det_q0.1_m0.3  reinforce_head_masked  F1=0.626 to_bar=None dComply=+0.0000 [33s]
+[FL1d] det_q0.1_m0.3  reinforce_head_full    F1=0.626 to_bar=None dComply=+0.0000 [40s]
+wrote /home/jaewoo-jang/Desktop/Projects/Parcel/research/20260828/feedback-learning-1/results.json (40.2s)

@@ -1,0 +1,159 @@
+{
+  "hypothesis": "H-DS1c (AMENDMENTS.md D4)",
+  "orin_bandwidth_gbs": 204.8,
+  "orin_bandwidth_source": "https://www.nvidia.com/en-us/autonomous-machines/embedded-systems/jetson-orin/",
+  "method": "batch-1 decode sweeps the whole weight set once per step, so steps/s ceiling = memory_bandwidth / (params x bytes_per_param). The realistic column applies the 0.83 roofline efficiency MEASURED on this host in H-DS1a; Orin may well do worse.",
+  "frame_hz_required": 12.5,
+  "roofline_efficiency_measured": 0.83,
+  "candidates": [
+    {
+      "name": "Kyutai Moshi (moshiko-pytorch-bf16)",
+      "params_b": 7.688,
+      "params_source": "MEASURED in this experiment (results.json lm_params)",
+      "weights_license": "CC-BY-4.0 (model card front-matter `license: cc-by-4.0`)",
+      "code_license": "MIT (python) / Apache-2.0 (rust)",
+      "languages": "English only (model card `language: - en`). NO Korean.",
+      "duplex_style": "native full-duplex, 17 parallel token streams at 12.5 Hz",
+      "measured_here": true,
+      "notes": "the only candidate measured on this host; act stream verified to run",
+      "orin_arithmetic": {
+        "bf16": {
+          "weights_gb": 15.38,
+          "fits_orin_64gb": true,
+          "theoretical_steps_per_s": 13.3,
+          "realistic_steps_per_s_at_83pct": 11.1,
+          "meets_12p5hz": false,
+          "headroom_vs_12p5hz": 0.88
+        },
+        "int8": {
+          "weights_gb": 7.69,
+          "fits_orin_64gb": true,
+          "theoretical_steps_per_s": 26.6,
+          "realistic_steps_per_s_at_83pct": 22.1,
+          "meets_12p5hz": true,
+          "headroom_vs_12p5hz": 1.77
+        },
+        "int4": {
+          "weights_gb": 3.84,
+          "fits_orin_64gb": true,
+          "theoretical_steps_per_s": 53.3,
+          "realistic_steps_per_s_at_83pct": 44.2,
+          "meets_12p5hz": true,
+          "headroom_vs_12p5hz": 3.54
+        }
+      }
+    },
+    {
+      "name": "Kyutai Hibiki-1B",
+      "params_b": 1.0,
+      "params_source": "literature note 1.3 (github.com/kyutai-labs/hibiki)",
+      "weights_license": "CC-BY-4.0",
+      "code_license": "MIT",
+      "languages": "speech translation (fr->en). NOT a dialogue model.",
+      "duplex_style": "same Moshi multistream architecture, 8 RVQ/stream, 12.5 Hz",
+      "measured_here": false,
+      "notes": "MLX-Swift build tested on iPhone 16 Pro \u2014 the only phone-class evidence for this architecture; proves the budget, not the task",
+      "orin_arithmetic": {
+        "bf16": {
+          "weights_gb": 2.0,
+          "fits_orin_64gb": true,
+          "theoretical_steps_per_s": 102.4,
+          "realistic_steps_per_s_at_83pct": 85.0,
+          "meets_12p5hz": true,
+          "headroom_vs_12p5hz": 6.8
+        },
+        "int8": {
+          "weights_gb": 1.0,
+          "fits_orin_64gb": true,
+          "theoretical_steps_per_s": 204.8,
+          "realistic_steps_per_s_at_83pct": 170.0,
+          "meets_12p5hz": true,
+          "headroom_vs_12p5hz": 13.6
+        },
+        "int4": {
+          "weights_gb": 0.5,
+          "fits_orin_64gb": true,
+          "theoretical_steps_per_s": 409.6,
+          "realistic_steps_per_s_at_83pct": 340.0,
+          "meets_12p5hz": true,
+          "headroom_vs_12p5hz": 27.2
+        }
+      }
+    },
+    {
+      "name": "MiniCPM-o 4.5",
+      "params_b": 9.0,
+      "params_source": "literature note 2.5",
+      "weights_license": "Apache-2.0",
+      "code_license": "Apache-2.0",
+      "languages": "Qwen3-8B backbone (multilingual; Korean coverage NOT verified by any source fetched here)",
+      "duplex_style": "full-duplex by time-division multiplexing (ms-scale slices)",
+      "measured_here": false,
+      "notes": "19 GB bf16 / 11 GB int4; 154 tok/s bf16, 212 int4 (desktop GPU); LLaMA-Factory / SWIFT fine-tuning; ingests live video + audio",
+      "orin_arithmetic": {
+        "bf16": {
+          "weights_gb": 18.0,
+          "fits_orin_64gb": true,
+          "theoretical_steps_per_s": 11.4,
+          "realistic_steps_per_s_at_83pct": 9.4,
+          "meets_12p5hz": false,
+          "headroom_vs_12p5hz": 0.76
+        },
+        "int8": {
+          "weights_gb": 9.0,
+          "fits_orin_64gb": true,
+          "theoretical_steps_per_s": 22.8,
+          "realistic_steps_per_s_at_83pct": 18.9,
+          "meets_12p5hz": true,
+          "headroom_vs_12p5hz": 1.51
+        },
+        "int4": {
+          "weights_gb": 4.5,
+          "fits_orin_64gb": true,
+          "theoretical_steps_per_s": 45.5,
+          "realistic_steps_per_s_at_83pct": 37.8,
+          "meets_12p5hz": true,
+          "headroom_vs_12p5hz": 3.02
+        }
+      }
+    },
+    {
+      "name": "Qwen2.5-Omni-7B",
+      "params_b": 7.0,
+      "params_source": "literature note 2.4",
+      "weights_license": "Apache-2.0",
+      "code_license": "Apache-2.0",
+      "languages": "multilingual (Korean coverage NOT verified by any source fetched here)",
+      "duplex_style": "turn-based streaming, NOT full-duplex (would need OmniFlatten-style duplex post-training)",
+      "measured_here": false,
+      "notes": "the ONLY candidate with a published measurement on the actual board: 15.3-16.1 tok/s at Q8_0, llama.cpp, AGX Orin 64 GB (github.com/ggml-org/llama.cpp/issues/15923); backbone RoboOmni used to emit action tokens",
+      "orin_arithmetic": {
+        "bf16": {
+          "weights_gb": 14.0,
+          "fits_orin_64gb": true,
+          "theoretical_steps_per_s": 14.6,
+          "realistic_steps_per_s_at_83pct": 12.1,
+          "meets_12p5hz": false,
+          "headroom_vs_12p5hz": 0.97
+        },
+        "int8": {
+          "weights_gb": 7.0,
+          "fits_orin_64gb": true,
+          "theoretical_steps_per_s": 29.3,
+          "realistic_steps_per_s_at_83pct": 24.3,
+          "meets_12p5hz": true,
+          "headroom_vs_12p5hz": 1.94
+        },
+        "int4": {
+          "weights_gb": 3.5,
+          "fits_orin_64gb": true,
+          "theoretical_steps_per_s": 58.5,
+          "realistic_steps_per_s_at_83pct": 48.6,
+          "meets_12p5hz": true,
+          "headroom_vs_12p5hz": 3.89
+        }
+      }
+    }
+  ],
+  "korean_caveat": "Moshi's model card declares English only. No source fetched in this experiment verifies Korean for any candidate. If Korean is a requirement, that is an open question for every row here, and it is a REFUTING consideration for Moshi specifically."
+}

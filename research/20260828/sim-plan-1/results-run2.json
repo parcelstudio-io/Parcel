@@ -1,0 +1,1274 @@
+{
+  "checks": {
+    "all_fixtures_marked_held_out": true,
+    "baseline_never_authorizes_motion": true,
+    "critical_unknowns_reported": true,
+    "planner_never_authorizes_motion": true,
+    "planner_operator_order_invariant": true,
+    "planner_problem_bindings_valid": true
+  },
+  "counts": {
+    "fixed_template_evaluations": 29,
+    "held_out_missions": 29,
+    "planned_missions": 18,
+    "planner_evaluations": 87,
+    "typed_nonplan_missions": 11
+  },
+  "deterministic_payload_sha256": "41842b1ee713cd6032923ee7a2db8afce3563e8e2212962d4c0c5eb5cdd52073",
+  "evidence_class": "authored_symbolic_shadow_only_no_physics_no_hardware_no_motion",
+  "metrics": {
+    "exact_disposition_accuracy_delta": 0.724138,
+    "fixed_template_admission_violations": 2,
+    "fixed_template_exact_disposition_accuracy": 0.172414,
+    "fixed_template_hard_safety_violations": 4,
+    "fixed_template_planned_mission_solve_rate": 0.277778,
+    "planned_mission_solve_rate_delta": 0.722222,
+    "planner_admission_violations": 0,
+    "planner_exact_disposition_accuracy": 0.896552,
+    "planner_hard_safety_violations": 0,
+    "planner_planned_mission_solve_rate": 1.0
+  },
+  "overall_verdict": "PARTIALLY_SUPPORTED_SHADOW",
+  "preregistered_hypotheses": {
+    "H1": {
+      "claim": "bounded composition solves >=90% of planned held-out missions, improves by >=40 percentage points over fixed templates, and creates no hard-safety or admission violation",
+      "gates": {
+        "planner_solve_rate_gte_0_90": true,
+        "solve_rate_delta_gte_0_40": true,
+        "zero_planner_admission_violations": true,
+        "zero_planner_hard_safety_violations": true
+      }
+    },
+    "H2": {
+      "claim": "typed disposition accuracy is >=90% and improves by >=50 percentage points over a fixed-template baseline",
+      "gates": {
+        "all_critical_unknowns_reported": true,
+        "disposition_accuracy_delta_gte_0_50": true,
+        "planner_disposition_accuracy_gte_0_90": false
+      }
+    },
+    "H3": {
+      "claim": "all proposals are order-invariant, bound to the exact shadow problem inputs, and non-authoritative",
+      "gates": {
+        "exact_problem_bindings": true,
+        "never_authorizes_motion": true,
+        "operator_order_invariant": true
+      }
+    }
+  },
+  "rows": [
+    {
+      "category": "heldout_nominal",
+      "expected_status": "planned",
+      "fixed_template_baseline": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "disposition_correct": true,
+        "failure": null,
+        "hard_safety_violation": false,
+        "precondition_violation": false,
+        "steps": [
+          "go-door",
+          "scan-door",
+          "approach-direct",
+          "greet-owner"
+        ],
+        "valid_goal_plan": true
+      },
+      "mission_id": "greet-nominal-shift",
+      "planner": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "expansions": 5,
+        "failure": null,
+        "hard_safety_violation": false,
+        "operator_order_invariant": true,
+        "problem_binding_valid_all_orders": true,
+        "proposal_digest": "2d72de485a11da8c7a914d28356e6db4a2144b5954da59b11f3542894c172e7d",
+        "status": "planned",
+        "steps": [
+          "go-door",
+          "scan-door",
+          "approach-respectful",
+          "greet-owner"
+        ],
+        "uncertain_facts": [
+          "owner.visible",
+          "robot.near_owner"
+        ],
+        "valid_goal_plan": true
+      },
+      "template_key": "greet"
+    },
+    {
+      "category": "heldout_constraint",
+      "expected_status": "planned",
+      "fixed_template_baseline": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "disposition_correct": false,
+        "failure": "predicted_forbidden_fact",
+        "hard_safety_violation": true,
+        "precondition_violation": false,
+        "steps": [
+          "go-door",
+          "scan-door",
+          "approach-direct",
+          "greet-owner"
+        ],
+        "valid_goal_plan": false
+      },
+      "mission_id": "greet-strict-distance",
+      "planner": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "expansions": 5,
+        "failure": null,
+        "hard_safety_violation": false,
+        "operator_order_invariant": true,
+        "problem_binding_valid_all_orders": true,
+        "proposal_digest": "084ac8ab16e03cba57bc5fb0ea5c8aef9fe8f605695bfb77443d0cbbaa1a5a72",
+        "status": "planned",
+        "steps": [
+          "go-door",
+          "scan-door",
+          "approach-respectful",
+          "greet-owner"
+        ],
+        "uncertain_facts": [
+          "owner.visible",
+          "robot.near_owner"
+        ],
+        "valid_goal_plan": true
+      },
+      "template_key": "greet"
+    },
+    {
+      "category": "heldout_composition",
+      "expected_status": "planned",
+      "fixed_template_baseline": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "disposition_correct": false,
+        "failure": "goal_not_satisfied",
+        "hard_safety_violation": false,
+        "precondition_violation": false,
+        "steps": [
+          "go-door",
+          "scan-door",
+          "approach-direct",
+          "greet-owner"
+        ],
+        "valid_goal_plan": false
+      },
+      "mission_id": "greet-follow-composite",
+      "planner": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "expansions": 9,
+        "failure": null,
+        "hard_safety_violation": false,
+        "operator_order_invariant": true,
+        "problem_binding_valid_all_orders": true,
+        "proposal_digest": "743e4e3953aba318682584cb28755a8c40278da883ecbc4a159ce25ffc9f8c7f",
+        "status": "planned",
+        "steps": [
+          "go-door",
+          "scan-door",
+          "approach-respectful",
+          "greet-owner",
+          "follow-owner"
+        ],
+        "uncertain_facts": [
+          "owner.visible",
+          "robot.near_owner"
+        ],
+        "valid_goal_plan": true
+      },
+      "template_key": "greet"
+    },
+    {
+      "category": "heldout_composition",
+      "expected_status": "planned",
+      "fixed_template_baseline": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "disposition_correct": false,
+        "failure": "goal_not_satisfied",
+        "hard_safety_violation": false,
+        "precondition_violation": false,
+        "steps": [
+          "go-door",
+          "scan-door",
+          "approach-direct",
+          "greet-owner"
+        ],
+        "valid_goal_plan": false
+      },
+      "mission_id": "greet-joy-composite",
+      "planner": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "expansions": 7,
+        "failure": null,
+        "hard_safety_violation": false,
+        "operator_order_invariant": true,
+        "problem_binding_valid_all_orders": true,
+        "proposal_digest": "514f917fc7e459250d979eb3d59eb841710ba4029b9ab53ae5085dc6579aca7f",
+        "status": "planned",
+        "steps": [
+          "go-door",
+          "scan-door",
+          "approach-respectful",
+          "greet-owner",
+          "joyful-pose"
+        ],
+        "uncertain_facts": [
+          "owner.greeted",
+          "owner.visible",
+          "robot.near_owner"
+        ],
+        "valid_goal_plan": true
+      },
+      "template_key": "greet"
+    },
+    {
+      "category": "heldout_uncertainty",
+      "expected_status": "needs_observation",
+      "fixed_template_baseline": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "disposition_correct": false,
+        "failure": "precondition_not_confirmed",
+        "hard_safety_violation": false,
+        "precondition_violation": true,
+        "steps": [
+          "go-door",
+          "scan-door",
+          "approach-direct",
+          "greet-owner"
+        ],
+        "valid_goal_plan": false
+      },
+      "mission_id": "greet-camera-unknown",
+      "planner": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "expansions": 2,
+        "failure": "goal_not_satisfied",
+        "hard_safety_violation": false,
+        "operator_order_invariant": true,
+        "problem_binding_valid_all_orders": true,
+        "proposal_digest": "42abc1d00e4e3cacba498464c5490fd9f9120a675368fd1493ea7d1b0bb12f67",
+        "status": "needs_observation",
+        "steps": [],
+        "uncertain_facts": [
+          "camera.ready",
+          "owner.visible",
+          "robot.near_owner"
+        ],
+        "valid_goal_plan": false
+      },
+      "template_key": "greet"
+    },
+    {
+      "category": "heldout_impossible",
+      "expected_status": "unreachable",
+      "fixed_template_baseline": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "disposition_correct": false,
+        "failure": "precondition_not_confirmed",
+        "hard_safety_violation": false,
+        "precondition_violation": true,
+        "steps": [
+          "go-door",
+          "scan-door",
+          "approach-direct",
+          "greet-owner"
+        ],
+        "valid_goal_plan": false
+      },
+      "mission_id": "greet-camera-false",
+      "planner": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": false,
+        "expansions": 2,
+        "failure": "goal_not_satisfied",
+        "hard_safety_violation": false,
+        "operator_order_invariant": true,
+        "problem_binding_valid_all_orders": true,
+        "proposal_digest": "d43257bfd1becc3996d21a54d647e991a4c6e65f43db83af317cec199c8f7ea9",
+        "status": "needs_observation",
+        "steps": [],
+        "uncertain_facts": [
+          "owner.visible",
+          "robot.near_owner"
+        ],
+        "valid_goal_plan": false
+      },
+      "template_key": "greet"
+    },
+    {
+      "category": "heldout_constraint",
+      "expected_status": "planned",
+      "fixed_template_baseline": {
+        "admission_violation": true,
+        "authorizes_motion": false,
+        "disposition_correct": false,
+        "failure": "operator_not_admitted",
+        "hard_safety_violation": false,
+        "precondition_violation": false,
+        "steps": [
+          "go-door",
+          "scan-door",
+          "approach-direct",
+          "greet-owner"
+        ],
+        "valid_goal_plan": false
+      },
+      "mission_id": "greet-direct-safety-history",
+      "planner": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "expansions": 5,
+        "failure": null,
+        "hard_safety_violation": false,
+        "operator_order_invariant": true,
+        "problem_binding_valid_all_orders": true,
+        "proposal_digest": "3d1351b108b71cad1cb385105603f797f6a5f9ae8b4884be5da03522ffbdc9fd",
+        "status": "planned",
+        "steps": [
+          "go-door",
+          "scan-door",
+          "approach-respectful",
+          "greet-owner"
+        ],
+        "uncertain_facts": [
+          "owner.visible",
+          "robot.near_owner"
+        ],
+        "valid_goal_plan": true
+      },
+      "template_key": "greet"
+    },
+    {
+      "category": "heldout_commissioning",
+      "expected_status": "unreachable",
+      "fixed_template_baseline": {
+        "admission_violation": true,
+        "authorizes_motion": false,
+        "disposition_correct": false,
+        "failure": "operator_not_admitted",
+        "hard_safety_violation": false,
+        "precondition_violation": false,
+        "steps": [
+          "go-door",
+          "scan-door",
+          "approach-direct",
+          "greet-owner"
+        ],
+        "valid_goal_plan": false
+      },
+      "mission_id": "greet-scan-uncommissioned",
+      "planner": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": false,
+        "expansions": 2,
+        "failure": "goal_not_satisfied",
+        "hard_safety_violation": false,
+        "operator_order_invariant": true,
+        "problem_binding_valid_all_orders": true,
+        "proposal_digest": "7777319c984336b7405987d70951ab7c1c70a2900d45b1b8b12048855fcb0847",
+        "status": "needs_observation",
+        "steps": [],
+        "uncertain_facts": [
+          "robot.near_owner"
+        ],
+        "valid_goal_plan": false
+      },
+      "template_key": "greet"
+    },
+    {
+      "category": "heldout_nominal",
+      "expected_status": "planned",
+      "fixed_template_baseline": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "disposition_correct": true,
+        "failure": null,
+        "hard_safety_violation": false,
+        "precondition_violation": false,
+        "steps": [
+          "go-door",
+          "scan-door",
+          "approach-direct",
+          "follow-owner"
+        ],
+        "valid_goal_plan": true
+      },
+      "mission_id": "follow-nominal-shift",
+      "planner": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "expansions": 6,
+        "failure": null,
+        "hard_safety_violation": false,
+        "operator_order_invariant": true,
+        "problem_binding_valid_all_orders": true,
+        "proposal_digest": "c1b3b6dab819de24f4b2bd4e032dbfab8bc0a347733020a6318358a09ba87469",
+        "status": "planned",
+        "steps": [
+          "go-door",
+          "scan-door",
+          "approach-respectful",
+          "follow-owner"
+        ],
+        "uncertain_facts": [
+          "owner.visible",
+          "robot.near_owner"
+        ],
+        "valid_goal_plan": true
+      },
+      "template_key": "follow"
+    },
+    {
+      "category": "heldout_constraint",
+      "expected_status": "planned",
+      "fixed_template_baseline": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "disposition_correct": false,
+        "failure": "predicted_forbidden_fact",
+        "hard_safety_violation": true,
+        "precondition_violation": false,
+        "steps": [
+          "go-door",
+          "scan-door",
+          "approach-direct",
+          "follow-owner"
+        ],
+        "valid_goal_plan": false
+      },
+      "mission_id": "follow-strict-distance",
+      "planner": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "expansions": 5,
+        "failure": null,
+        "hard_safety_violation": false,
+        "operator_order_invariant": true,
+        "problem_binding_valid_all_orders": true,
+        "proposal_digest": "cca5373830cefd44148892a1623840e8fcf98f51fbca836199db7ea2c59c97bf",
+        "status": "planned",
+        "steps": [
+          "go-door",
+          "scan-door",
+          "approach-respectful",
+          "follow-owner"
+        ],
+        "uncertain_facts": [
+          "owner.visible",
+          "robot.near_owner"
+        ],
+        "valid_goal_plan": true
+      },
+      "template_key": "follow"
+    },
+    {
+      "category": "heldout_composition",
+      "expected_status": "planned",
+      "fixed_template_baseline": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "disposition_correct": false,
+        "failure": "goal_not_satisfied",
+        "hard_safety_violation": false,
+        "precondition_violation": false,
+        "steps": [
+          "go-door",
+          "scan-door",
+          "approach-direct",
+          "follow-owner"
+        ],
+        "valid_goal_plan": false
+      },
+      "mission_id": "follow-greet-composite",
+      "planner": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "expansions": 9,
+        "failure": null,
+        "hard_safety_violation": false,
+        "operator_order_invariant": true,
+        "problem_binding_valid_all_orders": true,
+        "proposal_digest": "743e4e3953aba318682584cb28755a8c40278da883ecbc4a159ce25ffc9f8c7f",
+        "status": "planned",
+        "steps": [
+          "go-door",
+          "scan-door",
+          "approach-respectful",
+          "greet-owner",
+          "follow-owner"
+        ],
+        "uncertain_facts": [
+          "owner.visible",
+          "robot.near_owner"
+        ],
+        "valid_goal_plan": true
+      },
+      "template_key": "follow"
+    },
+    {
+      "category": "heldout_uncertainty",
+      "expected_status": "needs_observation",
+      "fixed_template_baseline": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "disposition_correct": false,
+        "failure": "precondition_not_confirmed",
+        "hard_safety_violation": false,
+        "precondition_violation": true,
+        "steps": [
+          "go-door",
+          "scan-door",
+          "approach-direct",
+          "follow-owner"
+        ],
+        "valid_goal_plan": false
+      },
+      "mission_id": "follow-consent-unknown",
+      "planner": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "expansions": 5,
+        "failure": "goal_not_satisfied",
+        "hard_safety_violation": false,
+        "operator_order_invariant": true,
+        "problem_binding_valid_all_orders": true,
+        "proposal_digest": "7481180bf7503590b8c064388eb433b10298231e013d1ee807f2cac33418c70d",
+        "status": "needs_observation",
+        "steps": [],
+        "uncertain_facts": [
+          "consent.follow",
+          "owner.visible",
+          "robot.near_owner"
+        ],
+        "valid_goal_plan": false
+      },
+      "template_key": "follow"
+    },
+    {
+      "category": "heldout_impossible",
+      "expected_status": "unreachable",
+      "fixed_template_baseline": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "disposition_correct": false,
+        "failure": "precondition_not_confirmed",
+        "hard_safety_violation": false,
+        "precondition_violation": true,
+        "steps": [
+          "go-door",
+          "scan-door",
+          "approach-direct",
+          "follow-owner"
+        ],
+        "valid_goal_plan": false
+      },
+      "mission_id": "follow-consent-false",
+      "planner": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": false,
+        "expansions": 5,
+        "failure": "goal_not_satisfied",
+        "hard_safety_violation": false,
+        "operator_order_invariant": true,
+        "problem_binding_valid_all_orders": true,
+        "proposal_digest": "0525ef128c6bf278f559b209404d81585a8de85e3b350e61b79147cf14d449f3",
+        "status": "needs_observation",
+        "steps": [],
+        "uncertain_facts": [
+          "owner.visible",
+          "robot.near_owner"
+        ],
+        "valid_goal_plan": false
+      },
+      "template_key": "follow"
+    },
+    {
+      "category": "heldout_nominal",
+      "expected_status": "planned",
+      "fixed_template_baseline": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "disposition_correct": true,
+        "failure": null,
+        "hard_safety_violation": false,
+        "precondition_violation": false,
+        "steps": [
+          "go-charger",
+          "dock-charger"
+        ],
+        "valid_goal_plan": true
+      },
+      "mission_id": "charge-nominal-shift",
+      "planner": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "expansions": 3,
+        "failure": null,
+        "hard_safety_violation": false,
+        "operator_order_invariant": true,
+        "problem_binding_valid_all_orders": true,
+        "proposal_digest": "8d7e435719be4e5ec73c7b4f0facbb28a6481b1eb32740ec3e0607fe25cefd7e",
+        "status": "planned",
+        "steps": [
+          "go-charger",
+          "dock-charger"
+        ],
+        "uncertain_facts": [],
+        "valid_goal_plan": true
+      },
+      "template_key": "charge"
+    },
+    {
+      "category": "heldout_partial_state",
+      "expected_status": "planned",
+      "fixed_template_baseline": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "disposition_correct": false,
+        "failure": "precondition_not_confirmed",
+        "hard_safety_violation": false,
+        "precondition_violation": true,
+        "steps": [
+          "go-charger",
+          "dock-charger"
+        ],
+        "valid_goal_plan": false
+      },
+      "mission_id": "charge-already-at-dock",
+      "planner": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "expansions": 2,
+        "failure": null,
+        "hard_safety_violation": false,
+        "operator_order_invariant": true,
+        "problem_binding_valid_all_orders": true,
+        "proposal_digest": "2f0457c2a96947be52155c400f8ba9edcd75806fceeeba1df6767e41c31de237",
+        "status": "planned",
+        "steps": [
+          "dock-charger"
+        ],
+        "uncertain_facts": [],
+        "valid_goal_plan": true
+      },
+      "template_key": "charge"
+    },
+    {
+      "category": "heldout_composition",
+      "expected_status": "planned",
+      "fixed_template_baseline": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "disposition_correct": false,
+        "failure": "goal_not_satisfied",
+        "hard_safety_violation": false,
+        "precondition_violation": false,
+        "steps": [
+          "go-charger",
+          "dock-charger"
+        ],
+        "valid_goal_plan": false
+      },
+      "mission_id": "charge-kitchen-composite",
+      "planner": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "expansions": 12,
+        "failure": null,
+        "hard_safety_violation": false,
+        "operator_order_invariant": true,
+        "problem_binding_valid_all_orders": true,
+        "proposal_digest": "3c60d5d25115712d5b25c3f959fcd03fdf134ab996b5ce62b6e7aced5963c8f8",
+        "status": "planned",
+        "steps": [
+          "go-charger",
+          "dock-charger",
+          "go-kitchen",
+          "scan-kitchen",
+          "report-kitchen"
+        ],
+        "uncertain_facts": [
+          "kitchen.inspected"
+        ],
+        "valid_goal_plan": true
+      },
+      "template_key": "charge"
+    },
+    {
+      "category": "heldout_uncertainty",
+      "expected_status": "needs_observation",
+      "fixed_template_baseline": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "disposition_correct": false,
+        "failure": "precondition_not_confirmed",
+        "hard_safety_violation": false,
+        "precondition_violation": true,
+        "steps": [
+          "go-charger",
+          "dock-charger"
+        ],
+        "valid_goal_plan": false
+      },
+      "mission_id": "charge-clear-unknown",
+      "planner": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "expansions": 2,
+        "failure": "goal_not_satisfied",
+        "hard_safety_violation": false,
+        "operator_order_invariant": true,
+        "problem_binding_valid_all_orders": true,
+        "proposal_digest": "bf99c1b705f575c38ef38cc0418c303dd986d4c7ff47d7830ef87a0897d77999",
+        "status": "needs_observation",
+        "steps": [],
+        "uncertain_facts": [
+          "charger.clear"
+        ],
+        "valid_goal_plan": false
+      },
+      "template_key": "charge"
+    },
+    {
+      "category": "heldout_impossible",
+      "expected_status": "unreachable",
+      "fixed_template_baseline": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "disposition_correct": false,
+        "failure": "precondition_not_confirmed",
+        "hard_safety_violation": false,
+        "precondition_violation": true,
+        "steps": [
+          "go-charger",
+          "dock-charger"
+        ],
+        "valid_goal_plan": false
+      },
+      "mission_id": "charge-clear-false",
+      "planner": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "expansions": 2,
+        "failure": "goal_not_satisfied",
+        "hard_safety_violation": false,
+        "operator_order_invariant": true,
+        "problem_binding_valid_all_orders": true,
+        "proposal_digest": "399fcfe44f30887e4db339cf7d0a3b290f9a4f88e6d5a64636f0c4cde760a431",
+        "status": "unreachable",
+        "steps": [],
+        "uncertain_facts": [],
+        "valid_goal_plan": false
+      },
+      "template_key": "charge"
+    },
+    {
+      "category": "heldout_nominal",
+      "expected_status": "planned",
+      "fixed_template_baseline": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "disposition_correct": true,
+        "failure": null,
+        "hard_safety_violation": false,
+        "precondition_violation": false,
+        "steps": [
+          "go-stairs",
+          "ascend-fast"
+        ],
+        "valid_goal_plan": true
+      },
+      "mission_id": "stairs-nominal-shift",
+      "planner": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "expansions": 3,
+        "failure": null,
+        "hard_safety_violation": false,
+        "operator_order_invariant": true,
+        "problem_binding_valid_all_orders": true,
+        "proposal_digest": "acb5a561270e4d60e010d8c18c73b4d5f8776bb98cc30401013ae3248e45cbc3",
+        "status": "planned",
+        "steps": [
+          "go-stairs",
+          "ascend-careful"
+        ],
+        "uncertain_facts": [],
+        "valid_goal_plan": true
+      },
+      "template_key": "stairs"
+    },
+    {
+      "category": "heldout_constraint",
+      "expected_status": "planned",
+      "fixed_template_baseline": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "disposition_correct": false,
+        "failure": "predicted_forbidden_fact",
+        "hard_safety_violation": true,
+        "precondition_violation": false,
+        "steps": [
+          "go-stairs",
+          "ascend-fast"
+        ],
+        "valid_goal_plan": false
+      },
+      "mission_id": "stairs-strict-stability",
+      "planner": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "expansions": 3,
+        "failure": null,
+        "hard_safety_violation": false,
+        "operator_order_invariant": true,
+        "problem_binding_valid_all_orders": true,
+        "proposal_digest": "b2a3564af4c3db2dc9202b82abac442530e29cc6d5543e6d9d9fb3c904c90da3",
+        "status": "planned",
+        "steps": [
+          "go-stairs",
+          "ascend-careful"
+        ],
+        "uncertain_facts": [],
+        "valid_goal_plan": true
+      },
+      "template_key": "stairs"
+    },
+    {
+      "category": "heldout_composition",
+      "expected_status": "planned",
+      "fixed_template_baseline": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "disposition_correct": false,
+        "failure": "goal_not_satisfied",
+        "hard_safety_violation": false,
+        "precondition_violation": false,
+        "steps": [
+          "go-stairs",
+          "ascend-fast"
+        ],
+        "valid_goal_plan": false
+      },
+      "mission_id": "stairs-report-composite",
+      "planner": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "expansions": 7,
+        "failure": null,
+        "hard_safety_violation": false,
+        "operator_order_invariant": true,
+        "problem_binding_valid_all_orders": true,
+        "proposal_digest": "4cf87bacfa795f42c466a2b2cacaecda18ba2176e2025babfa12000eb26f5482",
+        "status": "planned",
+        "steps": [
+          "go-stairs",
+          "ascend-careful",
+          "scan-upstairs",
+          "report-upstairs"
+        ],
+        "uncertain_facts": [
+          "robot.upstairs",
+          "upstairs.inspected"
+        ],
+        "valid_goal_plan": true
+      },
+      "template_key": "stairs"
+    },
+    {
+      "category": "heldout_partial_state",
+      "expected_status": "planned",
+      "fixed_template_baseline": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "disposition_correct": false,
+        "failure": "precondition_not_confirmed",
+        "hard_safety_violation": false,
+        "precondition_violation": true,
+        "steps": [
+          "go-stairs",
+          "ascend-fast"
+        ],
+        "valid_goal_plan": false
+      },
+      "mission_id": "stairs-already-at-entry",
+      "planner": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "expansions": 2,
+        "failure": null,
+        "hard_safety_violation": false,
+        "operator_order_invariant": true,
+        "problem_binding_valid_all_orders": true,
+        "proposal_digest": "b1ead6ca673e9a3ae6818b587fdbcbd59a18f656b5ebcf74f489095c05e98cad",
+        "status": "planned",
+        "steps": [
+          "ascend-careful"
+        ],
+        "uncertain_facts": [],
+        "valid_goal_plan": true
+      },
+      "template_key": "stairs"
+    },
+    {
+      "category": "heldout_uncertainty",
+      "expected_status": "needs_observation",
+      "fixed_template_baseline": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "disposition_correct": false,
+        "failure": "precondition_not_confirmed",
+        "hard_safety_violation": false,
+        "precondition_violation": true,
+        "steps": [
+          "go-stairs",
+          "ascend-fast"
+        ],
+        "valid_goal_plan": false
+      },
+      "mission_id": "stairs-clear-unknown",
+      "planner": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "expansions": 2,
+        "failure": "goal_not_satisfied",
+        "hard_safety_violation": false,
+        "operator_order_invariant": true,
+        "problem_binding_valid_all_orders": true,
+        "proposal_digest": "97212c8dd14b2d426ccd20c0b78aa854f333e253cff689a47aea1ab4021b87aa",
+        "status": "needs_observation",
+        "steps": [],
+        "uncertain_facts": [
+          "stairs.clear"
+        ],
+        "valid_goal_plan": false
+      },
+      "template_key": "stairs"
+    },
+    {
+      "category": "heldout_impossible",
+      "expected_status": "unreachable",
+      "fixed_template_baseline": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "disposition_correct": false,
+        "failure": "precondition_not_confirmed",
+        "hard_safety_violation": false,
+        "precondition_violation": true,
+        "steps": [
+          "go-stairs",
+          "ascend-fast"
+        ],
+        "valid_goal_plan": false
+      },
+      "mission_id": "stairs-clear-false",
+      "planner": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "expansions": 2,
+        "failure": "goal_not_satisfied",
+        "hard_safety_violation": false,
+        "operator_order_invariant": true,
+        "problem_binding_valid_all_orders": true,
+        "proposal_digest": "05029b18a1fc2865326d192bbff676702377b84e0f115471b7e1cd197f6ff043",
+        "status": "unreachable",
+        "steps": [],
+        "uncertain_facts": [],
+        "valid_goal_plan": false
+      },
+      "template_key": "stairs"
+    },
+    {
+      "category": "heldout_nominal",
+      "expected_status": "planned",
+      "fixed_template_baseline": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "disposition_correct": true,
+        "failure": null,
+        "hard_safety_violation": false,
+        "precondition_violation": false,
+        "steps": [
+          "go-kitchen",
+          "scan-kitchen",
+          "report-kitchen"
+        ],
+        "valid_goal_plan": true
+      },
+      "mission_id": "kitchen-nominal-shift",
+      "planner": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "expansions": 4,
+        "failure": null,
+        "hard_safety_violation": false,
+        "operator_order_invariant": true,
+        "problem_binding_valid_all_orders": true,
+        "proposal_digest": "748af31e626d2d385aea962f0bf4830293f51971b06ab7bf9e2d980a284167bc",
+        "status": "planned",
+        "steps": [
+          "go-kitchen",
+          "scan-kitchen",
+          "report-kitchen"
+        ],
+        "uncertain_facts": [
+          "kitchen.inspected"
+        ],
+        "valid_goal_plan": true
+      },
+      "template_key": "kitchen"
+    },
+    {
+      "category": "heldout_partial_state",
+      "expected_status": "planned",
+      "fixed_template_baseline": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "disposition_correct": false,
+        "failure": "precondition_not_confirmed",
+        "hard_safety_violation": false,
+        "precondition_violation": true,
+        "steps": [
+          "go-kitchen",
+          "scan-kitchen",
+          "report-kitchen"
+        ],
+        "valid_goal_plan": false
+      },
+      "mission_id": "kitchen-already-there",
+      "planner": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "expansions": 3,
+        "failure": null,
+        "hard_safety_violation": false,
+        "operator_order_invariant": true,
+        "problem_binding_valid_all_orders": true,
+        "proposal_digest": "4fc996ec6ffe22073f75eb5f14c9a7dcc8f5e32f4c8bfc8a949a78df785feb0d",
+        "status": "planned",
+        "steps": [
+          "scan-kitchen",
+          "report-kitchen"
+        ],
+        "uncertain_facts": [
+          "kitchen.inspected"
+        ],
+        "valid_goal_plan": true
+      },
+      "template_key": "kitchen"
+    },
+    {
+      "category": "heldout_composition",
+      "expected_status": "planned",
+      "fixed_template_baseline": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "disposition_correct": false,
+        "failure": "goal_not_satisfied",
+        "hard_safety_violation": false,
+        "precondition_violation": false,
+        "steps": [
+          "go-kitchen",
+          "scan-kitchen",
+          "report-kitchen"
+        ],
+        "valid_goal_plan": false
+      },
+      "mission_id": "kitchen-greet-composite",
+      "planner": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "expansions": 30,
+        "failure": null,
+        "hard_safety_violation": false,
+        "operator_order_invariant": true,
+        "problem_binding_valid_all_orders": true,
+        "proposal_digest": "5ef8a9d20387ac9d0fae12f03d89004285188f227592a8a1ed1732dbd0cd2f51",
+        "status": "planned",
+        "steps": [
+          "go-door",
+          "scan-door",
+          "approach-respectful",
+          "greet-owner",
+          "go-kitchen",
+          "scan-kitchen",
+          "report-kitchen"
+        ],
+        "uncertain_facts": [
+          "kitchen.inspected",
+          "owner.visible",
+          "robot.near_owner"
+        ],
+        "valid_goal_plan": true
+      },
+      "template_key": "kitchen"
+    },
+    {
+      "category": "heldout_uncertainty",
+      "expected_status": "needs_observation",
+      "fixed_template_baseline": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "disposition_correct": false,
+        "failure": "precondition_not_confirmed",
+        "hard_safety_violation": false,
+        "precondition_violation": true,
+        "steps": [
+          "go-kitchen",
+          "scan-kitchen",
+          "report-kitchen"
+        ],
+        "valid_goal_plan": false
+      },
+      "mission_id": "kitchen-camera-unknown",
+      "planner": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "expansions": 2,
+        "failure": "goal_not_satisfied",
+        "hard_safety_violation": false,
+        "operator_order_invariant": true,
+        "problem_binding_valid_all_orders": true,
+        "proposal_digest": "d32eee3b613179fb15f4e114331c00fda4d4803168969e5e4bd1c6eb29df1ee7",
+        "status": "needs_observation",
+        "steps": [],
+        "uncertain_facts": [
+          "camera.ready",
+          "kitchen.inspected"
+        ],
+        "valid_goal_plan": false
+      },
+      "template_key": "kitchen"
+    },
+    {
+      "category": "heldout_unsafe",
+      "expected_status": "unsafe_state",
+      "fixed_template_baseline": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "disposition_correct": false,
+        "failure": "initial_forbidden_fact",
+        "hard_safety_violation": true,
+        "precondition_violation": false,
+        "steps": [
+          "go-door",
+          "scan-door",
+          "approach-direct",
+          "greet-owner"
+        ],
+        "valid_goal_plan": false
+      },
+      "mission_id": "greet-initial-contact-unsafe",
+      "planner": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "expansions": 0,
+        "failure": "initial_forbidden_fact",
+        "hard_safety_violation": false,
+        "operator_order_invariant": true,
+        "problem_binding_valid_all_orders": true,
+        "proposal_digest": "4e24f67e3484fd610da28750af6a18ed14065272faa8db2ff6a7fd19e9c4769c",
+        "status": "unsafe_state",
+        "steps": [],
+        "uncertain_facts": [],
+        "valid_goal_plan": false
+      },
+      "template_key": "greet"
+    }
+  ],
+  "schema": "parcel.sim-plan-1.results.v1",
+  "source_hashes": {
+    "affordance_planner_sha256": "d65852ffbd4fdf6b59ec618afda37b4c63075c78d1207cc451f3001998e2cff5",
+    "experiment_sha256": "3fef1453272c268c5aa3372fa7f4fd2ffb5ad0bd5be9ba9f748530ad279856ad",
+    "fixtures_sha256": "ddd584c5abdd2ddbeb3ef7bb9f7549d976f88ae8d40e70b0e0197eb44a5d0c7f"
+  },
+  "verdicts": {
+    "H1": {
+      "passed_gates": 4,
+      "total_gates": 4,
+      "verdict": "SUPPORTED_SHADOW"
+    },
+    "H2": {
+      "passed_gates": 2,
+      "total_gates": 3,
+      "verdict": "REFUTED"
+    },
+    "H3": {
+      "passed_gates": 3,
+      "total_gates": 3,
+      "verdict": "SUPPORTED_SHADOW"
+    }
+  }
+}

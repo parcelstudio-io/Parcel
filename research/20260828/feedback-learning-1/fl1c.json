@@ -1,0 +1,219 @@
+{
+ "config": {
+  "n_owners": 100,
+  "n_losses": 40,
+  "arms_s": [
+   2.0,
+   4.0,
+   6.0,
+   8.0
+  ],
+  "simple_regret_bar": 0.1,
+  "n_grid": [
+   5,
+   10,
+   15,
+   20,
+   25,
+   30,
+   40
+  ],
+  "reward": "1[reacquired<=5s] - 0.5*1[annoyance]",
+  "loss_events_available_per_40_probe": [
+   40,
+   40,
+   40,
+   40,
+   40,
+   40,
+   40,
+   40,
+   40,
+   40
+  ],
+  "learned_quantity": "follow-skill config parameter check_in_latency_s"
+ },
+ "learners": {
+  "thompson_beta": {
+   "frac_simple_regret_ok": {
+    "5": 0.79,
+    "10": 0.93,
+    "15": 0.98,
+    "20": 1.0,
+    "25": 0.99,
+    "30": 1.0,
+    "40": 1.0
+   },
+   "frac_best_arm_identified": {
+    "5": 0.79,
+    "10": 0.93,
+    "15": 0.98,
+    "20": 1.0,
+    "25": 0.99,
+    "30": 1.0,
+    "40": 1.0
+   },
+   "median_n_to_stable_success": {
+    "median": 1.0,
+    "lo": 1.0,
+    "hi": 2.0,
+    "q1": 1.0,
+    "q3": 5.0,
+    "n": 100
+   },
+   "mean_simple_regret": {
+    "5": 0.11600000000000002,
+    "10": 0.038000000000000006,
+    "15": 0.01,
+    "20": 0.0,
+    "25": 0.005,
+    "30": 0.0,
+    "40": 0.0
+   },
+   "cum_reward_per_loss": 0.82225,
+   "by_preferred_latency": {
+    "L*=2s": {
+     "n_owners": 26,
+     "frac_ok_at_25": 1.0,
+     "median_n": 1.0
+    },
+    "L*=4s": {
+     "n_owners": 23,
+     "frac_ok_at_25": 1.0,
+     "median_n": 1.0
+    },
+    "L*=6s": {
+     "n_owners": 29,
+     "frac_ok_at_25": 1.0,
+     "median_n": 4.0
+    },
+    "L*=8s": {
+     "n_owners": 22,
+     "frac_ok_at_25": 0.9545454545454546,
+     "median_n": 6.0
+    }
+   }
+  },
+  "ucb1": {
+   "frac_simple_regret_ok": {
+    "5": 0.68,
+    "10": 0.88,
+    "15": 0.96,
+    "20": 0.99,
+    "25": 0.99,
+    "30": 1.0,
+    "40": 1.0
+   },
+   "frac_best_arm_identified": {
+    "5": 0.68,
+    "10": 0.88,
+    "15": 0.96,
+    "20": 0.99,
+    "25": 0.99,
+    "30": 1.0,
+    "40": 1.0
+   },
+   "median_n_to_stable_success": {
+    "median": 3.0,
+    "lo": 2.0,
+    "hi": 5.0,
+    "q1": 1.0,
+    "q3": 7.0,
+    "n": 100
+   },
+   "mean_simple_regret": {
+    "5": 0.17200000000000004,
+    "10": 0.063,
+    "15": 0.021,
+    "20": 0.005,
+    "25": 0.005,
+    "30": 0.0,
+    "40": 0.0
+   },
+   "cum_reward_per_loss": 0.76125,
+   "by_preferred_latency": {
+    "L*=2s": {
+     "n_owners": 26,
+     "frac_ok_at_25": 1.0,
+     "median_n": 1.0
+    },
+    "L*=4s": {
+     "n_owners": 23,
+     "frac_ok_at_25": 1.0,
+     "median_n": 2.0
+    },
+    "L*=6s": {
+     "n_owners": 29,
+     "frac_ok_at_25": 0.9655172413793104,
+     "median_n": 5.0
+    },
+    "L*=8s": {
+     "n_owners": 22,
+     "frac_ok_at_25": 1.0,
+     "median_n": 7.0
+    }
+   }
+  },
+  "epsilon_greedy_0.1": {
+   "frac_simple_regret_ok": {
+    "5": 0.79,
+    "10": 0.95,
+    "15": 0.97,
+    "20": 0.99,
+    "25": 0.98,
+    "30": 0.99,
+    "40": 0.99
+   },
+   "frac_best_arm_identified": {
+    "5": 0.79,
+    "10": 0.95,
+    "15": 0.97,
+    "20": 0.99,
+    "25": 0.98,
+    "30": 0.99,
+    "40": 0.99
+   },
+   "median_n_to_stable_success": {
+    "median": 1.0,
+    "lo": 1.0,
+    "hi": 2.0,
+    "q1": 1.0,
+    "q3": 4.25,
+    "n": 100
+   },
+   "mean_simple_regret": {
+    "5": 0.11599999999999999,
+    "10": 0.028000000000000004,
+    "15": 0.016,
+    "20": 0.005,
+    "25": 0.01,
+    "30": 0.005,
+    "40": 0.005
+   },
+   "cum_reward_per_loss": 0.82975,
+   "by_preferred_latency": {
+    "L*=2s": {
+     "n_owners": 26,
+     "frac_ok_at_25": 1.0,
+     "median_n": 1.0
+    },
+    "L*=4s": {
+     "n_owners": 23,
+     "frac_ok_at_25": 0.9565217391304348,
+     "median_n": 1.0
+    },
+    "L*=6s": {
+     "n_owners": 29,
+     "frac_ok_at_25": 1.0,
+     "median_n": 2.0
+    },
+    "L*=8s": {
+     "n_owners": 22,
+     "frac_ok_at_25": 0.9545454545454546,
+     "median_n": 5.0
+    }
+   }
+  }
+ },
+ "wall_s": 1.4
+}

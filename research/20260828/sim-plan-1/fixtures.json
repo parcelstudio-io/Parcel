@@ -1,0 +1,239 @@
+{
+  "schema": "parcel.sim-plan-1.fixtures.v1",
+  "evidence_class": "authored_symbolic_shadow_only",
+  "development_templates": {
+    "greet": ["go-door", "scan-door", "approach-direct", "greet-owner"],
+    "follow": ["go-door", "scan-door", "approach-direct", "follow-owner"],
+    "charge": ["go-charger", "dock-charger"],
+    "stairs": ["go-stairs", "ascend-fast"],
+    "kitchen": ["go-kitchen", "scan-kitchen", "report-kitchen"]
+  },
+  "base_state": {
+    "confirmed_true": [
+      "balance.stable",
+      "camera.ready",
+      "charger.clear",
+      "consent.approach",
+      "consent.follow",
+      "lidar.ready",
+      "stairs.clear",
+      "voice.ready"
+    ],
+    "confirmed_false": [
+      "human.contact",
+      "robot.at_charger",
+      "robot.at_door",
+      "robot.at_kitchen",
+      "robot.at_stairs",
+      "stability.low"
+    ]
+  },
+  "operator_catalog": {
+    "go-door": {
+      "skill": "NavigateTo",
+      "requires_true": ["lidar.ready"],
+      "requires_false": ["robot.at_door"],
+      "predicts_true": ["robot.at_door"],
+      "predicts_false": ["robot.at_charger", "robot.at_kitchen", "robot.at_stairs"],
+      "base_cost": 1.0,
+      "risk": 0.0,
+      "reliability_key": "route.door"
+    },
+    "scan-door": {
+      "skill": "ScanBehavior",
+      "requires_true": ["camera.ready", "robot.at_door"],
+      "predicts_true": ["owner.visible"],
+      "base_cost": 1.0,
+      "risk": 0.0,
+      "reliability_key": "scan.door"
+    },
+    "approach-direct": {
+      "skill": "FollowFormation",
+      "requires_true": ["consent.approach", "owner.visible"],
+      "predicts_true": ["human.contact", "robot.near_owner"],
+      "base_cost": 0.5,
+      "risk": 0.3,
+      "reliability_key": "approach.direct"
+    },
+    "approach-respectful": {
+      "skill": "FollowFormation",
+      "requires_true": ["consent.approach", "owner.visible"],
+      "predicts_true": ["robot.near_owner"],
+      "base_cost": 1.5,
+      "risk": 0.0,
+      "reliability_key": "approach.respectful"
+    },
+    "greet-owner": {
+      "skill": "Vocalize",
+      "requires_true": ["robot.near_owner", "voice.ready"],
+      "predicts_true": ["owner.greeted"],
+      "base_cost": 0.5,
+      "risk": 0.0,
+      "reliability_key": "voice.greet"
+    },
+    "follow-owner": {
+      "skill": "FollowFormation",
+      "requires_true": ["consent.follow", "robot.near_owner"],
+      "predicts_true": ["owner.followed"],
+      "base_cost": 1.0,
+      "risk": 0.0,
+      "reliability_key": "formation.follow"
+    },
+    "joyful-pose": {
+      "skill": "ExpressPose",
+      "requires_true": ["balance.stable", "owner.greeted"],
+      "predicts_true": ["expression.joyful"],
+      "base_cost": 0.5,
+      "risk": 0.0,
+      "reliability_key": "pose.joyful"
+    },
+    "go-charger": {
+      "skill": "NavigateTo",
+      "requires_true": ["lidar.ready"],
+      "requires_false": ["robot.at_charger"],
+      "predicts_true": ["robot.at_charger"],
+      "predicts_false": ["robot.at_door", "robot.at_kitchen", "robot.at_stairs"],
+      "base_cost": 1.0,
+      "risk": 0.0,
+      "reliability_key": "route.charger"
+    },
+    "dock-charger": {
+      "skill": "Dock",
+      "requires_true": ["charger.clear", "robot.at_charger"],
+      "predicts_true": ["robot.charging"],
+      "base_cost": 1.0,
+      "risk": 0.0,
+      "reliability_key": "dock.charger"
+    },
+    "go-stairs": {
+      "skill": "NavigateTo",
+      "requires_true": ["lidar.ready"],
+      "requires_false": ["robot.at_stairs"],
+      "predicts_true": ["robot.at_stairs"],
+      "predicts_false": ["robot.at_charger", "robot.at_door", "robot.at_kitchen"],
+      "base_cost": 1.0,
+      "risk": 0.0,
+      "reliability_key": "route.stairs"
+    },
+    "ascend-fast": {
+      "skill": "StairTraverse",
+      "requires_true": ["robot.at_stairs", "stairs.clear"],
+      "predicts_true": ["robot.upstairs", "stability.low"],
+      "base_cost": 0.5,
+      "risk": 0.25,
+      "reliability_key": "stairs.fast"
+    },
+    "ascend-careful": {
+      "skill": "StairTraverse",
+      "requires_true": ["robot.at_stairs", "stairs.clear"],
+      "predicts_true": ["robot.upstairs"],
+      "base_cost": 1.5,
+      "risk": 0.0,
+      "reliability_key": "stairs.careful"
+    },
+    "scan-upstairs": {
+      "skill": "ScanBehavior",
+      "requires_true": ["camera.ready", "robot.upstairs"],
+      "predicts_true": ["upstairs.inspected"],
+      "base_cost": 1.0,
+      "risk": 0.0,
+      "reliability_key": "scan.upstairs"
+    },
+    "report-upstairs": {
+      "skill": "Vocalize",
+      "requires_true": ["upstairs.inspected", "voice.ready"],
+      "predicts_true": ["owner.upstairs_updated"],
+      "base_cost": 0.5,
+      "risk": 0.0,
+      "reliability_key": "voice.upstairs"
+    },
+    "go-kitchen": {
+      "skill": "NavigateTo",
+      "requires_true": ["lidar.ready"],
+      "requires_false": ["robot.at_kitchen"],
+      "predicts_true": ["robot.at_kitchen"],
+      "predicts_false": ["robot.at_charger", "robot.at_door", "robot.at_stairs"],
+      "base_cost": 1.0,
+      "risk": 0.0,
+      "reliability_key": "route.kitchen"
+    },
+    "scan-kitchen": {
+      "skill": "ScanBehavior",
+      "requires_true": ["camera.ready", "robot.at_kitchen"],
+      "predicts_true": ["kitchen.inspected"],
+      "base_cost": 1.0,
+      "risk": 0.0,
+      "reliability_key": "scan.kitchen"
+    },
+    "report-kitchen": {
+      "skill": "Vocalize",
+      "requires_true": ["kitchen.inspected", "voice.ready"],
+      "predicts_true": ["owner.kitchen_updated"],
+      "base_cost": 0.5,
+      "risk": 0.0,
+      "reliability_key": "voice.kitchen"
+    }
+  },
+  "profiles": {
+    "greet": {
+      "template_key": "greet",
+      "operator_ids": ["go-door", "scan-door", "approach-direct", "approach-respectful", "greet-owner"],
+      "goal_true": ["owner.greeted"]
+    },
+    "follow": {
+      "template_key": "follow",
+      "operator_ids": ["go-door", "scan-door", "approach-direct", "approach-respectful", "follow-owner"],
+      "goal_true": ["owner.followed"]
+    },
+    "charge": {
+      "template_key": "charge",
+      "operator_ids": ["go-charger", "dock-charger"],
+      "goal_true": ["robot.charging"]
+    },
+    "stairs": {
+      "template_key": "stairs",
+      "operator_ids": ["go-stairs", "ascend-fast", "ascend-careful"],
+      "goal_true": ["robot.upstairs"]
+    },
+    "kitchen": {
+      "template_key": "kitchen",
+      "operator_ids": ["go-kitchen", "scan-kitchen", "report-kitchen"],
+      "goal_true": ["owner.kitchen_updated"]
+    }
+  },
+  "held_out_missions": [
+    {"id": "greet-nominal-shift", "profile": "greet", "category": "heldout_nominal", "expected_status": "planned"},
+    {"id": "greet-strict-distance", "profile": "greet", "category": "heldout_constraint", "forbidden_true": ["human.contact"], "expected_status": "planned"},
+    {"id": "greet-follow-composite", "profile": "greet", "category": "heldout_composition", "operator_ids_add": ["follow-owner"], "goal_true_add": ["owner.followed"], "expected_status": "planned"},
+    {"id": "greet-joy-composite", "profile": "greet", "category": "heldout_composition", "operator_ids_add": ["joyful-pose"], "goal_true_add": ["expression.joyful"], "expected_status": "planned"},
+    {"id": "greet-camera-unknown", "profile": "greet", "category": "heldout_uncertainty", "confirmed_true_remove": ["camera.ready"], "critical_unknown": "camera.ready", "expected_status": "needs_observation"},
+    {"id": "greet-camera-false", "profile": "greet", "category": "heldout_impossible", "confirmed_true_remove": ["camera.ready"], "confirmed_false_add": ["camera.ready"], "expected_status": "unreachable"},
+    {"id": "greet-direct-safety-history", "profile": "greet", "category": "heldout_constraint", "risk_weight": 0.0, "reliability": [{"reliability_key": "approach.direct", "successes": 99, "failures": 1, "safety_failures": 1}], "expected_status": "planned"},
+    {"id": "greet-scan-uncommissioned", "profile": "greet", "category": "heldout_commissioning", "commissioned_skills_remove": ["ScanBehavior"], "confirmed_false_add": ["owner.visible"], "expected_status": "unreachable"},
+
+    {"id": "follow-nominal-shift", "profile": "follow", "category": "heldout_nominal", "expected_status": "planned"},
+    {"id": "follow-strict-distance", "profile": "follow", "category": "heldout_constraint", "forbidden_true": ["human.contact"], "expected_status": "planned"},
+    {"id": "follow-greet-composite", "profile": "follow", "category": "heldout_composition", "operator_ids_add": ["greet-owner"], "goal_true_add": ["owner.greeted"], "expected_status": "planned"},
+    {"id": "follow-consent-unknown", "profile": "follow", "category": "heldout_uncertainty", "confirmed_true_remove": ["consent.follow"], "critical_unknown": "consent.follow", "expected_status": "needs_observation"},
+    {"id": "follow-consent-false", "profile": "follow", "category": "heldout_impossible", "confirmed_true_remove": ["consent.follow"], "confirmed_false_add": ["consent.follow"], "expected_status": "unreachable"},
+
+    {"id": "charge-nominal-shift", "profile": "charge", "category": "heldout_nominal", "expected_status": "planned"},
+    {"id": "charge-already-at-dock", "profile": "charge", "category": "heldout_partial_state", "confirmed_false_remove": ["robot.at_charger"], "confirmed_true_add": ["robot.at_charger"], "expected_status": "planned"},
+    {"id": "charge-kitchen-composite", "profile": "charge", "category": "heldout_composition", "operator_ids_add": ["go-kitchen", "scan-kitchen", "report-kitchen"], "goal_true_add": ["owner.kitchen_updated"], "expected_status": "planned"},
+    {"id": "charge-clear-unknown", "profile": "charge", "category": "heldout_uncertainty", "confirmed_true_remove": ["charger.clear"], "critical_unknown": "charger.clear", "expected_status": "needs_observation"},
+    {"id": "charge-clear-false", "profile": "charge", "category": "heldout_impossible", "confirmed_true_remove": ["charger.clear"], "confirmed_false_add": ["charger.clear"], "expected_status": "unreachable"},
+
+    {"id": "stairs-nominal-shift", "profile": "stairs", "category": "heldout_nominal", "expected_status": "planned"},
+    {"id": "stairs-strict-stability", "profile": "stairs", "category": "heldout_constraint", "forbidden_true": ["stability.low"], "expected_status": "planned"},
+    {"id": "stairs-report-composite", "profile": "stairs", "category": "heldout_composition", "operator_ids_add": ["scan-upstairs", "report-upstairs"], "goal_true_add": ["owner.upstairs_updated"], "expected_status": "planned"},
+    {"id": "stairs-already-at-entry", "profile": "stairs", "category": "heldout_partial_state", "confirmed_false_remove": ["robot.at_stairs"], "confirmed_true_add": ["robot.at_stairs"], "expected_status": "planned"},
+    {"id": "stairs-clear-unknown", "profile": "stairs", "category": "heldout_uncertainty", "confirmed_true_remove": ["stairs.clear"], "critical_unknown": "stairs.clear", "expected_status": "needs_observation"},
+    {"id": "stairs-clear-false", "profile": "stairs", "category": "heldout_impossible", "confirmed_true_remove": ["stairs.clear"], "confirmed_false_add": ["stairs.clear"], "expected_status": "unreachable"},
+
+    {"id": "kitchen-nominal-shift", "profile": "kitchen", "category": "heldout_nominal", "expected_status": "planned"},
+    {"id": "kitchen-already-there", "profile": "kitchen", "category": "heldout_partial_state", "confirmed_false_remove": ["robot.at_kitchen"], "confirmed_true_add": ["robot.at_kitchen"], "expected_status": "planned"},
+    {"id": "kitchen-greet-composite", "profile": "kitchen", "category": "heldout_composition", "operator_ids_add": ["go-door", "scan-door", "approach-direct", "approach-respectful", "greet-owner"], "goal_true_add": ["owner.greeted"], "expected_status": "planned"},
+    {"id": "kitchen-camera-unknown", "profile": "kitchen", "category": "heldout_uncertainty", "confirmed_true_remove": ["camera.ready"], "critical_unknown": "camera.ready", "expected_status": "needs_observation"},
+    {"id": "greet-initial-contact-unsafe", "profile": "greet", "category": "heldout_unsafe", "confirmed_false_remove": ["human.contact"], "confirmed_true_add": ["human.contact"], "forbidden_true": ["human.contact"], "expected_status": "unsafe_state"}
+  ]
+}

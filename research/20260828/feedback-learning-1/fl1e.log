@@ -1,0 +1,9 @@
+[FL1e] clean|laughter_only|beta_mean_2of3                             F1=0.738 to_bar=25 wrong=2 recov=27
+[FL1e] clean|laughter_only|beta_mean_2of3_detector_debiased           F1=0.772 to_bar=22 wrong=3 recov=25
+[FL1e] clean|laughter_plus_verbal|beta_mean_2of3                      F1=0.681 to_bar=None wrong=2 recov=None
+[FL1e] clean|laughter_plus_verbal|beta_mean_2of3_detector_debiased    F1=0.729 to_bar=30 wrong=2 recov=None
+[FL1e] det_q0.1_m0.3|laughter_only|beta_mean_2of3                     F1=0.474 to_bar=None wrong=1 recov=None
+[FL1e] det_q0.1_m0.3|laughter_only|beta_mean_2of3_detector_debiased   F1=0.614 to_bar=None wrong=2 recov=None
+[FL1e] det_q0.1_m0.3|laughter_plus_verbal|beta_mean_2of3              F1=0.516 to_bar=None wrong=1 recov=None
+[FL1e] det_q0.1_m0.3|laughter_plus_verbal|beta_mean_2of3_detector_debiased F1=0.616 to_bar=None wrong=2 recov=None
+wrote fl1e.json

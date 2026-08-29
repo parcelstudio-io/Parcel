@@ -1,0 +1,18 @@
+{
+  "schema": "parcel.sim-plan-2.observability.v1",
+  "evidence_class": "authored_symbolic_regression_shadow_only",
+  "externally_observable_facts": [
+    "camera.ready",
+    "charger.clear",
+    "consent.approach",
+    "consent.follow",
+    "lidar.ready",
+    "stairs.clear",
+    "voice.ready"
+  ],
+  "excluded_derived_examples": [
+    "owner.visible",
+    "robot.near_owner"
+  ],
+  "warning": "Authored observability metadata only; not a sensor capability or commissioning record."
+}

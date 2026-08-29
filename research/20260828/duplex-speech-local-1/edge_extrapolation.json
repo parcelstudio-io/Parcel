@@ -1,0 +1,120 @@
+{
+  "hypothesis": "H-DS1c",
+  "desktop_gpu": "NVIDIA RTX 5000 Ada Generation",
+  "desktop_bandwidth": {
+    "achievable_gbs": 483.6,
+    "achievable_gbs_median": 476.1,
+    "buffer_mib": 2048,
+    "iters": 30,
+    "warmup": 40,
+    "method": "torch fp16 device-to-device copy, read+write counted, best of N"
+  },
+  "desktop_bandwidth_theoretical_gbs": 576.1,
+  "desktop_bandwidth_theoretical_derivation": "nvidia-smi clocks.max.memory = 9001 MHz; GDDR6 double data rate -> 18.002 Gbps/pin; RTX 5000 Ada has a 256-bit bus -> 18.002 * 256 / 8 = 576.1 GB/s",
+  "orin_bandwidth_gbs": 204.8,
+  "orin_bandwidth_source": "https://www.nvidia.com/en-us/autonomous-machines/embedded-systems/jetson-orin/",
+  "measured_step_ms_p50": 41.69,
+  "measured_step_source": "results.json (492 steps, bf16)",
+  "lm_params": 7687729152,
+  "frame_budget_ms": 80.0,
+  "cross_checks": [
+    {
+      "model": "Qwen2.5-Omni-7B Q8_0, llama.cpp, full GPU offload, AGX Orin 64 GB",
+      "tok_per_s": 15.7,
+      "tok_per_s_range": [
+        15.3,
+        16.1
+      ],
+      "source": "https://github.com/ggml-org/llama.cpp/issues/15923",
+      "note": "audio input path had an open bug in that thread; decode rate still valid"
+    },
+    {
+      "model": "Llama 3.1 8B Q4_K_M / Qwen2.5 7B Q4_K_M, llama.cpp CUDA, JetPack 6.1",
+      "tok_per_s": [
+        28.0,
+        31.0
+      ],
+      "source": "https://multimodalflow.net/en/blog/jetson-orin-llm-benchmark/"
+    }
+  ],
+  "roofline_validation": {
+    "lm_step_ms_p50_measured": 38.494,
+    "weights_gb_bf16": 15.375,
+    "desktop_achievable_gbs": 483.6,
+    "bandwidth_floor_ms": 31.79,
+    "roofline_efficiency": 0.826,
+    "interpretation": "the LM step achieves this fraction of the pure weight-sweep floor, so batch-1 decode here IS bandwidth bound and scaling by bandwidth to another device is a sound first-order model",
+    "mimi_encode_decode_ms_p50": 3.607,
+    "temporal_transformer_params": 6576930816,
+    "depformer_stack_params": 714362880
+  },
+  "orin_projection_roofline_anchored": {
+    "bf16": {
+      "weights_gb": 15.38,
+      "bandwidth_floor_ms": 75.1,
+      "lm_step_ms": 90.9,
+      "plus_mimi_ms": 8.5,
+      "frame_total_ms": 99.4,
+      "rtf": 1.24,
+      "fits_80ms": false
+    },
+    "int8": {
+      "weights_gb": 7.69,
+      "bandwidth_floor_ms": 37.5,
+      "lm_step_ms": 45.4,
+      "plus_mimi_ms": 8.5,
+      "frame_total_ms": 54.0,
+      "rtf": 0.67,
+      "fits_80ms": true
+    },
+    "int4": {
+      "weights_gb": 3.84,
+      "bandwidth_floor_ms": 18.8,
+      "lm_step_ms": 22.7,
+      "plus_mimi_ms": 8.5,
+      "frame_total_ms": 31.2,
+      "rtf": 0.39,
+      "fits_80ms": true
+    }
+  },
+  "orin_projection_conservative": {
+    "anchor": {
+      "model": "Qwen2.5-Omni-7B Q8_0, llama.cpp, full GPU offload, AGX Orin 64 GB",
+      "tok_per_s": 15.7,
+      "tok_per_s_range": [
+        15.3,
+        16.1
+      ],
+      "source": "https://github.com/ggml-org/llama.cpp/issues/15923",
+      "note": "audio input path had an open bug in that thread; decode rate still valid"
+    },
+    "anchor_ms_per_token": 63.7,
+    "idealized_int8_lm_step_ms": 45.4,
+    "derate_factor": 1.4,
+    "derate_note": "llama.cpp on Orin reaches only 1/derate of the bandwidth-roofline projection for a 7B at Q8; applying the same derate to Moshi",
+    "int8_lm_step_ms": 63.7,
+    "int8_frame_total_ms": 72.2,
+    "int8_rtf": 0.9,
+    "int8_fits_80ms": true,
+    "int4_frame_total_ms": 40.3,
+    "int4_rtf": 0.5,
+    "int4_fits_80ms": true,
+    "caveat": "Moshi's depformer runs dep_q=8 SEQUENTIAL sub-steps per frame, each a small kernel launch; on Orin's weaker launch/latency profile that overhead is likely worse than on this desktop, so even this row may be optimistic. Nothing replaces running it on the board."
+  },
+  "bandwidth_ratio_desktop_over_orin": 2.361,
+  "projection": {
+    "orin_bf16_step_ms": 98.4,
+    "orin_bf16_rtf": 1.23,
+    "orin_int8_step_ms": 49.2,
+    "orin_int8_rtf": 0.62,
+    "orin_int4_step_ms": 24.6,
+    "orin_int4_rtf": 0.31,
+    "assumption": "batch-1 decode is bandwidth bound; step time scales with streamed weight bytes / achievable bandwidth. Quantization scaling is idealized (ignores dequant overhead and the fact that Mimi and the depformer stay in higher precision), so the int8/int4 rows are optimistic lower bounds.",
+    "orin_bf16_weight_sweep_floor_ms": 75.1,
+    "orin_bf16_weight_gb": 15.38,
+    "orin_int8_weight_sweep_floor_ms": 37.5,
+    "orin_int8_weight_gb": 7.69,
+    "orin_int4_weight_sweep_floor_ms": 18.8,
+    "orin_int4_weight_gb": 3.84
+  }
+}

@@ -1,0 +1,241 @@
+{
+  "all_negatives_pooled": {
+    "accuracy_at_youden": 0.9654545454545455,
+    "auprc": 0.902446352278063,
+    "auroc": 0.990686274509804,
+    "auroc_bootstrap_mean": 0.9906417401960784,
+    "auroc_ci95": [
+      0.9829889705882352,
+      0.9962254901960783
+    ],
+    "fpr_at_youden": 0.03529411764705882,
+    "n_neg": 510,
+    "n_pos": 40,
+    "tpr_at_youden": 0.975,
+    "youden_threshold": -2.519834518432617
+  },
+  "amendments_applied": [
+    "H1",
+    "H2",
+    "H3",
+    "H4",
+    "H7"
+  ],
+  "data_provenance": {
+    "chuckle_asset_search": {
+      "found": [
+        "src/parcel_robot/runtime_assets/configs/skills/trajectories/chuckle.yaml"
+      ],
+      "note": "the only 'chuckle' asset in src/ is a MOTION trajectory (YAML), not audio; the repo ships no laugh/chuckle audio asset, so that sub-slice of H2 is empty and is recorded as such",
+      "searched": "src/**  for *.wav *.mp3 *.ogg *chuckle* *laugh*"
+    },
+    "own_tts": {
+      "binary": "/home/jaewoo-jang/Desktop/Projects/Parcel/third_party/piper/piper",
+      "caller_in_product": "src/parcel_robot/providers.py::PiperSpeechProvider",
+      "n_clips": 50,
+      "source": "the repo's production Piper path, used read-only",
+      "voice": "/home/jaewoo-jang/Desktop/Projects/Parcel/models/piper/voice.onnx",
+      "voice_dataset": "lessac medium, en_US, 22050 Hz",
+      "voice_sha256": "5efe09e69902187827af646e1a6e9d269dee769f9877d17b16b1b46eeaaf019f"
+    },
+    "speech": {
+      "archive_sha256": "76f87d090650617fca0cac8f88b9416e0ebf80350acb97b343a85fa903728ab3",
+      "corpus": "LibriSpeech dev-clean",
+      "n_clips": 100,
+      "source": "https://www.openslr.org/resources/12/dev-clean.tar.gz"
+    }
+  },
+  "esc50_single_laughter_label": {
+    "accuracy_at_youden": 0.8975,
+    "auprc": 0.6354642490829502,
+    "auroc": 0.9590277777777777,
+    "auroc_bootstrap_mean": 0.9588370486111111,
+    "auroc_ci95": [
+      0.9393750000000001,
+      0.9751406250000001
+    ],
+    "fpr_at_youden": 0.11388888888888889,
+    "n_neg": 360,
+    "n_pos": 40,
+    "tpr_at_youden": 1.0,
+    "youden_threshold": -4.275226593017578
+  },
+  "evidence_tier": "replay",
+  "gpu_name": "NVIDIA RTX 5000 Ada Generation",
+  "headline_esc50_family_max": {
+    "accuracy_at_youden": 0.9525,
+    "auprc": 0.9029591727908833,
+    "auroc": 0.9870138888888889,
+    "auroc_bootstrap_mean": 0.9869002777777778,
+    "auroc_ci95": [
+      0.9765954861111111,
+      0.9943055555555556
+    ],
+    "fpr_at_youden": 0.05,
+    "n_neg": 360,
+    "n_pos": 40,
+    "tpr_at_youden": 0.975,
+    "youden_threshold": -2.519834518432617
+  },
+  "hop_seconds": 0.25,
+  "latency_ms": {
+    "cpu_1thread": {
+      "mean_ms": 2246.0916502552573,
+      "n": 200,
+      "note": "batch=1, one 1-s window, includes log-mel feature extraction",
+      "p50_ms": 2265.64157550456,
+      "p99_ms": 2358.0628278426593,
+      "threads": 1
+    },
+    "gpu": {
+      "mean_ms": 30.305530368350446,
+      "n": 200,
+      "note": "batch=1, one 1-s window, includes log-mel feature extraction",
+      "p50_ms": 30.362441495526582,
+      "p99_ms": 31.485532421502285,
+      "threads": 32
+    }
+  },
+  "laughter_family_ids": [
+    16,
+    18,
+    19,
+    20,
+    21,
+    17
+  ],
+  "laughter_family_labels": [
+    "Laughter",
+    "Giggle",
+    "Snicker",
+    "Belly laugh",
+    "Chuckle, chortle",
+    "Baby laughter"
+  ],
+  "laughter_primary_id": 16,
+  "laughter_primary_label": "Laughter",
+  "model": "MIT/ast-finetuned-audioset-10-10-0.4593",
+  "model_params": 86594063,
+  "n_clips_total": 550,
+  "operating_point": {
+    "false_triggers": {
+      "esc50_human_nonspeech": {
+        "false_triggers_per_minute": 1.647,
+        "n_clips": 360,
+        "n_clips_with_any_trigger": 15,
+        "n_windows": 6120,
+        "n_windows_over_threshold": 42,
+        "stream_minutes": 25.5
+      },
+      "own_piper_tts": {
+        "false_triggers_per_minute": 0.0,
+        "n_clips": 50,
+        "n_clips_with_any_trigger": 0,
+        "n_windows": 263,
+        "n_windows_over_threshold": 0,
+        "stream_minutes": 1.096
+      },
+      "speech_librispeech": {
+        "false_triggers_per_minute": 0.0,
+        "n_clips": 100,
+        "n_clips_with_any_trigger": 0,
+        "n_windows": 3179,
+        "n_windows_over_threshold": 0,
+        "stream_minutes": 13.246
+      }
+    },
+    "fold5_heldout": {
+      "accuracy": 0.9125,
+      "fpr": 0.05555555555555555,
+      "n": 80,
+      "n_neg": 72,
+      "n_pos": 8,
+      "tpr": 0.625
+    },
+    "folds1_4_insample": {
+      "accuracy": 0.965625,
+      "fpr": 0.03819444444444445,
+      "n": 320,
+      "n_neg": 288,
+      "n_pos": 32,
+      "tpr": 1.0
+    },
+    "onset_latency": {
+      "n_detected": 37,
+      "n_missed_at_threshold": 3,
+      "n_positive_clips": 40,
+      "note": "detection time is the END of the first window over threshold, so 1.00 s of window fill is included by construction",
+      "onset_annotation": "first RMS frame above 20 % of clip peak RMS (1024-sample frame, 256 hop)",
+      "time_to_first_detection_min_s": 0.8240000000000001,
+      "time_to_first_detection_p50_s": 1.0,
+      "time_to_first_detection_p95_s": 2.8115999999999928
+    },
+    "own_piper_tts_fpr_at_threshold": 0.0,
+    "own_piper_tts_n": 50,
+    "speech_librispeech_fpr_at_threshold": 0.0,
+    "speech_librispeech_n": 100,
+    "threshold": -2.2591989040374756,
+    "threshold_selected_on": "ESC-50 folds 1-4 (Youden J), laughter-family max logit"
+  },
+  "per_slice": {
+    "esc50_human_nonspeech": {
+      "accuracy_at_youden": 0.9525,
+      "auprc": 0.9029591727908833,
+      "auroc": 0.9870138888888889,
+      "auroc_bootstrap_mean": 0.9869002777777778,
+      "auroc_ci95": [
+        0.9765954861111111,
+        0.9943055555555556
+      ],
+      "fpr_at_youden": 0.05,
+      "n_neg": 360,
+      "n_pos": 40,
+      "negative_slice": "esc50_human_nonspeech",
+      "tpr_at_youden": 0.975,
+      "youden_threshold": -2.519834518432617
+    },
+    "own_piper_tts": {
+      "accuracy_at_youden": 1.0,
+      "auprc": 1.0,
+      "auroc": 1.0,
+      "auroc_bootstrap_mean": 1.0,
+      "auroc_ci95": [
+        0.9999999999999999,
+        1.0
+      ],
+      "fpr_at_youden": 0.0,
+      "n_neg": 50,
+      "n_pos": 40,
+      "negative_slice": "own_piper_tts",
+      "tpr_at_youden": 1.0,
+      "youden_threshold": -3.2526087760925293
+    },
+    "speech_librispeech": {
+      "accuracy_at_youden": 0.9928571428571429,
+      "auprc": 0.9982558139534885,
+      "auroc": 0.99925,
+      "auroc_bootstrap_mean": 0.99922325,
+      "auroc_ci95": [
+        0.997,
+        1.0
+      ],
+      "fpr_at_youden": 0.0,
+      "n_neg": 100,
+      "n_pos": 40,
+      "negative_slice": "speech_librispeech",
+      "tpr_at_youden": 0.975,
+      "youden_threshold": -2.519834518432617
+    }
+  },
+  "sample_rate": 16000,
+  "seed": 20260828,
+  "slice_counts": {
+    "esc50_human_nonspeech": 360,
+    "esc50_laughing": 40,
+    "own_piper_tts": 50,
+    "speech_librispeech": 100
+  },
+  "torch_version": "2.13.0+cu130",
+  "wall_seconds": 650.6,
+  "window_seconds": 1.0
+}

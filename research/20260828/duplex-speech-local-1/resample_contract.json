@@ -1,0 +1,73 @@
+{
+  "moshi_hz": 12.5,
+  "parcel_hz": 10.0,
+  "ratio": "5:4 \u2014 4 Moshi frames span 5 Parcel frames; no common frame",
+  "parcel_frame_hz_source": "src/parcel_robot/duplex/config.py:22 (frame_hz: float = 10.0)",
+  "moshi_frame_rate_source": "moshi/models/loaders.py:29 (FRAME_RATE = 12.5)",
+  "training_direction": {
+    "1.0_events_per_s": {
+      "src_frames": 3000,
+      "dst_frames": 3750,
+      "non_idle_events": 307,
+      "dropped_non_idle_events": 0,
+      "dropped_fraction": 0.0
+    },
+    "2.0_events_per_s": {
+      "src_frames": 3000,
+      "dst_frames": 3750,
+      "non_idle_events": 628,
+      "dropped_non_idle_events": 0,
+      "dropped_fraction": 0.0
+    },
+    "4.0_events_per_s": {
+      "src_frames": 3000,
+      "dst_frames": 3750,
+      "non_idle_events": 1177,
+      "dropped_non_idle_events": 0,
+      "dropped_fraction": 0.0
+    }
+  },
+  "inference_direction": {
+    "1.0_events_per_s": {
+      "src_frames": 3750,
+      "dst_frames": 3000,
+      "non_idle_events": 301,
+      "dropped_non_idle_events": 15,
+      "dropped_fraction": 0.04983,
+      "event_priority_merge_events_preserved": 301,
+      "event_priority_merge_drops": 0
+    },
+    "2.0_events_per_s": {
+      "src_frames": 3750,
+      "dst_frames": 3000,
+      "non_idle_events": 596,
+      "dropped_non_idle_events": 39,
+      "dropped_fraction": 0.06544,
+      "event_priority_merge_events_preserved": 594,
+      "event_priority_merge_drops": 2
+    },
+    "4.0_events_per_s": {
+      "src_frames": 3750,
+      "dst_frames": 3000,
+      "non_idle_events": 1163,
+      "dropped_non_idle_events": 114,
+      "dropped_fraction": 0.09802,
+      "event_priority_merge_events_preserved": 1149,
+      "event_priority_merge_drops": 14
+    },
+    "8.0_events_per_s": {
+      "src_frames": 3750,
+      "dst_frames": 3000,
+      "non_idle_events": 2379,
+      "dropped_non_idle_events": 351,
+      "dropped_fraction": 0.14754,
+      "event_priority_merge_events_preserved": 2206,
+      "event_priority_merge_drops": 173
+    }
+  },
+  "contract": {
+    "training": "10 -> 12.5 Hz, hold-last. Upsampling: ZERO dropped non-idle tokens by construction. Each Parcel act is repeated over 1 or 2 Moshi frames in a 4/5 alternating pattern; the only cost is up to 80 ms of act-onset quantization jitter.",
+    "inference_recommended": "Set DuplexConfig.frame_hz = 12.5 so the product clock matches the model's. This removes the resampling entirely and makes the control loop 20 ms faster. Downstream cadence assumptions (filler watchdog, response ceiling, TTLs) must be re-checked against the new period.",
+    "inference_fallback": "If the 10 Hz clock must stay, use the event-priority merge rather than hold-last: a destination frame takes the earliest non-idle token in its window and carries any second one into the next frame. It never drops an event; it delays at most one by 100 ms."
+  }
+}

@@ -1,0 +1,281 @@
+# FL-1 — RESULTS
+
+Executor: Opus (parcel-0e). Run date 2026-08-28. Evidence tier **`desktop-sim`**.
+Physical motion: **NO-GO**, unchanged. No product path is exercised; no hosted
+calls; no `src/`, `tests/`, `gateway/`, `logs/` or other research folder written.
+**No verdict is claimed here** — Fable writes `VERDICT.md`.
+
+## AMENDMENTS.md — present, read before any headline row
+
+`research/20260828/feedback-learning-1/AMENDMENTS.md` **existed** (written
+2026-08-28 17:57, mtime confirmed before the first FL-1 row ran; the first
+headline run started at 18:35). It is binding and it changed the experiment
+substantially versus `DESIGN.md`:
+
+| amendment | what it changed for this run |
+|---|---|
+| **F1** | Owners are continuous-taste: `p_c ~ 0.45·Beta(12,2) + 0.55·Beta(1.2,10)`, clipped to `[0.05, 0.95]`, i.i.d. over the 6 categories. Reward `+1 / −2 / 0`. Every table carries an **ORACLE** ceiling row and a **POPULATION-PRIOR-NO-ADAPTATION** floor row. |
+| **F2** | History state is **per category**: `(laughed, total)` capped at 7 plus a recency bin — 18 channels. BM-1's `hist0..hist5` (last-6 **global** joke events) are dropped. Policy C is **FL-1's own retrain**; no BM-1 checkpoint is inherited. |
+| **F3** | H-FL1a is scored over **jokes 13–32 after 12 observed**, 32 jokes per evaluation owner, uniform categories, evaluation owners from seeds `20260828 + 1 000 000 + i`, and must beat the **bare history rule** by ≥ 0.05 F1. |
+| **F4** | Decision threshold **2/3** (Bayes-optimal under the 2:1 cost). 0.6 is a sensitivity row only. |
+| **F5** | The reward is **not** clean. Detector FN 20 % / FP 5 %, self-echo `q ∈ {0, 0.1, 0.3}`, laugh-masking `m ∈ {0, 0.3}`. **Headline = `q=0.1, m=0.3`**; the clean row is a ceiling. |
+| **F6** | Look-back generator fully specified; success = **simple regret ≤ 0.1**; the learned quantity is the follow-skill config parameter `check_in_latency_s`. |
+| **F7** | REINFORCE arm is head-**masked** to `{<emote:chuckle>, <idle>}` (plus an unmasked row); one regression pair that counts (compliance F1 + raw M3 by `base_busy` + `cmd:stop`); ≥ 3 seeds; the regression CI must exclude 0. |
+| **F8** | New sub-hypothesis **H-FL1e** (explicit verbal feedback + table reset). |
+| **F9** | A governance paragraph, no experiment. |
+
+**Owner source (F1, required disclosure).** `humor-signal-1/owner_taste_prior.json`
+did **not** exist at run time (checked at 17:56, 18:20 and 19:30; the folder held
+only `DESIGN.md`, `hs_common.py`, `hs1a_laughter.py`). Neither did
+`humor-signal-1/results.json`, so the F5 detector operating point is the
+AMENDMENTS default (FN 0.20 / FP 0.05), **not** an HS-1 measurement. All owners
+in every headline row therefore come from the **synthetic Beta-mixture prior**
+recorded above. The Jester-derived slice is **not** reported — it could not be run.
+
+**BM-1 artifacts.** `behavior-model-1/` held `worldsim.py`, `splits.json` and
+`sample_episodes.txt` only; `arms.py` and `eval.py` never appeared during the
+run (polled 17:55 → 20:00). FL-1 therefore uses its **own** minimal equivalents:
+`models.py` (BM-1 arm C's architecture by specification: 6 layers, d = 256, 4
+heads, context 128 frames, one act token per frame) and its own event-conditional
+scorer using BM-1's `WINDOWS` constants imported from `worldsim`. BM-1's arm C
+score was **not available**, so F3's "if BM-1's arm C in-distribution chuckle F1
+< 0.85, H-FL1a is INCONCLUSIVE" clause cannot be evaluated from BM-1's side.
+
+## Simulator reuse and the two FL-1 schema deviations
+
+`worldsim.generate_episode` is reused verbatim (imported read-only, patched at
+call time via a context manager that swaps `sample_profile` for an FL-1 owner
+and `DialogueEvent` for a recording subclass — no file in `behavior-model-1/` is
+written). Two deviations were forced and are load-bearing:
+
+1. **`joke_cat` channel added.** BM-1's `cue` vocabulary marks `joke_punchline`
+   but carries **no category**. Arm C therefore cannot condition a chuckle on the
+   joke's category from the frame channels at all — only BM-1's arm D (raw words)
+   could. F2's per-category history is meaningless without it, so FL-1 adds a
+   7-value `joke_cat` channel, active from the setup to punchline + 2.6 s.
+   *This is a finding about BM-1's schema, and it is reported to Fable as such.*
+2. **Anticipatory decision frame fixed at punchline reference + 0.3 s.** The
+   earliest frame inside BM-1's M2 chuckle window `[0.3, 1.5] s`, and always
+   strictly before the laugh cue (worldsim's laugh delay is ≥ 0.5 s), which
+   satisfies F3's "the decision counts only if timestamped before the laugh cue".
+   9 % of jokes are **not evaluable** (the world had the dog mid-emote, mid-skill
+   or `base_busy=critical` at that frame); those are excluded from every row's
+   numerator and denominator alike.
+
+FL-1 frame schema = 42 channels: worldsim's 19 world channels + 4 profile
+channels + `joke_cat` + 18 per-category history channels.
+
+
+---
+
+## Results (generated by the verifier's `fable_results_addendum.py` from the JSON artefacts, 2026-08-29)
+
+Wall times: fl1a 361 s, fl1b 2 s, fl1c 1 s, fl1e 0 s (executor, 18:2x), fl1d 40 s (verifier, 02:3x; GPU shared with BM-1 training — no latency row depends on it).
+
+### H-FL1a — in-context adaptation (policy C with per-category history)
+
+Config: 1000 training owners × 50 jokes, 100 evaluation owners × 32 jokes, scored over jokes [13, 32] (F3), policy 4857425 params, 8000 steps, threshold 0.667, evaluable fraction 0.916.
+
+
+**f1** (median over 100 held-out owners, bootstrap 95 % CI on the median)
+
+| regime | oracle | population_prior | history_rule_2of3 | policyC_hist | policyC_nohist |
+|---|---|---|---|---|---|
+| clean | 0.833 [0.800, 0.870] | 0.000 [0.000, 0.000] | 0.721 [0.667, 0.769] | 0.700 [0.631, 0.750] | 0.000 [0.000, 0.000] |
+| det_q0.0_m0.0 | 0.833 [0.800, 0.870] | 0.000 [0.000, 0.000] | 0.667 [0.571, 0.681] | 0.615 [0.551, 0.696] | 0.000 [0.000, 0.000] |
+| det_q0.0_m0.3 | 0.833 [0.800, 0.870] | 0.000 [0.000, 0.000] | 0.600 [0.571, 0.667] | 0.571 [0.500, 0.620] | 0.000 [0.000, 0.000] |
+| det_q0.1_m0.0 | 0.833 [0.800, 0.870] | 0.000 [0.000, 0.000] | 0.628 [0.588, 0.667] | 0.615 [0.571, 0.681] | 0.000 [0.000, 0.000] |
+| det_q0.1_m0.3 | 0.833 [0.800, 0.870] | 0.000 [0.000, 0.000] | 0.625 [0.571, 0.667] | 0.571 [0.539, 0.632] | 0.000 [0.000, 0.000] |
+| det_q0.3_m0.0 | 0.833 [0.800, 0.870] | 0.000 [0.000, 0.000] | 0.667 [0.571, 0.667] | 0.625 [0.558, 0.667] | 0.000 [0.000, 0.000] |
+| det_q0.3_m0.3 | 0.833 [0.800, 0.870] | 0.000 [0.000, 0.000] | 0.593 [0.500, 0.667] | 0.600 [0.545, 0.667] | 0.000 [0.000, 0.000] |
+
+**false_chuckle_bm1** (median over 100 held-out owners, bootstrap 95 % CI on the median)
+
+| regime | oracle | population_prior | history_rule_2of3 | policyC_hist | policyC_nohist |
+|---|---|---|---|---|---|
+| clean | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] |
+| det_q0.0_m0.0 | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] |
+| det_q0.0_m0.3 | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] |
+| det_q0.1_m0.0 | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] |
+| det_q0.1_m0.3 | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] |
+| det_q0.3_m0.0 | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.059] | 0.000 [0.000, 0.000] |
+| det_q0.3_m0.3 | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] |
+
+**false_chuckle_strict** (median over 100 held-out owners, bootstrap 95 % CI on the median)
+
+| regime | oracle | population_prior | history_rule_2of3 | policyC_hist | policyC_nohist |
+|---|---|---|---|---|---|
+| clean | 0.077 [0.031, 0.106] | 0.000 [0.000, 0.000] | 0.095 [0.071, 0.125] | 0.083 [0.069, 0.118] | 0.000 [0.000, 0.000] |
+| det_q0.0_m0.0 | 0.077 [0.031, 0.106] | 0.000 [0.000, 0.000] | 0.087 [0.067, 0.133] | 0.080 [0.062, 0.100] | 0.000 [0.000, 0.000] |
+| det_q0.0_m0.3 | 0.077 [0.031, 0.106] | 0.000 [0.000, 0.000] | 0.067 [0.000, 0.083] | 0.083 [0.065, 0.106] | 0.000 [0.000, 0.000] |
+| det_q0.1_m0.0 | 0.077 [0.031, 0.106] | 0.000 [0.000, 0.000] | 0.083 [0.065, 0.113] | 0.113 [0.077, 0.148] | 0.000 [0.000, 0.000] |
+| det_q0.1_m0.3 | 0.077 [0.031, 0.106] | 0.000 [0.000, 0.000] | 0.071 [0.000, 0.095] | 0.091 [0.067, 0.133] | 0.000 [0.000, 0.000] |
+| det_q0.3_m0.0 | 0.077 [0.031, 0.106] | 0.000 [0.000, 0.000] | 0.074 [0.000, 0.125] | 0.106 [0.083, 0.133] | 0.000 [0.000, 0.000] |
+| det_q0.3_m0.3 | 0.077 [0.031, 0.106] | 0.000 [0.000, 0.000] | 0.071 [0.031, 0.100] | 0.091 [0.071, 0.134] | 0.000 [0.000, 0.000] |
+
+**precision** (median over 100 held-out owners, bootstrap 95 % CI on the median)
+
+| regime | oracle | population_prior | history_rule_2of3 | policyC_hist | policyC_nohist |
+|---|---|---|---|---|---|
+| clean | 0.857 [0.833, 0.920] | nan [nan, nan] | 0.833 [0.750, 0.857] | 0.800 [0.750, 0.846] | nan [nan, nan] |
+| det_q0.0_m0.0 | 0.857 [0.833, 0.920] | nan [nan, nan] | 0.809 [0.750, 0.875] | 0.800 [0.750, 0.875] | nan [nan, nan] |
+| det_q0.0_m0.3 | 0.857 [0.833, 0.920] | nan [nan, nan] | 0.833 [0.750, 1.000] | 0.817 [0.750, 0.875] | nan [nan, nan] |
+| det_q0.1_m0.0 | 0.857 [0.833, 0.920] | nan [nan, nan] | 0.800 [0.750, 0.857] | 0.750 [0.667, 0.833] | nan [nan, nan] |
+| det_q0.1_m0.3 | 0.857 [0.833, 0.920] | nan [nan, nan] | 0.833 [0.764, 0.875] | 0.750 [0.721, 0.833] | nan [nan, nan] |
+| det_q0.3_m0.0 | 0.857 [0.833, 0.920] | nan [nan, nan] | 0.833 [0.750, 0.909] | 0.750 [0.667, 0.800] | nan [nan, nan] |
+| det_q0.3_m0.3 | 0.857 [0.833, 0.920] | nan [nan, nan] | 0.800 [0.750, 0.889] | 0.750 [0.690, 0.857] | nan [nan, nan] |
+
+**recall** (median over 100 held-out owners, bootstrap 95 % CI on the median)
+
+| regime | oracle | population_prior | history_rule_2of3 | policyC_hist | policyC_nohist |
+|---|---|---|---|---|---|
+| clean | 0.857 [0.826, 0.909] | 0.000 [0.000, 0.000] | 0.667 [0.613, 0.739] | 0.620 [0.558, 0.679] | 0.000 [0.000, 0.000] |
+| det_q0.0_m0.0 | 0.857 [0.826, 0.909] | 0.000 [0.000, 0.000] | 0.563 [0.500, 0.592] | 0.500 [0.481, 0.571] | 0.000 [0.000, 0.000] |
+| det_q0.0_m0.3 | 0.857 [0.826, 0.909] | 0.000 [0.000, 0.000] | 0.500 [0.455, 0.545] | 0.481 [0.400, 0.500] | 0.000 [0.000, 0.000] |
+| det_q0.1_m0.0 | 0.857 [0.826, 0.909] | 0.000 [0.000, 0.000] | 0.500 [0.500, 0.592] | 0.558 [0.500, 0.600] | 0.000 [0.000, 0.000] |
+| det_q0.1_m0.3 | 0.857 [0.826, 0.909] | 0.000 [0.000, 0.000] | 0.500 [0.449, 0.571] | 0.500 [0.429, 0.500] | 0.000 [0.000, 0.000] |
+| det_q0.3_m0.0 | 0.857 [0.826, 0.909] | 0.000 [0.000, 0.000] | 0.551 [0.500, 0.600] | 0.519 [0.500, 0.571] | 0.000 [0.000, 0.000] |
+| det_q0.3_m0.3 | 0.857 [0.826, 0.909] | 0.000 [0.000, 0.000] | 0.500 [0.422, 0.571] | 0.500 [0.444, 0.592] | 0.000 [0.000, 0.000] |
+
+**regret_window** (median over 100 held-out owners, bootstrap 95 % CI on the median)
+
+| regime | oracle | population_prior | history_rule_2of3 | policyC_hist | policyC_nohist |
+|---|---|---|---|---|---|
+| clean | 0.000 [0.000, 0.000] | 4.459 [3.828, 5.046] | 1.191 [0.850, 1.464] | 1.375 [1.171, 1.594] | 4.459 [3.828, 5.046] |
+| det_q0.0_m0.0 | 0.000 [0.000, 0.000] | 4.459 [3.828, 5.046] | 1.840 [1.394, 2.271] | 2.069 [1.662, 2.481] | 4.459 [3.828, 5.046] |
+| det_q0.0_m0.3 | 0.000 [0.000, 0.000] | 4.459 [3.828, 5.046] | 1.906 [1.561, 2.232] | 2.374 [2.125, 2.817] | 4.459 [3.828, 5.046] |
+| det_q0.1_m0.0 | 0.000 [0.000, 0.000] | 4.459 [3.828, 5.046] | 1.541 [1.323, 1.804] | 2.107 [1.677, 2.649] | 4.459 [3.828, 5.046] |
+| det_q0.1_m0.3 | 0.000 [0.000, 0.000] | 4.459 [3.828, 5.046] | 1.938 [1.543, 2.310] | 2.610 [1.739, 3.322] | 4.459 [3.828, 5.046] |
+| det_q0.3_m0.0 | 0.000 [0.000, 0.000] | 4.459 [3.828, 5.046] | 1.531 [1.309, 2.271] | 2.586 [2.088, 2.857] | 4.459 [3.828, 5.046] |
+| det_q0.3_m0.3 | 0.000 [0.000, 0.000] | 4.459 [3.828, 5.046] | 1.845 [1.494, 2.264] | 2.604 [1.932, 3.066] | 4.459 [3.828, 5.046] |
+
+**regret_all32** (median over 100 held-out owners, bootstrap 95 % CI on the median)
+
+| regime | oracle | population_prior | history_rule_2of3 | policyC_hist | policyC_nohist |
+|---|---|---|---|---|---|
+| clean | 0.000 [0.000, 0.000] | 7.322 [6.421, 8.524] | 3.816 [3.471, 4.209] | 3.849 [3.084, 4.390] | 7.322 [6.421, 8.524] |
+| det_q0.0_m0.0 | 0.000 [0.000, 0.000] | 7.322 [6.421, 8.524] | 4.787 [4.264, 5.208] | 4.684 [3.881, 5.364] | 7.322 [6.421, 8.524] |
+| det_q0.0_m0.3 | 0.000 [0.000, 0.000] | 7.322 [6.421, 8.524] | 4.803 [4.362, 5.416] | 5.074 [4.438, 5.789] | 7.322 [6.421, 8.524] |
+| det_q0.1_m0.0 | 0.000 [0.000, 0.000] | 7.322 [6.421, 8.524] | 4.449 [3.743, 5.151] | 5.047 [4.441, 5.522] | 7.322 [6.421, 8.524] |
+| det_q0.1_m0.3 | 0.000 [0.000, 0.000] | 7.322 [6.421, 8.524] | 5.072 [4.165, 5.488] | 5.577 [4.794, 6.008] | 7.322 [6.421, 8.524] |
+| det_q0.3_m0.0 | 0.000 [0.000, 0.000] | 7.322 [6.421, 8.524] | 4.647 [4.222, 4.927] | 5.174 [4.176, 5.800] | 7.322 [6.421, 8.524] |
+| det_q0.3_m0.3 | 0.000 [0.000, 0.000] | 7.322 [6.421, 8.524] | 4.716 [4.092, 5.395] | 5.277 [4.419, 5.947] | 7.322 [6.421, 8.524] |
+
+**wrong_chuckles_all32** (median over 100 held-out owners, bootstrap 95 % CI on the median)
+
+| regime | oracle | population_prior | history_rule_2of3 | policyC_hist | policyC_nohist |
+|---|---|---|---|---|---|
+| clean | 1.000 [1.000, 2.000] | 0.000 [0.000, 0.000] | 1.000 [1.000, 2.000] | 1.000 [1.000, 2.000] | 0.000 [0.000, 0.000] |
+| det_q0.0_m0.0 | 1.000 [1.000, 2.000] | 0.000 [0.000, 0.000] | 1.000 [1.000, 1.000] | 1.000 [1.000, 2.000] | 0.000 [0.000, 0.000] |
+| det_q0.0_m0.3 | 1.000 [1.000, 2.000] | 0.000 [0.000, 0.000] | 1.000 [0.000, 1.000] | 1.000 [1.000, 2.000] | 0.000 [0.000, 0.000] |
+| det_q0.1_m0.0 | 1.000 [1.000, 2.000] | 0.000 [0.000, 0.000] | 1.000 [1.000, 1.000] | 2.000 [1.000, 2.000] | 0.000 [0.000, 0.000] |
+| det_q0.1_m0.3 | 1.000 [1.000, 2.000] | 0.000 [0.000, 0.000] | 1.000 [1.000, 1.000] | 1.000 [1.000, 2.000] | 0.000 [0.000, 0.000] |
+| det_q0.3_m0.0 | 1.000 [1.000, 2.000] | 0.000 [0.000, 0.000] | 1.000 [1.000, 1.000] | 2.000 [1.000, 2.000] | 0.000 [0.000, 0.000] |
+| det_q0.3_m0.3 | 1.000 [1.000, 2.000] | 0.000 [0.000, 0.000] | 1.000 [1.000, 1.000] | 2.000 [1.000, 2.000] | 0.000 [0.000, 0.000] |
+
+Bars (AMENDMENTS F3 / DESIGN): F1 ≥ 0.80 with false-chuckle ≤ 0.10 at 12 observed jokes; refuted if F1 < 0.60 or false-chuckle > 0.20; policy C must beat the bare history rule by ≥ 0.05 F1. Headline regime = det_q0.1_m0.3 (F5).
+
+### H-FL1b — contextual Thompson / Beta bandit
+
+| regime | rule | jokes-to-bar (pooled) | f1_all60 | false_chuckle_bm1_all60 | false_chuckle_strict_all60 | wrong_chuckles_all60 | expected_reward_regret_all60 | jokes_to_oracle_agreement |
+|---|---|---|---|---|---|---|---|---|
+| clean | oracle | 1 | 0.859 [0.842, 0.887] | 0.000 [0.000, 0.000] | 0.062 [0.048, 0.091] | 2.000 [1.500, 3.000] | 0.000 [0.000, 0.000] | 1.000 [1.000, 1.000] |
+| clean | population_prior | None | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 14.270 [12.078, 16.649] | 60.000 [59.000, 60.000] |
+| clean | history_rule_2of3 | 33 | 0.732 [0.698, 0.757] | 0.000 [0.000, 0.029] | 0.081 [0.068, 0.105] | 3.000 [2.000, 3.000] | 4.511 [4.114, 5.023] | 42.500 [35.000, 48.000] |
+| clean | beta_mean_2of3 | 25 | 0.758 [0.716, 0.791] | 0.000 [0.000, 0.000] | 0.071 [0.061, 0.088] | 2.000 [2.000, 3.000] | 3.122 [2.424, 3.482] | 30.000 [21.488, 34.500] |
+| clean | beta_thompson_2of3 | 46 | 0.732 [0.686, 0.756] | 0.068 [0.059, 0.086] | 0.124 [0.111, 0.150] | 4.000 [3.000, 4.000] | 6.702 [5.579, 7.589] | 48.000 [43.500, 52.000] |
+| clean | beta_mean_0.6 | 23 | 0.783 [0.747, 0.812] | 0.000 [0.000, 0.000] | 0.083 [0.067, 0.102] | 2.500 [2.000, 3.000] | 2.602 [2.262, 3.297] | 23.000 [18.000, 30.000] |
+| clean | beta_mixture_mean_2of3 | 22 | 0.784 [0.764, 0.816] | 0.000 [0.000, 0.000] | 0.086 [0.067, 0.104] | 3.000 [2.000, 3.000] | 2.495 [2.146, 3.227] | 20.000 [15.000, 27.000] |
+| clean | beta_mean_2of3_detector_debiased | 22 | 0.784 [0.764, 0.816] | 0.000 [0.000, 0.000] | 0.087 [0.067, 0.107] | 3.000 [2.000, 3.000] | 2.495 [2.068, 3.204] | 20.000 [15.000, 27.000] |
+| det_q0.0_m0.0 | oracle | 1 | 0.859 [0.842, 0.887] | 0.000 [0.000, 0.000] | 0.062 [0.048, 0.091] | 2.000 [1.500, 3.000] | 0.000 [0.000, 0.000] | 1.000 [1.000, 1.000] |
+| det_q0.0_m0.0 | population_prior | None | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 14.270 [12.078, 16.649] | 60.000 [59.000, 60.000] |
+| det_q0.0_m0.0 | history_rule_2of3 | None | 0.621 [0.596, 0.653] | 0.029 [0.000, 0.044] | 0.085 [0.062, 0.110] | 2.000 [2.000, 3.000] | 7.165 [6.161, 8.036] | 54.000 [51.500, 55.000] |
+| det_q0.0_m0.0 | beta_mean_2of3 | None | 0.603 [0.545, 0.653] | 0.000 [0.000, 0.000] | 0.057 [0.043, 0.071] | 2.000 [1.000, 2.000] | 5.800 [5.015, 7.073] | 54.000 [51.987, 56.512] |
+| det_q0.0_m0.0 | beta_thompson_2of3 | None | 0.581 [0.539, 0.631] | 0.078 [0.065, 0.089] | 0.111 [0.106, 0.128] | 3.000 [3.000, 4.000] | 10.091 [8.434, 11.105] | 56.000 [53.000, 58.000] |
+| det_q0.0_m0.0 | beta_mean_0.6 | None | 0.659 [0.600, 0.714] | 0.000 [0.000, 0.000] | 0.067 [0.056, 0.076] | 2.000 [2.000, 2.000] | 4.562 [3.980, 5.263] | 47.000 [43.000, 52.000] |
+| det_q0.0_m0.0 | beta_mixture_mean_2of3 | None | 0.667 [0.625, 0.724] | 0.000 [0.000, 0.000] | 0.064 [0.051, 0.083] | 2.000 [2.000, 2.000] | 3.959 [3.270, 5.015] | 48.500 [43.000, 53.000] |
+| det_q0.0_m0.0 | beta_mean_2of3_detector_debiased | None | 0.708 [0.643, 0.733] | 0.000 [0.000, 0.000] | 0.069 [0.054, 0.090] | 2.000 [2.000, 2.500] | 4.125 [3.544, 5.031] | 43.000 [36.000, 49.000] |
+| det_q0.0_m0.3 | oracle | 1 | 0.859 [0.842, 0.887] | 0.000 [0.000, 0.000] | 0.062 [0.048, 0.091] | 2.000 [1.500, 3.000] | 0.000 [0.000, 0.000] | 1.000 [1.000, 1.000] |
+| det_q0.0_m0.3 | population_prior | None | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 14.270 [12.078, 16.649] | 60.000 [59.000, 60.000] |
+| det_q0.0_m0.3 | history_rule_2of3 | None | 0.563 [0.538, 0.600] | 0.027 [0.000, 0.049] | 0.075 [0.061, 0.094] | 2.000 [2.000, 3.000] | 8.631 [7.561, 9.749] | 57.000 [54.000, 58.000] |
+| det_q0.0_m0.3 | beta_mean_2of3 | None | 0.456 [0.400, 0.500] | 0.000 [0.000, 0.000] | 0.036 [0.028, 0.043] | 1.000 [1.000, 1.000] | 9.499 [7.949, 10.529] | 58.000 [57.000, 59.000] |
+| det_q0.0_m0.3 | beta_thompson_2of3 | None | 0.459 [0.400, 0.531] | 0.065 [0.056, 0.085] | 0.103 [0.083, 0.119] | 3.000 [3.000, 4.000] | 11.739 [10.817, 12.809] | 59.000 [57.500, 59.000] |
+| det_q0.0_m0.3 | beta_mean_0.6 | None | 0.542 [0.474, 0.622] | 0.000 [0.000, 0.029] | 0.057 [0.041, 0.075] | 2.000 [1.000, 2.000] | 7.680 [6.679, 9.161] | 57.000 [56.000, 58.000] |
+| det_q0.0_m0.3 | beta_mixture_mean_2of3 | None | 0.587 [0.549, 0.651] | 0.000 [0.000, 0.027] | 0.066 [0.051, 0.080] | 2.000 [2.000, 2.000] | 6.782 [5.629, 7.898] | 57.000 [55.000, 58.000] |
+| det_q0.0_m0.3 | beta_mean_2of3_detector_debiased | None | 0.632 [0.575, 0.674] | 0.000 [0.000, 0.029] | 0.071 [0.054, 0.082] | 2.000 [2.000, 2.000] | 6.178 [5.413, 7.484] | 56.000 [54.000, 57.000] |
+| det_q0.1_m0.0 | oracle | 1 | 0.859 [0.842, 0.887] | 0.000 [0.000, 0.000] | 0.062 [0.048, 0.091] | 2.000 [1.500, 3.000] | 0.000 [0.000, 0.000] | 1.000 [1.000, 1.000] |
+| det_q0.1_m0.0 | population_prior | None | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 14.270 [12.078, 16.649] | 60.000 [59.000, 60.000] |
+| det_q0.1_m0.0 | history_rule_2of3 | None | 0.653 [0.606, 0.694] | 0.030 [0.000, 0.044] | 0.088 [0.068, 0.102] | 3.000 [2.000, 3.000] | 6.813 [6.264, 7.502] | 53.000 [49.000, 55.000] |
+| det_q0.1_m0.0 | beta_mean_2of3 | None | 0.595 [0.560, 0.648] | 0.000 [0.000, 0.000] | 0.064 [0.045, 0.074] | 2.000 [1.500, 2.000] | 5.875 [4.740, 7.160] | 53.000 [42.000, 57.000] |
+| det_q0.1_m0.0 | beta_thompson_2of3 | None | 0.606 [0.542, 0.652] | 0.081 [0.062, 0.097] | 0.123 [0.103, 0.149] | 4.000 [3.000, 4.500] | 9.882 [8.253, 10.801] | 56.000 [54.000, 58.000] |
+| det_q0.1_m0.0 | beta_mean_0.6 | None | 0.675 [0.632, 0.718] | 0.000 [0.000, 0.027] | 0.071 [0.056, 0.087] | 2.000 [2.000, 2.000] | 5.120 [4.500, 6.245] | 47.000 [41.500, 53.000] |
+| det_q0.1_m0.0 | beta_mixture_mean_2of3 | None | 0.692 [0.660, 0.725] | 0.000 [0.000, 0.027] | 0.075 [0.062, 0.083] | 2.000 [2.000, 3.000] | 4.928 [4.196, 5.767] | 45.500 [37.000, 52.000] |
+| det_q0.1_m0.0 | beta_mean_2of3_detector_debiased | 56 | 0.697 [0.680, 0.740] | 0.010 [0.000, 0.030] | 0.077 [0.069, 0.094] | 2.000 [2.000, 3.000] | 4.971 [4.272, 5.788] | 42.000 [34.000, 50.512] |
+| det_q0.1_m0.3 | oracle | 1 | 0.859 [0.842, 0.887] | 0.000 [0.000, 0.000] | 0.062 [0.048, 0.091] | 2.000 [1.500, 3.000] | 0.000 [0.000, 0.000] | 1.000 [1.000, 1.000] |
+| det_q0.1_m0.3 | population_prior | None | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 14.270 [12.078, 16.649] | 60.000 [59.000, 60.000] |
+| det_q0.1_m0.3 | history_rule_2of3 | None | 0.583 [0.571, 0.609] | 0.000 [0.000, 0.041] | 0.075 [0.068, 0.086] | 2.000 [2.000, 3.000] | 8.242 [7.289, 9.077] | 57.000 [56.000, 59.000] |
+| det_q0.1_m0.3 | beta_mean_2of3 | None | 0.460 [0.409, 0.529] | 0.000 [0.000, 0.026] | 0.039 [0.034, 0.054] | 1.000 [1.000, 1.500] | 8.821 [7.732, 10.537] | 58.000 [57.000, 59.000] |
+| det_q0.1_m0.3 | beta_thompson_2of3 | None | 0.517 [0.470, 0.550] | 0.082 [0.065, 0.094] | 0.115 [0.105, 0.130] | 3.000 [3.000, 4.000] | 11.366 [10.389, 12.885] | 58.000 [56.500, 59.000] |
+| det_q0.1_m0.3 | beta_mean_0.6 | None | 0.595 [0.553, 0.635] | 0.000 [0.000, 0.013] | 0.060 [0.050, 0.077] | 2.000 [1.000, 2.000] | 7.165 [5.934, 8.031] | 57.000 [54.000, 58.000] |
+| det_q0.1_m0.3 | beta_mixture_mean_2of3 | None | 0.621 [0.590, 0.667] | 0.000 [0.000, 0.026] | 0.062 [0.050, 0.084] | 2.000 [2.000, 2.000] | 6.752 [5.810, 7.433] | 54.000 [48.000, 57.000] |
+| det_q0.1_m0.3 | beta_mean_2of3_detector_debiased | None | 0.628 [0.607, 0.660] | 0.000 [0.000, 0.026] | 0.070 [0.050, 0.087] | 2.000 [2.000, 3.000] | 6.538 [5.850, 7.399] | 55.000 [51.500, 57.000] |
+| det_q0.3_m0.0 | oracle | 1 | 0.859 [0.842, 0.887] | 0.000 [0.000, 0.000] | 0.062 [0.048, 0.091] | 2.000 [1.500, 3.000] | 0.000 [0.000, 0.000] | 1.000 [1.000, 1.000] |
+| det_q0.3_m0.0 | population_prior | None | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 14.270 [12.078, 16.649] | 60.000 [59.000, 60.000] |
+| det_q0.3_m0.0 | history_rule_2of3 | None | 0.655 [0.611, 0.682] | 0.000 [0.000, 0.036] | 0.089 [0.075, 0.109] | 3.000 [2.000, 3.000] | 7.020 [5.629, 7.768] | 50.000 [45.000, 54.500] |
+| det_q0.3_m0.0 | beta_mean_2of3 | None | 0.631 [0.593, 0.667] | 0.000 [0.000, 0.000] | 0.068 [0.056, 0.080] | 2.000 [2.000, 2.000] | 6.416 [5.539, 7.250] | 52.500 [46.500, 54.500] |
+| det_q0.3_m0.0 | beta_thompson_2of3 | None | 0.623 [0.550, 0.647] | 0.086 [0.070, 0.103] | 0.129 [0.107, 0.150] | 4.000 [3.000, 4.500] | 10.159 [9.409, 10.981] | 56.500 [54.500, 58.000] |
+| det_q0.3_m0.0 | beta_mean_0.6 | None | 0.686 [0.649, 0.728] | 0.000 [0.000, 0.028] | 0.078 [0.067, 0.106] | 2.500 [2.000, 3.000] | 4.993 [4.154, 6.238] | 44.000 [40.000, 53.000] |
+| det_q0.3_m0.0 | beta_mixture_mean_2of3 | None | 0.687 [0.662, 0.735] | 0.000 [0.000, 0.027] | 0.085 [0.071, 0.103] | 3.000 [2.000, 3.000] | 4.342 [3.457, 6.369] | 44.000 [35.000, 49.000] |
+| det_q0.3_m0.0 | beta_mean_2of3_detector_debiased | 58 | 0.709 [0.667, 0.755] | 0.000 [0.000, 0.026] | 0.085 [0.068, 0.108] | 3.000 [2.000, 3.000] | 4.500 [3.768, 5.482] | 44.000 [34.500, 49.000] |
+| det_q0.3_m0.3 | oracle | 1 | 0.859 [0.842, 0.887] | 0.000 [0.000, 0.000] | 0.062 [0.048, 0.091] | 2.000 [1.500, 3.000] | 0.000 [0.000, 0.000] | 1.000 [1.000, 1.000] |
+| det_q0.3_m0.3 | population_prior | None | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 14.270 [12.078, 16.649] | 60.000 [59.000, 60.000] |
+| det_q0.3_m0.3 | history_rule_2of3 | None | 0.621 [0.583, 0.650] | 0.024 [0.000, 0.055] | 0.091 [0.077, 0.103] | 3.000 [2.000, 3.000] | 7.343 [6.396, 8.251] | 56.000 [53.000, 57.000] |
+| det_q0.3_m0.3 | beta_mean_2of3 | None | 0.552 [0.515, 0.597] | 0.000 [0.000, 0.000] | 0.053 [0.038, 0.064] | 2.000 [1.000, 2.000] | 7.699 [6.188, 8.795] | 56.000 [55.000, 58.000] |
+| det_q0.3_m0.3 | beta_thompson_2of3 | None | 0.532 [0.487, 0.560] | 0.102 [0.077, 0.118] | 0.129 [0.109, 0.150] | 4.000 [3.000, 5.000] | 11.048 [10.208, 13.203] | 57.500 [56.000, 58.000] |
+| det_q0.3_m0.3 | beta_mean_0.6 | None | 0.628 [0.594, 0.667] | 0.000 [0.000, 0.031] | 0.073 [0.060, 0.103] | 2.000 [2.000, 3.000] | 7.160 [6.294, 7.764] | 55.000 [53.000, 57.000] |
+| det_q0.3_m0.3 | beta_mixture_mean_2of3 | None | 0.667 [0.615, 0.711] | 0.014 [0.000, 0.040] | 0.100 [0.073, 0.120] | 3.000 [2.000, 4.000] | 6.343 [5.550, 7.694] | 54.000 [48.000, 56.000] |
+| det_q0.3_m0.3 | beta_mean_2of3_detector_debiased | None | 0.667 [0.615, 0.709] | 0.000 [0.000, 0.036] | 0.101 [0.069, 0.122] | 3.000 [2.000, 4.000] | 6.138 [5.149, 7.055] | 53.000 [48.000, 56.000] |
+
+Bars (DESIGN + F1/F4): same F1/false-chuckle bars reached in ≤ 20 jokes; cumulative regret ≤ 8 wrong chuckles over 60 jokes (median over 100 owners); ORACLE and POPULATION-PRIOR rows are the ceiling and floor.
+
+### H-FL1c — learning the owner's check-in latency (4-arm bandit)
+
+Config: 100 owners × 40 loss events, arms [2.0, 4.0, 6.0, 8.0] s, reward `1[reacquired<=5s] - 0.5*1[annoyance]`, success = simple regret ≤ 0.1; learned quantity = `follow-skill config parameter check_in_latency_s`.
+
+| learner | frac ok @N=5 | frac ok @N=10 | frac ok @N=15 | frac ok @N=20 | frac ok @N=25 | frac ok @N=30 | frac ok @N=40 | median N to stable success | reward/loss |
+|---|---|---|---|---|---|---|---|---|---|
+| thompson_beta | 0.79 | 0.93 | 0.98 | 1.00 | 0.99 | 1.00 | 1.00 | 1.000 [1.000, 2.000] | 0.822 |
+| ucb1 | 0.68 | 0.88 | 0.96 | 0.99 | 0.99 | 1.00 | 1.00 | 3.000 [2.000, 5.000] | 0.761 |
+| epsilon_greedy_0.1 | 0.79 | 0.95 | 0.97 | 0.99 | 0.98 | 0.99 | 0.99 | 1.000 [1.000, 2.000] | 0.830 |
+
+Bar (F6): ≥ 80 % of owners at simple regret ≤ 0.1 within 25 loss events.
+
+### H-FL1d — online REINFORCE on the output head vs the bandit (run by the verifier)
+
+Config: 100 owners × 60 jokes × 3 seeds, lr 0.0001, credit window [punchline, min(laugh+1.5 s, punchline+2.5 s)]; regression check on FL-1's frozen split (24 owners, 54 episodes, 61048 frames, all 9 incl. BM-1's two held-out). Before-update raw M3 body rate by base_busy: {'free': 0.009456694703341668, 'busy': 0.010431276297335203, 'critical': 0.0}.
+
+| regime · arm | f1_all | false_chuckle_strict_all60 | wrong_chuckles_all60 | expected_reward_regret_all60 | jokes_to_bar_pooled | delta_compliance_f1 | delta_cmd_stop | delta_raw_m3_busy |
+|---|---|---|---|---|---|---|---|---|
+| clean|bandit_beta_mean_2of3 | 0.729 [0.685, 0.760] | 0.075 [0.056, 0.095] | 2.000 [2.000, 3.000] | 3.321 [2.678, 4.002] | 50 | +0.00000 [+0.00000, +0.00000] n=0 | None | None |
+| clean|reinforce_head_masked | 0.689 [0.658, 0.730] | 0.232 [0.190, 0.250] | 6.000 [6.000, 7.000] | 10.510 [9.906, 11.358] | None | +0.00000 [+0.00000, +0.00000] n=72 | +0.00000 [+0.00000, +0.00000] n=72 | -0.00001 [-0.00002, -0.00001] n=72 |
+| clean|reinforce_head_full | 0.692 [0.658, 0.730] | 0.232 [0.190, 0.250] | 6.000 [6.000, 7.000] | 10.510 [9.906, 11.358] | None | +0.00000 [+0.00000, +0.00000] n=72 | +0.00000 [+0.00000, +0.00000] n=72 | -0.00001 [-0.00002, -0.00001] n=72 |
+| det_q0.1_m0.3|bandit_beta_mean_2of3 | 0.483 [0.412, 0.529] | 0.042 [0.031, 0.059] | 1.000 [1.000, 2.000] | 7.810 [6.913, 9.603] | None | +0.00000 [+0.00000, +0.00000] n=0 | None | None |
+| det_q0.1_m0.3|reinforce_head_masked | 0.626 [0.587, 0.686] | 0.246 [0.222, 0.265] | 7.000 [7.000, 8.000] | 13.347 [12.074, 15.248] | None | +0.00000 [+0.00000, +0.00000] n=72 | +0.00000 [+0.00000, +0.00000] n=72 | -0.00002 [-0.00003, -0.00001] n=72 |
+| det_q0.1_m0.3|reinforce_head_full | 0.626 [0.587, 0.686] | 0.246 [0.222, 0.265] | 7.000 [7.000, 8.000] | 13.347 [12.074, 15.248] | None | +0.00000 [+0.00000, +0.00000] n=72 | +0.00000 [+0.00000, +0.00000] n=72 | -0.00002 [-0.00003, -0.00001] n=72 |
+
+Bar (F7): H-FL1d is CONFIRMED ("not worth it") when the REINFORCE arm is no faster than the bandit AND regresses compliance F1 or raw M3 by ≥ 0.05 with a CI excluding 0; REFUTED if it is faster and does not regress.
+
+### H-FL1e — explicit verbal feedback as a second reward channel
+
+| regime · channel · rule | jokes-to-bar (pooled) | recovery jokes after table reset | F1 sliding curve (first 8 points) |
+|---|---|---|---|
+| clean|laughter_only|beta_mean_2of3 | 25 | 27 | 0.00, 0.19, 0.27, 0.34, 0.42, 0.44, 0.47, 0.48 |
+| clean|laughter_only|beta_mean_2of3_detector_debiased | 22 | 25 | 0.00, 0.19, 0.27, 0.34, 0.42, 0.44, 0.47, 0.48 |
+| clean|laughter_plus_verbal|beta_mean_2of3 | None | None | 0.00, 0.19, 0.27, 0.34, 0.42, 0.43, 0.46, 0.47 |
+| clean|laughter_plus_verbal|beta_mean_2of3_detector_debiased | 30 | None | 0.00, 0.19, 0.27, 0.34, 0.42, 0.43, 0.46, 0.47 |
+| det_q0.1_m0.3|laughter_only|beta_mean_2of3 | None | None | 0.00, 0.20, 0.27, 0.32, 0.35, 0.37, 0.39, 0.40 |
+| det_q0.1_m0.3|laughter_only|beta_mean_2of3_detector_debiased | None | None | 0.00, 0.20, 0.27, 0.32, 0.35, 0.37, 0.41, 0.42 |
+| det_q0.1_m0.3|laughter_plus_verbal|beta_mean_2of3 | None | None | 0.00, 0.20, 0.24, 0.31, 0.36, 0.36, 0.38, 0.37 |
+| det_q0.1_m0.3|laughter_plus_verbal|beta_mean_2of3_detector_debiased | None | None | 0.00, 0.20, 0.24, 0.31, 0.36, 0.36, 0.38, 0.39 |
+
+F8 generator: scold with p 0.3 after a false chuckle (= 3 negative pseudo-observations + suppression for the episode), praise with p 0.2 after a hit (= 2 positive); table reset at joke 30 for 20 % of owners.

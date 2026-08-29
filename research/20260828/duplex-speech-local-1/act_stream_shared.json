@@ -1,0 +1,39 @@
+{
+  "variant": "shared",
+  "overrides": {
+    "n_q": 17,
+    "dep_q": 9,
+    "act_card": 90,
+    "act_index": 8,
+    "depformer_weights_per_step_schedule": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      7
+    ]
+  },
+  "delays_len": 18,
+  "act_index": 8,
+  "act_card": 90,
+  "lm_params": 7690292224,
+  "load_seconds": 2.99,
+  "n_steps": 600,
+  "steps_with_output": 608,
+  "step_ms_p50": 44.362,
+  "step_ms_p90": 99.925,
+  "step_ms_p99": 100.584,
+  "step_ms_max": 100.712,
+  "rtf_p50": 0.5545,
+  "rtf_p99": 1.2573,
+  "peak_gpu_alloc_gib": 16.242,
+  "n_distinct_act_tokens": 63,
+  "act_token_min": 0,
+  "act_token_max": 89,
+  "act_tokens_in_range": true,
+  "note": "act modules are RANDOMLY INITIALISED \u2014 the act tokens are noise. This measures cost and wiring, never behaviour."
+}

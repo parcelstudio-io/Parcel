@@ -1,0 +1,4 @@
+[FL1c] thompson_beta        frac ok @25=0.99 median N=1 [1s]
+[FL1c] ucb1                 frac ok @25=0.99 median N=3 [1s]
+[FL1c] epsilon_greedy_0.1   frac ok @25=0.98 median N=1 [1s]
+wrote fl1c.json

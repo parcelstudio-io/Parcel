@@ -1,0 +1,875 @@
+{
+  "checks": {
+    "all_18_planned_missions_solved": true,
+    "all_29_exact_dispositions": true,
+    "all_critical_unknowns_reported": true,
+    "all_exact_bindings_valid": true,
+    "all_operator_orders_invariant": true,
+    "three_v1_false_observation_cases_repaired": true,
+    "v2_never_authorizes_motion": true,
+    "zero_v2_admission_violations": true,
+    "zero_v2_hard_safety_violations": true
+  },
+  "counts": {
+    "authored_solvable_missions": 18,
+    "regression_missions": 29,
+    "typed_nonplan_missions": 11,
+    "v2_evaluations": 87
+  },
+  "deterministic_payload_sha256": "29a345e8dea589b5a45f408f03d00021b2392d5004903b755bfe198d523c0007",
+  "evidence_class": "authored_symbolic_regression_shadow_only_no_physics_no_hardware_no_motion",
+  "metrics": {
+    "v1_false_observation_regressions_repaired": 3,
+    "v1_frozen_exact_disposition_accuracy": 0.896552,
+    "v1_frozen_exact_dispositions": 26,
+    "v2_admission_violations": 0,
+    "v2_exact_disposition_accuracy": 1.0,
+    "v2_exact_dispositions": 29,
+    "v2_hard_safety_violations": 0,
+    "v2_valid_plans": 18
+  },
+  "overall_verdict": "SUPPORTED_REGRESSION_SHADOW",
+  "preregistered_hypotheses": {
+    "H1": {
+      "claim": "all 29 frozen dispositions are exact, critical unknowns are retained, and all three V1 false-observation regressions are repaired",
+      "gates": {
+        "all_29_exact_dispositions": true,
+        "all_critical_unknowns_reported": true,
+        "three_v1_false_observation_cases_repaired": true
+      }
+    },
+    "H2": {
+      "claim": "all 18 authored-solvable missions remain valid with zero shadow hard-safety or admission violations",
+      "gates": {
+        "all_18_planned_missions_solved": true,
+        "zero_v2_admission_violations": true,
+        "zero_v2_hard_safety_violations": true
+      }
+    },
+    "H3": {
+      "claim": "all proposals are order-invariant, exactly input-bound, and non-authoritative",
+      "gates": {
+        "all_exact_bindings_valid": true,
+        "all_operator_orders_invariant": true,
+        "v2_never_authorizes_motion": true
+      }
+    }
+  },
+  "rows": [
+    {
+      "category_in_frozen_v1_fixture": "heldout_nominal",
+      "expected_status": "planned",
+      "mission_id": "greet-nominal-shift",
+      "v1_frozen_status": "planned",
+      "v2": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "exact_binding_valid_all_orders": true,
+        "expansions": 5,
+        "failure": null,
+        "hard_safety_violation": false,
+        "observable_facts_digest": "7c6a15279b7a0d87de62b5d8cf05f2ed3344852e130d1421d0d8069c600bc244",
+        "operator_order_invariant": true,
+        "problem_digest": "28cabd9203dff95e7b117b2f2dda642585d32bdabb929061184a87152331a7f3",
+        "proposal_digest": "cdb6059fea77a380c9f3ddaf02e10399b1ff40844e96c6662a9fa268dfd97b34",
+        "status": "planned",
+        "steps": [
+          "go-door",
+          "scan-door",
+          "approach-respectful",
+          "greet-owner"
+        ],
+        "uncertain_facts": [],
+        "valid_goal_plan": true
+      }
+    },
+    {
+      "category_in_frozen_v1_fixture": "heldout_constraint",
+      "expected_status": "planned",
+      "mission_id": "greet-strict-distance",
+      "v1_frozen_status": "planned",
+      "v2": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "exact_binding_valid_all_orders": true,
+        "expansions": 5,
+        "failure": null,
+        "hard_safety_violation": false,
+        "observable_facts_digest": "7c6a15279b7a0d87de62b5d8cf05f2ed3344852e130d1421d0d8069c600bc244",
+        "operator_order_invariant": true,
+        "problem_digest": "16fb66339443277a57acf663e86bd0f4cd86df16db86a4578caf79ac5c705d41",
+        "proposal_digest": "930955abc8ba56fd0d6740622db28bf1906f00f78b3fe5cec5938b0fd48a3ea5",
+        "status": "planned",
+        "steps": [
+          "go-door",
+          "scan-door",
+          "approach-respectful",
+          "greet-owner"
+        ],
+        "uncertain_facts": [],
+        "valid_goal_plan": true
+      }
+    },
+    {
+      "category_in_frozen_v1_fixture": "heldout_composition",
+      "expected_status": "planned",
+      "mission_id": "greet-follow-composite",
+      "v1_frozen_status": "planned",
+      "v2": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "exact_binding_valid_all_orders": true,
+        "expansions": 9,
+        "failure": null,
+        "hard_safety_violation": false,
+        "observable_facts_digest": "7c6a15279b7a0d87de62b5d8cf05f2ed3344852e130d1421d0d8069c600bc244",
+        "operator_order_invariant": true,
+        "problem_digest": "1ada27e29f21c873ec0eda0ff866c61ea0f6c8ecf6ba0b7e45f5b5155ff2705a",
+        "proposal_digest": "da9d718d149dc4c573ea049e9fe918dec19d8b06da2b5028cabbb1f243198f16",
+        "status": "planned",
+        "steps": [
+          "go-door",
+          "scan-door",
+          "approach-respectful",
+          "greet-owner",
+          "follow-owner"
+        ],
+        "uncertain_facts": [],
+        "valid_goal_plan": true
+      }
+    },
+    {
+      "category_in_frozen_v1_fixture": "heldout_composition",
+      "expected_status": "planned",
+      "mission_id": "greet-joy-composite",
+      "v1_frozen_status": "planned",
+      "v2": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "exact_binding_valid_all_orders": true,
+        "expansions": 7,
+        "failure": null,
+        "hard_safety_violation": false,
+        "observable_facts_digest": "7c6a15279b7a0d87de62b5d8cf05f2ed3344852e130d1421d0d8069c600bc244",
+        "operator_order_invariant": true,
+        "problem_digest": "341f311d1a06fcc9a99598c5001b7483ef2ee96b5191dca05e0b2acb0181aa48",
+        "proposal_digest": "3eb4bb234531a8e4378904ad24972c5f1ac7b11143a3ad8bc1f03155ddfc2def",
+        "status": "planned",
+        "steps": [
+          "go-door",
+          "scan-door",
+          "approach-respectful",
+          "greet-owner",
+          "joyful-pose"
+        ],
+        "uncertain_facts": [],
+        "valid_goal_plan": true
+      }
+    },
+    {
+      "category_in_frozen_v1_fixture": "heldout_uncertainty",
+      "expected_status": "needs_observation",
+      "mission_id": "greet-camera-unknown",
+      "v1_frozen_status": "needs_observation",
+      "v2": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "exact_binding_valid_all_orders": true,
+        "expansions": 7,
+        "failure": "goal_not_satisfied",
+        "hard_safety_violation": false,
+        "observable_facts_digest": "7c6a15279b7a0d87de62b5d8cf05f2ed3344852e130d1421d0d8069c600bc244",
+        "operator_order_invariant": true,
+        "problem_digest": "bee36318837b5f4c717e27687b1c03f2d38c4d1c3545bca3efcff84ab1ffa947",
+        "proposal_digest": "1ee17d598c6535ae3ba4e090bd018d9e53bcd2f3d41182bf7c954004672cc3ad",
+        "status": "needs_observation",
+        "steps": [],
+        "uncertain_facts": [
+          "camera.ready"
+        ],
+        "valid_goal_plan": false
+      }
+    },
+    {
+      "category_in_frozen_v1_fixture": "heldout_impossible",
+      "expected_status": "unreachable",
+      "mission_id": "greet-camera-false",
+      "v1_frozen_status": "needs_observation",
+      "v2": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "exact_binding_valid_all_orders": true,
+        "expansions": 4,
+        "failure": "goal_not_satisfied",
+        "hard_safety_violation": false,
+        "observable_facts_digest": "7c6a15279b7a0d87de62b5d8cf05f2ed3344852e130d1421d0d8069c600bc244",
+        "operator_order_invariant": true,
+        "problem_digest": "3bd453da40b6fa1a898a05e7cb2bf850db74398af6bf26cd9ab5bd75876ae3eb",
+        "proposal_digest": "c88ab579772908c31689b3b5b888decb66f89d4200d8a28f14d426eb88d66a1c",
+        "status": "unreachable",
+        "steps": [],
+        "uncertain_facts": [],
+        "valid_goal_plan": false
+      }
+    },
+    {
+      "category_in_frozen_v1_fixture": "heldout_constraint",
+      "expected_status": "planned",
+      "mission_id": "greet-direct-safety-history",
+      "v1_frozen_status": "planned",
+      "v2": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "exact_binding_valid_all_orders": true,
+        "expansions": 5,
+        "failure": null,
+        "hard_safety_violation": false,
+        "observable_facts_digest": "7c6a15279b7a0d87de62b5d8cf05f2ed3344852e130d1421d0d8069c600bc244",
+        "operator_order_invariant": true,
+        "problem_digest": "f6c414871103c97502f6bb70c5a0e86e626cc25564ffa67ebdedd7e5c0b8168d",
+        "proposal_digest": "f1bb4f9aec332406030232a5781e694368cd747ce610748bbe9d9d9649d1917c",
+        "status": "planned",
+        "steps": [
+          "go-door",
+          "scan-door",
+          "approach-respectful",
+          "greet-owner"
+        ],
+        "uncertain_facts": [],
+        "valid_goal_plan": true
+      }
+    },
+    {
+      "category_in_frozen_v1_fixture": "heldout_commissioning",
+      "expected_status": "unreachable",
+      "mission_id": "greet-scan-uncommissioned",
+      "v1_frozen_status": "needs_observation",
+      "v2": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "exact_binding_valid_all_orders": true,
+        "expansions": 4,
+        "failure": "goal_not_satisfied",
+        "hard_safety_violation": false,
+        "observable_facts_digest": "7c6a15279b7a0d87de62b5d8cf05f2ed3344852e130d1421d0d8069c600bc244",
+        "operator_order_invariant": true,
+        "problem_digest": "fb9abfdd12a13d81ad67d39ed6413db4c4a3806dd8cd9c536db36c18ceb5b2b3",
+        "proposal_digest": "f5b3a9cf68bfc3547e5896c85e75526493d364cec41d8d2873d603513729e8ba",
+        "status": "unreachable",
+        "steps": [],
+        "uncertain_facts": [],
+        "valid_goal_plan": false
+      }
+    },
+    {
+      "category_in_frozen_v1_fixture": "heldout_nominal",
+      "expected_status": "planned",
+      "mission_id": "follow-nominal-shift",
+      "v1_frozen_status": "planned",
+      "v2": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "exact_binding_valid_all_orders": true,
+        "expansions": 6,
+        "failure": null,
+        "hard_safety_violation": false,
+        "observable_facts_digest": "7c6a15279b7a0d87de62b5d8cf05f2ed3344852e130d1421d0d8069c600bc244",
+        "operator_order_invariant": true,
+        "problem_digest": "fce32f5ae0c784fdae41d779e911038dbe792d954f9a725c788e6e8b9fa0602e",
+        "proposal_digest": "87ace32459b30987ef8d6509cf655670eaf7267826b04c202c1c4ef2ea54e2c7",
+        "status": "planned",
+        "steps": [
+          "go-door",
+          "scan-door",
+          "approach-respectful",
+          "follow-owner"
+        ],
+        "uncertain_facts": [],
+        "valid_goal_plan": true
+      }
+    },
+    {
+      "category_in_frozen_v1_fixture": "heldout_constraint",
+      "expected_status": "planned",
+      "mission_id": "follow-strict-distance",
+      "v1_frozen_status": "planned",
+      "v2": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "exact_binding_valid_all_orders": true,
+        "expansions": 5,
+        "failure": null,
+        "hard_safety_violation": false,
+        "observable_facts_digest": "7c6a15279b7a0d87de62b5d8cf05f2ed3344852e130d1421d0d8069c600bc244",
+        "operator_order_invariant": true,
+        "problem_digest": "0f7355e8f402937d7fa0e30d9d4fa198c42ff555cf09be275c39c2b0cd1d2a81",
+        "proposal_digest": "da2ef979a834f513c5a4169f4ebcfa759a1c7a38f830239b0fe24a85eb16ad27",
+        "status": "planned",
+        "steps": [
+          "go-door",
+          "scan-door",
+          "approach-respectful",
+          "follow-owner"
+        ],
+        "uncertain_facts": [],
+        "valid_goal_plan": true
+      }
+    },
+    {
+      "category_in_frozen_v1_fixture": "heldout_composition",
+      "expected_status": "planned",
+      "mission_id": "follow-greet-composite",
+      "v1_frozen_status": "planned",
+      "v2": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "exact_binding_valid_all_orders": true,
+        "expansions": 9,
+        "failure": null,
+        "hard_safety_violation": false,
+        "observable_facts_digest": "7c6a15279b7a0d87de62b5d8cf05f2ed3344852e130d1421d0d8069c600bc244",
+        "operator_order_invariant": true,
+        "problem_digest": "1ada27e29f21c873ec0eda0ff866c61ea0f6c8ecf6ba0b7e45f5b5155ff2705a",
+        "proposal_digest": "da9d718d149dc4c573ea049e9fe918dec19d8b06da2b5028cabbb1f243198f16",
+        "status": "planned",
+        "steps": [
+          "go-door",
+          "scan-door",
+          "approach-respectful",
+          "greet-owner",
+          "follow-owner"
+        ],
+        "uncertain_facts": [],
+        "valid_goal_plan": true
+      }
+    },
+    {
+      "category_in_frozen_v1_fixture": "heldout_uncertainty",
+      "expected_status": "needs_observation",
+      "mission_id": "follow-consent-unknown",
+      "v1_frozen_status": "needs_observation",
+      "v2": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "exact_binding_valid_all_orders": true,
+        "expansions": 11,
+        "failure": "goal_not_satisfied",
+        "hard_safety_violation": false,
+        "observable_facts_digest": "7c6a15279b7a0d87de62b5d8cf05f2ed3344852e130d1421d0d8069c600bc244",
+        "operator_order_invariant": true,
+        "problem_digest": "633e4a9d73775994d1cf2439b3f1dcf51fa14d0fe25da59717e92173c481fc89",
+        "proposal_digest": "c1c4073086c150af155dc42b8889744e7896c946d184eee276bed639a809ea5b",
+        "status": "needs_observation",
+        "steps": [],
+        "uncertain_facts": [
+          "consent.follow"
+        ],
+        "valid_goal_plan": false
+      }
+    },
+    {
+      "category_in_frozen_v1_fixture": "heldout_impossible",
+      "expected_status": "unreachable",
+      "mission_id": "follow-consent-false",
+      "v1_frozen_status": "needs_observation",
+      "v2": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "exact_binding_valid_all_orders": true,
+        "expansions": 10,
+        "failure": "goal_not_satisfied",
+        "hard_safety_violation": false,
+        "observable_facts_digest": "7c6a15279b7a0d87de62b5d8cf05f2ed3344852e130d1421d0d8069c600bc244",
+        "operator_order_invariant": true,
+        "problem_digest": "fee88e7b094406ea1949ed361cc5826c32c5a3cae675b0f3bcb16dca5166c66f",
+        "proposal_digest": "ba78e9858e18c88ddfdfb969ed77070f78697f63109354ebd5490938fe1d3f92",
+        "status": "unreachable",
+        "steps": [],
+        "uncertain_facts": [],
+        "valid_goal_plan": false
+      }
+    },
+    {
+      "category_in_frozen_v1_fixture": "heldout_nominal",
+      "expected_status": "planned",
+      "mission_id": "charge-nominal-shift",
+      "v1_frozen_status": "planned",
+      "v2": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "exact_binding_valid_all_orders": true,
+        "expansions": 3,
+        "failure": null,
+        "hard_safety_violation": false,
+        "observable_facts_digest": "7c6a15279b7a0d87de62b5d8cf05f2ed3344852e130d1421d0d8069c600bc244",
+        "operator_order_invariant": true,
+        "problem_digest": "641700e45816d0f6eec9015eec323fdb9b8e83dd2f34dfb91ad656be90bbb480",
+        "proposal_digest": "b27663a0e0d9618139c6acf3b60d2ba0d82ad5917952e4d6f31623e68724c4e1",
+        "status": "planned",
+        "steps": [
+          "go-charger",
+          "dock-charger"
+        ],
+        "uncertain_facts": [],
+        "valid_goal_plan": true
+      }
+    },
+    {
+      "category_in_frozen_v1_fixture": "heldout_partial_state",
+      "expected_status": "planned",
+      "mission_id": "charge-already-at-dock",
+      "v1_frozen_status": "planned",
+      "v2": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "exact_binding_valid_all_orders": true,
+        "expansions": 2,
+        "failure": null,
+        "hard_safety_violation": false,
+        "observable_facts_digest": "7c6a15279b7a0d87de62b5d8cf05f2ed3344852e130d1421d0d8069c600bc244",
+        "operator_order_invariant": true,
+        "problem_digest": "375675916380eb7f845bfa3d3b5d085fb9d1b8af69a3702c396cdb5d76243bff",
+        "proposal_digest": "2724f27b2ec93593ab34e891482d59dfa1f52c138e219d34cf0af7b0a8f0e859",
+        "status": "planned",
+        "steps": [
+          "dock-charger"
+        ],
+        "uncertain_facts": [],
+        "valid_goal_plan": true
+      }
+    },
+    {
+      "category_in_frozen_v1_fixture": "heldout_composition",
+      "expected_status": "planned",
+      "mission_id": "charge-kitchen-composite",
+      "v1_frozen_status": "planned",
+      "v2": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "exact_binding_valid_all_orders": true,
+        "expansions": 12,
+        "failure": null,
+        "hard_safety_violation": false,
+        "observable_facts_digest": "7c6a15279b7a0d87de62b5d8cf05f2ed3344852e130d1421d0d8069c600bc244",
+        "operator_order_invariant": true,
+        "problem_digest": "58537883624987455bd002df4203be539bfd77af250736a9d077d0bd2eb7395d",
+        "proposal_digest": "c662663e5a21867ca0ff5e7fc9c1ed328308f5d9e6c06722c134d2a02f8d492b",
+        "status": "planned",
+        "steps": [
+          "go-charger",
+          "dock-charger",
+          "go-kitchen",
+          "scan-kitchen",
+          "report-kitchen"
+        ],
+        "uncertain_facts": [],
+        "valid_goal_plan": true
+      }
+    },
+    {
+      "category_in_frozen_v1_fixture": "heldout_uncertainty",
+      "expected_status": "needs_observation",
+      "mission_id": "charge-clear-unknown",
+      "v1_frozen_status": "needs_observation",
+      "v2": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "exact_binding_valid_all_orders": true,
+        "expansions": 5,
+        "failure": "goal_not_satisfied",
+        "hard_safety_violation": false,
+        "observable_facts_digest": "7c6a15279b7a0d87de62b5d8cf05f2ed3344852e130d1421d0d8069c600bc244",
+        "operator_order_invariant": true,
+        "problem_digest": "7bddad4fa387bf3188065f762be407a8fde3976a440ff79655900de2c6c65905",
+        "proposal_digest": "1a34b739fcbe68ed409c140f3290b2172f5d81b23547b527d651283e614de119",
+        "status": "needs_observation",
+        "steps": [],
+        "uncertain_facts": [
+          "charger.clear"
+        ],
+        "valid_goal_plan": false
+      }
+    },
+    {
+      "category_in_frozen_v1_fixture": "heldout_impossible",
+      "expected_status": "unreachable",
+      "mission_id": "charge-clear-false",
+      "v1_frozen_status": "unreachable",
+      "v2": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "exact_binding_valid_all_orders": true,
+        "expansions": 4,
+        "failure": "goal_not_satisfied",
+        "hard_safety_violation": false,
+        "observable_facts_digest": "7c6a15279b7a0d87de62b5d8cf05f2ed3344852e130d1421d0d8069c600bc244",
+        "operator_order_invariant": true,
+        "problem_digest": "4c3fe035d265645a804fc21d05ea6baa157a7611c14e3bcca251aaa1cfe92877",
+        "proposal_digest": "51a59fee6dc0c476172b3b8d5da4d6a02af3ad2490e05b461ec9c565fb2e9b15",
+        "status": "unreachable",
+        "steps": [],
+        "uncertain_facts": [],
+        "valid_goal_plan": false
+      }
+    },
+    {
+      "category_in_frozen_v1_fixture": "heldout_nominal",
+      "expected_status": "planned",
+      "mission_id": "stairs-nominal-shift",
+      "v1_frozen_status": "planned",
+      "v2": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "exact_binding_valid_all_orders": true,
+        "expansions": 3,
+        "failure": null,
+        "hard_safety_violation": false,
+        "observable_facts_digest": "7c6a15279b7a0d87de62b5d8cf05f2ed3344852e130d1421d0d8069c600bc244",
+        "operator_order_invariant": true,
+        "problem_digest": "3b1826d2e9b3684e81331b8791ccf305c7c3508d756db18c67612a9e8876b978",
+        "proposal_digest": "124f55f11737e00ed0c0ff8cc0d95f14a276a7249c1659233b5682c66bbee1a7",
+        "status": "planned",
+        "steps": [
+          "go-stairs",
+          "ascend-careful"
+        ],
+        "uncertain_facts": [],
+        "valid_goal_plan": true
+      }
+    },
+    {
+      "category_in_frozen_v1_fixture": "heldout_constraint",
+      "expected_status": "planned",
+      "mission_id": "stairs-strict-stability",
+      "v1_frozen_status": "planned",
+      "v2": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "exact_binding_valid_all_orders": true,
+        "expansions": 3,
+        "failure": null,
+        "hard_safety_violation": false,
+        "observable_facts_digest": "7c6a15279b7a0d87de62b5d8cf05f2ed3344852e130d1421d0d8069c600bc244",
+        "operator_order_invariant": true,
+        "problem_digest": "f906961827552ad9fd8cbc8715681944214037ef4b322b3e6a5353ce445c62f8",
+        "proposal_digest": "4b267088e14717f550f5b612f23582e6af09fcfa3154d809616278693bf3deb3",
+        "status": "planned",
+        "steps": [
+          "go-stairs",
+          "ascend-careful"
+        ],
+        "uncertain_facts": [],
+        "valid_goal_plan": true
+      }
+    },
+    {
+      "category_in_frozen_v1_fixture": "heldout_composition",
+      "expected_status": "planned",
+      "mission_id": "stairs-report-composite",
+      "v1_frozen_status": "planned",
+      "v2": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "exact_binding_valid_all_orders": true,
+        "expansions": 7,
+        "failure": null,
+        "hard_safety_violation": false,
+        "observable_facts_digest": "7c6a15279b7a0d87de62b5d8cf05f2ed3344852e130d1421d0d8069c600bc244",
+        "operator_order_invariant": true,
+        "problem_digest": "ff468dbf3ec0b5ac8f601806e23198aa116d6f82898db58b3daeaca951d721fd",
+        "proposal_digest": "f282300266e8a3feb1c95d326d6a0c73b5b9aed95298dfa718f4699d541e1b91",
+        "status": "planned",
+        "steps": [
+          "go-stairs",
+          "ascend-careful",
+          "scan-upstairs",
+          "report-upstairs"
+        ],
+        "uncertain_facts": [],
+        "valid_goal_plan": true
+      }
+    },
+    {
+      "category_in_frozen_v1_fixture": "heldout_partial_state",
+      "expected_status": "planned",
+      "mission_id": "stairs-already-at-entry",
+      "v1_frozen_status": "planned",
+      "v2": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "exact_binding_valid_all_orders": true,
+        "expansions": 2,
+        "failure": null,
+        "hard_safety_violation": false,
+        "observable_facts_digest": "7c6a15279b7a0d87de62b5d8cf05f2ed3344852e130d1421d0d8069c600bc244",
+        "operator_order_invariant": true,
+        "problem_digest": "428a44277bb02b7cbe22c3318f32bc68339aee5f667fa4453a3696a8672e3b20",
+        "proposal_digest": "3e1c2ed68c4bc06af94dedf731c03f6d7b5393da9c734ba757e80bd4b7d46ace",
+        "status": "planned",
+        "steps": [
+          "ascend-careful"
+        ],
+        "uncertain_facts": [],
+        "valid_goal_plan": true
+      }
+    },
+    {
+      "category_in_frozen_v1_fixture": "heldout_uncertainty",
+      "expected_status": "needs_observation",
+      "mission_id": "stairs-clear-unknown",
+      "v1_frozen_status": "needs_observation",
+      "v2": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "exact_binding_valid_all_orders": true,
+        "expansions": 5,
+        "failure": "goal_not_satisfied",
+        "hard_safety_violation": false,
+        "observable_facts_digest": "7c6a15279b7a0d87de62b5d8cf05f2ed3344852e130d1421d0d8069c600bc244",
+        "operator_order_invariant": true,
+        "problem_digest": "f417f68259572e712832649d6c95a723c5f0f5decf472c08ad2a409b78a2607b",
+        "proposal_digest": "950f9b6d5fc0658f3dedcc4e3b4e47421eb41a5d0aa5e5bd1934aea490a03254",
+        "status": "needs_observation",
+        "steps": [],
+        "uncertain_facts": [
+          "stairs.clear"
+        ],
+        "valid_goal_plan": false
+      }
+    },
+    {
+      "category_in_frozen_v1_fixture": "heldout_impossible",
+      "expected_status": "unreachable",
+      "mission_id": "stairs-clear-false",
+      "v1_frozen_status": "unreachable",
+      "v2": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "exact_binding_valid_all_orders": true,
+        "expansions": 4,
+        "failure": "goal_not_satisfied",
+        "hard_safety_violation": false,
+        "observable_facts_digest": "7c6a15279b7a0d87de62b5d8cf05f2ed3344852e130d1421d0d8069c600bc244",
+        "operator_order_invariant": true,
+        "problem_digest": "d53054fb9653ea6f83a71892c35916569d07dc31f04c9d98a62b977ee34a4c2e",
+        "proposal_digest": "bf6a84b80669202475ba1de7bd1572ba23469d3d45846a5db454f99807690364",
+        "status": "unreachable",
+        "steps": [],
+        "uncertain_facts": [],
+        "valid_goal_plan": false
+      }
+    },
+    {
+      "category_in_frozen_v1_fixture": "heldout_nominal",
+      "expected_status": "planned",
+      "mission_id": "kitchen-nominal-shift",
+      "v1_frozen_status": "planned",
+      "v2": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "exact_binding_valid_all_orders": true,
+        "expansions": 4,
+        "failure": null,
+        "hard_safety_violation": false,
+        "observable_facts_digest": "7c6a15279b7a0d87de62b5d8cf05f2ed3344852e130d1421d0d8069c600bc244",
+        "operator_order_invariant": true,
+        "problem_digest": "1735ed5b71f50ccfe63e2bb84d66485d7dc34941ed9b8a87458e304c1f100211",
+        "proposal_digest": "4ea8853aa0bd506d674504f0144ffbfe8d10077f06aeca5e890a681ce02462b4",
+        "status": "planned",
+        "steps": [
+          "go-kitchen",
+          "scan-kitchen",
+          "report-kitchen"
+        ],
+        "uncertain_facts": [],
+        "valid_goal_plan": true
+      }
+    },
+    {
+      "category_in_frozen_v1_fixture": "heldout_partial_state",
+      "expected_status": "planned",
+      "mission_id": "kitchen-already-there",
+      "v1_frozen_status": "planned",
+      "v2": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "exact_binding_valid_all_orders": true,
+        "expansions": 3,
+        "failure": null,
+        "hard_safety_violation": false,
+        "observable_facts_digest": "7c6a15279b7a0d87de62b5d8cf05f2ed3344852e130d1421d0d8069c600bc244",
+        "operator_order_invariant": true,
+        "problem_digest": "9784ca4de14ace5d53ea675d41c032dea69bbe41c8342dd2200f7cc155296c5e",
+        "proposal_digest": "088cff485f7f147f2c3b8fd5898df709c22c67f804fa1098438db3e1199e9ffb",
+        "status": "planned",
+        "steps": [
+          "scan-kitchen",
+          "report-kitchen"
+        ],
+        "uncertain_facts": [],
+        "valid_goal_plan": true
+      }
+    },
+    {
+      "category_in_frozen_v1_fixture": "heldout_composition",
+      "expected_status": "planned",
+      "mission_id": "kitchen-greet-composite",
+      "v1_frozen_status": "planned",
+      "v2": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "exact_binding_valid_all_orders": true,
+        "expansions": 30,
+        "failure": null,
+        "hard_safety_violation": false,
+        "observable_facts_digest": "7c6a15279b7a0d87de62b5d8cf05f2ed3344852e130d1421d0d8069c600bc244",
+        "operator_order_invariant": true,
+        "problem_digest": "335f94990af98b807be3c471d0dd0bc7751f9358e0e54df2ab889045d917bc53",
+        "proposal_digest": "f15cf11ce6964ac00e9cee138718f2292717f9d2014dadf272f48d3d809c3a22",
+        "status": "planned",
+        "steps": [
+          "go-door",
+          "scan-door",
+          "approach-respectful",
+          "greet-owner",
+          "go-kitchen",
+          "scan-kitchen",
+          "report-kitchen"
+        ],
+        "uncertain_facts": [],
+        "valid_goal_plan": true
+      }
+    },
+    {
+      "category_in_frozen_v1_fixture": "heldout_uncertainty",
+      "expected_status": "needs_observation",
+      "mission_id": "kitchen-camera-unknown",
+      "v1_frozen_status": "needs_observation",
+      "v2": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "exact_binding_valid_all_orders": true,
+        "expansions": 6,
+        "failure": "goal_not_satisfied",
+        "hard_safety_violation": false,
+        "observable_facts_digest": "7c6a15279b7a0d87de62b5d8cf05f2ed3344852e130d1421d0d8069c600bc244",
+        "operator_order_invariant": true,
+        "problem_digest": "2702d20d522966bd6a54cfa9e7d8cc6ba0c7464a0f66485c7c8766ea07a83392",
+        "proposal_digest": "49749aac160b6c97bcd729243331df913fbfcda89bf75c3e17fbccd7e6b4a96f",
+        "status": "needs_observation",
+        "steps": [],
+        "uncertain_facts": [
+          "camera.ready"
+        ],
+        "valid_goal_plan": false
+      }
+    },
+    {
+      "category_in_frozen_v1_fixture": "heldout_unsafe",
+      "expected_status": "unsafe_state",
+      "mission_id": "greet-initial-contact-unsafe",
+      "v1_frozen_status": "unsafe_state",
+      "v2": {
+        "admission_violation": false,
+        "authorizes_motion": false,
+        "critical_unknown_included": true,
+        "disposition_correct": true,
+        "exact_binding_valid_all_orders": true,
+        "expansions": 0,
+        "failure": "initial_forbidden_fact",
+        "hard_safety_violation": false,
+        "observable_facts_digest": "7c6a15279b7a0d87de62b5d8cf05f2ed3344852e130d1421d0d8069c600bc244",
+        "operator_order_invariant": true,
+        "problem_digest": "49fe5a4e4a4acaeef40a54b9150604fad3450b3ebb2b63a60ad9a4e2a3c18a1c",
+        "proposal_digest": "3eabb46975f755b7d9146c0462f056502fe5622c95ab61cc516b757646cb8f14",
+        "status": "unsafe_state",
+        "steps": [],
+        "uncertain_facts": [],
+        "valid_goal_plan": false
+      }
+    }
+  ],
+  "schema": "parcel.sim-plan-2.results.v1",
+  "source_hashes": {
+    "affordance_planner_v1_sha256": "d65852ffbd4fdf6b59ec618afda37b4c63075c78d1207cc451f3001998e2cff5",
+    "affordance_planner_v2_sha256": "23824e95fe911b1074aeb669414677ff3a211b20d405a80b66505e83ea305786",
+    "experiment_sha256": "7419577e950ccce4639f211f54c1985506cf1843ae6d0220733fe8cef246b1e8",
+    "observability_sha256": "ba90f5177bd5eac1db0d34305cb6b01b24b9a939bf7e2ae460c1f0de8c390fc5",
+    "sim_plan_1_experiment_sha256": "3fef1453272c268c5aa3372fa7f4fd2ffb5ad0bd5be9ba9f748530ad279856ad",
+    "sim_plan_1_fixtures_sha256": "ddd584c5abdd2ddbeb3ef7bb9f7549d976f88ae8d40e70b0e0197eb44a5d0c7f",
+    "sim_plan_1_results_sha256": "24b556e4ccdab8a37bb7be43edbe306d7fc5f88ed3bfbaf068aa197006ab839e"
+  },
+  "verdicts": {
+    "H1": {
+      "passed_gates": 3,
+      "total_gates": 3,
+      "verdict": "SUPPORTED_REGRESSION_SHADOW"
+    },
+    "H2": {
+      "passed_gates": 3,
+      "total_gates": 3,
+      "verdict": "SUPPORTED_REGRESSION_SHADOW"
+    },
+    "H3": {
+      "passed_gates": 3,
+      "total_gates": 3,
+      "verdict": "SUPPORTED_REGRESSION_SHADOW"
+    }
+  }
+}

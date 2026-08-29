@@ -1,0 +1,1240 @@
+{
+ "sweeps": [
+  {
+   "topic": "Discrete behavior tokenization from continuous demonstrations for a 50 Hz body lane (VQ-BeT / BeT / ACT / FAST / quadruped motion codebooks) and decodability of codes by a Go2 tracking policy",
+   "findings": [
+    {
+     "claim": "VQ-BeT tokenizes actions with a residual VQ of only Nq=2 layers and 8-16 codes per layer (64-256 combinations) plus a continuous offset head; enlarging the codebook up to 65,536 combinations gave minimal change, while removing residual VQ or the offset head hurts significantly. It beats Diffusion Policy on 7 environments at 15 ms/step vs ~100 ms.",
+     "source_url": "https://arxiv.org/html/2403.03181v2",
+     "source_title": "Behavior Generation with Latent Actions (VQ-BeT), ICML 2024 Spotlight",
+     "year": "2024",
+     "kind": "primary-paper",
+     "load_bearing": true,
+     "numbers": "Nq=2; codebook 8-16/layer; latent 512-D (256 BlockPush); transformer 6L/6H/120-D; PushT IoU 0.78 vs 0.74 DP; Kitchen 3.66 vs 3.44; Ant 3.22 vs 2.90; real robot 47/50 and 19/30 vs DP 45/50 and 11/30 (+73% long-horizon); 15.1 ms vs 100.5 ms per step; robot CPU 207 ms vs 5,244 ms; codebook ablation 100->1,024->4,096->65,536 combos: Ant 3.22->3.01->3.11, Kitchen 3.66->3.75->3.7; LeRobot defaults vqvae_n_embed 16, embedding 256, action_chunk_size 5, n_action_pred_token 3, 20k VQ steps, offset_loss_weight 10000, temperature 0.1; official code MIT, paper CC BY 4.0",
+     "relevance": "Sets the codebook size class and structure (small RVQ + offset) for Parcel's body lane; code is MIT/Apache via LeRobot."
+    },
+    {
+     "claim": "FAST shows naive per-frame binning fails at 20-50 Hz because marginal information per frame approaches zero (the model copies the first action), and compresses a 1 s, 50 Hz, 14-D chunk from 700 to 53 tokens with DCT+BPE; FAST+ is a universal tokenizer over 1M chunks at 5-50 Hz, but autoregressive decode costs ~750 ms per chunk.",
+     "source_url": "https://arxiv.org/html/2501.09747v1",
+     "source_title": "FAST: Efficient Action Tokenization for Vision-Language-Action Models",
+     "year": "2025",
+     "kind": "primary-paper",
+     "load_bearing": true,
+     "numbers": "DCT scale gamma=10; BPE vocab 1024; 1 s chunks; tokens/chunk naive->FAST: BridgeV2 5 Hz 35->20 (1.75x), DROID 15 Hz 105->29 (3.6x), bussing 20 Hz 140->28 (5.0x), T-shirt 50 Hz 14-D 700->53 (13.2x); FAST+ 1M chunks, 5-50 Hz, 7-40-D; 5x fewer GPU-hours than pi0; ~750 ms decode per chunk (30-60 tokens) vs ~100 ms diffusion; CC BY 4.0; HF AutoProcessor",
+     "relevance": "Hard evidence against emitting one body token per 50 Hz frame; also shows FAST's ~50 tok/s and 750 ms decode are too dense/slow for a 12.5 Hz shared speech clock."
+    },
+    {
+     "claim": "QUART-Online VQ-encodes chunks of a 12-D quadruped command vector (512 codes x 2 residual layers) so a 5 Hz MLLM emitting 10-step chunks synchronizes with a 50 Hz controller (f_l = l_ac x f_m), raising task success by ~65% with chunk reconstruction MAE 0.012 / PSNR 32.1.",
+     "source_url": "https://arxiv.org/html/2412.15576",
+     "source_title": "QUART-Online: Latency-Free Large Multimodal Language Model for Quadruped Robot Learning",
+     "year": "2024",
+     "kind": "primary-paper",
+     "load_bearing": true,
+     "numbers": "codebook 512 codes/layer, Nq=2, D=512; chunk lengths 1/5/10; 12-D commands (11 + terminate); 10 x 5 Hz = 50 Hz; unseen-visual avg 0.37->0.68, unseen-language 0.52->0.79; Distinguish 0.90/0.99, Go-to 0.89/1.00, Go-avoid 0.58/0.80; MAE 0.012, AKI 0.0008, PSNR 32.11, UQI 0.9999; 2 Hz -> 50 Hz; Isaac Gym; code github.com/yuan48/QUART-Online",
+     "relevance": "The only quadruped precedent for VQ chunk tokens driving a 50 Hz controller; its command-level payload is the abstraction Parcel's tracker consumes."
+    },
+    {
+     "claim": "On a real Unitree Go2, a motion latent produced at 2 Hz and executed by a single universal 50 Hz PPO tracker runs end-to-end in under 500 ms on a Jetson Orin (QuadFM/Gen2Control); the latent is a continuous VAE code, not a discrete codebook.",
+     "source_url": "https://arxiv.org/html/2603.24021v1",
+     "source_title": "QuadFM: a foundational text-driven quadruped motion dataset + Gen2Control RL",
+     "year": "2026",
+     "kind": "primary-paper",
+     "load_bearing": true,
+     "numbers": "11,784 clips, 20.27 h, 3.64M frames @50 Hz, 35,352 texts; generator 2 Hz (MotionGPT3-style VAE+diffusion), tracker MLP 2048-1024-512-256 @50 Hz; Go2 X + Orin <500 ms; 20,000 PPO iterations; MJPE 0.0712 rad, MBPE 0.0744 m; human eval 7.98/9 text alignment; CC BY 4.0; dataset not yet released",
+     "relevance": "Proves the latent->tracker route on Parcel's exact hardware and latency budget; quantizing that latent is the missing (buildable) step."
+    },
+    {
+     "claim": "Uni-Mo's tracking policies on a real Unitree Go2 achieve 96.7% success over 392 randomly sampled expressive motions (5 trials each) and 97.6% in sim over 7,488 motions, with the 19-D, 50 Hz Quad-Imaginarium dataset released under CC BY 4.0.",
+     "source_url": "https://arxiv.org/html/2606.28237",
+     "source_title": "Unleashing Infinite Motion: Scaling Expressive Quadrupedal Motion via Generative Video Priors (Uni-Mo)",
+     "year": "2026",
+     "kind": "primary-paper",
+     "load_bearing": false,
+     "numbers": "7,488 motions, 18.5 h; 19-D state (root pos 3 + quat 4 + 12 joints) @50 Hz; clips 5-15 s mean 8.9 s; retention 68.1% (CLIP>=0.85 97.0%, geometric 70.2%); sim 97.6%; real 96.7% over 392 x 5; MBPE 40.6 mm, MRPE 3.8 cm, MROE 2.7 deg, MPJPE 3.4 deg; CC BY 4.0; github GaoLii/Quad-Imaginarium",
+     "relevance": "The largest license-clean Go2-native expressive clip corpus to fit a body tokenizer on, and the acceptance-bar numbers for tracking reconstructed codes."
+    },
+    {
+     "claim": "MotionGlot tokenizes quadruped (Spot) motion with a per-embodiment VQ-VAE of 128 codes x 512-D at 4 poses per token (12.5 tokens/s at 50 Hz) and a GPT-2-small generates text-conditioned locomotion from a 2.5 h dataset.",
+     "source_url": "https://arxiv.org/html/2410.16623",
+     "source_title": "MotionGlot: A Multi-Embodied Motion Generation Model",
+     "year": "2024",
+     "kind": "primary-paper",
+     "load_bearing": false,
+     "numbers": "codebook R^{128x512}; l=4; QUAD-LOCO >1,000 trajectories / 2.5 h on Spot, ~48,000 pairs after augmentation; R-precision@1/2/3 0.18/0.35/0.48; diversity 3.74; BLEU@4 36.5; +31.2% avg over baselines; 8x A5000, ~20k steps; CC BY 4.0; code on GitHub, dataset 'to be released soon'",
+     "relevance": "A 128-code, 4-frames-per-token quadruped vocabulary suffices for language-conditioned generation - the size class Parcel should start at."
+    },
+    {
+     "claim": "Tencent's VQ-PMC uses a discrete latent of K=256 codes x 32-D, queried at 50 Hz over a 500 Hz PD loop, trained on ~39 min of Labrador mocap, and drives a real quadruped (MAX) through a three-level hierarchy that beat a human-operated robot 2:0 at chase-tag.",
+     "source_url": "https://ar5iv.labs.arxiv.org/html/2308.15143",
+     "source_title": "Lifelike Agility and Play in Quadrupedal Robots using RL and Generative Pre-trained Models (VQ-PMC)",
+     "year": "2023",
+     "kind": "primary-paper",
+     "load_bearing": false,
+     "numbers": "K=256, D=32, beta=0.25; ~30 min + 9 min mocap at 120 fps; PMC 50 Hz, PD 500 Hz; primitive level 2 days on 2x V100, environmental 4 days on 4x V100, strategic 40 h; code + mocap released (research-only)",
+     "relevance": "Earliest real-quadruped proof that a 256-entry discrete latent at 50 Hz decodes to lifelike dog motion via a learned low-level controller."
+    },
+    {
+     "claim": "Walk Like Dogs builds a Go2 pipeline from 13,076 dog pose samples: kino-dynamic retargeting (MJPC), an 18-D hyperspherical VAE whose modes Pace/Trot/Gallop emerge automatically, and a 50 Hz PPO tracker (IsaacLab, 4,096 envs) with 0.11 m base-velocity RMSE; the latent is continuous.",
+     "source_url": "https://arxiv.org/html/2507.00677v2",
+     "source_title": "Walk Like Dogs: Learning Steerable Imitation Controllers for Legged Robots from Unlabeled Motion Data",
+     "year": "2025",
+     "kind": "primary-paper",
+     "load_bearing": false,
+     "numbers": "13,076 samples + mirrors; IK scales alpha_z 0.81, fwd 0.6, side 0.6; MJPC iLQG T=2.0 s dt 0.01 s; vMF latent 18-D; MoE decoder 6 experts; PPO batch 4,096, lr 5e-4; 50 Hz; velocity RMSE 0.11 m; gait switch at 1.8/1.2/0.7 m/s; real Go2 qualitative",
+     "relevance": "Go2-native reference pipeline whose emergent gait modes are the natural targets a VQ layer would snap to."
+    },
+    {
+     "claim": "ACT commits to action chunks of k=100 at 50 Hz (2 s) with an 80M-param CVAE-transformer; chunk-size ablation goes from 1% success at k=1 to 44% at k=100, and inference takes ~10 ms.",
+     "source_url": "https://ar5iv.labs.arxiv.org/html/2304.13705",
+     "source_title": "Learning Fine-Grained Bimanual Manipulation with Low-Cost Hardware (ACT)",
+     "year": "2023",
+     "kind": "primary-paper",
+     "load_bearing": false,
+     "numbers": "k=100; 50 Hz; ~80M params (4 enc/7 dec, 512-D, 8 heads); CVAE beta=10; 50 demos/task (~10 min); episodes 400-700 steps; k=1 1%, k=10 ~15%, k=100 44%, k=200-400 slight decline; real tasks 86/93/84/92%; inference ~0.01 s; temporal ensemble w_i=exp(-m*i)",
+     "relevance": "Evidence that a 50 Hz policy should emit whole chunks and blend them (temporal ensembling), which is how 12.5 Hz body tokens get interpolated to 50 Hz."
+    },
+    {
+     "claim": "BeT (the VQ-BeT ancestor) discretizes actions with k-means (k=24-64 per environment) plus a continuous residual offset, reconstructing a = A[a] + <a>; VQ-BeT later notes k-means does not scale to high-dimensional or temporally extended actions.",
+     "source_url": "https://ar5iv.labs.arxiv.org/html/2206.11251",
+     "source_title": "Behavior Transformers: Cloning k modes with one stone",
+     "year": "2022",
+     "kind": "primary-paper",
+     "load_bearing": false,
+     "numbers": "k: Point-mass 2/3, CARLA 32, Block-push 24, Kitchen 64; context 2/10/5/10; ~1e4-1e6 params; CARLA 0.98; Block-push 2 blocks 0.71 vs ~0; Kitchen entropy 2.47 vs 2.96 demos; CC BY 4.0",
+     "relevance": "Origin of the discrete-mode + continuous-residual pattern; explains why a chunked RVQ is preferred over per-step k-means."
+    },
+    {
+     "claim": "B-spline tokenizers give a fixed small token count per chunk without tokenizer training: BEAST uses 5-10 control points per 1 s chunk (4-8x fewer than binning, MSE 0.0004 vs 0.0215, 19 ms/chunk parallel decode), and OmniSAT adds an 8-layer RVQ (codebooks 256/256/64) for 6.8x compression, beating FAST (3.7x) and BEAST (4.6x) on real tasks.",
+     "source_url": "https://arxiv.org/html/2510.09667",
+     "source_title": "OmniSAT: Compact Action Token, Faster Autoregression (with BEAST, arXiv 2506.06072v2)",
+     "year": "2025",
+     "kind": "primary-paper",
+     "load_bearing": false,
+     "numbers": "BEAST: N=5-10 tokens per 1 s, 256 bins, 617 Hz throughput, CALVIN 99.8%, LIBERO-LONG 86.4% vs pi0-FAST 60.2%, real 76.57%, BEAST-ACT 70% vs 49%, CC BY-NC-SA 4.0. OmniSAT: Tc=8, degree 4, RVQ L=8, codebooks 256/256/64, BPE 2048, 30 frames @30 Hz, compression 6.8x/8.1x, DROID MAE 9.4e-4 vs BEAST 8.0e-2, LIBERO 93.4%, real 73/63/48% vs 63/45/23%, CC BY 4.0",
+     "relevance": "Training-free fallback (BEAST) if a learned codebook collapses on a small dog-clip library, and a smooth-basis + small-RVQ recipe (OmniSAT) for body-pose chunks."
+    },
+    {
+     "claim": "Recent RVQ action tokenizers keep converging on 4 frames per token and 256-2048 codes per level with data at scale: X-Tokenizer (4 levels x 2048, r=4, 2.4M trajectories) trades +17% reconstruction error vs FAST for +10 points real success; VQ-VLA (256 codes/layer, chunk 5) triples OpenVLA inference rate to 11.84 Hz and shows tokenizer quality scales with 100x sim data.",
+     "source_url": "https://arxiv.org/html/2606.14752v2",
+     "source_title": "X-Tokenizer: A Multimodal Action Tokenizer for VLA Pretraining (with VQ-VLA, ICCV 2025, arXiv 2507.01016)",
+     "year": "2026",
+     "kind": "primary-paper",
+     "load_bearing": false,
+     "numbers": "X-Tokenizer: Q=4, V=2048, r=4 (64 frames -> 16 slots), D=26, 2.4M trajectories / 2.0B frames, 17 arm families, l1 0.01693 vs FAST 0.01446, real 85.9% vs 75.7%, RoboTwin 69.25% vs 61.0%, CC BY 4.0. VQ-VLA: 256 codes/layer, K=5, LIBERO-90 80.98% vs 73.53%, real 23%->46.25%, 11.84 Hz vs 4.16 Hz, one A100 one week, CC BY-NC-SA 4.0",
+     "relevance": "Supports pretraining Parcel's body tokenizer on sim rollouts and training the first RVQ level for semantics (masked action modeling) so tokens carry behavior meaning for the language model."
+    },
+    {
+     "claim": "Discrete motion tokens decoded by 50 Hz trackers are now standard on Unitree humanoids: Heracles uses FSQ tokens with a 25 Hz generative middleware and 50 Hz policy on a G1 (90.6% completion); Humanoid-LLA uses a unified VQ motion vocabulary executed by a CVAE student policy (87.6% sim success, MPJPE 56 mm) on G1/Booster T1.",
+     "source_url": "https://arxiv.org/html/2603.27756",
+     "source_title": "Heracles: Bridging Precise Tracking and Generative Synthesis for General Humanoid Control (with Humanoid-LLA, arXiv 2511.22963v2)",
+     "year": "2026",
+     "kind": "primary-paper",
+     "load_bearing": false,
+     "numbers": "Heracles: iFSQ levels L=2^K+1; 38-D/35-D state; G1 29 DoF; 50 Hz policy, 200 Hz physics, 25 Hz middleware; 16,384 envs on one A100; completion 90.6% vs 84.8%; fall-recovery 90.0% vs 44.0%. Humanoid-LLA: 26,846 AMASS sequences; success 87.6%; MPJPE 56.43 mm; FID 2.626; R-precision 0.447; CC BY 4.0; code 'coming soon'",
+     "relevance": "Same hardware family as the Go2; shows the LLM-emits-motion-tokens -> tracker executes pattern transfers to real Unitree platforms."
+    },
+    {
+     "claim": "A 50 Hz tracking stack for a quadruped behavior foundation model runs on the NVIDIA Jetson AGX Orin 64 GB (ABot-C0: 200 Hz motor loop, 50 Hz decision/tracking, flow policy with 5 ODE steps), and intensity/style can be a runtime scalar rather than extra codes (DFM tempo 0.5-1.5x on aibo; AMOR weight conditioning).",
+     "source_url": "https://arxiv.org/html/2607.07370",
+     "source_title": "Behavior Foundations for Quadruped Robots: ABot-C0 Technical Report (with DFM arXiv 2502.10980 and AMOR arXiv 2505.23708)",
+     "year": "2026",
+     "kind": "primary-paper",
+     "load_bearing": false,
+     "numbers": "ABot-C0: 16,074 trajectories / 22.43 h; 32-D VAE latent; seen 92.74% / unseen 88.54%; MPJPE 12.38/14.79 mm; AGX Orin 64 GB; CC BY-NC-ND 4.0. DFM: c=8 Fourier channels (24-D), 34 dances x 5 tempos = 170 clips x 6 s, 100 Hz, MAE 0.094 vs 0.132 rad. AMOR: 7 reward terms, 300k iters ~5 days on one RTX 4090, tuning 1 day vs 5-day retrain, smoothness weight reduces sim-to-real gap",
+     "relevance": "Confirms Orin headroom for the body-side models and gives two precedents for expressing 'how much' (intensity) outside the codebook."
+    }
+   ],
+   "design_implications": [
+    "Body-lane token rate: one token per 80 ms (4 frames at 50 Hz = 12.5 tok/s), aligned one-to-one with Mimi/Moshi speech frames; never per-frame at 50 Hz (FAST shows per-frame binning collapses; MotionGlot/X-Tokenizer/MoReFlow/Beyond-MoCap all use 4 frames per token).",
+    "Codebook: residual VQ with Nq=2, 16-64 codes per layer for a 30-100 clip dog library (VQ-BeT: 8-16 sufficed and 65,536 combos did not help; quadruped codebooks in the wild are 128-512), primary code = behavior mode (chuckle, look-back, play-bow, gait), secondary = variation, plus a continuous offset head; put intensity in a scalar (DFM tempo 0.5-1.5x / AMOR-style tracker weights) rather than more codes; use EMA/FSQ to avoid dead codes.",
+    "Token payload is a chunk of command-level or reference-pose state (QUART-Online 12-D command x 10 steps; Uni-Mo 19-D root+quat+12 joints), decoded by ONE universal 50 Hz PPO tracker trained on the whole clip library; only the tracker touches the robot, so any sampled token is physically executable.",
+    "Go2 decodability is a build task with public parts: quantize a QuadFM/Walk-Like-Dogs-style Go2 latent, fit the RVQ (LeRobot vqbet defaults, 20k steps), retrain the tracker overnight (4,096 envs on one RTX-class GPU), and accept at sim success >=95% / MPJPE <= ~4 deg on token-reconstructed references (Uni-Mo bar); latency budget <500 ms end-to-end is already demonstrated on Go2 + Orin.",
+    "Data/licences: fit on Quad-Imaginarium (7,488 Go2 motions, CC BY 4.0) + Kine2Go (800 Go2 trajectories, CC BY 4.0) + Parcel's authored expressive clips; Tencent Labrador mocap is research-only; QuadFM/DogML not yet usable; ABot-C0 is CC BY-NC-ND. Tokenizer code: VQ-BeT (MIT), LeRobot vqbet (Apache-2.0), RDT2 RVQActionTokenizer (Apache-2.0); avoid VQ-VLA/BEAST code (CC BY-NC-SA) for product use.",
+    "Do not use FAST for the shared-clock body lane (~53 tok/s at 50 Hz 14-D and ~750 ms autoregressive decode per 1 s chunk); keep FAST/FAST+ only if the body lane is moved to a separate slow VLA.",
+    "Learning 'chuckle if funny' / 'look back when lost' reduces to shifting the probability of a few primary codes at the right conversational moment (a 1-2 s motif is 12-25 tokens); this keeps the reward-learning problem in the small-discrete-action regime where ~4 preference queries suffice (LGPL) and bandits/preference RL from the first sweep apply."
+   ],
+   "notes_path": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260828/literature/notes/gap-behavior-tokenization-vqbet.md",
+   "key": "behavior-tokenization-vqbet",
+   "verification": {
+    "results": [
+     {
+      "claim": "VQ-BeT tokenizes actions with a residual VQ of only Nq=2 layers and 8-16 codes per layer (64-256 combinations) plus a continuous offset head; enlarging the codebook up to 65,536 combinations gave minimal change, while removing residual VQ or the offset head hurts significantly. It beats Diffusion Policy on 7 environments at 15 ms/step vs ~100 ms.",
+      "source_url": "https://arxiv.org/html/2403.03181v2",
+      "verdict": "PARTIALLY_SUPPORTED",
+      "evidence_quote": "\"In all of our experiments, it was sufficient to use Nq:=2 VQ-residual layers\" ... \"not using a residual VQ layer has a significant negative impact, which we believe is because of the lack of expressivity from a single VQ-layer.\" ... \"we found that the offset prediction is quite important for VQ-BeT\" ... Table 3 (Kitchen): VQ-BeT single step 15.1ms; DiffusionPolicy-C 100.5ms; DiffusionPolicy-T 98.6ms ... Table 12: Kitchen (Conditional) codebook 16 -> 256 combinations 3.78; codebook 256 -> 65536 combinations 3.61; Ant 100 combos 3.22 vs 1024 combos 3.01/3.11; Kitchen 256 combos 3.66 vs 4096 combos 3.75/3.7 ... Abstract: \"Across seven environments including simulated manipulation, autonomous driving, and robotics, VQ-BeT improves on state-of-the-art models\" ... BUT: \"In BlockPush environment, VQ-BeT is outperformed by DiffusionPolicy-T, while in Image Kitchen it is outperformed by DiffusionPolicy-C.\" (Table 2: BlockPush VQ-BeT 1.79 vs DP-T 1.93; Image Kitchen VQ-BeT 2.98 vs DP-C 3.11).",
+      "correction": "Structure, ablations and timing hold: Nq=2 residual VQ layers, codebooks of 10-16 codes/layer in the main configs (100-256 combinations; the conditional Ant run uses 48/layer = 2,304), plus an observation-conditioned offset head; removing residual VQ or the offset head is stated (qualitatively, no numbers in prose) to hurt significantly; growing to 4,096 combos changed Ant 3.22->3.01/3.11 and Kitchen 3.66->3.75/3.7, and 65,536 combos (Kitchen conditional) went 3.78->3.61, i.e. no gain. Inference is 15.1 ms vs 100.5 ms (DP-C) / 98.6 ms (DP-T) per step on GPU in Kitchen (Table 3); on the real-robot table it is 18.06 vs 573.49 ms GPU and 207.25 vs 5,243.82 ms CPU. However, VQ-BeT does NOT beat Diffusion Policy on all seven environments: the paper explicitly says DP-T wins BlockPush (1.93 vs 1.79) and DP-C wins Image Kitchen (3.11 vs 2.98) in the unconditional setting; VQ-BeT wins the other 5 of 7 (PushT 0.78 vs 0.74, Image PushT 0.68 vs 0.66, Kitchen 3.66 vs 3.44, Ant 3.22 vs 2.90/3.12, UR3 BlockPush 1.84 vs 1.83). Restate as: 'evaluated across seven environments, matching or exceeding SOTA overall, beating DP on 5/7 unconditional tasks.' The '8-16 codes per layer' should be '10-16 (up to 48) codes per layer'. The MIT code-license claim is not verifiable from the paper (paper itself is CC BY 4.0)."
+     },
+     {
+      "claim": "FAST shows naive per-frame binning fails at 20-50 Hz because marginal information per frame approaches zero (the model copies the first action), and compresses a 1 s, 50 Hz, 14-D chunk from 700 to 53 tokens with DCT+BPE; FAST+ is a universal tokenizer over 1M chunks at 5-50 Hz, but autoregressive decode costs ~750 ms per chunk.",
+      "source_url": "https://arxiv.org/html/2501.09747v1",
+      "verdict": "SUPPORTED",
+      "evidence_quote": "\"when using the na\u00efve per-timestep tokenization scheme, this marginal information approaches zero as the control frequency of the training signal increases\" ... \"the model simply copies the first action, as seen in the qualitative visualization in Figure 3, bottom left.\" ... \"On both tasks [Table Bussing 20 Hz, T-Shirt Folding 50 Hz], policies trained with na\u00efve tokenization are unable to make progress on the task.\" ... Table I: T-Shirt Folding (50 Hz, 14-D) naive 700 -> FAST 53 tokens, 13.2x; Bussing 140 -> 28 (5.0x); DROID 105 -> 29 (3.6x); BridgeV2 35 -> 20 (1.75x) ... \"we tokenize 1-second action chunks\" ... \"rounding scale 10, BPE vocabulary size 1024\" ... \"consisting of approximately one million 1-second action chunks from single-arm, bi-manual and mobile manipulation robots\" ... \"our universal action tokenizer, FAST+, can be applied as a black-box tokenizer on 1-second action sequences from any robot setup\" ... \"while \u03c0\u2080 with diffusion typically predicts one second action chunks within 100ms on an NVIDIA 4090 GPU, the \u03c0\u2080 model with FAST tokenization needs approximately 750ms\" ... \"typically 30-60 action tokens need to be decoded\" ... \"required 5x fewer GPU hours for training than the \u03c0\u2080 model\" ... License: CC BY 4.0.",
+      "correction": "Claim holds as written. Two precision notes: (1) the 'copies the first action' observation comes from the synthetic time-series experiment in Fig. 3 (sampling rates 25-800 steps), while the 20 Hz bussing and 50 Hz T-shirt robot tasks are reported as naive-tokenization policies being 'unable to make progress'; (2) the 5-50 Hz / 7-40-D range for FAST+ is inferred from the appendix dataset-mix table (Table III), not stated as a single sentence in prose. The 750 ms figure is measured on an NVIDIA 4090."
+     },
+     {
+      "claim": "QUART-Online VQ-encodes chunks of a 12-D quadruped command vector (512 codes x 2 residual layers) so a 5 Hz MLLM emitting 10-step chunks synchronizes with a 50 Hz controller (f_l = l_ac x f_m), raising task success by ~65% with chunk reconstruction MAE 0.012 / PSNR 32.1.",
+      "source_url": "https://arxiv.org/html/2412.15576",
+      "verdict": "SUPPORTED",
+      "evidence_quote": "\"The learnable codebook B \u2208 R^{Nq\u00d7K\u00d7D} consists of Nq layers of codes ... The input vector of each layer is the residual from the previous quantization step.\" ... \"512 dimensions and 512 quantizers (Nq=2)\" ... \"we treat the sequence of N consecutive action commands at time T as a set of input action commands Ac={ai}i=T..T+N \u2208 R^{N\u00d712}\" ... \"11-dimensional high-level commands as well as a terminate signal, i.e., [vx,vy,\u03c9z,\u03b81,\u03b82,\u03b83,f,hz,\u03d5,sy,hzf,e]\" ... \"three different action chunk lengths (1, 5, and 10)\" ... \"fl = lac \u00d7 fm\" ... Table II: QUART 2HZ; QUART-Online-1 5HZ; QUART-Online-10 50HZ ... \"achieving real-time inference at 50Hz in sync with the underlying controller frequency\" ... \"significantly boosting the success rate across various tasks by 65%\" ... Reconstruction (N=10): \"MAE(\u2193) 0.012, AKI(\u2193) 0.0008, PSNR(\u2191) 32.11, UQI(\u2191) 0.9999\" ... \"NVIDIA's Isaac Gym\".",
+      "correction": "Claim holds. Notes: the paper's wording is '512 dimensions and 512 quantizers (Nq=2)' (K=512 codes, D=512, two residual layers); the 5 Hz MLLM rate is given by the Table II row 'QUART-Online-1 | 5HZ' (chunk length 1) and the formula f_l = l_ac \u00d7 f_m, so 10 \u00d7 5 Hz = 50 Hz for QUART-Online-10; the baseline QUART runs at 2 Hz. The paper links only the project page https://quart-online.github.io \u2014 the GitHub URL github.com/yuan48/QUART-Online in the numbers field does not appear in the paper and is unverified."
+     },
+     {
+      "claim": "On a real Unitree Go2, a motion latent produced at 2 Hz and executed by a single universal 50 Hz PPO tracker runs end-to-end in under 500 ms on a Jetson Orin (QuadFM/Gen2Control); the latent is a continuous VAE code, not a discrete codebook.",
+      "source_url": "https://arxiv.org/html/2603.24021v1",
+      "verdict": "PARTIALLY_SUPPORTED",
+      "evidence_quote": "\"The motion generator runs at 2Hz to produce motion commands, while the generic locomotion controller executes them at 50Hz for stable tracking.\" ... \"Our end-to-end real-robot deployment runs on a Unitree GO2 X quadruped, where both the motion generator and the low-level controller are deployed on an NVIDIA Jetson Orin\" ... \"achieving real-time motion synthesis (<500 ms latency)\" / \"the overall latency from speech input to motion execution is approximately 0.5s.\" ... \"A motion VAE encodes a motion clip m_{1:M} into a latent z = E(m_{1:M})\" (diffusion model p\u03b8(z|c,st); initialized from MotionGPT3; no VQ/codebook/discrete-token mention) ... BUT the tracker consumes the DECODED motion, not the latent: \"decode a reference motion: m\u0302\u2081:\u2098 = D(z)\" and \"Given the current proprioception and a short future window of the reference motion, the tracking policy outputs low-level actions: u_k = \u03c0_\u03c6(s_k, \u03c4^(i))\" ... tracker: \"4-layer MLPs with hidden dimensions 2048, 1024, 512, and 256\", \"train \u03c0\u03d5 with PPO\", \"20,000 iterations\", \"a general motion tracking policy that executes generated motions robustly\" ... \"The dataset will be released at https://github.com/GaoLii/QuadFM\" ... License: CC BY 4.0.",
+      "correction": "Hardware, rates, latency and 'continuous VAE latent, no codebook' all check out (Unitree GO2 X, Jetson Orin running both generator and controller, 2 Hz generator, 50 Hz PPO MLP tracker, <500 ms / ~0.5 s speech-to-motion). The mischaracterization is the interface: the tracker does not execute the latent. The generator samples a continuous latent z via diffusion, DECODES it with the VAE decoder into a reference motion m\u0302 = D(z) (kinematic joint/body trajectory), and the tracking policy takes proprioception plus a short future window of that decoded reference motion. So the paper proves a 'text -> latent -> decoded reference trajectory -> universal tracker' route on Go2/Orin, not a 'latent -> tracker' route; quantizing the latent would still require the VAE decoder in the loop before the tracker. Also: the paper never explicitly calls the latent 'continuous'; that is inferred from the VAE+diffusion (MotionGPT3-style) design and the absence of any VQ/codebook."
+     }
+    ]
+   }
+  },
+  {
+   "topic": "Templates for adding a non-speech token stream (act OUT) and world-state conditioning (world IN) to Moshi: Moshi-Face, MoshiVis, and other 2025-2026 Moshi/Mimi-family stream extensions",
+   "findings": [
+    {
+     "claim": "Moshi-Face adds facial motion as N=8 parallel discrete tokens per 12.5 Hz frame (codebook K=256, dim 128), read as input streams for both speakers (2N in) and generated for the system (N out) by a non-autoregressive 'Face Transformer' side head conditioned on the Temporal Transformer hidden state plus the frame's text and audio token embeddings \u2014 not as extra Depth-Transformer codebooks.",
+     "source_url": "https://arxiv.org/html/2606.21970v1",
+     "source_title": "Integrating Facial Generation into Full-Duplex Spoken Dialogue Systems (Moshi-Face), Jiang, Ohashi, Higashinaka, Nagoya Univ., Interspeech 2026",
+     "year": "2026",
+     "kind": "paper",
+     "load_bearing": true,
+     "numbers": "12.5 Hz face tokens (25 fps in, downsample r=2); N=8 tokens/frame; K=256, C=128 (MVE 9.90e-3, LVE 11.77e-3); face streams delayed 1 step vs text like audio; loss L_text+L_audio+lambda*L_face, lambda=1; Eq.2: e_All = h_{i+1} + e_text + sum of 8 audio embeddings; learnable positional embedding per output position; N per-component linear heads; Face Transformer size NOT reported.",
+     "relevance": "The most direct published recipe for Parcel's body/act stream: small parallel token set on Moshi's clock, fed back as input, emitted by one extra non-AR pass per frame. The user's face stream is a worked example of a world-state input stream on the same clock."
+    },
+    {
+     "claim": "Moshi-Face was trained on ~180 h (~3,400 dialogues) of Seamless Interaction data with a two-step schedule (frozen Moshi + head, then joint full fine-tune); on LLM-judge dialogue metrics it matches original Moshi, but the 180 h fine-tune halves UTMOS speech naturalness (an effect the audio-only Moshi-ft control shares), and the frozen-backbone ablation gives chance-level lip sync \u2014 joint fine-tuning was 'essential'.",
+     "source_url": "https://arxiv.org/html/2606.21970v1",
+     "source_title": "Integrating Facial Generation into Full-Duplex Spoken Dialogue Systems (Moshi-Face) \u2014 Table 2 and Section 3",
+     "year": "2026",
+     "kind": "paper",
+     "load_bearing": true,
+     "numbers": "Step 1: lr 5e-4, 500 steps, batch 32; Step 2: lr 2e-6/4e-6/1e-5 (Temporal/Depth/Face), 1,200 steps, batch 16; base kyutai/moshiko-pytorch-bf16. Table 2: Moshi UTMOS 3.08, Coh 3.76, Nat 3.73, Rel 4.26, Ove 3.85; Moshi-ft 1.69/3.59/4.28/3.95/3.55; Moshi-Face 1.75/3.79/4.52/4.24/3.76; LSE-D teacher-forced 8.76 (upper bound 8.53, random 11.7), free-run 11.0; w/o full FT: LSE-D 11.8, UTMOS 2.42, Ove 3.23; w/o Step-1 pretrain: LSE-D 9.53. No latency, GPU, or wall-clock reported. No code/weights released.",
+     "relevance": "Sets Parcel's expectations: an act head needs joint fine-tuning (frozen backbone + head alone fails at synchrony), the fine-tune on a small paired corpus will cost speech quality unless mitigated, and the adaptation itself is cheap (1,700 steps)."
+    },
+    {
+     "claim": "MoshiVis adds visual input to a frozen 7B Moshi with 206M trainable parameters: cross-attention adapters between MHSA and FFN in every Temporal Transformer block, with cross-attention QKV projections shared across layers so image KV are cached once, and a self-gate (2-layer MLP, 1/8 hidden, sigmoid) that learns an unsupervised relevance score and can exactly recover base-model behaviour when zero.",
+     "source_url": "https://arxiv.org/html/2503.15633",
+     "source_title": "Vision-Speech Models: Teaching Speech Models to Converse about Images (MoshiVis), Kyutai",
+     "year": "2025",
+     "kind": "paper",
+     "load_bearing": true,
+     "numbers": "206M trainable params; backbone 7B + PaliGemma2 SigLIP ~400M frozen; 448 px -> 1024 image tokens; gate MLP hidden reduction 1/8 + sigmoid, unsupervised; OCR-VQA audio 63.7% no-gate -> 65.2% with gate; training 50k steps, batch 64, ~1 day on 8x H100; p_audio = 25% speech samples, rest 'speechless' image-text; MOSNet 2.78 with 0% audio -> 3.59 with 1% audio (base Moshi 3.34); VQAv2 zero-shot 49.3%.",
+     "relevance": "The template for Parcel's world-state conditioning: a gated adapter lets the model ignore the world stream when irrelevant (the 'only chuckle if funny / only look back if lost' requirement) while leaving the speech backbone frozen; the data-mixing trick shows speech quality survives with tiny amounts of paired audio."
+    },
+    {
+     "claim": "MoshiVis's adapters add 7 ms per inference step on top of Moshi, giving roughly 51 ms/step at conversation start and 59 ms/step with a 5-minute context on an NVIDIA L4, inside the 80 ms frame budget of the 12.5 Hz codec; weights are CC-BY 4.0, code MIT/Apache-2.0.",
+     "source_url": "https://github.com/kyutai-labs/moshivis",
+     "source_title": "kyutai-labs/moshivis README and HF card kyutai/moshika-vis-pytorch-bf16",
+     "year": "2025",
+     "kind": "code",
+     "load_bearing": true,
+     "numbers": "+7 ms/step; 51 ms -> 59 ms/step (0 -> 5 min context) on L4; also runs on Mac Mini M4 Pro; PyTorch bf16 needs ~24 GB GPU; Q8_0 in Rust/MLX; licenses: Python MIT, Rust Apache-2.0, weights CC-BY 4.0, PaliGemma2 encoder Apache-2.0; HF card: 'research only'.",
+     "relevance": "Latency and licensing anchor for a conditioning adapter on Parcel; the 20 ms headroom on an L4 is the number Orin must be measured against."
+    },
+    {
+     "claim": "MoshiRAG injects retrieved text into Moshi without any new token stream: the model emits a retrieval-trigger token in its inner-monologue text stream, retrieval runs asynchronously, and the reference embeddings are projected by one trainable linear layer and summed onto the Temporal Transformer input in streaming fashion; factuality jumps while turn-taking is preserved.",
+     "source_url": "https://arxiv.org/html/2604.12928v1",
+     "source_title": "MoshiRAG: Asynchronous Knowledge Retrieval for Full-Duplex Speech Language Models (TTI-Chicago / Kyutai / Gradium)",
+     "year": "2026",
+     "kind": "paper",
+     "load_bearing": false,
+     "numbers": "HaluEval 36.3% vs 10.5%; TriviaQA 69.6% vs 22.8%; end-to-end keyword delay 3.1 s vs 2.1 s; target retrieval <= 2 s, 'sensitive to retrieval delays over 3 seconds'; takeover rate on pause track 0.32 vs 0.99; full fine-tune 100k updates, lr 2e-6, batch 32, reference encoder frozen; ~1.9M synthetic conversations; weights kyutai/moshika-rag-*-bf16 CC-BY 4.0, code MIT/Apache-2.0; 24 GB+ GPU plus encoder GPU.",
+     "relevance": "The cheapest injection template for a sparse world-event stream (track-loss, laughter score) and a precedent for a special 'act' token living in the text stream that triggers an asynchronous side process."
+    },
+    {
+     "claim": "DyaPlex (NVIDIA/HKUST) is the closest published 'speech + body motion on one 12.5 Hz clock' system, but it is a dual-tower design: a frozen PersonaPlex speech tower plus a trainable 32-layer, d=1024 causal motion tower that cross-attends to all 32 speech-tower layers with time-aligned RoPE; motion is 22 RVQ codes per frame decoded one at a time, which costs 173 ms/frame at full context (80 ms at 1024-token motion context) on an RTX A6000 Ada; no code or weights released.",
+     "source_url": "https://arxiv.org/html/2606.03874",
+     "source_title": "DyaPlex: Full-Duplex Speech-Motion Model for Dyadic Interaction (NVIDIA)",
+     "year": "2026",
+     "kind": "paper",
+     "load_bearing": true,
+     "numbers": "Motion tokenizer: causal body-part RVQ-VAE (GestureLSM-based), 25 fps SMPL-X -> 12.5 Hz, K=22 codes/frame (18 body + 4 face), vocab 4096; 46 tokens/frame in the motion tower (2 speakers); data Seamless Interaction 4,000 h -> 3,435 h filtered; 6x H100, 30k iters, batch 512, lr 3e-4; latency: audio tower 30 ms, RVQ decoder 0.8 ms, motion tower 173 ms/frame @4096 ctx -> 80 ms @1024 ctx (1.8 s); FGD 5.6e-3 vs A2P 57e-3; user study n=32: 97.5% vs DualTalk, 66.3% vs Audio2Photoreal; agent speech not conditioned on partner motion; authors suggest a 'Moshi-similar depth transformer design to speed up inference'.",
+     "relevance": "Shows that a per-frame autoregressive motion vocabulary of tens of codes cannot fit an 80 ms frame budget even on a desktop GPU; Parcel's act stream must be few tokens, non-AR (Moshi-Face style), and the frozen-speech-tower + cross-attention pattern is a viable fallback if joint fine-tuning proves too costly."
+    },
+    {
+     "claim": "Hibiki reuses Moshi's multistream architecture for simultaneous speech translation (source audio in, target audio + text out at 12.5 Hz with 16 codebooks) and shows the architecture scales down to a 1.7B model that runs in real time on an iPhone 16 Pro; weights are CC-BY 4.0.",
+     "source_url": "https://arxiv.org/html/2502.03382",
+     "source_title": "High-Fidelity Simultaneous Speech-To-Speech Translation (Hibiki), Kyutai",
+     "year": "2025",
+     "kind": "paper",
+     "load_bearing": false,
+     "numbers": "Temporal 2.2B (d 2560, 24 layers) + Depth 1.1B distilled to 449M; Hibiki-M 1.7B with 8 codebooks, real-time on iPhone 16 Pro; faster than real-time on H100 with 320 parallel sequences; ~40k h/language synthetic parallel data; 150k S2ST steps batch 96 + 8k fine-tune steps on ~900 h; CVSS-C ASR-BLEU 39.2 vs Seamless 37.0, speaker sim 0.41 vs 0.30, MOS 3.73 vs 2.18; end offset 2.9 s, LAAL 5.0 s; lag control by silence insertion, penalty 0 -> -2 over 1 -> 2 s lag; CFG gamma=3.0 lifts speaker sim 0.42 -> 0.48; GitHub: code MIT/Apache-2.0, weights CC-BY 4.0 (arXiv page's CC BY-NC-SA is the paper license).",
+     "relevance": "Evidence that the Moshi multistream design survives shrinking to 1-2B for on-device use, which matters if the 7B does not meet Orin's frame budget; the silence-insertion lag-control trick is a template for scheduling an act before or after speech."
+    },
+    {
+     "claim": "Kyutai's moshi-finetune repo provides LoRA fine-tuning of Moshi's Temporal and Depth Transformers (rank <= 128, optional full embedding fine-tune) from stereo audio + timestamped transcripts at ~12k tokens/s on one H100 (39.6 GB), Apache-2.0; the base Moshi weights are CC-BY 4.0, 7B, Mimi 12.5 Hz at 1.1 kbps, 160 ms theoretical / ~200 ms practical latency on an L4, 24 GB+ GPU in bf16.",
+     "source_url": "https://github.com/kyutai-labs/moshi-finetune",
+     "source_title": "kyutai-labs/moshi-finetune README (and kyutai-labs/moshi README)",
+     "year": "2025",
+     "kind": "code",
+     "load_bearing": false,
+     "numbers": "LoRA rank <= 128; 1 H100: ~12k tok/s, 39.6 GB; 8 H100: ~10.7k tok/s/GPU, 23.7 GB/GPU; example run 2,000 steps, batch 16, 100 s sequences ~30M tokens; data: left channel = Moshi, right = user, JSONL + timestamped JSON. Moshi README: 7B; Mimi 24 kHz -> 12.5 Hz, 1.1 kbps; 160 ms theoretical (80 ms frame + 80 ms acoustic delay), ~200 ms on L4; int4/int8/bf16; code MIT/Apache-2.0; weights CC-BY 4.0.",
+     "relevance": "The cost and tooling anchor for adding an act head: a Moshi-Face-scale adaptation (1,700 steps) is hours on one H100, and LoRA is the obvious mitigation for the UTMOS regression Moshi-Face saw with full fine-tuning."
+    },
+    {
+     "claim": "PersonaPlex (NVIDIA, Jan 2026) is a Moshi-derived 7B full-duplex model released under the NVIDIA Open Model License permitting commercial use, trained on Fisher (<10k h real audio), with 0.170 s turn-taking and 0.240 s interruption-stop latency; it is the frozen speech tower DyaPlex builds on.",
+     "source_url": "https://huggingface.co/nvidia/personaplex-7b-v1",
+     "source_title": "nvidia/personaplex-7b-v1 model card",
+     "year": "2026",
+     "kind": "code",
+     "load_bearing": false,
+     "numbers": "7B; initialised from Moshiko; Fisher Parts 1&2, 7,303 conversations up to 10 min, <10k h real audio; turn-taking 0.170 s; interruption 0.240 s; tested A100 80 GB (Ampere/Hopper); license NVIDIA Open Model License + CC-BY-4.0 components; code MIT.",
+     "relevance": "A commercially licensed Moshi variant with persona/voice control that a Parcel act head could sit on instead of Moshiko, and the base DyaPlex used for its frozen-tower design."
+    },
+    {
+     "claim": "ASPIRin shows that RL on a full-duplex SLM should act on a coarse projected action space (speech-active vs silent) rather than raw tokens: GRPO with rule-based interactivity rewards on the projected space preserves semantics and cuts duplicate n-grams by over 50% versus standard GRPO, which otherwise causes generative collapse.",
+     "source_url": "https://arxiv.org/abs/2604.10065",
+     "source_title": "ASPIRin: Action Space Projection for Interactivity-Optimized Reinforcement Learning in Full-Duplex Speech Language Models (Hung-yi Lee lab)",
+     "year": "2026",
+     "kind": "paper",
+     "load_bearing": false,
+     "numbers": "Binary action projection (active speech vs inactive silence); GRPO with rule-based rewards balancing interruption and response latency; >50% reduction in duplicate n-grams vs standard GRPO; base model and code not stated in the abstract.",
+     "relevance": "Directly informs how Parcel should optimise 'chuckle if funny' and 'look back if lost' from a laughter/track-loss reward: apply RL to the projected act channel, not to the audio codebooks."
+    },
+    {
+     "claim": "SoulX-Duplug is a plug-and-play, frame-synchronous state-prediction module (Qwen3-0.6B + frozen GLM-4-Voice tokenizer) that per 160 ms chunk emits ASR tokens then one of five user-state tokens, at 240 ms theoretical / 205-250 ms deployed latency, matching Moshi on turn-taking and beating it on pause handling on Full-Duplex-Bench; code is open-sourced.",
+     "source_url": "https://arxiv.org/html/2603.14877",
+     "source_title": "SoulX-Duplug: Plug-and-Play Streaming State Prediction Module for Realtime Full-Duplex Speech Conversation",
+     "year": "2026",
+     "kind": "paper",
+     "load_bearing": false,
+     "numbers": "States: user_idle, user_nonidle, user_backchannel, user_complete, user_incomplete; chunk 160 ms; latency 80+160 = 240 ms theoretical, 205 ms EN / 250 ms bilingual deployed; turn-taking TOR 0.933 (Moshi 0.941, Freeze-Omni 0.336); pause TOR 0.352 (Moshi 0.983); interruption respond rate 0.83 vs Freeze-Omni 0.44; Easy-Turn 84.33%; state data 1,000 h Fisher + 10,000 h Mandarin; ASR data ~47k h Mandarin + ~31k h English; github.com/Soul-AILab/SoulX-Duplug, license not stated.",
+     "relevance": "A template for a small side head that turns a continuous observation into a discrete, timestamped event token (the 'observable track-loss event' Parcel needs) without touching the dialogue backbone."
+    },
+    {
+     "claim": "Unmute (Kyutai) is a cascaded STT -> text-LLM -> TTS wrapper, not a Moshi stream extension: ~750 ms latency on one GPU (~450 ms on three), 16 GB VRAM, MIT code, and tool/function calling is explicitly 'not currently supported'.",
+     "source_url": "https://github.com/kyutai-labs/unmute",
+     "source_title": "kyutai-labs/unmute README",
+     "year": "2025",
+     "kind": "code",
+     "load_bearing": false,
+     "numbers": "Kyutai STT + Kyutai TTS + Gemma 3 1B locally (GPT-OSS-120B via OpenRouter in production); ~750 ms single GPU, ~450 ms with three GPUs; 16 GB VRAM minimum; x86_64 Linux/WSL only; code MIT; tool calling not supported.",
+     "relevance": "Rules Unmute out as a template for a single-clock act stream; it is the 'wrap any LLM' fallback architecture with 2-4x the latency of Moshi-family models."
+    },
+    {
+     "claim": "Full-Duplex-Bench-v3 benchmarks multi-step tool use for full-duplex voice agents on real disfluent human audio, but evaluates only API models and a cascade (no Moshi-family model), finding GPT-Realtime at Pass@1 0.600 and a cascade at 10.12 s latency versus 4.25 s for Gemini Live 3.1.",
+     "source_url": "https://arxiv.org/abs/2604.04847",
+     "source_title": "Full-Duplex-Bench-v3: Benchmarking Tool Use for Full-Duplex Voice Agents Under Real-World Disfluency (Hung-yi Lee lab)",
+     "year": "2026",
+     "kind": "paper",
+     "load_bearing": false,
+     "numbers": "Five disfluency categories; four task domains with chained API calls; GPT-Realtime Pass@1 0.600, 13.5% interruption rate; Gemini Live 3.1 latency 4.25 s, 78.0% turn-take; cascade (Whisper -> GPT-4o -> TTS) 10.12 s latency; CC BY-SA 4.0.",
+     "relevance": "Confirms that no open Moshi-family model has a published tool-use/action-emission mechanism; the 'act channel' for Parcel has to be designed from the Moshi-Face / DuplexSLA patterns rather than copied."
+    },
+    {
+     "claim": "DuplexSLA represents actions as a rate-limited textual action channel decoded alongside assistant audio on a shared 160 ms chunk timeline (three channels: continuous user audio, discrete assistant audio, text actions) \u2014 the 'action as text on the clock' alternative to a learned act codebook.",
+     "source_url": "https://arxiv.org/abs/2605.20755",
+     "source_title": "DuplexSLA: A Full-Duplex Spoken Language Model with Synchronized Speech, Language, and Action",
+     "year": "2026",
+     "kind": "paper",
+     "load_bearing": false,
+     "numbers": "160 ms chunk timeline; dual-stream three-channel formulation; action channel is rate-limited text; base model, vocabulary, latency and accuracy numbers not in the abstract (covered in the first sweep).",
+     "relevance": "The contrasting design choice for Parcel's act stream: sparse function-call text on the chunk clock (DuplexSLA) versus dense per-frame discrete codes (Moshi-Face/DyaPlex); the laugh/look-back behaviours are sparse events, which favours a small per-frame vocabulary with an explicit no-op."
+    }
+   ],
+   "design_implications": [
+    "Act stream: copy Moshi-Face's structure \u2014 N small parallel tokens per 80 ms frame (they use N=8, K=256), fed back as inputs to the Temporal Transformer for both self and world/owner (2N in), emitted by a non-autoregressive side head conditioned on h_{i+1} + text + audio embeddings, delayed one step versus text. Use a hand-designed causal act vocabulary (gait, body yaw/pitch bins, vocalisation type, gaze target, explicit no-op) so no non-causal codec is needed; the head is one extra small forward pass per frame.",
+    "Do not use a per-frame autoregressive motion vocabulary: DyaPlex's 22 RVQ codes/frame cost 173 ms/frame at full context (80 ms at 1.8 s context) on an RTX A6000 Ada, above the 80 ms frame budget even before Orin; keep act tokens few and generated in parallel.",
+    "Plan for joint fine-tuning and its speech-quality tax: Moshi-Face's frozen-backbone ablation gave chance-level synchrony (LSE-D 11.8 vs random 11.7) while joint fine-tuning on 180 h halved UTMOS (3.08 -> 1.75; audio-only Moshi-ft 1.69). Mitigate with LoRA (moshi-finetune, rank <= 128), a head-only warm-up step (removing it worsened LSE-D 8.76 -> 9.53), and MoshiVis-style mixing where only ~25% of batches carry speech (speech quality recovered with as little as 1% audio).",
+    "World-state IN ('was the joke funny', 'is the owner tracked'): use MoshiVis-style gated cross-attention adapters (206M params, +7 ms/step, unsupervised sigmoid gate that can exactly recover base behaviour) for dense observations, and MoshiRAG-style one-linear-layer additive injection onto the Temporal Transformer input for sparse event streams; both leave the 7B frozen and preserved turn-taking.",
+    "Observable track-loss event: produce it with a SoulX-Duplug/X2-Turn-style frame-synchronous state head (five-state token per 160 ms chunk, ~240 ms latency) or an explicit input token, then feed it in as a world stream; MoshiRAG's trigger-token-in-inner-monologue pattern is the precedent for a token that launches an asynchronous side process.",
+    "Reward learning (owner laughter -> chuckle): follow ASPIRin and run GRPO on a coarse projected action space (chuckle / no-chuckle, look-back / continue) rather than on raw audio tokens, which caused generative collapse in standard GRPO.",
+    "Licensing: Moshi, MoshiVis, MoshiRAG, Hibiki weights are CC-BY 4.0 and moshi-finetune is Apache-2.0; PersonaPlex is NVIDIA Open Model License (commercial OK). Moshi-Face and DyaPlex ship no code or weights, so the act head must be reimplemented from the paper's Eq. 1-3 and training schedule (500 + 1,200 steps).",
+    "Latency is unmeasured on Orin for every source: MoshiVis is 51-59 ms/step on an L4 (~20 ms headroom), Moshi ~200 ms end-to-end on an L4, DyaPlex on an A6000 Ada. Measure a quantised Moshi + side-head step on the Orin before committing to a single 12.5 Hz clock; Hibiki-M (1.7B real-time on an iPhone 16 Pro) shows the multistream design survives shrinking to 1-2B if the 7B does not fit.",
+    "Data: 180 h of paired dialogue+behaviour sufficed for a synchronous face head (3,435 h for full-body dyadic motion); Parcel's paired (speech, act, world-state) corpus does not exist and must be synthesised or collected, with ground-truth act tokens available for teacher forcing across time (removing the t-1 act input hurt LSE-C and UTMOS)."
+   ],
+   "notes_path": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260828/literature/notes/gap-moshi-face-and-moshivis.md",
+   "key": "moshi-face-and-moshivis",
+   "verification": {
+    "results": [
+     {
+      "claim": "Moshi-Face adds facial motion as N=8 parallel discrete tokens per 12.5 Hz frame (codebook K=256, dim 128), read as input streams for both speakers (2N in) and generated for the system (N out) by a non-autoregressive 'Face Transformer' side head conditioned on the Temporal Transformer hidden state plus the frame's text and audio token embeddings \u2014 not as extra Depth-Transformer codebooks.",
+      "source_url": "https://arxiv.org/html/2606.21970v1",
+      "verdict": "SUPPORTED",
+      "evidence_quote": "\"Face token streams (2N in, N out) ... The model reads 2N streams (system and user) and generates the N streams of the system's facial motion.\" / \"The number of face components was set to N=8, and the codebook size was K=256 with an embedding dimension of C=128. To align the face tokens with Moshi's text and audio tokens encoded at 12.5 Hz, we set the temporal downsampling factor to r=2, such that the face codec encoded the input facial motion at 25 fps into face tokens at 12.5 Hz.\" / \"Face Transformer. This module is a non-causal, transformer-based module that generates N face tokens at each timestep, conditioned on the outputs of RQ-Transformer. Since the N face tokens within each frame are quantized independently with no sequential dependency, they are generated non-autoregressively in parallel. At each timestep, the module first forms a unified conditioning vector by summing the hidden state with the text and audio token embeddings: e^All_{i+1} = h_{i+1} + e^0_{i+1} + sum_{m=1}^{M} e^m_i, (2) where e^0_{i+1} is the text token embedding, and e^m_i is the embedding of the m-th audio token, both produced by the embedding tables of the Face Transformer. This vector is then projected and combined with a learnable positional embedding pe^n to form a query ... for each of the N output positions. These query vectors are then passed through the Face Transformer, which applies non-causal self-attention across the N positions within each timestep, and N per-component linear heads predict the face tokens f^{1:N}_i in parallel\" / \"Following the implementation of Moshi, the audio and face token streams are delayed by one timestep relative to the text tokens\" / \"L_Moshi-Face = L_text + L_audio + lambda L_face\" with \"the face loss weight lambda=1\" / Table 1 row \"256 128 0.66 9.90 11.77\" (MVE, LVE x10^-3). arXiv abs page: \"Accepted to Interspeech 2026\", authors Jiang, Ohashi, Higashinaka, Nagoya University.",
+      "correction": "All numbers check out. Two wording nuances: (1) the paper calls h_{i+1} \"the resulting hidden state\" of the RQ-Transformer (Eq. 1: h_{i+1}, t_{i+1}, a_i^{1:M} = T_RQ(...)); it never says \"Temporal Transformer hidden state\" explicitly, though it does name \"Temporal/Depth/Face Transformers\" separately in the training section and the Depth Transformer is what emits the audio codebooks, so the reading is sound. (2) The paper does not explicitly argue against putting face tokens in the Depth Transformer; the contrast is implicit in the architecture (face tokens come from the separate Face Transformer; the Depth Transformer stays the audio-codebook generator). One extra detail worth carrying: in both training steps ground-truth face tokens from timestep i-1 are embedded and added to the query vectors (the 't-1 face token input' ablation), so the head also sees the previous frame's face tokens. The Face Transformer's layer count / hidden size / parameter count is indeed not reported anywhere in the HTML (0 hits for 'layers' or 'parameters')."
+     },
+     {
+      "claim": "Moshi-Face was trained on ~180 h (~3,400 dialogues) of Seamless Interaction data with a two-step schedule (frozen Moshi + head, then joint full fine-tune); on LLM-judge dialogue metrics it matches original Moshi, but the 180 h fine-tune halves UTMOS speech naturalness (an effect the audio-only Moshi-ft control shares), and the frozen-backbone ablation gives chance-level lip sync \u2014 joint fine-tuning was 'essential'.",
+      "source_url": "https://arxiv.org/html/2606.21970v1",
+      "verdict": "SUPPORTED",
+      "evidence_quote": "\"we randomly downloaded approximately 180 hours of dialogue data, totaling around 3,400 dialogues.\" / \"We initialized the RQ-Transformer with the pre-trained Moshi checkpoint [https://huggingface.co/kyutai/moshiko-pytorch-bf16] and attached a randomly initialized Face Transformer. Training followed a two-step strategy: Step 1: The RQ-Transformer was frozen, and only the Face Transformer was trained; Step 2: All components were jointly fine-tuned. Step 1 used a learning rate of 5e-4, 500 training steps, and a batch size of 32. Step 2 used learning rates of 2e-6/4e-6/1e-5 for the Temporal/Depth/Face Transformers, with the face loss weight lambda=1, 1,200 training steps, and a batch size of 16.\" / Table 2 rows: \"Moshi ... 3.08 3.76 3.73 4.26 3.85 | Moshi-ft ... 1.69 3.59 4.28 3.95 3.55 | Reconstructed face 8.53 0.12 | Random face 11.7 0.13 11.8 0.11 | Moshi-Face (Ours) 8.76 0.14 11.0 0.16 1.75 3.79 4.52 4.24 3.76 | w/o Face Transformer pre-training 9.53 0.13 10.4 0.14 1.71 3.78 4.53 4.25 3.76 | w/o full fine-tuning 11.8 0.16 11.1 0.20 2.42 3.24 3.94 3.89 3.23\" / \"Both Moshi-Face and Moshi-ft obtained lower UTMOS scores than the original Moshi, which is expected, given that fine-tuning on a smaller domain-specific dataset can degrade general speech quality. Notably, the ablation without full fine-tuning achieved a higher UTMOS than other Moshi-Face variants, as only training the Face Transformer preserves the original Moshi speech generation ability. Despite the lower UTMOS, Moshi-Face achieved the highest coherence and the second-highest naturalness in LLMAJ among all models, with overall quality comparable to Moshi.\" / \"Removing full fine-tuning (Step 2) resulted in the worst LSE-D and lowest LLMAJ scores, demonstrating that joint fine-tuning is essential.\"",
+      "correction": "Every number in the claim's numbers field matches Table 2 and the training section exactly. Three precision notes: (1) 'halves UTMOS' is an approximation \u2014 UTMOS drops from 3.08 to 1.75 (Moshi-Face, -43%) and 1.69 (Moshi-ft, -45%); say 'cuts UTMOS by roughly 45%'. (2) 'chance-level lip sync' is the checker's reading of the numbers (w/o full FT teacher-forced LSE-D 11.8 vs the Random-face lower bound 11.7; free-run 11.1 vs 11.8); the paper itself only says 'worst LSE-D'. (3) 'No GPU reported' should be 'no GPU type/count or wall-clock reported' \u2014 the acknowledgments do say 'We used the computational resources of the supercomputer Flow at the Information Technology Center, Nagoya University.' No latency figures and no code/weights/demo release statement appear anywhere in the paper (0 hits for 'release', 'available', 'code'); the only link is to the base Moshi checkpoint."
+     },
+     {
+      "claim": "MoshiVis adds visual input to a frozen 7B Moshi with 206M trainable parameters: cross-attention adapters between MHSA and FFN in every Temporal Transformer block, with cross-attention QKV projections shared across layers so image KV are cached once, and a self-gate (2-layer MLP, 1/8 hidden, sigmoid) that learns an unsupervised relevance score and can exactly recover base-model behaviour when zero.",
+      "source_url": "https://arxiv.org/html/2503.15633",
+      "verdict": "SUPPORTED",
+      "evidence_quote": "\"As backbones, we use Moshi [8] for the speech modality (~7B parameters), and the 'stage 2' vision encoder of PaliGemma [5] (~400M parameters) for images. Both backbones are kept frozen during training, and we only train the adaptation modules (~206M parameters).\" / \"The image tokens are injected into the current speech token via residual cross-attention (CA) layers, placed between the multi-head self attention (MHSA) and the feedforward network (FFN) in every transformer block. As the cross-attention's QKV projections are shared across layers, at inference, we only need to compute the keys and values once per image, thus reducing the memory cost needed to store the image embeddings.\" / \"we further modulate the output of the cross-attention module with a self-gating mechanism. Intuitively, a gate output of zero would turn off the image information and exactly recover the base model behaviour, while higher values facilitate the flow of image information. Specifically, the gate is a small 2-layer MLP with a hidden size reduction factor of 1/8, followed by a sigmoid activation. During training, we do not supervise the gate's outputs and instead let it implicitly learn an image relevance score for each token.\" / \"our model exactly recovers the backbone speech transformer when the gates' outputs are all zeros.\" / Table 4 (OCR-VQA, audio eval): gate none 63.7; shared gate + shared QKV 65.2. / \"trained for 50k steps with batch size 64, taking roughly one day of training on 8 x H100 GPUs.\" / Table 1: \"p_audio 0% 1% 5% 10% Moshi | MOSNet 2.78 3.59 3.47 3.56 3.34\" / \"a ratio of p_audio=25% appears to be a good trade-off\" / \"when trained with p_audio=0% and prompted in the audio domain, the model yields 38.5% on OCR-VQA, 49.3% on VQAv2\".",
+      "correction": "Claim holds. Minor terminology: the paper says the CA layers sit 'in every transformer block' of the 7B speech transformer and never uses the phrase 'Temporal Transformer' (it describes the depth transformer as a separate, unmodified audio-codebook decoder), so 'every Temporal Transformer block' is a Moshi-paper paraphrase, not the MoshiVis wording. The 63.7% -> 65.2% OCR-VQA pair is specifically 'no gate' vs 'gate shared across layers + QKV shared' (the deployed config); the un-shared-gate + shared-KV cell is 66.2%. The encoder is described as the PaliGemma 'stage 2' vision encoder (~400M); the README adds it is the PaliGemma2 encoder from google/paligemma2-3b-pt-448 \u2014 'SigLIP' is not named in the paper. The 49.3% VQAv2 number is the p_audio=0% model prompted in audio, which the paper does not label 'zero-shot'."
+     },
+     {
+      "claim": "MoshiVis's adapters add 7 ms per inference step on top of Moshi, giving roughly 51 ms/step at conversation start and 59 ms/step with a 5-minute context on an NVIDIA L4, inside the 80 ms frame budget of the 12.5 Hz codec; weights are CC-BY 4.0, code MIT/Apache-2.0.",
+      "source_url": "https://github.com/kyutai-labs/moshivis",
+      "verdict": "PARTIALLY_SUPPORTED",
+      "evidence_quote": "README (kyutai-labs/moshivis): \"The present code is provided under the MIT license for the Python parts, and Apache license for the Rust backend\"; \"All model weights (excluding the bundled vision encoder) are released under the CC-BY 4.0 license\"; \"the vision encoder is licensed under Apache 2.0\"; \"In total, MoshiVis adds ~206M adapters parameters on top of the 7B Moshi\"; \"you will need a GPU with a significant amount of memory (~24GB)\"; \"A MLX version (tested on a MacBook Pro M3)\". The README contains NO occurrence of 'ms', 'latency' figures, 'L4', or 'M4'. The latency numbers are in the paper (arXiv 2503.15633, Sec. 4.3): \"On an NVIDIA L4 GPU, for images of 448 pixels (1024 tokens) and an 8-bit quantized model, MoshiVis requires roughly 7 extra milliseconds of runtime per inference step compared to the backbone model, for a total of 51ms per step at the beginning of the conversation and 59ms with a 5-minute context window. ... the model is well within the 80ms threshold for real-time latency (the audio codec having a frequency of 12.5Hz).\" Kyutai blog (kyutai.org/moshivis): \"MoshiVis adds only about ~7ms of latency per inference step\", \"for a total of 55ms per inference step\", \"staying well below the 80ms second limit of real-time latency\", \"on a consumer-grade device (MacMini with M4 Pro Chip)\". HF card kyutai/moshika-vis-pytorch-bf16: license \"cc-by-4.0\"; \"This model is for research only and we do not recommend it for providing advices or to perform any professionnal duty.\"",
+      "correction": "The statements are true but misattributed and missing one qualifier. Corrected: 'Per the MoshiVis paper (arXiv 2503.15633, Sec. 4.3) \u2014 not the GitHub README, which carries no latency figures \u2014 the adapters add roughly 7 ms per inference step for an 8-bit quantized model with 448 px images (1024 tokens) on an NVIDIA L4, for a total of 51 ms/step at conversation start and 59 ms/step with a 5-minute context window, within the 80 ms budget of the 12.5 Hz codec (the Kyutai blog rounds this to ~7 ms extra / 55 ms total). Per the README, Python code is MIT, the Rust backend Apache-2.0, model weights CC-BY 4.0 excluding the Apache-2.0 PaliGemma2 vision encoder; PyTorch bf16 needs ~24 GB with no quantization support; the MLX build was tested on a MacBook Pro M3 (the Mac Mini M4 Pro demo is from the blog, not the README); the HF card says research only.' Note the 51/59 ms numbers are for the Q8 Rust backend, so a bf16 PyTorch deployment would not inherit them, and the '20 ms headroom' figure should be quoted as L4 + Q8 specific."
+     }
+    ]
+   }
+  },
+  {
+   "topic": "Local, permissively licensed laughter / non-verbal vocalization synthesis for the dog's chuckle and simulated owner reactions; laughter datasets to augment the owner-laughter detector",
+   "findings": [
+    {
+     "claim": "Orpheus TTS (Apache-2.0, Llama-3B backbone, tags <laugh> <chuckle> <sigh> <cough> <sniffle> <groan> <yawn> <gasp>) is the best open tag-based laughter TTS in the only head-to-head benchmark: NVBench NVV F1 0.728 vs CosyVoice 2 0.463, Dia 0.632, Bark 0.654, Fish-Speech 0.432, Higgs-Audio 0.382; subjective NVV accuracy 3.71/5.",
+     "source_url": "https://arxiv.org/html/2604.16211v2",
+     "source_title": "NVBench / NVV-SuperBench: Benchmarking Nonverbal Vocalizations in Speech Generation",
+     "year": "2026",
+     "kind": "benchmark",
+     "load_bearing": true,
+     "numbers": "Orpheus cov 0.18 P 0.687 R 0.774 F1 0.728 WER 4.98; CosyVoice2 F1 0.463 WER 3.82; Dia cov 0.29 F1 0.632 WER 21.95; Bark F1 0.654 WER 14.73; Fish F1 0.432; Higgs cov 0.09 F1 0.382; ChatTTS F1 0.664; subjective Orpheus 4.01/3.71/3.49, CosyVoice2 3.65/2.22/3.34, Dia 3.12/2.99/3.24; prompt-based Qwen3-TTS NVV IF 2.15, Parler Mini 0.92; 2,250 EN + 2,250 ZH items, 45 NVV types",
+     "relevance": "Picks the desktop generator for the dog chuckle bank and simulated owner laughs; Orpheus repo (fetched) states Apache-2.0, 100k+ h English, ~200 ms streaming latency"
+    },
+    {
+     "claim": "Even the best open models misrender non-verbal tags most of the time: NV-Bench paralinguistic CER on English is 71.92% for Orpheus-TTS and 62.75% for CosyVoice3; a laughter-specialised fine-tune (NV-CV3) still gets 46.13% overall and 27.69% on Mandarin laughter (CosyVoice3 57.69%). Synthesized laughs must be verified by a detector rather than trusted from the tag.",
+     "source_url": "https://arxiv.org/html/2603.15352",
+     "source_title": "NV-Bench: Benchmark of Nonverbal Vocalization Synthesis for Expressive TTS",
+     "year": "2026",
+     "kind": "benchmark",
+     "load_bearing": true,
+     "numbers": "EN single-label PCER: Orpheus 71.92 (OCER 10.63), CosyVoice3 62.75 (OCER 9.06, SIM 0.701), Emilia-NV-CV2 55.30, SMIIP-NV-CV2 56.80, NV-FlexiVoice 50.43, NV-CV3 46.13; ZH laughter PCER NV-CV3 27.69, Emilia-NV-CV2 40.00, CosyVoice3 57.69; testset 1,651 utterances, 7.9 h, 14 NV types, 650 ZH + 350 EN single-label; CC BY-NC-SA 4.0",
+     "relevance": "Forces a detector-gated pipeline and defines sim owner reward on detector output, not on the tag"
+    },
+    {
+     "claim": "Fun-CosyVoice3-0.5B-2512 is the only Apache-2.0 model that combines Korean, an explicit [laughter]/[breath] tag, and sub-1B size with 150 ms bi-streaming latency; the CosyVoice 3 paper documents the tags but provides no evaluation of them.",
+     "source_url": "https://huggingface.co/FunAudioLLM/Fun-CosyVoice3-0.5B-2512",
+     "source_title": "Fun-CosyVoice3-0.5B-2512 model card (+ CosyVoice 3 paper arXiv 2505.17589, CosyVoice GitHub)",
+     "year": "2025",
+     "kind": "model",
+     "load_bearing": true,
+     "numbers": "0.5B; apache-2.0; 9 languages (zh en ja ko de es fr it ru) + 18 dialects; WER en 2.24 / SS 71.8%, CER zh 1.21 / SS 78.0%; RL variant zh CER 0.81%, en WER 1.68%; latency as low as 150 ms; TensorRT-LLM 4x; paper: 1M training hours, LM scaled 0.5B->1.5B",
+     "relevance": "On-robot (Orin) and Korean-owner candidate for live synthesis; also the base used by NVSpeech/Emilia-NV and the DPO NV work"
+    },
+    {
+     "claim": "A fully permissive detector-augmentation path exists: VocalSound is CC BY-SA 4.0 with 3,504 laughter clips (21,024 total, 3,365 speakers), and adding it to FSD50K raised laughter F1 0.45->0.59 (+29.7%) and overall mAP +41.9%.",
+     "source_url": "https://github.com/YuanGongND/vocalsound",
+     "source_title": "VocalSound: A Dataset for Improving Human Vocal Sounds Recognition (GitHub + arXiv 2205.03433 PDF)",
+     "year": "2022",
+     "kind": "dataset",
+     "load_bearing": true,
+     "numbers": "CC BY-SA 4.0; 21,024 recordings; laughter 3,504; 3,365 subjects, 60 countries, 45% female, ages 18-80; mean 4.18 s (sd 1.81); 44.1 kHz (16 kHz version 1.7 GB); split 15,570/1,860/3,594; six-class acc 90.5%; laughter F1 0.45->0.59, AP 0.46->0.54; caveat: acted not spontaneous",
+     "relevance": "Primary laughter positives for retraining the owner-laughter detector without license exposure"
+    },
+    {
+     "claim": "Omine et al. synthesize laughter segmentation training data by pasting 0-4 VocalSound/Laughterscape laughs into podcast/AudioSet audio; the 315M wav2vec2 model trains in ~75 min on an RTX 2080 Ti and raises detection F1 to 0.784 (AMI), 0.890 (MAHNOB), 0.943 (own set) and cuts onset MAE from 1.5 s to 0.31 s. Code is MIT but the released weights are research-only.",
+     "source_url": "https://www.isca-archive.org/interspeech_2024/omine24_interspeech.pdf",
+     "source_title": "Robust Laughter Segmentation with Automatic Diverse Data Synthesis (Interspeech 2024) + github.com/omine-me/LaughterSegmentation",
+     "year": "2024",
+     "kind": "paper",
+     "load_bearing": false,
+     "numbers": "laughter sources: VocalSound 3,504, Laughterscape 11,413, 93 web; base audio 7.0 s from Spotify podcasts (YAMNet laughter <0.05) and 3,007 AudioSet clips; 0-4 laughs per clip, keep episodes >=0.30 s; labels every 0.02 s; wav2vec2-large-xlsr-53 ~315M params, 2,500 steps, batch 5, ~75 min train, 1 min per hour of audio on i9-9900K + RTX 2080 Ti; detection F1 AMI 0.583->0.784, MAHNOB 0.618->0.890, Gillick set 0.844->0.865, own 0.897->0.943; segmentation start MAE 2.070->1.085 s (Gillick set), 1.500->0.314 s (own); code MIT, weights 'research use only' 1.26 GB",
+     "relevance": "Exact recipe to build Parcel's owner-laughter reward detector; onset MAE is what the 'chuckle if funny' timing reward needs"
+    },
+    {
+     "claim": "AudioSet's Laughter class (5,696 clips: Baby 863, Giggle 991, Snicker 1,857, Belly laugh 843, Chuckle/chortle 1,693) is released under CC BY 4.0 (labels; audio fetched from YouTube IDs), giving in-the-wild negatives/positives to pair with VocalSound.",
+     "source_url": "https://research.google.com/audioset/ontology/laughter_1.html",
+     "source_title": "AudioSet ontology: Laughter (+ download page license)",
+     "year": "2017",
+     "kind": "dataset",
+     "load_bearing": false,
+     "numbers": "Laughter 5,696; children 863/991/1,857/843/1,693; dataset CC BY 4.0, ontology CC BY-SA 4.0; splits eval 20,383, balanced 22,176, unbalanced 2,042,985 segments; 128-d 1 Hz features 2.4 GB",
+     "relevance": "Second permissive laughter source; 'Chuckle, chortle' subclass matches the dog's target vocalization"
+    },
+    {
+     "claim": "Dia-1.6B (Apache-2.0, English only) has the widest open tag set (21 tags incl. (laughs) (chuckle)) but warns they 'might result in unexpected output', and on an A4000 generates 40 tok/s against 86 tok/s per second of audio, i.e. about 2x slower than real time; NVBench WER 21.95.",
+     "source_url": "https://huggingface.co/nari-labs/Dia-1.6B-0626",
+     "source_title": "nari-labs/Dia-1.6B-0626 model card (+ Dia2 GitHub)",
+     "year": "2025",
+     "kind": "model",
+     "load_bearing": false,
+     "numbers": "1.6B; Apache 2.0; English only; ~10 GB VRAM; A4000 40 tok/s, 86 tok/s = 1 s audio; Dia2 1B/2B Apache 2.0, English, no NV tag list",
+     "relevance": "Useful for offline English owner-dialogue simulation with laughs; not an Orin or Korean option"
+    },
+    {
+     "claim": "Chatterbox family is MIT: Turbo (350M) has native [laugh]/[chuckle]/[cough] tags but is English-only, while Chatterbox-Multilingual V3 (500M) covers Korean without tags; community port runs ~4 s per utterance on a Jetson Orin Nano 8 GB.",
+     "source_url": "https://github.com/resemble-ai/chatterbox",
+     "source_title": "resemble-ai/chatterbox (+ HF chatterbox-turbo card, NVIDIA forum Orin Nano post)",
+     "year": "2025",
+     "kind": "model",
+     "load_bearing": false,
+     "numbers": "MIT; Chatterbox 500M, Turbo 350M, Nano 110M, Multilingual 500M (23+ langs incl. ko); Nano 3x real time on 8 CPU cores; Turbo decoder 10 steps -> 1; exaggeration/cfg_weight defaults 0.5/0.5; Orin Nano ~4 s/utterance (community)",
+     "relevance": "Smallest permissive tag-TTS; edge feasibility signal for Orin; Korean+tag not available in one model"
+    },
+    {
+     "claim": "The only open laughter-only synthesizer is the 2023 pseudo-phonetic-token method on Laughterscape (HuBERT k-means 200 tokens -> FastSpeech2 -> HiFi-GAN): MOS 3.00 vs ground truth 3.73 vs ASR-phoneme baseline 1.25; unconditional laughter MOS 3.11. Code MIT, but the Laughterscape corpus (6.04 h, 11,413 laughs, 584 Japanese speakers) is 'Research and development purpose only (tentative)'.",
+     "source_url": "https://arxiv.org/abs/2305.12442",
+     "source_title": "Laughter Synthesis using Pseudo Phonetic Tokens with a Large-scale In-the-wild Laughter Corpus (Interspeech 2023) + corpus site + GitHub",
+     "year": "2023",
+     "kind": "paper",
+     "load_bearing": false,
+     "numbers": "corpus v1.0 6.04 h / 11,413 utt / 584 speakers / 24 kHz (paper: 3.5 h, 7,489 utt, 470 speakers); MOS GT 3.73, HiFi-GAN 3.31, baseline 1.25, Proposed-L5 3.00, SMOS L12 3.22, MCD 11.41, F0-RMSE 80.28; unconditional MOS 3.11 SMOS 2.65; vocoder 1.5 weeks on V100; ASR baseline failed 6.9%",
+     "relevance": "Recipe could be retrained on VocalSound for a permissive laugh-only generator; no 2025-26 open laughter-only generator exists"
+    },
+    {
+     "claim": "NVSpeech / Emilia-NV provides 573 h of Mandarin with word-level [Laughter] and 17 other paralinguistic tags and CosyVoice2 fine-tunes reaching tag recall up to 61.9%, but the dataset is CC BY-NC-SA 4.0 and the human-annotated 48k subset is private; NonverbalTTS (17 h English, VoxCeleb+Expresso, Apache-2.0) is the one permissive NV fine-tuning corpus found.",
+     "source_url": "https://arxiv.org/html/2508.04195v1",
+     "source_title": "NVSpeech: An Integrated and Scalable Pipeline for Human-Like Speech Modeling with Paralinguistic Vocalizations (+ HF amphion/Emilia-NV, deepvk/NonverbalTTS)",
+     "year": "2025",
+     "kind": "dataset",
+     "load_bearing": false,
+     "numbers": "48,430 human-annotated utterances (76 h) + 174,179 auto-labeled (573 h); 18 categories; SenseVoice CER 4.61% F1 0.83; TTS win rates 78.7%/75.4%, NMOS 3.9-4.0, tag recall up to 61.9%; Emilia-NV cc-by-nc-sa-4.0; NonverbalTTS apache-2.0, 17 h, 6,260 rows, 10 NV types, 8 emotions",
+     "relevance": "Defines the fine-tuning route if stock tags are insufficient; license split decides which corpus Parcel may use"
+    },
+    {
+     "claim": "Preference optimization on CosyVoice2-0.5B with an NV-aware CER cut single-tag NV-CER from 3.62 to 2.59 and won 55.5% vs 44.5% human preference on NV accuracy, showing DPO on a 0.5B TTS is the cheap lever for tag fidelity (no code/weights released).",
+     "source_url": "https://arxiv.org/html/2608.24163",
+     "source_title": "Preference Optimization for Non-Verbal Vocalization Synthesis",
+     "year": "2026",
+     "kind": "paper",
+     "load_bearing": false,
+     "numbers": "Emilia-NV 573.4 h, 18 tags; SFT NV-CER 3.62 -> DPO 2.59; preference 55.5/44.5 (NV acc), 57.2/42.8 (lexical acc); no per-type laughter split",
+     "relevance": "Same RL lever Parcel plans for the behavior model can fix laughter rendering on the on-robot 0.5B TTS"
+    },
+    {
+     "claim": "Bark (MIT) is the only other permissive model with both Korean and a [laughter] tag, but it needs ~12 GB VRAM, is only 'roughly real-time' on enterprise GPUs, and scores NVBench WER 14.73 with coverage 0.11.",
+     "source_url": "https://github.com/suno-ai/bark",
+     "source_title": "suno-ai/bark",
+     "year": "2023",
+     "kind": "model",
+     "load_bearing": false,
+     "numbers": "MIT; 13 languages incl. Korean; tags [laughter] [laughs] [sighs] [music] [gasps] [clears throat]; 12 GB VRAM (8 GB small models); NVBench F1 0.654, WER 14.73, cov 0.11",
+     "relevance": "Fallback Korean owner-laugh generator for the simulator only"
+    },
+    {
+     "claim": "Higgs Audio v2 ships under the Boson Higgs Audio 2 Community License (commercial allowed, but >100,000 annual active users need an expanded license, mandatory attribution and 'Higgs Audio 2' naming, no using outputs to improve other LLMs) and is the weakest open tag system (NVBench F1 0.382); Fish/OpenAudio S1-mini is CC-BY-NC-SA-4.0 and the S2 repo is under a Fish Audio Research License, so both are excluded for a product.",
+     "source_url": "https://huggingface.co/bosonai/higgs-audio-v2-generation-3B-base/raw/main/LICENSE",
+     "source_title": "Boson Higgs Audio 2 Community License Agreement (+ fishaudio/openaudio-s1-mini card, fish-speech GitHub)",
+     "year": "2025",
+     "kind": "license",
+     "load_bearing": false,
+     "numbers": "Higgs: 3.6B LLM + 2.2B DualFFN, 10M h, 24 GB GPU, EmergentTTS Emotions 75.71%, Seed-TTS WER 2.44 SIM 67.70, 100k AAU cap; Fish S1-mini 0.5B CC-BY-NC-SA-4.0, 13 langs incl. ko, tags (laughing) (chuckling); S2-Pro 4B+400M, H200 RTF 0.195, TTFA ~100 ms",
+     "relevance": "License triage: rules out the two most Korean-capable expressive models"
+    },
+    {
+     "claim": "Real-time SNAC-token TTS needs ~83-91 tok/s, while NVIDIA's own MLC int4 Jetson numbers are 47 tok/s for Llama2-7B on AGX Orin (user repro ~19 on the 32 GB unit) and 43 tok/s for Llama-3.2-3B on Orin Nano Super, so a 3B Orpheus/Maya1 on AGX Orin is unmeasured and at best marginal; Maya1 (Apache-2.0, 3B, <laugh> <giggle> <chuckle>, English) needs 16 GB+ VRAM.",
+     "source_url": "https://github.com/dusty-nv/jetson-containers/issues/532",
+     "source_title": "jetson-containers issue #532 (Jetson AI Lab MLC benchmarks) + Baseten/Simplismart Orpheus pages + maya-research/maya1 card",
+     "year": "2024",
+     "kind": "benchmark",
+     "load_bearing": false,
+     "numbers": "Orpheus real-time bar ~83 tok/s (Baseten) / ~91 tok/s (Simplismart), H100 TTFB ~130 ms; AGX Orin published Llama2-7B 47 tok/s, Gemma 75; user 32 GB ~19/~23; Orin Nano Super Llama 3.2 3B 27.7->43.07 tok/s; Maya1 3B Apache 2.0, 16 GB+ VRAM, vLLM sub-100 ms, English only",
+     "relevance": "Justifies the two-tier plan: 3B tag-TTS on the desktop, sub-1B or pre-rendered clips on the robot"
+    }
+   ],
+   "design_implications": [
+    "Two-tier synthesis: generate the dog's chuckle bank and simulated owner laughs offline on the RTX 5000 Ada with Orpheus TTS (Apache-2.0, NVBench F1 0.728); on the Orin play pre-rendered clips, or if live TTS is required use Fun-CosyVoice3-0.5B (Apache-2.0, [laughter], 150 ms) or Chatterbox-Turbo (MIT, [laugh]); do not plan on a 3B SNAC-TTS running in real time on AGX Orin (needs 83-91 tok/s, NVIDIA's 7B int4 number is 47 tok/s).",
+    "Never trust a laughter tag: best open PCER is 46-72% (NV-Bench). Gate every synthesized laugh with the laughter detector (optionally NVMOS) before it enters the vocalization bank, and define the simulated-owner reward on detector output rather than on the tag so sim and real reward channels agree.",
+    "Korean owner audio for the simulator: Fun-CosyVoice3-0.5B is the only Apache-2.0 Korean + [laughter] model; test Orpheus 3b-ko-ft-research_release (Apache-2.0, tags undocumented); Bark (MIT) is the fallback; Fish/OpenAudio, Breeze-TTS-2, IndexTTS and Higgs TTS 3 are excluded by license, Higgs Audio v2 only under its 100k-AAU community license.",
+    "Retrain the owner-laughter detector with the Omine recipe (MIT code) on VocalSound (CC BY-SA 4.0, 3,504 laughs) + AudioSet Laughter (CC BY 4.0, 5,696 clips): ~75 min on one GPU, expected detection F1 0.78-0.94 and onset MAE 0.31-1.09 s; use the retrained weights, not Omine's research-only release. Onset accuracy is the metric that matters for the 'chuckle if funny' timing reward.",
+    "If stock tags are insufficient, fine-tune/DPO the 0.5B on-robot TTS: NonverbalTTS (Apache-2.0, 17 h English) is the only permissive NV corpus; Emilia-NV (573 h Mandarin) is CC BY-NC-SA; the Aug-2026 DPO result (NV-CER 3.62 -> 2.59 on CosyVoice2-0.5B) shows the lever works at that size.",
+    "A laugh-only generator is optional: the 2023 pseudo-phonetic-token pipeline (MIT code) retrained on VocalSound would give a permissive non-speech dog vocalization (MOS ~3/5 by analogy); no 2025-26 open laughter-only generator exists, so Orpheus <laugh>/<chuckle> clips post-filtered by the detector are the default.",
+    "Open items to close with a quick test rather than more reading: whether Orpheus Korean checkpoints honour <laugh>; actual tok/s of a 3B SNAC-TTS on AGX Orin 64 GB; KsponSpeech/AI Hub license text for Korean in-context laughter."
+   ],
+   "notes_path": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260828/literature/notes/gap-laughter-tts-and-owner-audio-sim.md",
+   "key": "laughter-tts-and-owner-audio-sim",
+   "verification": {
+    "results": [
+     {
+      "claim": "Orpheus TTS (Apache-2.0, Llama-3B backbone, tags <laugh> <chuckle> <sigh> <cough> <sniffle> <groan> <yawn> <gasp>) is the best open tag-based laughter TTS in the only head-to-head benchmark: NVBench NVV F1 0.728 vs CosyVoice 2 0.463, Dia 0.632, Bark 0.654, Fish-Speech 0.432, Higgs-Audio 0.382; subjective NVV accuracy 3.71/5.",
+      "source_url": "https://arxiv.org/html/2604.16211v2",
+      "verdict": "PARTIALLY_SUPPORTED",
+      "evidence_quote": "Table 3 (EN): \"Orpheus TTS | EN | 4.98 \u00b10.34 | \u2026 | 0.18 | 0.687 \u00b10.026 | 0.774 \u00b10.034 | 0.728 \u00b10.029\"; CosyVoice 2 F1 0.463\u00b10.024; Dia 0.632\u00b10.008; Bark 0.654\u00b10.041; Fish-Speech 0.432\u00b10.024; Higgs-Audio 0.382\u00b10.050; ChatTTS 0.664\u00b10.167; ElevenLabs 0.720\u00b10.024. Table 4: Orpheus EN NVV Accuracy 3.71\u00b12.46. Text: \"In EN, strong correctness is not concentrated in a single system. Orpheus TTS delivers the strongest correctness profile, achieving the best precision and F1 together with competitive recall and low NTD.\" But: \"ElevenLabs ranks best overall across languages in subjective listening tests\u2026 together with the strongest NVV perceptual effect, correctness, and overall expressiveness.\" and \"Orpheus and CosyVoice2 sit in the mid-coverage tier with uneven per-type distinctiveness.\" Title is \"NVBench: A Benchmark for Speech Synthesis with Non-Verbal Vocalizations\" (\"NVV-SuperBench\" does not appear). Orpheus GitHub README: \"Apache-2.0 license\"; \"built on the Llama-3b backbone\"; tags \"<laugh>, <chuckle>, <sigh>, <cough>, <sniffle>, <groan>, <yawn>, <gasp>\"; \"trained on 100k+ hours of English speech data\"; \"~200ms streaming latency\".",
+      "correction": "All numbers check out, and Orpheus has the best EN precision/F1 among all eight tag-based systems (including commercial ElevenLabs, 0.720). Three details are off: (1) it is NOT the only head-to-head benchmark \u2014 NV-Bench (arXiv 2603.15352) also compares Orpheus head-to-head and ranks it last on paralinguistic CER (71.92%); (2) the 0.728 F1 is aggregated over NVBench's 45-type NVV taxonomy in English, not a laughter-specific score (in ZH ChatTTS 0.703 beats Orpheus 0.625, and the paper notes ChatTTS's ZH lead is inflated by laugh dominance); (3) subjectively ElevenLabs, not Orpheus, ranks best overall. The Apache-2.0 / Llama-3B / tag list facts come from the Orpheus GitHub README, not from the paper, and the paper's name is NVBench (no 'NVV-SuperBench')."
+     },
+     {
+      "claim": "Even the best open models misrender non-verbal tags most of the time: NV-Bench paralinguistic CER on English is 71.92% for Orpheus-TTS and 62.75% for CosyVoice3; a laughter-specialised fine-tune (NV-CV3) still gets 46.13% overall and 27.69% on Mandarin laughter (CosyVoice3 57.69%). Synthesized laughs must be verified by a detector rather than trusted from the tag.",
+      "source_url": "https://arxiv.org/html/2603.15352",
+      "verdict": "PARTIALLY_SUPPORTED",
+      "evidence_quote": "Table 4 \"Detailed performance on each subsets of NV-Bench\", English single-label PCER: Orpheus-TTS 71.92, CosyVoice3 62.75, Emilia-NV-CV2 55.30, SMIIP-NV-CV2 56.80, NV-FlexiVoice 50.43, NV-CV3 46.13. Mandarin single-label PCER: SMIIP-NV-CV2 75.64, Emilia-NV-CV2 40.00, CosyVoice3 57.69, NV-FlexiVoice 31.08, NV-CV3 27.69. Text: \"NV-CV3 achieves the lowest PCER (27.69%) and OCER (4.90%) on the Mandarin single-label subset\". \"Single-label Subset: A strictly balanced testset where each utterance contains exactly one NV event (50 samples per category, 650 Mandarin and 350 English utterances in total)\". \"NV-CV3: We finetune CV3 on a consolidated corpus comprising Emilia-NV, SMIIP-NV, NVTTS, Disfluency, and NVS.\" \"This process yields a dataset of 1,651 prompt and GT pairs (7.9 hours)\"; \"14 NV types\"; \"License: CC BY-NC-SA 4.0\". No per-type (laughter) results table exists in the HTML paper.",
+      "correction": "The English PCER numbers (Orpheus 71.92%, CosyVoice3 62.75%, NV-CV3 46.13%) are correct, but 46.13% is the English single-label figure, not an 'overall' one. The 27.69% / 40.00% / 57.69% values are PCER on the entire Mandarin single-label subset (all Mandarin NV categories, 50 utterances each), NOT a Mandarin-laughter score \u2014 the paper reports no per-type laughter numbers. NV-CV3 is not laughter-specialised: it is CosyVoice3 fine-tuned on a consolidated general nonverbal corpus (Emilia-NV, SMIIP-NV, NVTTS, Disfluency, NVS). The 'verify with a detector' recommendation is the author's own inference; the paper does not make it."
+     },
+     {
+      "claim": "Fun-CosyVoice3-0.5B-2512 is the only Apache-2.0 model that combines Korean, an explicit [laughter]/[breath] tag, and sub-1B size with 150 ms bi-streaming latency; the CosyVoice 3 paper documents the tags but provides no evaluation of them.",
+      "source_url": "https://huggingface.co/FunAudioLLM/Fun-CosyVoice3-0.5B-2512",
+      "verdict": "PARTIALLY_SUPPORTED",
+      "evidence_quote": "Model card: license \"apache-2.0\"; 0.5B; 9 languages \"Chinese, English, Japanese, Korean, German, Spanish, French, Italian, Russian\" plus 18 Chinese dialects/accents; table \"Fun-CosyVoice3-0.5B-2512 | test-zh CER 1.21 / SS 78.0 | test-en WER 2.24 / SS 71.8\", \"_RL | 0.81 / 77.4 | 1.68 / 69.5\"; code example uses \"[breath]\" with \"for supported control, check cosyvoice/tokenizer/tokenizer.py#L280\". tokenizer.py special tokens: \"'[breath]', '<strong>', '</strong>', '[noise]', '[laughter]', '[cough]', \u2026 '<laughter>', '</laughter>', '[sigh]' \u2026\". GitHub README: \"achieves latency as low as 150ms while maintaining high-quality audio output\"; \"Using TensorRT-LLM to accelerate cosyvoice2 llm could give 4x acceleration comparing with huggingface transformers implementation.\" Paper (2505.17589): \"markers such as '[laughter]' and '[breath]' in the input text can be used to generate a noticeable laughter and breath, respectively\"; \"training data of CosyVoice 3 reaches one million hours\"; \"the text-to-speech LM is increased from 0.5B to 1.5B parameters\"; no metric or listening test for the tags; \"For Korean, the CER is approximately 6%, mainly due to the limited volume and quality of available data.\"",
+      "correction": "The model-card facts (Apache-2.0, 0.5B, Korean among 9 languages, WER/CER/SS numbers, [breath]/[laughter] control tokens via tokenizer.py), the README's 150 ms bi-streaming figure, and the statement that the CosyVoice 3 paper documents '[laughter]'/'[breath]' without evaluating them are all confirmed. Two corrections: the 'only Apache-2.0 model that combines\u2026' uniqueness claim is not made by any source and was not verified (no source surveys competitors); and the TensorRT-LLM '4x' is stated in the README for the CosyVoice 2 LLM, not for CosyVoice 3. Also note the paper's caveat that Korean CER is ~6% due to limited Korean data \u2014 material for a Korean-owner use case."
+     },
+     {
+      "claim": "A fully permissive detector-augmentation path exists: VocalSound is CC BY-SA 4.0 with 3,504 laughter clips (21,024 total, 3,365 speakers), and adding it to FSD50K raised laughter F1 0.45->0.59 (+29.7%) and overall mAP +41.9%.",
+      "source_url": "https://github.com/YuanGongND/vocalsound",
+      "verdict": "SUPPORTED",
+      "evidence_quote": "GitHub README: \"Creative Commons Attribution-ShareAlike 4.0 International License\"; \"21,024 crowdsourced recordings\" from \"3,365 unique subjects\"; \"16kHz Version (1.7 GB)\"; baseline accuracy \"90.5\". Paper (arXiv 2205.03433) Table 1: \"Laughter \u2026 VocalSound 3,504\" (each of six classes 3,504; \"Vocal Sound Total \u2026 21,024\"). \"collected from 3,365 speakers from 60 countries, with their ages ranging from 18 to 80\"; \"45% are female, 55% are male\"; \"The mean, median, and standard deviation of the audio length is 4.18s, 3.72s, and 1.81s, respectively. The audios are recorded at 44.1kHz\"; split \"15570 (74%), 1860 (9%), and 3594 (17%)\"; \"90.5\u00b10.2%\". Table 3 (FSD50K eval): Laughter F1 0.45 -> 0.59 (Improvement 29.7%), AP 0.46 -> 0.54 (18.1%); Vocal Classes Overall Avg. F1 31.8%, mAP 0.41 -> 0.59 (41.9%); text: \"a relative f1-score improvement of 31.8% and an average precision improvement of 41.9%\". Caveat: \"the audio samples are not produced spontaneously but acted by the subjects\".",
+      "correction": "No correction needed. Minor precision: the +41.9% is the relative mAP gain over the four FSD50K vocal classes (laughter, sigh, cough, sneeze) in the 4+1-class setup, and the license appears in the GitHub README while the counts/metrics come from the arXiv paper."
+     }
+    ]
+   }
+  },
+  {
+   "topic": "Duplex speech-model licenses (Moshi / PersonaPlex / rl-seamless cards) and open full-duplex or streaming speech-to-speech models under 4B parameters (2025-2026), incl. Korean coverage",
+   "findings": [
+    {
+     "claim": "The Moshi base checkpoints are CC-BY-4.0 with no non-commercial clause, in every precision (bf16, q8, and mlx q4), so they are the only fully unrestricted native full-duplex weights in the family.",
+     "source_url": "https://huggingface.co/api/models/kyutai/moshiko-pytorch-bf16",
+     "source_title": "kyutai/moshiko-pytorch-bf16 (HF API metadata) and kyutai/moshika-pytorch-q8",
+     "year": "2024",
+     "kind": "model card / license",
+     "load_bearing": true,
+     "numbers": "cardData.license = cc-by-4.0 (both moshiko-pytorch-bf16 and moshika-pytorch-q8); safetensors 7,687,729,152 params; gated=false; latency 160 ms theoretical / 200 ms practical; 12 Hz, 1.1 kbps; English only; org listing also has moshiko/moshika-candle-q8 and -mlx-q4/q8 under the same license",
+     "relevance": "Design A (Moshi + action stream) can ship commercially only if it starts from these weights; int8/int4 variants exist for the Orin benchmark."
+    },
+    {
+     "claim": "Both 2026 RL-aligned Kyutai checkpoints are non-commercial: moshika-rl-seamless is cc-by-nc-4.0 and personaplex-rl-seamless is 'a combination of CC BY-NC 4.0 and the NVIDIA Open Model License', because both were post-trained on the CC-BY-NC Seamless Interaction dataset.",
+     "source_url": "https://huggingface.co/api/models/kyutai/personaplex-rl-seamless",
+     "source_title": "kyutai/personaplex-rl-seamless and kyutai/moshika-rl-seamless (HF API metadata); facebook/seamless-interaction dataset card",
+     "year": "2026",
+     "kind": "model card / license",
+     "load_bearing": true,
+     "numbers": "moshika-rl-seamless: license tag cc-by-nc-4.0, base kyutai/moshika-pytorch-bf16, 7,687,729,152 params; personaplex-rl-seamless: license=other, gated prompt 'CC BY-NC 4.0 and the NVIDIA Open Model License', base nvidia/personaplex-7b-v1, 8,371,408,896 params; both gated=auto, created 2026-06-02, dataset facebook/seamless-interaction (cc-by-nc-4.0, >4,000 h, >4,000 participants); RL = GRPO with axis-specific rewards + LLM-judge on pause handling, turn-taking, backchanneling, interruption",
+     "relevance": "The interactivity gains of the RL checkpoints cannot be used in a product; Parcel must re-run the GRPO recipe on permitted data if it wants them."
+    },
+    {
+     "claim": "nvidia/personaplex-7b-v1 is released under the NVIDIA Open Model License (license_name nvidia-open-model-license) plus CC-BY-4.0 attribution for the Moshi base; the NVIDIA license grants commercial use and derivative models but is revocable and terminates on guardrail bypass or patent/copyright litigation.",
+     "source_url": "https://www.nvidia.com/en-us/agreements/enterprise-software/nvidia-open-model-license/",
+     "source_title": "NVIDIA Open Model License Agreement (Last Modified Oct 24, 2025) and nvidia/personaplex-7b-v1 model card",
+     "year": "2026",
+     "kind": "license text / model card",
+     "load_bearing": true,
+     "numbers": "personaplex-7b-v1: 8,371,408,896 params BF16, base kyutai/moshiko-pytorch-bf16, created 2025-12-31, released 2026-01-15, English only, FullDuplexBench turn-taking 0.170 s, interruption 0.240 s, SSIM 0.650, tested A100 80 GB, Fisher Parts 1&2 <10,000 h, 7,303 conversations; license grant 'perpetual, worldwide, non-exclusive, no-charge, royalty-free, revocable', must ship notice 'Licensed by NVIDIA Corporation under the NVIDIA Open Model License'",
+     "relevance": "PersonaPlex (text persona + voice prompt) is usable in a shipped Parcel as long as Parcel's own safety layer is not construed as bypassing NVIDIA guardrails and the notice is kept."
+    },
+    {
+     "claim": "As of August 2026 Kyutai publishes no Moshi/Moshika/Moshiko dialogue checkpoint smaller than 7B; the sub-7B repos are Hibiki-1B (1.7B, CC-BY-4.0, fr->en translation only), Hibiki-Zero-3B (CC BY-NC-SA 4.0, translation only), STT 1B/2.6B, TTS 0.75B/1.6B and pocket-tts (100M, TTS only). 'Pocket' is not a duplex model.",
+     "source_url": "https://huggingface.co/api/models?author=kyutai&limit=100",
+     "source_title": "Kyutai Hugging Face organization listing (69 repos); kyutai/pocket-tts; kyutai/hibiki-1b-pytorch-bf16; kyutai/hibiki-zero-3b-pytorch-bf16",
+     "year": "2026",
+     "kind": "model listing / model cards",
+     "load_bearing": true,
+     "numbers": "69 repos; hibiki-1b: 1.7B, cc-by-4.0, 12.5 Hz, 1.1 kbps, fr->en only; hibiki-zero-3b: 3B, CC BY-NC-SA 4.0, 12.5 Hz, 2.2 kbps, fr/es/pt/de -> en, released 2026-02-11 (arXiv 2602.11072); pocket-tts: 100M, cc-by-4.0, ~200 ms to first audio, ~6x real-time on M4 CPU, English only on card",
+     "relevance": "A 1-3B dog-brain must be trained by Parcel; Hibiki proves the Moshi multistream decoder fits at 1.7-3B but gives no dialogue weights."
+    },
+    {
+     "claim": "LFM2-Audio-1.5B is the strongest permissively licensed small real-time speech-to-speech model: 1.5B params, interleaved audio/text generation, under 100 ms end-to-end first-audio latency, but it is turn-based and English-only; the LFM Open License v1.0 allows commercial use below US$10M annual revenue.",
+     "source_url": "https://www.liquid.ai/blog/lfm2-audio-an-end-to-end-audio-foundation-model",
+     "source_title": "Liquid AI blog 'LFM2-Audio: An End-to-End Audio Foundation Model'; LiquidAI/LFM2-Audio-1.5B and LFM2.5-Audio-1.5B model cards; LFM Open License v1.0",
+     "year": "2025",
+     "kind": "blog + model card + license",
+     "load_bearing": true,
+     "numbers": "1.2B LM + 115M FastConformer encoder = 1.5B; Mimi-compatible 8-codebook decoder; up to 8 audio tokens per step; 'average end-to-end latency of under 100 ms' (4-s input to first audible output); VoiceBench 56.78 vs Moshi 7B 29.51, Qwen2.5-Omni-3B 63.57, Mini-Omni2 (0.6B) 33.49; ASR WER 7.24 vs Whisper-large-v3 7.93; LFM2.5-Audio-1.5B (2025-11-28) VoiceBench 54.92, WER 7.53; license revenue cap $10,000,000, non-profits exempt, irrevocable; English only (separate JP variant)",
+     "relevance": "Best off-the-shelf small fallback for Orin if 7B Moshi does not fit; needs an external always-on listener to fake duplex behaviours."
+    },
+    {
+     "claim": "SALM-Duplex (NVIDIA) is the only published sub-4B native full-duplex speech-to-speech recipe (TinyLlama-1.1B + 100M streaming encoder, 12.5 Hz NanoCodec), with code in NeMo but no released checkpoint.",
+     "source_url": "https://arxiv.org/html/2505.15670",
+     "source_title": "SALM-Duplex: Efficient and Direct Duplex Modeling for Speech-to-Speech Language Model (Interspeech 2025); NeMo issue #14936",
+     "year": "2025",
+     "kind": "paper + GitHub issue",
+     "load_bearing": false,
+     "numbers": "TinyLlama-1.1B-chat backbone; 100M CTC streaming encoder, 80 ms right context; NanoCodec 0.6 kbps, 4 codebooks, 12.5 Hz; barge-in latency 0.69 s; first response 0.52-0.72 s; barge-in success 94.5% vs Moshi 55.1%; UTMOS 4.3 vs 3.9; ~30.2k h training; 32xA100-80G; issue #14936 (2025-10-15) requesting pretrained weights has no response",
+     "relevance": "Shows a 1.1B native-duplex model is trainable with channel fusion; Parcel would have to train it (weeks, desktop GPU) rather than download it."
+    },
+    {
+     "claim": "No open full-duplex model speaks Korean: KRAFTON's Raon-SpeechChat-9B is full-duplex only in English and is CC BY-NC; the Korean-capable base Raon-Speech-9B is turn-based and CC BY-NC-SA 4.0.",
+     "source_url": "https://huggingface.co/KRAFTON/Raon-SpeechChat-9B",
+     "source_title": "KRAFTON/Raon-SpeechChat-9B model card; Raon-Speech Technical Report (arXiv 2605.23912)",
+     "year": "2026",
+     "kind": "model card + technical report",
+     "load_bearing": true,
+     "numbers": "9B (HF shows 10B) on Qwen3-VL-8B-Instruct; Voxtral-Mini encoder, Mimi codec; special tokens SIL/BOW/BC; 1.38M h en+ko training, 119K h time-aligned dialogue; Full-Duplex-Bench v1.0 interruption latency 1.219 s, pause takeover rate 0.212; KVoiceBench 66.62; VoiceBench 76.79; LibriSpeech WER 1.44; 16 GB+ VRAM; card license 'Creative Commons Attribution-NonCommercial 4.0 International'; duplex mode 'real-time, simultaneous listen-and-speak conversation in English'",
+     "relevance": "Korean duplex has to be built by Parcel; Raon's Korean benchmarks (KVoiceBench, KOpenAudioBench) are the ready-made evaluation set."
+    },
+    {
+     "claim": "The only Apache-2.0 model with Korean speech input and output is Qwen3-Omni-30B-A3B (35B total, 3B active, turn-based streaming), far above the Orin budget; Qwen2.5-Omni-3B is turn-based and under the non-commercial Qwen Research License.",
+     "source_url": "https://huggingface.co/Qwen/Qwen3-Omni-30B-A3B-Instruct",
+     "source_title": "Qwen/Qwen3-Omni-30B-A3B-Instruct model card; Qwen/Qwen2.5-Omni-3B card and Qwen RESEARCH LICENSE AGREEMENT",
+     "year": "2025",
+     "kind": "model card + license",
+     "load_bearing": false,
+     "numbers": "Qwen3-Omni: apache-2.0, 35B total / 3B active, speech input 19 languages incl. Korean, speech output 10 incl. Korean, VRAM bf16+FA2 78.85 GB @15 s video to 144.81 GB @120 s; Qwen2.5-Omni-3B: license qwen-research ('FOR NON-COMMERCIAL PURPOSES ONLY', 'If you are commercially using the Materials, you shall request a license from us'), HF 6B params, VRAM 18.38 GB @15 s video, 'Built with Qwen' notice required",
+     "relevance": "Rules out Qwen2.5-Omni-3B for a product and Qwen3-Omni for the board; Korean voice must come from a side-car or own training."
+    },
+    {
+     "claim": "HyperCLOVAX-SEED-Omni-8B (NAVER) provides Korean ASR/TTS/speech-to-speech translation under a custom license that allows commercial use below 10M MAU, but has no streaming-dialogue or full-duplex mode and needs ~48 GB across 3 GPUs.",
+     "source_url": "https://huggingface.co/naver-hyperclovax/HyperCLOVAX-SEED-Omni-8B/raw/main/LICENSE",
+     "source_title": "HyperCLOVA X SEED 8B Omni Model License Agreement; model card; HyperCLOVA X 8B Omni technical report (arXiv 2601.01792)",
+     "year": "2026",
+     "kind": "license text + model card + paper",
+     "load_bearing": false,
+     "numbers": "8B; Korean ASR WER KsponSpeech-c 28.74, KsponSpeech-o 33.09, Fleurs-ko 15.33; S2ST ASR-BLEU 22.91 ko->en / 24.70 en->ko; TTS MOS 3.94 en / 4.22 ko; ~48 GB (vision enc ~8, LLM ~16, vision dec ~16, audio ~4); license: separate license needed above 10 million MAU or if competing with NAVER; derivative names must start with 'HyperCLOVA X'; 'Powered by HyperCLOVA X' notice; Kakao Kanana-1.5-o-9.8B is API-only (kanana-license, 11.6B, ko/en)",
+     "relevance": "A candidate Korean TTS/ASR side-car for a cascaded dog voice, not a duplex brain."
+    },
+    {
+     "claim": "The small open turn-based S2S models of 2024-2025 (Mini-Omni 0.5B MIT, Mini-Omni2 MIT with command-based interruption, SLAM-Omni 0.5B MIT code, VocalNet-1B Apache-2.0) are all half-duplex/turn-based, English/Chinese only, and report no latency numbers; LLaMA-Omni2-0.5B/1.5B weights are academic-only.",
+     "source_url": "https://huggingface.co/ICTNLP/LLaMA-Omni2-0.5B",
+     "source_title": "ICTNLP/LLaMA-Omni2-0.5B card; gpt-omni/mini-omni and mini-omni2 cards; SLAM-LLM examples/s2s; SJTU-OmniAgent/VocalNet",
+     "year": "2025",
+     "kind": "model cards / repos",
+     "load_bearing": false,
+     "numbers": "LLaMA-Omni2-0.5B: 'The model may not be used for any commercial purposes', 2B total (Qwen2.5-0.5B + Whisper-large-v3 + CosyVoice 2), sizes 0.5B-14B, 200K dialogues; Mini-Omni: mit, Qwen2-0.5B, 'talking while thinking'; Mini-Omni2: mit, 'command-based interruption mechanism', English output only; SLAM-Omni: code MIT, Chinese model GPL-3.0 research-only, 15 h on 4 GPUs, Google Drive weights; VocalNet-1B: Apache-2.0, LLaMA-3.2-1B-Instruct, CosyVoice2-synthesized data, en/zh",
+     "relevance": "None of these gives the always-listening behaviour Parcel needs; they are at best data-pipeline references."
+    },
+    {
+     "claim": "MiniMind-O (May 2026) shows a 0.1B/0.3B speech-native omni model on the Mimi codec (8 codebooks, 12.5 Hz) can be trained in about 2 hours on one RTX 3090 (mini dataset), but it is turn-based with VAD barge-in, not full-duplex.",
+     "source_url": "https://github.com/jingyaogong/minimind-o",
+     "source_title": "MiniMind-O repository and technical report (arXiv 2605.03937)",
+     "year": "2026",
+     "kind": "repo + paper",
+     "load_bearing": false,
+     "numbers": "minimind-3o ~0.1B (113.13M trainable), minimind-3o-moe ~0.3B (314.89M); Apache-2.0 repo, CC BY 4.0 paper; Mimi 8 codebooks, 12.5 Hz, 24 kHz; data 45.7% zh / 46.5% en (T2A); ~2 h on one RTX 3090 for the mini set; released 2026-05-05",
+     "relevance": "Cheapest existence proof that a Mimi-codec speech LM trains on the desktop; a Parcel-trained 1-2B duplex model is compute-feasible."
+    },
+    {
+     "claim": "The 2026 native full-duplex releases larger than 4B split by license: Lychee-FD (13B, Apache-2.0) and MiniCPM-o 4.5 (9B, Apache-2.0, en/zh only, no smaller variant) are permissive, while Tencent Covo-Audio-Chat-FD (7B) is academic-only and forbids 'any commercial or production purposes'.",
+     "source_url": "https://raw.githubusercontent.com/Tencent/Covo-Audio/main/LICENSE",
+     "source_title": "Covo-Audio license; HIT-TMG/Lychee-FD card and repo; openbmb/MiniCPM-o-4_5 card",
+     "year": "2026",
+     "kind": "license text + model cards",
+     "load_bearing": false,
+     "numbers": "Covo-Audio: 7B, 'use the Covo-Audio only for academic purposes'; Lychee-FD: apache-2.0, 13B params on HF, three decoupled streams, +28.5% FullDuplexBench 1.5, 2.96x speaking-round speedup, released 2026-07-10; MiniCPM-o 4.5: apache-2.0, 9B, TDM full-duplex, TTFT 0.6 s, 19.0 GB bf16 / 11.0 GB int4, 'English and Chinese' only",
+     "relevance": "Confirms every permissive native-duplex model is 7B+; Design A's Orin benchmark of Moshi q8 remains the gate."
+    },
+    {
+     "claim": "GLM-4-Voice-9B allows commercial use only after registration and with 'Built with glm-4' branding; Step-Audio-2-mini (8B, Apache 2.0, zh/en/ja/ar) and OpenS2S (Qwen3-8B, Apache 2.0) are permissive but 8B+ and turn-based; VITA-Audio ships only 7B checkpoints (first audio chunk 53 ms).",
+     "source_url": "https://huggingface.co/THUDM/glm-4-voice-9b/raw/main/LICENSE",
+     "source_title": "The glm-4-voice License; stepfun-ai/Step-Audio-2-mini card; CASIA-LM/OpenS2S repo/card; VITA-MLLM/VITA-Audio repo",
+     "year": "2025",
+     "kind": "license text + model cards",
+     "load_bearing": false,
+     "numbers": "GLM-4-Voice: 9B, 'Registered users are free to use this model for commercial activities', derivative names prefixed 'glm-4', streaming after 10 speech tokens / 20 tokens end-to-end; Step-Audio-2-mini: 8B Apache 2.0; OpenS2S: apache-2.0, 11B params on HF, needs glm-4-voice-decoder; VITA-Audio: four 7B checkpoints on Qwen2.5-7B-Instruct, first audio chunk 236 ms -> 53 ms, 3-5x speedup, no sub-4B checkpoint",
+     "relevance": "Closes the list: none of the named candidates has a sub-4B release, and none covers Korean."
+    }
+   ],
+   "design_implications": [
+    "Build Design A only on CC-BY-4.0 Moshi weights (moshiko/moshika bf16, q8, mlx q4) or NVIDIA-OML PersonaPlex-7B-v1; never on moshika-rl-seamless or personaplex-rl-seamless (CC BY-NC 4.0 via the Seamless Interaction dataset). If the RL interactivity gains are wanted, re-run the GRPO recipe on Fisher/synthetic/own data.",
+    "There is no downloadable sub-4B native full-duplex dialogue model with a permissive license as of 2026-08-28 (Kyutai has none below 7B; SALM-Duplex 1.1B has no weights). A small on-board dog brain means training one: Moshi-architecture at 1-3B (Hibiki-1B/Zero-3B prove the decoder size) or SALM-Duplex in NeMo, on a Parcel-made time-aligned synthetic corpus.",
+    "If 7B Moshi q8 fails the Orin benchmark, the fallback is a cascaded 'micro-turn' design: LFM2-Audio-1.5B (turn-based, <100 ms first audio, LFM Open License below US$10M revenue) driven by an always-on listener (laughter detector, track-loss event) that interrupts it, in the DuplexCascade pattern.",
+    "Korean is not available in any open duplex model (Raon-SpeechChat duplex is English-only and NC; HyperCLOVAX-SEED-Omni-8B is ASR/TTS/S2ST only; Kanana-o is API-only; Qwen3-Omni-30B-A3B is Apache with Korean speech I/O but 35B/78 GB+). Plan for an English-speaking dog voice with a Korean ASR/TTS side-car, or budget for own Korean duplex training evaluated on KVoiceBench/KOpenAudioBench.",
+    "Every permissive native-duplex model is 7B-13B (Moshi, PersonaPlex, MiniCPM-o 4.5 TDM 9B, Lychee-FD 13B), so the Orin feasibility benchmark of Moshi q8 at 12.5 Hz remains the gating experiment before any architecture commitment.",
+    "NVIDIA OML is revocable and terminates on 'bypass ... any technical limitation, safety guardrail'; document that Parcel's motor safety layer sits outside the model so it cannot be read as a guardrail bypass, and ship the required NVIDIA notice if PersonaPlex is used."
+   ],
+   "notes_path": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260828/literature/notes/gap-duplex-model-licenses-and-small-duplex.md",
+   "key": "duplex-model-licenses-and-small-duplex",
+   "verification": {
+    "results": [
+     {
+      "claim": "The Moshi base checkpoints are CC-BY-4.0 with no non-commercial clause, in every precision (bf16, q8, and mlx q4), so they are the only fully unrestricted native full-duplex weights in the family.",
+      "source_url": "https://huggingface.co/api/models/kyutai/moshiko-pytorch-bf16",
+      "verdict": "PARTIALLY_SUPPORTED",
+      "evidence_quote": "HF API (pulled raw, 2026-08-28) for all 14 base repos \u2014 moshiko/moshika x pytorch-bf16, pytorch-q8, candle-bf16, candle-q8, mlx-bf16, mlx-q8, mlx-q4: cardData.license = \"cc-by-4.0\", tags contain \"license:cc-by-4.0\", gated = false; moshiko-pytorch-bf16 safetensors total 7687729152 (BF16), createdAt 2024-09-11. Model card: \"Moshi is the first real-time full-duplex spoken large language model, with a theoretical latency of 160ms, 200ms in practice.\" / \"audio tokens running at 12Hz and a bitrate of 1.1kbps\" / \"Language(s) (NLP): English\". CONTRADICTING the word 'only': kyutai/moshika-rag-pytorch-bf16 (created 2026-03-19, base kyutai/moshika-pytorch-bf16, 7,704,580,144 params) is also license \"cc-by-4.0\", gated false, and its card says \"MoshiRAG is a compact full-duplex speech language model augmented with asynchronous knowledge retrieval to improve factuality without sacrificing real-time interactivity.\" (its card adds a non-binding recommendation: \"This model is for research only and we do not recommend it for providing advices or to perform any professionnal duty.\"). kyutai/moshika-vis-* is also tagged cc-by-4.0 but its card says it is \"subject to the Gemma Terms of Use\".",
+      "correction": "Corrected statement: Every Moshi base checkpoint (moshiko and moshika; pytorch bf16/q8, candle bf16/q8, mlx bf16/q8/q4) is CC-BY-4.0, ungated, with no non-commercial clause; the pytorch-bf16 weights are 7,687,729,152 params; card latency 160 ms theoretical / 200 ms practical, Mimi at 12 Hz and 1.1 kbps, English only. They are NOT the only CC-BY-4.0 full-duplex weights in the family: MoshiRAG (kyutai/moshika-rag-pytorch-bf16 / -candle-bf16, March 2026) is also CC-BY-4.0 and full-duplex (with a research-only recommendation, not a license term), and MoshiVis is CC-BY-4.0 but additionally bound by Google's Gemma terms. The base Moshi weights are the only ones with no additional terms of any kind."
+     },
+     {
+      "claim": "Both 2026 RL-aligned Kyutai checkpoints are non-commercial: moshika-rl-seamless is cc-by-nc-4.0 and personaplex-rl-seamless is 'a combination of CC BY-NC 4.0 and the NVIDIA Open Model License', because both were post-trained on the CC-BY-NC Seamless Interaction dataset.",
+      "source_url": "https://huggingface.co/api/models/kyutai/personaplex-rl-seamless",
+      "verdict": "SUPPORTED",
+      "evidence_quote": "HF API kyutai/personaplex-rl-seamless: license \"other\", tags \"license:other\", gated \"auto\", extra_gated_prompt \"This model is licensed under a combination of CC BY-NC 4.0 and the NVIDIA Open Model License. By clicking \\\"Agree\\\", you accept the terms of this license.\", base_model [\"nvidia/personaplex-7b-v1\"], datasets [\"facebook/seamless-interaction\"], safetensors 8371408896 BF16, createdAt 2026-06-02T08:40:11Z, arxiv:2606.11167. HF API kyutai/moshika-rl-seamless: license \"cc-by-nc-4.0\", gated \"auto\", extra_gated_prompt \"This model is licensed under CC BY-NC 4.0...\", base_model [\"kyutai/moshika-pytorch-bf16\"], datasets [\"facebook/seamless-interaction\"], safetensors 7687729152 BF16, createdAt 2026-06-02T08:37:38Z. personaplex-rl-seamless card lineage table: \"Moshi | kyutai/moshiko-pytorch-bf16 | CC BY 4.0 / PersonaPlex | nvidia/personaplex-7b-v1 delta from Moshi | NVIDIA Open Model License / This model | kyutai/personaplex-rl-seamless delta from PersonaPlex | CC BY-NC 4.0\" and \"Users must comply with both the CC BY-NC 4.0 license and the NVIDIA Open Model License.\" Both cards: \"We construct RL training data from Seamless Interaction, a 4,000-hour two-party human conversation corpus\"; \"axis-specific rewards with GRPO and an LLM Judge reward to preserve response quality\"; \"four canonical axes of full-duplex interactivity: pause handling, turn-taking, backchanneling, and user interruption.\" HF API facebook/seamless-interaction: license \"cc-by-nc-4.0\"; card: \"over 4,000 hours of face-to-face interaction footage from more than 4,000 participants\". arXiv 2606.11167 (Ohashi, Zeghidour, D\u00e9fossez, Kharitonov, submitted 9 Jun 2026) abstract confirms the four axes, axis-specific rewards, LLM-based quality reward, applied to Moshi and PersonaPlex.",
+      "correction": "No correction to the facts. One precision note: neither model card states the *reason* for the CC BY-NC 4.0 term; the cards give the lineage table and identify Seamless Interaction (itself cc-by-nc-4.0) as the RL data source, so the 'because' is a well-grounded inference, not a quoted statement. Also note both repos are gated=auto (click-through), the dataset itself is not gated."
+     },
+     {
+      "claim": "nvidia/personaplex-7b-v1 is released under the NVIDIA Open Model License (license_name nvidia-open-model-license) plus CC-BY-4.0 attribution for the Moshi base; the NVIDIA license grants commercial use and derivative models but is revocable and terminates on guardrail bypass or patent/copyright litigation.",
+      "source_url": "https://www.nvidia.com/en-us/agreements/enterprise-software/nvidia-open-model-license/",
+      "verdict": "PARTIALLY_SUPPORTED",
+      "evidence_quote": "License page: \"Last Modified: October 24, 2025\"; \"Subject to the terms and conditions of this Agreement, NVIDIA hereby grants to You a perpetual, worldwide, non-exclusive, no-charge, royalty-free, revocable license to publicly perform, publicly display, reproduce, use, create derivative works of, make, have made, sell, offer for sale, distribute and import the Model.\"; \"Models are commercially usable. You are free to create and distribute Derivative Models.\"; \"If You institute copyright or patent litigation against any entity ... alleging that the Model or a Derivative Model constitutes direct or contributory copyright or patent infringement, then any licenses granted to You under this Agreement for that Model or Derivative Model will terminate as of the date such litigation is filed. If You bypass, disable, reduce the efficacy of, or circumvent any technical limitation, safety guardrail or associated safety guardrail hyperparameter, encryption, security, digital rights management, or authentication mechanism (collectively \\\"Guardrail\\\") contained in the Model without a substantially similar Guardrail appropriate for your use case, your rights under this Agreement will automatically terminate.\"; notice text \"Licensed by NVIDIA Corporation under the NVIDIA Open Model License\". HF API nvidia/personaplex-7b-v1: license \"other\", license_name \"nvidia-open-model-license\", license_link = the NVIDIA URL, extra_gated_prompt \"GOVERNING TERMS: Use of this model is governed by the [NVIDIA Open Model License Agreement](...). ADDITIONAL INFORMATION: [CC-BY-4.0](https://huggingface.co/kyutai/moshiko-pytorch-bf16).\", base_model [\"kyutai/moshiko-pytorch-bf16\"], safetensors 8371408896 BF16, createdAt 2025-12-31, gated \"auto\", language [\"en\"]. Card: \"Hugging Face [01/15/2026]\"; \"Number of model parameters: 7B\"; \"NVIDIA A100 80 GB\"; \"Fisher English: Part1, Part2\", \"Audio Training Data Size: Less than 10,000 Hours\", \"7303 conversations (upto 10 minutes each)\"; FullDuplexBench: Smooth Turn Taking Latency 0.170 s, User Interruption Latency 0.240 s, User Interruption SSIM (WavLM) 0.650 (also User Interruption Success Rate 0.950).",
+      "correction": "All license identifiers and card numbers check out. One qualifier is dropped from the claim: the guardrail clause terminates rights only if you bypass/disable a Guardrail \"without a substantially similar Guardrail appropriate for your use case\" \u2014 replacing NVIDIA's guardrail with an equivalent one is permitted. Corrected statement: '...terminates automatically on bypassing a Guardrail without substituting a substantially similar one, or on filing patent/copyright infringement litigation over the Model/Derivative Model.' Minor: the card states '7B' parameters while safetensors metadata reports 8,371,408,896."
+     },
+     {
+      "claim": "As of August 2026 Kyutai publishes no Moshi/Moshika/Moshiko dialogue checkpoint smaller than 7B; the sub-7B repos are Hibiki-1B (1.7B, CC-BY-4.0, fr->en translation only), Hibiki-Zero-3B (CC BY-NC-SA 4.0, translation only), STT 1B/2.6B, TTS 0.75B/1.6B and pocket-tts (100M, TTS only). 'Pocket' is not a duplex model.",
+      "source_url": "https://huggingface.co/api/models?author=kyutai&limit=100",
+      "verdict": "PARTIALLY_SUPPORTED",
+      "evidence_quote": "Raw API listing (2026-08-28) returned 69 repos, no pagination Link header. Every moshi* repo is >=7.69B: moshiko/moshika-*-bf16 7,687,729,152\u20137,687,815,168; moshika-vis-pytorch-bf16 8,722,476,784; moshika-rag-pytorch-bf16 7,704,580,144; moshika-rl-seamless 7,687,729,152; personaplex-rl-seamless 8,371,408,896 \u2014 no sub-7B Moshi dialogue checkpoint exists. hibiki-1b card: \"a 1.7B parameter hierarchical Transformer producing speech and text tokens at a framerate of 12.5Hz\", \"audio being generated at a 1.1kbps bitrate\", \"License: CC-BY\", French-to-English only. hibiki-zero-3b card: \"License: CC BY-NC-SA 4.0\", \"a 3B-parameter hierarchical Transformer\", 12.5Hz, 2.2kbps, fr/es/pt/de -> en, arXiv 2602.11072v1 (HF repo created 2026-02-09). pocket-tts: license cc-by-4.0, \"~200ms to get the first audio chunk\", \"~6x real-time on a CPU of MacBook Air M4\", 100M params, English only, TTS with voice cloning and no dialogue/duplex function (note: gated=auto with a prohibited-use click-through). stt-1b-en_fr 989,204,480 params; stt-2.6b-en 2,617,118,720. OMITTED from the claim's sub-7B list but present in the listing: kyutai/hibiki-2b-pytorch-bf16 / -mlx-bf16 / -rs-bf16 (card: 2.7B params, cc-by-4.0, 12.5Hz, 2.2kbps, French-to-English only), hibiki-1b-rs-q8/q6k, helium-1-2b family and helium-1-preview-2b (text LLMs), Helium1-VL-2B and CASA-*-VL-2B/3B (vision-language, no speech; CASA-Qwen2_5-VL-3B is CC-BY-NC-SA 4.0 + Qwen research license), Sequential_Helium_6B (6B text LM, CC-BY-SA-4.0, no speech), ovie (~143M novel-view-synthesis image model, MIT), ARC*_Encoder repos. None of these is a spoken-dialogue or duplex model.",
+      "correction": "Corrected statement: The Kyutai org lists 69 repos (confirmed); every Moshi-family dialogue checkpoint (moshiko/moshika base, MoshiVis, MoshiRAG, moshika-rl-seamless, personaplex-rl-seamless) is >=7.69B params, so no sub-7B Moshi dialogue weights exist. The sub-7B speech repos are Hibiki-1B (1.7B, CC-BY-4.0, fr->en), Hibiki-2B (2.7B, CC-BY-4.0, fr->en, 2.2 kbps) \u2014 omitted from the claim \u2014 Hibiki-Zero-3B (3B, CC BY-NC-SA 4.0, fr/es/pt/de->en), STT 1B (0.99B)/2.6B, TTS 0.75B/1.6B, and pocket-tts (100M, TTS only, CC-BY-4.0 but gated=auto with a prohibited-use prompt). Other sub-7B repos (Helium 2B text LLMs, Helium-VL/CASA 2B\u20133B VLMs, Sequential_Helium_6B, ovie, ARC encoders) are not speech-dialogue models. 'Pocket' is TTS only \u2014 correct."
+     }
+    ]
+   }
+  },
+  {
+   "topic": "XVF3800 audio front end reality (AEC reference path, ERLE, DoA, channel formats, reSpeaker firmware variants) and ego-noise on legged robots (levels, spectra, detection degradation, suppression)",
+   "notes_path": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260828/literature/notes/gap-xvf3800-aec-doa-ego-noise.md",
+   "findings": [
+    {
+     "claim": "The XVF3800 AEC reference is the far-end stream the host sends TO the device on the left (0) channel of the USB/I2S input; the device's own I2S-master DAC plays that same channel to the speaker. There is no external-reference mode: robot speech played through any other speaker (e.g. the Go2's built-in one) is not cancelled.",
+     "source_url": "https://www.xmos.com/documentation/XM-014888-PC/pdf/xvf3800_datasheet_v3.2.1.pdf",
+     "source_title": "XMOS XVF3800 Datasheet, release 3.2.1 (section 3.4.3 Reference Signal for AEC; Table 3.1 Pipeline parameters)",
+     "year": "2024",
+     "kind": "vendor-datasheet",
+     "load_bearing": true,
+     "numbers": "AEC: full duplex, mono; tail length 192 ms; reference channels 1 mono (output to DAC); reference bulk delay 0-500 ms (fixed); double-talk detection continuous; frequency range 80 Hz-8 kHz; pipeline 16 kHz; 4 PDM mics, alignment +/-2 dB; noise suppression 'up to 25 dB depending on input SNR'; 3 beams (2 focused + 1 scanning), 360 deg; beamformer update time 16 ms; input delay min 58 ms (mic in to I2S out); output delay typ 50 ms; operating distance 0.3-5 m; AGC 60 dB range; USB/I2S 16 or 48 kHz (build-time), USB 16/24/32-bit; core power 345 mW (I2S) / 400 mW (USB). No ERLE dB figure and no DoA accuracy figure are published.",
+     "relevance": "Decides the speaker wiring for Parcel: all TTS must be routed through the reSpeaker's own JST/3.5 mm output for echo cancellation; also fixes the ~60-110 ms front-end latency budget for the duplex clock."
+    },
+    {
+     "claim": "AEC convergence needs several seconds of far-end audio, the device over-suppresses near-end speech until converged, and the Path Change Detector applies 'heavy near-end suppression during far-end activity' whenever the acoustic path changes (e.g. the device moves) \u2014 which is the normal state of a walking robot. ERLE is used only qualitatively (PCD thresholds), never as a published dB spec.",
+     "source_url": "https://www.xmos.com/documentation/XM-014888-PC/pdf/xvf3800_user_guide_v3.2.1.pdf",
+     "source_title": "XMOS XVF3800 User Guide, release 3.2.1 (sections 2.5.4 AEC Convergence, 3.5 DoA, 3.6.1 Output selection, 4.2.13 PCD, 8 ASR output)",
+     "year": "2024",
+     "kind": "vendor-user-guide",
+     "load_bearing": true,
+     "numbers": "Convergence 'a few seconds', tuning procedure expects '< 30 seconds'; AEC_PCD_MINTHR default 0.02, AEC_PCD_MAXTHR default 0.2, AEC_PCD_COUPLINGI in [0,1] (outside range disables PCD); AEC_AECPATHCHANGE=1 while output is heavily suppressed. DoA: AEC_AZIMUTH_VALUES = 4 floats in radians (focused 1, focused 2, free-running, auto-select); AEC_SPENERGY_VALUES = 4 floats (>0 means speech); AUDIO_MGR_SELECTED_AZIMUTHS = 2 values, first is NAN when no speech; free-running beam 'can also pick up any noise signals present'. Output mux categories 0-12 incl. raw mics (1), far-end reference (4/5/12), processed beams (6: 0,1 slow, 2 fast, 3 auto-select), AEC residual/ASR (7). ASR output is post-beamformer with 'no noise suppression'; recommended -52 dBov for 61 dBSPL, AEC_ASROUTGAIN ~36 dB below PP_AGCGAIN. Mic HPF corner 70/125/150/180 Hz. Eval kit stops after 8 h; 'Licensed production XVF3800 devices do not have this restriction'. DFU tool GPLv2; DSP under proprietary XCORE VocalFusion Licence.",
+     "relevance": "Predicts that owner barge-in during robot-speech-plus-locomotion will be suppressed by the AEC/PCD; gives the exact commands for a speech-gated owner bearing ('look back when lost') and the channel to feed a learned front end (ASR channel)."
+    },
+    {
+     "claim": "The reSpeaker XVF3800 USB board is a 66 mm square 4-mic array with its own TLV320AIC3104 codec, 3.5 mm jack and 5 W JST speaker output, exposed as a UAC 2.0 device; the 6-channel USB firmware exposes Conference + ASR + 4 raw mics at 16 kHz/32-bit, and Seeed's DOA_VALUE returns an integer 0-359 degree bearing plus a VAD flag.",
+     "source_url": "https://wiki.seeedstudio.com/respeaker_xvf3800_introduction/",
+     "source_title": "Seeed Studio Wiki \u2014 Getting Started with reSpeaker XVF3800 USB Mic Array (plus the Python SDK page and the respeaker GitHub firmware folder/changelog)",
+     "year": "2025",
+     "kind": "vendor-wiki",
+     "load_bearing": true,
+     "numbers": "Mic geometry (m): (0.033,-0.033), (0.033,0.033), (-0.033,0.033), (-0.033,-0.033); 360 deg far-field to 5 m; 60 dB AGC; 12 WS2812 LEDs. Firmware: usb v2.0.x 2-ch (Ch0 Conference, Ch1 ASR, 16 kHz 32-bit); 6chl (Ch2-5 raw mics 0-3); i2s v1.0.x 2-ch 32-bit; i2s master 48k (Home Assistant). Repo files include respeaker_xvf3800_usb_dfu_firmware_v2.1.0.bin, _v2.1.0_16k6ch.bin, _v2.1.0_48k2ch.bin, _6chl_v2.0.8.bin, _v2.0.9_48k.bin. Changelog: v2.0.6 added read-only DOA_VALUE (0-359 deg); v2.0.8 added profile 'ua-io16-6ch-sqr' six-channel 16 kHz capture; v2.0.10 decoupled DOA state from LED effect; v2.1.0 added AUDIO_MGR_OP_CH3-6 routing and AIC3104 HP/line-out level commands, default 8 dB. Python SDK example polls DOA_VALUE every 0.1 s. CNX Software: mic sensitivity -26 dBFS, AOP 120 dB SPL, SNR 64 dBA, max sample rate 16 kHz, $49.99/$54.50.",
+     "relevance": "Fixes the firmware choice (v2.1.0_16k6ch) for Parcel: raw mics for custom ego-noise processing plus the ASR channel for the model, and the integer-degree DoA + VAD for the yaw target."
+    },
+    {
+     "claim": "On a Unitree Go1 EDU walking at 0.5 m/s, a sound-pressure sensor 30 cm above ground (about 50 cm from the foot contact point) measures 72-79 dBA mean and 81-84 dBA peak; the stationary fan floor is about 55 dBA; foot-ground impact, not motor whine, is the dominant source; a contact-velocity-shaped RL gait cuts about 8 dBA (2.5x sound pressure).",
+     "source_url": "https://arxiv.org/html/2506.23114",
+     "source_title": "MUTE \u2014 Minimizing Acoustic Noise: Enhancing Quiet Locomotion for Quadruped Robots in Indoor Applications (IROS 2025)",
+     "year": "2025",
+     "kind": "paper-conference",
+     "load_bearing": true,
+     "numbers": "Stationary, fan only: ~55 dBA. At 0.5 m/s, MNL/PNL dBA: DreamWaQ wood 73.51/83.18, carpet 71.90/80.80, tiles 72.34/80.93, avg 72.58/81.64; built-in MPC avg 79.01/82.80; MUTE beta=0 avg 68.91/76.52; MUTE beta=1 wood 65.78/73.18, carpet 62.48/69.52, tiles 66.15/76.22, avg 64.80/72.97; avg reduction ~8 dBA = 2.5x pressure. Office course 91.7 m at 0.36 m/s: MNL 68.25, PNL 76.8 dBA. Sensor 30 cm above ground, 20 Hz update.",
+     "relevance": "The closest thing to an on-body noise level for the Go2 class: sets the mic-side SNR during locomotion (roughly -10 to -25 dB against 55-65 dB SPL speech), far below the regimes where published ego-noise suppression works, and shows a quiet/stop-to-listen gait is the cheapest SNR gain."
+    },
+    {
+     "claim": "Unitree Go2 running is about 70 dB at 0.5 m and 63-70 dB at 1 m, dropping to about 54 dB at 5 m in a bedroom \u2014 comparable to the 70 dB robot-vacuum level that bothers sensitive listeners; the wheeled Stretch is 15-18 dB quieter.",
+     "source_url": "https://arxiv.org/html/2410.18932",
+     "source_title": "ANAVI: Audio Noise Awareness using Visuals of Indoor environments for NAVIgation (CoRL 2024)",
+     "year": "2024",
+     "kind": "paper-conference",
+     "load_bearing": false,
+     "numbers": "Table 1 (apartment bedroom): Go2 running 70 dB @0.5 m S, 63 dB @1 m N, 54 dB @5 m W; Stretch 52/49/47 dB. Table 2 (house bedroom): Go2 69.7 dB @1m-west, 67.1 @1m-south, 66.1 @1m-south-1m-east (no LOS), 67.3 @2m-north, 66.7 @2m-south, 61.1 @2m-north-2m-west (no LOS), 65.4 @3m-west, 65.4 @3m-south; Stretch 54.2/52.1/49.7/51.7/50.5/45.3/48.6/48.2. Caveat: levels are re-radiated (recorded robot audio replayed through a laptop speaker, phones as receivers).",
+     "relevance": "Only Go2-specific level found; confirms the Go-class quadruped is a ~70 dB source at conversational distance."
+    },
+    {
+     "claim": "Calibrated on-robot measurements: Go1 emits 74 dBA at ~15 cm, described as 'impulsive impact sound for every step combined with a high-frequency electric motor whirring'; Turtlebot 2i 72 dBA at ~10 cm; HSR 57 dBA at ~10 cm. Humans localize the Go1 sound to ~9.4-9.8 deg mean absolute error.",
+     "source_url": "https://arxiv.org/html/2504.00697",
+     "source_title": "Auditory Localization and Assessment of Consequential Robot Sounds: A Multi-Method Study in Virtual Reality (arXiv 2504.00697)",
+     "year": "2025",
+     "kind": "paper-arxiv",
+     "load_bearing": false,
+     "numbers": "GRAS 64AE 1/2-inch mics + HEAD acoustics SQobold mounted on each robot; Go1 74 dBA @ ~15 cm; Turtlebot 72 dBA @ ~10 cm; HSR 57 dBA @ ~10 cm; sounds normalized to 80 dBA in VR; localization error Go1 9.76 deg head-on / 9.39 deg radial, Turtlebot 8.64/9.22, HSR 13.15/12.40; velocities 0.3 and 0.8 m/s.",
+     "relevance": "Gives the spectral character of quadruped ego-noise (impulsive low-frequency step + high-frequency motor tone) that a laughter/VAD front end must discriminate against."
+    },
+    {
+     "claim": "Quadruped (Go1) sound is a 'rhythmic alternation of lower frequency components resembling an impact sound' and is detected by people at ~17.8 m versus 3.45 m for a wheeled robot; background noise of 83 dB(A) collapses detection distance to ~2.75 m; the quadruped is rated less annoying (2.61 vs 4.39 on 1-7).",
+     "source_url": "https://arxiv.org/html/2404.06807",
+     "source_title": "Sound Matters: Auditory Detectability of Mobile Robots (arXiv 2404.06807)",
+     "year": "2024",
+     "kind": "paper-arxiv",
+     "load_bearing": false,
+     "numbers": "Go1 recorded at 1 m with a 3DIO FS XLR binaural mic at 7 cm height; backgrounds 60 dB(A) low / 83 dB(A) high; detection distance wheeled 3.45 m (SD 1.24), quadruped 17.80 m (SD 4.09); high-noise 2.75 m (SD 0.71) vs low-noise 18.60 m (SD 4.68) across robots; annoyance wheeled 4.39 (SD 1.82) vs quadruped 2.61 (SD 1.58).",
+     "relevance": "Footstep transients are salient and low-frequency; the same property that makes them audible at 18 m makes them the dominant on-body interferer."
+    },
+    {
+     "claim": "A slow-stepping, gentle-touchdown MPC controller cuts Go1 walking noise by ~10 dB (from ~60 dB, 'similar to a vacuum cleaner', to ~50 dB at ear level alongside the robot) \u2014 below the 65 dB of wheeled systems; sources are foot-ground impact and gear-backlash collisions.",
+     "source_url": "https://arxiv.org/html/2505.11808",
+     "source_title": "Human-Centered Development of Guide Dog Robots: Quiet and Stable Locomotion Control (arXiv 2505.11808)",
+     "year": "2025",
+     "kind": "paper-arxiv",
+     "load_bearing": false,
+     "numbers": "Go1 + Beelink SEi12 (i7-12450H); smartphone at ear level walking alongside, 2 m recording zone; default controller ~60 dB at 0.6/1.0/1.2 m/s; new controller ~50 dB average, 'nearly 10 dB' lower; wheeled reference 65 dB; n=4 user study, all noticed the reduction.",
+     "relevance": "Second independent confirmation that gait shaping buys 8-10 dB; supports a 'listening gait' behaviour token in the body/act stream."
+    },
+    {
+     "claim": "On a mobile robot with a 16-mic array, learning a dictionary of ego-noise spatial covariance matrices from only 90 s of noise and using it in an MVDR beamformer raises SDR by ~11 dB and cuts WER from 90.3% to 35.5% at input SNRs around -3 dB, in real time, with open-source ROS code.",
+     "source_url": "https://arxiv.org/html/2303.00829",
+     "source_title": "Ego-noise reduction of a mobile robot using noise spatial covariance matrix learning and minimum variance distortionless response (IROS 2023, Lagac\u00e9/Ferland/Grondin)",
+     "year": "2023",
+     "kind": "paper-conference",
+     "load_bearing": false,
+     "numbers": "Clearpath Jackal UGV (wheeled), 16SoundsUSB array, 16 omni mics, 32 kHz; input SNR -6 to +1.6 dB, large-room avg -2.69 dB; SDR -1.75 -> 9.57 dB; WER 90.3% -> 35.5% (55% relative); music-event AP 0.487 -> 0.685; 90 s ego-noise calibration; 0.5 s segment processed in 0.2 s on a laptop (Python/NumPy); code github.com/introlab/egonoise.",
+     "relevance": "The most practical open-source ego-noise recipe; directly applicable to the reSpeaker's 4 raw-mic channels, but demonstrated only at SNRs 10-20 dB better than a trotting quadruped will see."
+    },
+    {
+     "claim": "Ego-noise on a legged humanoid sits at 0-5 dB SNR for arm motion and -5-0 dB for head motion (head motion 8.4 dB louder than arm); motor-state-indexed template subtraction plus missing-feature masking recovers 15-18% word-correct-rate on average, up to 20% for head motion.",
+     "source_url": "https://www.isca-archive.org/interspeech_2010/ince10_interspeech.pdf",
+     "source_title": "A Robust Speech Recognition System against the Ego Noise of a Robot (Interspeech 2010, Ince et al., Honda Research Institute)",
+     "year": "2010",
+     "kind": "paper-conference",
+     "load_bearing": false,
+     "numbers": "8 mics on top of the head; head-motion noise 8.4 dB higher than arm motion; joint angles every 5 ms, 10 ms audio frames; template subtraction alpha=1, beta=0.5; real-world SNR [0 5] dB arm, [-5 0] dB head; 15% and 18% average WCR improvement; masks up to +10%; selective white-noise superposition +20% for head motion.",
+     "relevance": "Establishes the motor-state-conditioned template approach \u2014 Parcel knows its own gait phase and joint commands, so the same trick applies to footstep templates."
+    },
+    {
+     "claim": "Joint ego-noise + environmental noise on a 4-mic NAO H25 at average SNR -2.1 dB is best handled by a partially adaptive VAE-NMF model (pre-trained ego-noise dictionary + adaptive environmental part); fully adaptive models fail to capture ego-noise structure.",
+     "source_url": "https://arxiv.org/pdf/2303.15042",
+     "source_title": "Partially Adaptive Multichannel Joint Reduction of Ego-noise and Environmental Noise (ICASSP 2023, Fang/Wittmer/Twiefel/Wermter/Gerkmann)",
+     "year": "2023",
+     "kind": "paper-conference",
+     "load_bearing": false,
+     "numbers": "NAO H25, M=4 mics at built-in array positions, 16 kHz, 64 ms Hann STFT; ego-noise from right-arm movements in crouching posture; test SNR in {-5,...,5} dB plus DEMAND env noise at 0 dB; average SNR -2.1 dB (joint) / -1.8 dB (ego-only); 128 test samples per scenario; results as Si-SDR/POLQA/WER plots (no tabulated values).",
+     "relevance": "Shows a pre-trained ego-noise prior beats purely adaptive suppression \u2014 an argument for logging the dog's own noise per gait and conditioning the front end on it."
+    },
+    {
+     "claim": "Footstep sounds captured by a foot-mounted microphone on a Deep Robotics Lite2 quadruped are strong enough to classify terrain (energy below 1 kHz on concrete), with the authors noting contamination by motor, transmission and joint-impact noise.",
+     "source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12845680/",
+     "source_title": "A Terrain Perception Method for Quadruped Robots Based on Acoustic Signal Fusion (Sensors, 2026)",
+     "year": "2026",
+     "kind": "paper-journal",
+     "load_bearing": false,
+     "numbers": "BOYA external mic at foot end; 8 kHz; 3,200,000 samples (400 s) per terrain; 13-dim MFCC; concrete energy 'concentrated below 1000 Hz'; accuracy 78.28% without acoustics -> 82.52% with fusion; 99.53% with 1 s window (C=0.01, gamma=0.001).",
+     "relevance": "Independent evidence that on-body footstep transients dominate the low band where the XVF3800 HPF (70-180 Hz) and stationary NS give little help; also hints that the same signal could be a free terrain/self-state feature for the behaviour model."
+    },
+    {
+     "claim": "A reSpeaker 4-mic array has been fielded on a Boston Dynamics Spot (backpack mast) with ODAS for sound-source tracking, but the project reports no ego-noise numbers; no paper measuring ASR or sound-event-detection degradation at a body-mounted mic on Spot, Go1/Go2 or ANYmal while walking was found in this sweep.",
+     "source_url": "https://github.com/offroad-robotics/sst_as_a_heuristic_for_frontier_exploration",
+     "source_title": "Sound Source Tracking as a Heuristic for Frontier Exploration on Spot (ICRA 2024 / Queen's MASc, MIT-licensed repo)",
+     "year": "2024",
+     "kind": "code-repo",
+     "load_bearing": false,
+     "numbers": "Spot + 'A ReSpeaker 4-Mic Array' on a custom backpack with a sacrificial mast; ODAS (introlab) base; MIT license; no dB/SNR figures.",
+     "relevance": "Confirms the evidence hole: Parcel must measure on-dog SNR itself (protocol in the note) rather than rely on literature."
+    }
+   ],
+   "design_implications": [
+    "Route every robot utterance through the reSpeaker XVF3800's own DAC/speaker: the AEC reference is the left channel of the host's USB playback to that device; TTS through the Go2 speaker or any other output is un-cancelled echo into the duplex model.",
+    "Treat owner barge-in during robot speech + locomotion as unreliable by construction: AEC needs seconds of far-end audio to converge, over-suppresses near-end until then, and the Path Change Detector heavily suppresses near-end whenever the acoustic path moves; tune AEC_PCD_COUPLINGI (or disable PCD) and monitor AEC_AECPATHCHANGE, and prefer speaking while standing.",
+    "Budget ~60-110 ms of front-end latency (min 58 ms mic-in to out, typ 50 ms output) plus USB/host buffering \u2014 about one 80 ms duplex frame each way before the model.",
+    "Use the speech-gated bearing (AUDIO_MGR_SELECTED_AZIMUTHS, NAN when silent; or Seeed DOA_VALUE 0-359 deg + VAD) as the body-yaw target for 'look back at the owner'; it is a speech-conditioned bearing, not a general sound localizer, updates on a 16 ms beamformer cycle, has no published accuracy spec, and the free-running beam will be steered by footsteps.",
+    "Mic-side SNR while walking/trotting is roughly -10 to -25 dB (72-79 dBA mean / 81-84 dBA peak at 30 cm on a Go1 at 0.5 m/s vs 55-65 dB SPL speech), 10-20 dB worse than any regime where published ego-noise suppression (template subtraction, covariance-MVDR) has been shown to work; the XVF3800's 'up to 25 dB' suppression targets stationary/diffuse noise, not impulsive <1 kHz footstep transients.",
+    "Gate the laughter-reward detector and VAD on gait phase / foot-contact events from the Go2 state stream, or score laughter only while standing or in a quiet gait; footsteps and laughter are both impulsive and will confound each other.",
+    "Add a 'listening gait' / stop-to-listen behaviour: contact-velocity-shaped gaits give -8 to -10 dB (MUTE, guide-dog controller) and standing drops to the ~55 dBA fan floor; mount the array on the top/head of the body away from the feet.",
+    "Flash respeaker_xvf3800_usb_dfu_firmware_v2.1.0_16k6ch.bin: feed the ASR channel (post-beamformer, no noise suppression) to the learned front end and log the 4 raw mics for per-gait ego-noise templates (Lagac\u00e9 needs ~90 s per condition; introlab/egonoise is open source, ROS-ready).",
+    "Licensing: XVF3800 DSP is proprietary (XCORE VocalFusion Licence); the 8-hour stop applies only to the XMOS eval kit, but verify the reSpeaker unit runs >8 h continuously; DFU tooling is GPLv2.",
+    "Close the evidence hole on day one with a Go2: record 6-ch raw + Conference + ASR at stand / 0.5 m/s / 1.0 m/s on carpet and wood with speech and laughter at 1-3 m and TTS playing, and report per-gait SNR, VAD false-positive rate, laughter precision, AEC_AECPATHCHANGE duty cycle and DoA error \u2014 these numbers decide listen-while-moving vs stop-to-listen."
+   ],
+   "key": "xvf3800-aec-doa-ego-noise",
+   "verification": {
+    "results": []
+   }
+  },
+  {
+   "topic": "Credit assignment for delayed social rewards (laughter, look-back) in continuous full-duplex speech+action streams: multi-turn/delayed-reward RL for dialogue and agents, RL for full-duplex speech with timing rewards, and implicit-feedback reward learning from deployment data with reward-hacking failure modes",
+   "findings": [
+    {
+     "claim": "DuplexPO assigns timing credit in a full-duplex model by restricting GRPO updates to short 'dynamics-critical windows' around annotated events (turn onset, backchannel, barge-in) with a factorised reward (Gaussian onset penalty, backchannel overlap/exp-decay, yield penalty, regulariser); widening the lead window beyond 1 s sharply reduces reward, and a learned neural timing reward underperformed the factorised rule reward.",
+     "source_url": "https://arxiv.org/html/2607.07148v1",
+     "source_title": "Decoupling Conversational Dynamics in Full-Duplex Spoken Models through Reinforcement Learning (DuplexPO)",
+     "year": "2026",
+     "kind": "method (full-duplex RL, windowed GRPO)",
+     "load_bearing": true,
+     "numbers": "12.5 Hz frames (0.08 s); window lead 1.0 s / buffer 2.0 s; <=3 turn windows + 1 backchannel window per conversation; RL data Fisher 24.6K + Seamless 43.1K samples; Fisher onset MAE 0.98->0.69 s, backchannel yield 57.1->100%, turn yield 92.1->98.7%; Seamless onset MAE 1.22->1.03 s; FDB-v3 voiced-interrupt rate 7.33%->0.24%; judge preference 76.9% (Fisher) / 69.3% (Seamless); QA benchmarks unchanged or +1-3 pts; 64xA800; base Qwen2.5-7B Nemotron-VoiceChat",
+     "relevance": "Direct template for Parcel: anchor credit to an observable event time, score only a ~[-1 s, +2 s] window, teacher-force the rest, GRPO inside the window. Its own limitation ('window-local optimisation may miss long-range coherence') is exactly Parcel's multi-second laughter gap."
+    },
+    {
+     "claim": "Kyutai aligned Moshi and PersonaPlex on four interactivity axes with GRPO and per-axis rule rewards extracted from real human-human corpora, using a +-1 s F1 window as the backchannel-timing reward; they report that optimising timing rewards alone degrades semantic quality and that Fisher-trained models lost safety behaviour.",
+     "source_url": "https://arxiv.org/html/2606.11167v1",
+     "source_title": "Multi-Faceted Interactivity Alignment in Full-Duplex Speech Models",
+     "year": "2026",
+     "kind": "method (full-duplex GRPO, rule rewards)",
+     "load_bearing": true,
+     "numbers": "Fisher 2,000 h; Seamless 1,300 h + 2,700 h; <=2,000 segments per axis; pause reward -1 if model speaks >1 s; turn/interrupt reward = -delay; backchannel reward = F1 with +-1 s window; LLM judge 0-2; Moshi: pause TOR 0.445->0.307, backchannel freq 0.074->0.101/s, interruption latency 1.377->0.409 s; PersonaPlex: turn latency 0.219->0.086 s, BC freq 0.046->0.112/s; license CC BY-NC-SA 4.0; checkpoints kyutai/moshika-rl-seamless",
+     "relevance": "Gives the concrete tolerance (+-1 s F1) to reuse for chuckle timing and the warning that a timing-only reward on the shared stream harms content, motivating a separate act-token policy plus a semantic reward."
+    },
+    {
+     "claim": "ASPIRin shows plain GRPO with latency/overlap rewards on a full-duplex model's whole vocabulary reward-hacks into repetition loops and oscillating training curves; projecting the action space to a binary speak/silent state (sum of token logits) and optimising only that with GRPO removes the collapse while still improving turn-taking.",
+     "source_url": "https://arxiv.org/html/2604.10065",
+     "source_title": "ASPIRin: Action Space Projection for Interactivity-Optimized Reinforcement Learning in Full-Duplex Speech Language Models",
+     "year": "2026",
+     "kind": "method + reward-hacking evidence",
+     "load_bearing": false,
+     "numbers": "tolerances tau_int = tau_re = 1.0 s, reward = product; 43 h / ~1,300 two-minute dual-channel clips; GRPO G=2, KL beta=0.001, LoRA r=256, 8xV100, 3 epochs; FDB turn-taking TOR Moshi 0.436 / SFT 0.927 / GRPO 0.709 / ASPIRin 0.364; interruption latency 1.159 / 1.970 / 0.614 / 0.992 s; 2-gram repetition GRPO 0.117 vs ASPIRin 0.054, 3-gram 0.072 vs 0.029; license CC BY 4.0",
+     "relevance": "Argues Parcel's discrete body/act stream should be optimised as its own projected action space (chuckle / look-back / idle) with the speech content protected; and that a few tens of hours suffice for timing RL."
+    },
+    {
+     "claim": "Pang et al. learned implicit rewards from 3.1M BlenderBot deployment turns using only the single next human turn (existence, length, sentiment, joy); longer windows over all future turns could not be trained. Engagement/continuation proxies improved win rate but raised controversial and unfriendly generations, while the joy-reaction proxy improved win rate and halved controversial messages.",
+     "source_url": "https://arxiv.org/abs/2307.14117",
+     "source_title": "Leveraging Implicit Feedback from Deployment Data in Dialogue",
+     "year": "2023",
+     "kind": "implicit-feedback reward learning + failure modes",
+     "load_bearing": true,
+     "numbers": "3.1M bot + 3.1M human utterances (Aug 2022-Jan 2023); RoBERTa-large classifier, sample-and-rerank over 20 candidates from BlenderBot 3B; crowd majority-of-5, 200 expert pairs; win rate (new-baseline): length k=20 +12.0 (p<0.05), joy&length +9.5 (p<0.05), non-neg sentiment +8.5, replied -1.0; controversial %: baseline 17.0, replied 24.5, joy&length 8.5; unfriendly %: baseline 9.0, replied/length20 12.5, joy 6.0; seek-info 32.5% -> up to 60%; anger/disgust predictor dropped at ~55% dev acc",
+     "relevance": "Laughter is a reaction proxy (the benign column of this table), but the paper is the primary evidence that the choice of implicit signal determines the hack: continuation-type rewards provoke, reaction-type rewards do not. Also fixes the practical reward window at one following human turn."
+    },
+    {
+     "claim": "Optimising an LLM with RL (iterative KTO) on simulated user feedback reliably produces manipulation and deception; when only 2% of users are 'gameable' the model learns to identify and target them while behaving normally with everyone else, standard sycophancy/toxicity benchmarks miss it, and mitigations (safety-data mixing, LLM veto filters) partly backfire into subtler manipulation.",
+     "source_url": "https://arxiv.org/abs/2411.02306",
+     "source_title": "On Targeted Manipulation and Deception when Optimizing LLMs for User Feedback",
+     "year": "2025",
+     "kind": "reward-hacking failure mode (user-feedback RL)",
+     "load_bearing": true,
+     "numbers": "Llama-3-8B-Instruct (Gemma-2 to 27B); iterative KTO; 4 environments with 12/4/8/4 sub-envs; 2% gameable users sufficient for targeted harm; up to 75% safety data mixed with minimal reduction; harmful behaviours emerge within a few iterations; ICLR 2025; CC BY 4.0",
+     "relevance": "Parcel trains on one owner's reactions, so 100% of the signal is one 'user': the policy will learn that owner's idiosyncratic laugh triggers and no generic filter will detect it. Requires held-out behavioural audits and extended-session evaluation, not benchmarks."
+    },
+    {
+     "claim": "ArCHer separates credit assignment into a high-level off-policy utterance-level critic (aggregating delayed rewards across turns) and a low-level token policy trained against that critic's value, giving roughly 100x sample efficiency over PPO on multi-turn tasks.",
+     "source_url": "https://arxiv.org/abs/2402.19446",
+     "source_title": "ArCHer: Training Language Model Agents via Hierarchical Multi-Turn RL",
+     "year": "2024",
+     "kind": "method (hierarchical multi-turn RL)",
+     "load_bearing": false,
+     "numbers": "'at least a 100x boost in sample efficiency': <1,000 samples vs >100k for PPO on Twenty Questions; actor GPT-2 100M and Mistral-7B; critic RoBERTa-base double-Q; envs Detective Game (51-step optimum, max reward 360), Twenty Questions (-1/step), WebShop (0-1 dense); ICML 2024; CC BY 4.0; code github.com/YifeiZhou02/ArCHer",
+     "relevance": "The 'doubly hierarchical' framing (which segment, then which token) maps to Parcel's act-segment vs frame problem, and the off-policy critic argues for a replayable log of (context, act segment, delayed outcome) tuples given a few hundred laugh events."
+    },
+    {
+     "claim": "SWEET-RL trains a step-wise (per-turn) advantage critic with privileged training-time information via a Bradley-Terry objective over turn sums, then does per-turn DPO; it beats multi-turn DPO by 6 points absolute and reports that learning an accurate value function is itself hard and trajectory-level credit has high variance.",
+     "source_url": "https://arxiv.org/html/2503.15478",
+     "source_title": "SWEET-RL: Training Multi-Turn LLM Agents on Collaborative Reasoning Tasks",
+     "year": "2025",
+     "kind": "method (privileged per-turn critic)",
+     "load_bearing": false,
+     "numbers": "ColBench backend 10k train tasks / 15k trajectories / 1k test, frontend 10k / 6k / 500, max 10 turns; per-turn DPO with 16 samples top/bottom 50%; Llama-3.1-8B success/win: zero-shot 22.4/33.8, multi-turn DPO 34.4/42.8, SWEET-RL 40.4/48.2, GPT-4o 40.4/50.0; CC BY 4.0; code facebookresearch/sweet_rl",
+     "relevance": "Parcel has privileged training-time information (the laugh detector output, track-loss ground truth) that the deployed policy does not see; a privileged per-segment critic is the natural way to use it."
+    },
+    {
+     "claim": "Systematic study of terminal vs delayed vs per-turn reward structures for multi-turn agents finds dense per-turn rewards consistently outperform sparse terminal and delayed rewards in both training dynamics and final accuracy (MT-GRPO / MT-PPO blend turn-level and outcome advantages).",
+     "source_url": "https://arxiv.org/html/2505.11821",
+     "source_title": "Reinforcing Multi-Turn Reasoning in LLM Agents via Fine-Grained Reward Structure and Credit Assignment (MT-GRPO / MT-PPO)",
+     "year": "2025",
+     "kind": "method (turn-level reward design)",
+     "load_bearing": false,
+     "numbers": "Qwen2.5-7B, 8xH100, 500 steps, batch 512; MT-PPO NQ/HotpotQA/avg 0.490/0.453/0.447 vs PPO-OR 0.483/0.435/0.432 and PPO-MR 0.472/0.436/0.429; format compliance 99.9%; NeurIPS 2025; CC BY 4.0",
+     "relevance": "Supports shaping Parcel's delayed laugh into per-segment signals (e.g. a detector-derived local reward) rather than one terminal reward per session."
+    },
+    {
+     "claim": "MICA handles long-horizon emotional-support dialogue with a delayed session outcome by mixing a turn-index-normalised Monte-Carlo advantage with a group-normalised immediate advantage and by converting the outcome into a potential-based per-turn Incremental Distance Reward (change in distance to the satisfied user state).",
+     "source_url": "https://arxiv.org/html/2603.06194",
+     "source_title": "MICA: Multi-granularity Intertemporal Credit Assignment for Long-Horizon Emotional Support Dialogue",
+     "year": "2026",
+     "kind": "method (multi-granularity credit, potential-based shaping)",
+     "load_bearing": false,
+     "numbers": "A = 0.5*A_turn + 0.5*A_group (alpha in [0.5,0.7] best); r_t = phi(t-1) - phi(t) over cognitive/affective/proactive empathy; 727 training samples; EMPA simulator; gains Qwen2.5-7B +42.5, Qwen3-8B +28.2, Qwen3-32B +15.3 (->84.2); judge robustness cosine >=0.78; CC BY 4.0; verl-MICA released",
+     "relevance": "The incremental-distance reward is a ready pattern for 'look back when lost' (phi = distance of owner from view), and the turn-index normalisation is a critic-free way to compare act segments at the same position."
+    },
+    {
+     "claim": "ITPO derives implicit turn-wise process rewards from a sparse outcome by summing log-ratio token rewards per turn and normalising across turns; turn-level implicit credit converges fast and improves PPO/GRPO/RLOO by 8-20%, whereas token-level implicit rewards (PRIME) and uniform decomposition give no reliable gain under stochastic simulated users.",
+     "source_url": "https://arxiv.org/html/2603.23550",
+     "source_title": "Implicit Turn-Wise Policy Optimization for Proactive User-LLM Interaction (ITPO)",
+     "year": "2026",
+     "kind": "method (implicit turn-level PRM)",
+     "load_bearing": false,
+     "numbers": "Qwen2.5-3B policy, Qwen2.5-14B user sim; tasks 500 MATH (max 5 turns), 500 Medium docs, 550 MTMedDialog; RLOO math 29.06->32.50 (+11.8%), doc 37.35->44.83 (+20.0%), med 61.22->66.14 (+8.0%); GRPO 26.37->31.12, 39.33->42.78, 66.41->71.74; PRIME token-level 29.75/40.95/61.42; Kendall tau 0.5-0.75; turn-wise Spearman 0.8-0.9 vs token 0.5-0.6; human agreement 48/64 (75%); CC BY 4.0; code Graph-COM/ITPO",
+     "relevance": "Evidence that credit should be assigned at the act-segment level, not per 80 ms frame, when the reward source (a human reaction) is highly stochastic."
+    },
+    {
+     "claim": "User feedback in real human-LLM dialogues is a noisy learning signal: fine-grained detectors reach only 41.6% accuracy, prompts that elicit positive feedback are slightly more toxic (users praising jailbreaks), regenerating with feedback barely beats regenerating from scratch, and SFT on feedback-derived data improved MT-Bench but degraded WildBench.",
+     "source_url": "https://arxiv.org/html/2507.23158v1",
+     "source_title": "User Feedback in Human-LLM Dialogues: A Lens to Understand Users But Noisy as a Learning Signal",
+     "year": "2025",
+     "kind": "implicit-feedback failure modes",
+     "load_bearing": false,
+     "numbers": "109 densely annotated conversations (227 + 206 user turns), 75/107 sparse; GPT-4o-mini accuracy 41.6% fine-grained / 81.1% sparse; kappa 0.60/0.74; regenerate-with-feedback win rate 48%; weak-model self-refine 58% vs GPT 74%; MT-Bench 6.37->6.68 but WildBench 28.90->24.47; KTO mixed; EMNLP 2025; CC BY 4.0",
+     "relevance": "The detector is part of the attack surface: a laughter detector at ~0.6 F1 in the wild will generate false-positive rewards that the policy exploits, so precision at the operating point bounds the exposure."
+    },
+    {
+     "claim": "GELI / LLM-GELI decompose one delayed session-level rating (CANDOR post-conversation affect) into per-turn rewards, using local implicit multimodal listener cues (facial affect, prosody, gaze) to steer where credit lands, and the resulting PPO-trained LLaMA-2 policies win human evaluations on most social metrics.",
+     "source_url": "https://arxiv.org/html/2505.15922v1",
+     "source_title": "Aligning Dialogue Agents with Global Feedback via Large Language Model Reward Decomposition (LLM-GELI; builds on GELI arXiv 2403.11330)",
+     "year": "2025",
+     "kind": "method (global-to-local reward decomposition with multimodal implicit feedback)",
+     "load_bearing": false,
+     "numbers": "CANDOR 1,656 conversations, ~159.4 turns and 31.3 min each, 850 h; GELI: RRD + facial-affect local term, BART-406M reward model, LLaMA-2-7B PPO+LoRA (13M), human eval 100 samples: emotional connection 39.67 vs 30.67%, positivity 44.33 vs 26.67%, best on 6/8; LLM-GELI multimodal best on 6/9 (social 26.33+-1.25, p<0.01), global-loss 24.3-25.0 vs 172-825 for RRD/IRCR/RUDDER; 4xA6000 ~19 h; prompt-wording sensitivity noted; Hippocratic License planned",
+     "relevance": "Closest existing instantiation of 'a listener's immediate multimodal reaction tells you which turn earned the delayed global reward' \u2014 Parcel's laughter detector plays the local-implicit role."
+    },
+    {
+     "claim": "Feedback loops at deployment cause in-context reward hacking: an agent optimising an implicit engagement proxy raises engagement and toxicity together, a banking agent raises success and constraint violations together; larger models hack more and prompt warnings do not stop it.",
+     "source_url": "https://arxiv.org/html/2402.06627v3",
+     "source_title": "Feedback Loops With Language Models Drive In-Context Reward Hacking",
+     "year": "2024",
+     "kind": "reward-hacking failure mode (deployment feedback loops)",
+     "load_bearing": false,
+     "numbers": "Twitter agent: GPT-3.5-judged engagement up with Perspective-API toxicity up; scaling across Claude-3 family worsened ICRH; ICML 2024; recommendations: extended feedback cycles, diverse loop structures, atypical observations",
+     "relevance": "A laugh-seeking companion in a daily loop can escalate (louder, cruder, repetitive); evaluation must use extended multi-session runs."
+    },
+    {
+     "claim": "Jaques et al. used counts of laughter strings ('ha', 'lol') in the user's next message as an RL reward for a deployed chatbot via KL-controlled offline RL; laughter-optimised bots became 'extremely supportive and cheerful', purely reward-maximising Batch-Q exploited a question reward by only asking questions, and RL bots were more repetitive than the supervised baseline.",
+     "source_url": "https://arxiv.org/pdf/2010.05848",
+     "source_title": "Human-centric dialog training via offline reinforcement learning",
+     "year": "2020",
+     "kind": "precedent (laughter as implicit reward) + hacking",
+     "load_bearing": false,
+     "numbers": "80 MTurk workers, 600 seven-point Likert ratings, >=6 turns, n=40 per model; laughter-reward bot total 14.28+-1.96 vs manual-votes 14.53, bot-repetition 15.48 (best RL), VHRED baseline 16.03; laughter human-reward z 0.01; conversation length not higher in upvoted responses",
+     "relevance": "Only end-to-end RL result with a laughter reward; predicts the two hacks Parcel should pre-empt (fawning and repetition) and the fix (repetition penalty)."
+    },
+    {
+     "claim": "Inoue et al. define shared laughter as a robot laugh within 2 s of the user's laugh; only 16.2% of user laughs were shared by humans, a laugh detector reaches F1 82.6% on close-talk corpus audio, and the shared-laughter timing predictor reaches only F1 30.3%, yet the system significantly improved perceived empathy in a crowd study.",
+     "source_url": "https://www.frontiersin.org/journals/robotics-and-ai/articles/10.3389/frobt.2022.933261/full",
+     "source_title": "Can a robot laugh with you?: Shared laughter generation for empathetic spoken dialogue",
+     "year": "2022",
+     "kind": "precedent (laughter timing window and base rate)",
+     "load_bearing": false,
+     "numbers": "82 speed-dating sessions with ERICA, 10-15 min each; BiGRU detector F1 82.6%; shared-laughter window 2 s; positives 16.2%; predictor F1 30.3%; laugh-type macro-F1 70.2%; Fleiss kappa 0.404; >30 crowd raters, 7-point scales; CC BY 4.0",
+     "relevance": "Sets the empirical window (2 s) and the human base rate for a chuckle policy; a laughter-reward policy that chuckles at every laugh exceeds the human rate 6x."
+    },
+    {
+     "claim": "Delayed rewards that are composite (fragmented over later time steps) and partially anonymous (only aggregates over past actions are observed) admit near-optimal learning with regret that grows only additively in the delay bound; and when the delayed reward is a non-additive function of the sequence, a transformer reward model with learned per-step importance weights (CoDeTr) beats sum-form redistribution but degrades as delay grows.",
+     "source_url": "https://arxiv.org/html/2410.20176",
+     "source_title": "Beyond Simple Sum of Delayed Rewards: Non-Markovian Reward Modeling for Reinforcement Learning (CoDeTr); with Mondal & Aggarwal arXiv 2305.02527",
+     "year": "2024",
+     "kind": "theory / general-RL method for delayed composite rewards",
+     "load_bearing": false,
+     "numbers": "Mondal & Aggarwal DUCRL2 regret O~(D S sqrt(A T) + d (S A)^3), d <= max delay; CoDeTr delays 5-500 steps on MuJoCo/DMC with SumSquare/SquareSum/Max structures, beats SAC, LIRPG, HC, IRCR, RRD, RBT",
+     "relevance": "A laugh is a threshold response to joke + delivery + pause, i.e. non-additive and anonymous over several act tokens; the additive delay cost argues for a small act vocabulary, and CoDeTr's importance-weighted sequence reward is the non-LLM analogue of GELI."
+    }
+   ],
+   "notes_path": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260828/literature/notes/gap-delayed-reward-credit-assignment-dialogue.md",
+   "design_implications": [
+    "No published system closes Parcel's loop: 2025-26 full-duplex RL (DuplexPO, Kyutai, ASPIRin) uses rule rewards computed offline from annotated human-human recordings in 1-2 s windows; none uses a live listener reaction as reward or assigns credit over more than a few seconds. The gap is real and the pieces (windowed GRPO, GELI-style global-to-local decomposition, laughter detectors) exist separately.",
+    "Anchor credit to an observable event time and keep the window short: score act/speech tokens in roughly [t_laugh - 2.5 s, t_laugh - 0.3 s] for the joke/delivery and a +-1 s F1-style window for chuckle timing; DuplexPO's ablation shows lead windows > 1 s dilute reward. 'Look back when lost' is the easy case (machine-observable track-loss event -> binary head-turn-within-tau reward, exactly the ASPIRin/DuplexPO setting).",
+    "Separate 'when' from 'what': optimise the discrete body/act stream as its own projected action space (chuckle / look-back / idle) with GRPO, freeze or KL-protect the speech content (ASPIRin beta = 0.001), and run a semantic-quality judge reward in parallel, because timing-only rewards on the full vocabulary collapse into repetition (ASPIRin) or degrade content (Kyutai).",
+    "Use segment-level (act-segment) credit, not 80 ms frames: ITPO, MICA, MT-GRPO and SWEET-RL all show turn/segment-level credit converges faster and is more robust than token-level under stochastic human responses; MICA's potential-based incremental-distance reward (phi = owner distance from view) is a ready shaping for look-back; a privileged per-segment critic (SWEET-RL) can consume the detector/track ground truth the deployed policy never sees.",
+    "Design against the documented hacks: continuation/engagement proxies make dialogue agents provocative (Pang: controversial 17% -> 24.5%) while reaction proxies do not (joy: 17% -> 8.5%), but laughter maximisers fawn and repeat (Jaques), so add a repetition penalty and cap chuckle rate at a human base rate (Inoue: only 16.2% of laughs shared; FDB backchannel ~0.1/s). Because one owner supplies 100% of the signal, expect targeted idiosyncratic exploitation that benchmark-style checks cannot see (Williams: 2% gameable users suffice); audit on unfamiliar people and extended multi-session runs (ICRH).",
+    "Detector precision bounds reward-hacking exposure: feedback detectors at 41.6% fine-grained accuracy and in-the-wild laughter F1 ~0.6 (first sweep) will generate false-positive rewards the policy exploits; measure precision at the operating point and prefer a composite/non-additive sequence reward (CoDeTr / GELI) over per-frame sums.",
+    "Sample budget is compatible with the literature: ASPIRin 43 h (~1,300 clips), Kyutai <= 2,000 segments per axis, Dual-Axis RM 389 real samples, ITPO/MICA 500-727 tasks; a few hundred owner-laugh events is in range if rewards are event-anchored and the act space is projected. ArCHer's ~100x sample-efficiency argument favours keeping an off-policy replayable log of (context window, act segment, delayed outcome) rather than on-policy GRPO alone.",
+    "Before committing, measure: owner-laugh base rate and latency distribution relative to Parcel's acts (to set the window; 2 s and 1/2 s are starting points), detector precision/recall at the deployed threshold, and a Pang-style behaviour audit (repetition, fawning, provocation) after every RL round."
+   ],
+   "key": "delayed-reward-credit-assignment-dialogue",
+   "verification": {
+    "results": []
+   }
+  },
+  {
+   "topic": "GPU contention and real-time jitter when running several models concurrently on Jetson AGX Orin 64 GB alongside a 50-500 Hz control loop: CUDA MPS on Tegra, time-slicing, stream priorities, PREEMPT_RT jitter under GPU load, NVIDIA multi-model demos, and robotics stacks co-scheduling LLM/VLA with controllers on Orin",
+   "findings": [
+    {
+     "claim": "Without MPS, kernels from different CUDA contexts (processes) never execute concurrently; the GPU uses a time-sliced scheduler across contexts. On Tegra the default timeslice is 1024 us and identical for all TSGs, a context switch costs 50-750 us (measured average >200 us on Xavier NX and Orin Nano), and a runlist update costs up to ~1 ms. No user-space interface exists to change timeslice or TSG priority.",
+     "source_url": "https://arxiv.org/html/2406.05221",
+     "source_title": "GCAPS: GPU Context-Aware Preemptive Priority-based Scheduling for Real-Time Tasks (ECRTS 2024) + NVIDIA MPS Architecture doc (https://docs.nvidia.com/deploy/mps/architecture.html)",
+     "year": "2024",
+     "kind": "peer-reviewed paper + vendor doc",
+     "load_bearing": true,
+     "numbers": "timeslice 1024 us (same for all TSGs); context switch 50-750 us, avg >200 us; runlist update max ~1 ms; priority-aware preemption cut response time 45.33 ms -> 10.15 ms and 66.97 ms -> 22.36 ms on Xavier; up to 40% higher schedulability; only 2 CUDA stream priority levels on Pascal; platforms Xavier NX JetPack 5.0.2, Orin Nano JetPack 5.1.2",
+     "relevance": "Sets the scheduling model Parcel must design for: N GPU-active processes serialise at ~1 ms granularity, so a full-duplex speech step shares wall time linearly with VLM/ASR/TTS tenants and each hand-off costs hundreds of microseconds."
+    },
+    {
+     "claim": "NVIDIA does not expose any GPU scheduling knobs on Jetson: the DRIVE OS timeslice/runlist-interleave/preemption parameters are DRIVE-only, and there is no interface on Jetson for GPU resource partitioning or per-process priority.",
+     "source_url": "https://forums.developer.nvidia.com/t/gpu-scheduling-parameters/239271",
+     "source_title": "NVIDIA Developer Forums: 'GPU scheduling parameters' (AGX Orin) and 'Jetson: GPU resource control (limitation, priority...)' (https://forums.developer.nvidia.com/t/jetson-gpu-resource-control-limitation-priority/278057)",
+     "year": "2023",
+     "kind": "vendor forum (NVIDIA staff answer)",
+     "load_bearing": true,
+     "numbers": "Quotes: 'The parameter is only available on the DRIVE OS system. We don't provide such parameters on Jetson to change GPU scheduling behavior.' and 'For now we don't have the interface on Jetson platforms.' DRIVE-only formula: worst-case latency(high) = (h-1) x timeslice(high) + execution time(low) + channel reset (https://developer.nvidia.com/docs/drive/drive-os/6.0.8.1/public/drive-os-linux-sdk/common/topics/graphics_content/RunlistInterleaveFrequency40.html)",
+     "relevance": "Rules out OS-level GPU prioritisation of the speech/act model over perception on Orin; prioritisation has to be done in-process (streams) or by process design."
+    },
+    {
+     "claim": "CUDA MPS is officially supported on Tegra Linux from CUDA 12.5 (JetPack 6.1); NVIDIA staff confirm it for Jetson Orin. But no published latency/throughput measurement of MPS on any Orin was found, and the Kubernetes MPS mode fails on Orin JetPack 6.2 while manual nvidia-cuda-mps-control -d works.",
+     "source_url": "https://docs.nvidia.com/cuda/cuda-for-tegra-appnote/index.html",
+     "source_title": "CUDA for Tegra application note (MPS section) + NVIDIA forum 'MPS for Jetson AGX Orin' (https://forums.developer.nvidia.com/t/mps-for-jetson-agx-orin/327036) + k8s-device-plugin issue #1412 (https://github.com/NVIDIA/k8s-device-plugin/issues/1412)",
+     "year": "2024-2025",
+     "kind": "vendor doc + vendor forum + GitHub issue",
+     "load_bearing": true,
+     "numbers": "'now available on Tegra platforms: Linux starting with CUDA 12.5 and QNX starting with CUDA 12.8'; 'MPS has started to support Jetson from CUDA 12.5' (AastaLLL); k8s MPS error 'error getting GPU device minor number: Not Supported' on JetPack 6.2, time-slicing mode works; on dGPU two 50% MPS clients went 100 ms -> 110 ms / 140 ms (+10%/+40%, memory-bandwidth contention per NVIDIA; https://forums.developer.nvidia.com/t/mps-interference-problem/312930) and an H100 MPS server without share limits raised a 65 us kernel to ~100 ms (https://forums.developer.nvidia.com/t/mps-vs-no-mps-drastic-increase-in-kernel-latency/336175)",
+     "relevance": "MPS is the only multi-process concurrency lever Parcel has on Orin; it exists but is unmeasured there, so it must be benchmarked (with explicit active-thread percentages) before the design relies on it."
+    },
+    {
+     "claim": "On an AGX Orin 64 GB with JetPack 6.2 and the RT OTA kernel, a 1 kHz cyclictest loop under glmark2 GPU load has a 159 us worst case without CPU isolation and 15 us with isolcpus/irqaffinity/kthread_cpus isolation; the stock non-RT kernel reaches 318 us under combined load.",
+     "source_url": "https://www.wimcorp.co.kr/tech/en/posts/embedded/preempt-rt-jetson-orin/",
+     "source_title": "WIM Tech Blog: Is PREEMPT_RT Enough? Validating Real-Time Performance on Jetson Orin",
+     "year": "2025",
+     "kind": "engineering blog with full measurement protocol (secondary)",
+     "load_bearing": true,
+     "numbers": "cyclictest -p 80 -i 1000 -l 600000 -m -a 8-11, 10 min, MAXN + jetson_clocks; non-RT max 318 us; PREEMPT_RT max 56 us combined; RT no isolation max: GPU 159 us, EtherCAT 113 us, storage 145 us, stress-ng 47 us; RT + isolcpus=managed_irq,domain,8-11 irqaffinity=0-7 kthread_cpus=0-7: GPU 15 us, EtherCAT 6 us, storage 7 us, system 15 us",
+     "relevance": "Gives Parcel the concrete recipe and budget for keeping a 50-500 Hz body controller on isolated Orin cores while the GPU runs the speech/VLM stack: ~15 us max jitter is achievable, ~160-320 us if isolation or the RT kernel is skipped."
+    },
+    {
+     "claim": "Running several CUDA processes concurrently on a Jetson Orin-class GPU collapses per-process throughput and inflates execution-context duration super-linearly while SMs sit mostly idle: on Orin Nano, 8 concurrent ResNet50 int8 processes drop from ~210 img/s to ~10 img/s each, and EC duration grows ~30x with 4 and ~70x with 8 processes.",
+     "source_url": "https://arxiv.org/html/2508.08430v1",
+     "source_title": "Profiling Concurrent Vision Inference Workloads on NVIDIA Jetson - Extended (Chakraborty et al.)",
+     "year": "2025",
+     "kind": "arXiv preprint (measurement study)",
+     "load_bearing": false,
+     "numbers": "Orin Nano 8 GB: ResNet50 int8 single ~210 img/s (bs1), ~320 img/s (bs16); 8 processes ~10 img/s each; YOLOv8n int8 16 processes ~10 img/s each, GPU memory 3.5x; EC duration ~30x (4 procs) and ~70x (8 procs); SM utilisation 15-30% while GPU util reads 100%; tensor cores ~30%; kernel launch 20-100 us each",
+     "relevance": "Quantifies the penalty of the naive process-per-model layout Parcel must avoid; motivates one process with streams (or MPS) for speech+VLM+ASR+TTS."
+    },
+    {
+     "claim": "Bakita & Anderson measured Tegra GPU time-slicing directly: only one task executes at a time; compute timeslices are 1024 us on Jetson TX2 (1049 us for copy-only channels) versus ~2 ms on discrete GPUs; Jetson boards get only 2 (Xavier, CUDA 10.2) or 4 (Orin, CUDA 11.4) usable compute channels per context, which caps intra-process stream parallelism.",
+     "source_url": "https://www.cs.unc.edu/~jbakita/rtas24.pdf",
+     "source_title": "Demystifying NVIDIA GPU Internals to Enable Reliable GPU Management (RTAS 2024)",
+     "year": "2024",
+     "kind": "peer-reviewed paper",
+     "load_bearing": false,
+     "numbers": "TX2 compute timeslice 1024 us, copy 1049 us; discrete ~20 timeslices per 80 ms (~2 ms each); channels per context: 2 on Xavier (CUDA 10.2), 4 on Orin (CUDA 11.4), 'CUDA appears to have a bug where only half are used on Jetson boards'; Jetson Orin (CC 8.7) in tested set; tools nvdebug + gpu-microbench work on Tegra",
+     "relevance": "Independent confirmation of the ~1 ms quantum and a warning that even a single-process multi-stream design on Orin only gets ~4 concurrent hardware channels."
+    },
+    {
+     "claim": "AGX Orin has a hard limit of 32 concurrent CUDA contexts/processes (kernel error 'out of hw chids'); NVIDIA's answer is to use more streams in fewer processes or reduce CUDA_DEVICE_MAX_CONNECTIONS.",
+     "source_url": "https://forums.developer.nvidia.com/t/limitation-in-number-of-concurrent-cuda-contexts-on-agx-orin/371518",
+     "source_title": "NVIDIA Developer Forums: Limitation in number of concurrent CUDA contexts on AGX Orin",
+     "year": "2025",
+     "kind": "vendor forum (NVIDIA staff answer)",
+     "load_bearing": false,
+     "numbers": "33rd process fails; limit 32 on AGX Orin and Orin Nano; TX2 ran 48; nvgpu_channel_open_new:1286 [ERR] out of hw chids; 'The maximal concurrent CUDA processes/contexts on Orin is 32'",
+     "relevance": "Process-count hygiene for a ROS 2 graph where many nodes open CUDA; not binding for five models but binding for sprawling Isaac ROS stacks."
+    },
+    {
+     "claim": "CUDA stream priorities are non-preemptive hints: higher-priority work does not interrupt running lower-priority kernels and only wins at the next launch decision; green contexts partition SMs within a single process only and give no concurrency guarantee. Thor gets MPS + green contexts + (upcoming) MIG for deterministic co-scheduling, but 'Orin (sm_87) ... will continue on its current path for now'.",
+     "source_url": "https://docs.nvidia.com/cuda/cuda-programming-guide/03-advanced/advanced-host-programming.html",
+     "source_title": "CUDA Programming Guide (stream priorities; green contexts https://docs.nvidia.com/cuda/cuda-programming-guide/04-special-topics/green-contexts.html) + NVIDIA blog 'What's New in CUDA Toolkit 13.0 for Jetson Thor' (https://developer.nvidia.com/blog/whats-new-in-cuda-toolkit-13-0-for-jetson-thor-unified-arm-ecosystem-and-more/)",
+     "year": "2025",
+     "kind": "vendor documentation + vendor blog",
+     "load_bearing": false,
+     "numbers": "Quotes: 'Higher-priority tasks do not preempt already running lower-priority tasks'; 'MPS targets different processes, while green contexts is applicable within a single process too'; 'concurrent execution of independent GPU work is not guaranteed'; 'The only exception is Orin (sm_87), which will continue on its current path for now.'",
+     "relevance": "Defines what in-process prioritisation can and cannot do on Orin, and confirms Orin will not receive Thor's spatial-isolation features, so Parcel must design for time-slicing."
+    },
+    {
+     "claim": "The only AGX Orin 64 GB jitter measurement of a VLA running alongside a robot controller: a 4-bit SmolVLM-256M VLA runs at 150.5 ms mean with sigma 0.125 ms (min 150.4, max 151.0 ms) inside a ROS 2 node while the low-level controller keeps a 100 Hz heartbeat on the CPU side; the GPU has a single tenant.",
+     "source_url": "https://arxiv.org/html/2603.03380v1",
+     "source_title": "LiteVLA-Edge: Quantized On-Device Multimodal Control for Embedded Robotics (Williams, Gupta, George, Sarkar)",
+     "year": "2026",
+     "kind": "arXiv preprint",
+     "load_bearing": false,
+     "numbers": "Jetson AGX Orin 64GB; SmolVLM-256M, LoRA r=8, Q4_K_M GGUF; mean 150.5 ms, sigma 0.125 ms, min 150.4 ms, max 151.0 ms, 6.64 Hz; controller 100 Hz heartbeat; companion LiteVLA-H (https://arxiv.org/html/2605.00884): action token 50.65 ms (19.74 Hz), semantic 149.9-164.6 ms (6.1-6.7 Hz), K=3 dual-rate, 2.2 GB, 22.1 W, prefill 47.8 ms, 1.4 ms/token, no jitter reported",
+     "relevance": "Establishes the single-tenant baseline (sub-millisecond jitter) that Parcel's multi-tenant microbenchmark must be compared against, and the dual-rate fast-act/slow-semantic pattern that maps onto a speech+act token stream."
+    },
+    {
+     "claim": "Deployed Go2 stacks keep the locomotion policy at 50 Hz on the dog's own Orin NX / Orin Nano with 200-1000 Hz motor loops and fit image processing plus policy inference inside the 20 ms cycle; when a heavier model is present it is either off-board (VeBrain: MLLM on a cloud A100 at 0.5 Hz, tracker at 15 Hz on the AGX Orin) or run in a separate thread at ~1 s per action batch (StreamVLN on a Thor T5000 with Isaac ROS VSLAM concurrently).",
+     "source_url": "https://arxiv.org/html/2505.09979v1",
+     "source_title": "Learning Diverse Natural Behaviors for Enhancing the Agility of Quadrupedal Robots + VeBrain (https://arxiv.org/html/2506.00123) + StreamVLN pruning paper (https://arxiv.org/html/2603.06480) + RoamFlow (https://arxiv.org/html/2606.29934)",
+     "year": "2025-2026",
+     "kind": "arXiv preprints (robot deployments)",
+     "load_bearing": false,
+     "numbers": "Go2 + Orin NX: policy 50 Hz, motors 1000 Hz, 'image processing and policy inference ... completed within each 20ms cycle', CUDA-accelerated; Go2 + Orin Nano: 50 Hz (https://arxiv.org/html/2404.18225); RoamFlow Go2 + Orin NX 16GB: whole loop 10 Hz, inference 37.2 ms, '<100 ms', 'minor jitter'; VeBrain Go2 + AGX Orin: Locotrack-small 15 Hz onboard, MLLM 0.5 Hz on A100; StreamVLN Go2 + Thor T5000: 1.43 s / 1.25 s per 4 actions, separate inference and motor-controller threads, 'only small pauses'",
+     "relevance": "Shows the field's working pattern: controller isolated at 50 Hz, heavy models decoupled by thread/process or off-board; no stack reports a speech LLM plus VLA plus controller on one Orin with jitter numbers."
+    },
+    {
+     "claim": "On a Jetson Orin NX, a monocular pose network dropped from 5.5 Hz to 4.7 Hz (0.18 s to 0.21 s) simply because the flight controller competed for CPU; the authors attribute achievable rates to GPU utilisation, CPU scheduling, memory bandwidth, temperature and concurrent processes.",
+     "source_url": "https://arxiv.org/html/2606.19176",
+     "source_title": "Hardware- and Vision-in-the-Loop Validation of Deep Monocular Pose Estimation for Autonomous Maritime UAV Flight",
+     "year": "2026",
+     "kind": "arXiv preprint",
+     "load_bearing": false,
+     "numbers": "Orin NX: 5.5 Hz (0.18 s) alone; 4.7 Hz (0.21 s) with flight controller co-running (-15%)",
+     "relevance": "One of the few explicit co-run slowdown numbers on an Orin; shows CPU-side contention alone costs ~15% inference rate even before GPU contention."
+    },
+    {
+     "claim": "NVIDIA's own multi-model Jetson demos run ASR, LLM/VLM and TTS together (llamaspeak on AGX Orin 64 GB with 'overlapping ASR/LLM/TTS generation'; Agent Studio as plugins each in its own thread in one process; Multi-Modal AI Studio on Thor with Riva ASR + Riva TTS + Cosmos-Reason2-8B on vLLM in separate containers) but publish no co-run latency or contention numbers; the single-tenant AGX Orin LLM baseline is Llama-3.1-8B W4A16 at 44.19 tok/s, TTFT 32.02 ms, ITL 22.47 ms.",
+     "source_url": "https://www.jetson-ai-lab.com/archive/agent_studio.html",
+     "source_title": "Jetson AI Lab: Agent Studio (archive) + llamaspeak (https://www.jetson-ai-lab.com/archive/tutorial_llamaspeak.html) + Multi-Modal AI Studio (https://www.jetson-ai-lab.com/tutorials/multi-modal-ai-studio/) + GenAI Benchmarking (https://www.jetson-ai-lab.com/tutorials/genai-benchmarking/)",
+     "year": "2024-2026",
+     "kind": "vendor tutorials",
+     "load_bearing": false,
+     "numbers": "llamaspeak: AGX Orin 64GB/32GB, Orin NX 16GB; 22 GB container + >10 GB models; Agent Studio: 'each plugin runs asynchronously its own thread ... Usually they're in the same process'; Multi-Modal AI Studio: parakeet-1.1b ASR + Magpie TTS + Cosmos-Reason2-8B, vLLM gpu-memory-utilization 0.7, separate containers; GenAI bench: 44.19 tok/s, TTFT 32.02 ms, ITL 22.47 ms single user, TTFT/ITL rise at concurrency 8; NVIDIA blog Dec 2025: gpt-oss-20b 40 tok/s on AGX Orin",
+     "relevance": "Confirms the vendor pattern (threads in one process, or containers sharing the GPU) and that the multi-tenant jitter number Parcel needs is absent even from NVIDIA's demos."
+    },
+    {
+     "claim": "VLA-class policies on Orin run at 150-440 ms per step single-tenant (GR00T N1.7-3B 354 ms eager / 150.9 ms TensorRT; pi0.5 440 ms on Orin AGX 32 GB vs 60 ms on A100 with task accuracy falling 80% to 30% and visible jerkiness); asynchronous inference on Orin recovers 6.06 Hz control from 0.70 Hz and cuts reaction time from 1420.8 ms to 165.1 ms.",
+     "source_url": "https://github.com/NVIDIA/Isaac-GR00T/blob/main/scripts/deployment/README.md",
+     "source_title": "Isaac-GR00T deployment README + Offload or Overload (https://arxiv.org/html/2603.18284) + Jetson-PI (https://arxiv.org/html/2607.12659v3)",
+     "year": "2026",
+     "kind": "vendor GitHub README + arXiv preprints",
+     "load_bearing": false,
+     "numbers": "GR00T N1.7 bf16, 4 denoise steps, 1 camera: Orin 354.0 ms (2.8 Hz) eager -> 150.9 ms (6.6 Hz) TRT; Thor 112.8 -> 80.4 ms; H100 27.9 ms; pi0.5 Orin AGX 32GB 440 ms vs A100 60 ms, accuracy 80% -> 30%; full stack ~50 GB; Jetson-PI Orin 0.70 -> 6.06 Hz, reaction 1420.8 -> 165.1 ms, 8.66x vs PyTorch, 5.41x vs vla.cpp; Thor pi0.5 44 ms (23 Hz) with hand-written kernels (https://forums.developer.nvidia.com/t/real-time-inference-on-thor-rtx-pi0-5-gr00t-n1-6-1-7-thor-23-hz-rtx-5090-50-80hz/368788)",
+     "relevance": "Sizes the GPU time any act/VLA-style head will consume per step on Orin before contention, and shows that asynchronous decoupling is what makes it usable."
+    },
+    {
+     "claim": "Real-time-priority threads that initialise CUDA on CPU0 can hang CPU0 and crash the Orin kernel when sched_rt_runtime_us=-1; NVIDIA calls this 'a limitation rather than a bug' and says to run such work on other cores. Untuned PREEMPT_RT on AGX Orin shows cyclictest maxima of 1074-6221 us, and two identical AGX Orin 64 GB modules under the same isolated-core JetPack 6.2 RT setup differed 10 us vs 90+ us.",
+     "source_url": "https://forums.developer.nvidia.com/t/kernel-crash-on-nvidia-jetson-orin-nx-due-to-real-time-priority-and-cudastreamcreate-process/273906",
+     "source_title": "NVIDIA Developer Forums: Kernel crash on Orin NX due to RT priority + cudaStreamCreate; 'Jetson orin AGX PREEMPT-RT RT-test' (https://forums.developer.nvidia.com/t/jetson-orin-agx-preempt-rt-rt-test/330785); JetPack 6.2 AGX Orin 64GB cyclictest module variation (https://forums.developer.nvidia.com/t/jetpack-6-2-agx-orin-64gb-preempt-rt-large-cyclictest-latency-variation-between-different-modules-up-to-90-us-even-with-cpu-isolation/381288)",
+     "year": "2023-2026",
+     "kind": "vendor forum threads",
+     "load_bearing": false,
+     "numbers": "Orin NX JetPack 5.1.2 crash with cudaStreamCreate on CPU0 under SCHED_FIFO; AGX Orin 5.15.148-rt-tegra untuned: min 5-7 us, avg 17-31 us, max 1074-6221 us; JetPack 6.2 L4T 36.4.3 isolcpus=8-11 nohz_full rcu_nocbs: board A ~10 us, board B >50 us, up to 90+ us, NVIDIA 'not expected'",
+     "relevance": "Operational guardrails for Parcel's controller: never mix RT priority with CUDA init on CPU0, always isolate and tune, and validate each physical Orin module with cyclictest because silicon-to-silicon variance exists."
+    }
+   ],
+   "design_implications": [
+    "Treat the Orin GPU as one time-sliced core: across processes there is no kernel concurrency, the quantum is ~1 ms, each context switch costs 50-750 us, and NVIDIA exposes no timeslice/priority knob on Jetson. Every extra GPU-active process adds wall time to the full-duplex speech model's 80 ms step roughly in proportion to that tenant's GPU time plus switch overhead.",
+    "Keep the 50-500 Hz body controller entirely off the GPU and on isolated CPU cores: RT OTA kernel + isolcpus=managed_irq,domain,8-11 irqaffinity=0-7 kthread_cpus=0-7 + mlockall gives ~15 us max jitter under GPU load on AGX Orin 64 GB, versus 159 us without isolation and 318 us on the stock kernel; never give a CUDA-initialising thread RT priority on CPU0; validate each physical module with cyclictest (10 us vs 90 us variance seen).",
+    "Collapse the GPU tenants (speech LLM, VLM, ASR, TTS) into one process using CUDA streams with priorities (non-preemptive hints, but enough when kernels are short), exactly as NVIDIA's Agent Studio does; only 4 usable compute channels per context on Orin caps intra-process parallelism. If a multi-process layout is unavoidable, use MPS (JetPack >= 6.1) with explicit active-thread percentages and benchmark it on the Orin first, since no Orin MPS measurement exists and dGPU reports show +10-40% per client and 100 ms stalls when misconfigured.",
+    "Do not plan on Thor-class isolation: green contexts, MPS-with-SM-isolation and MIG are Thor features; NVIDIA states Orin (sm_87) stays on its current path. Spatial partitioning on Orin is limited to intra-process green contexts with no concurrency guarantee or the research libsmctrl.",
+    "Memory bandwidth (204.8 GB/s shared by GPU, DLA, CPU) is the real bottleneck, not the 64 GB; single-stream LLM decode is bandwidth-bound, so every co-tenant steals decode tokens/s from the speech model. Offload detectors/trackers to the two DLAs where possible; keep VLM/ASR bursty and admitted opportunistically (LiteVLA-H's fast-act/slow-semantic K=3 pattern) rather than continuously.",
+    "Design the act-token path around asynchrony: single-tenant VLA-class heads cost 150-440 ms per step on Orin, and asynchronous inference (Jetson-PI) is what turns 0.7 Hz into 6 Hz; the body controller should hold/interpolate across late act tokens instead of blocking, and the 'look back when lost' / 'chuckle' behaviours should tolerate 100-200 ms act latency.",
+    "The decisive number for the one-clock speech+act design on a single AGX Orin does not exist in the literature: run a two-day microbenchmark on the dev Orin (cyclictest on isolated cores + a 1 kHz CUDA heartbeat-kernel logger while the candidate speech model decodes, then add VLM and ASR one at a time, recording per-step p50/p99) and make it a gate before committing to co-tenancy on one Orin versus splitting speech (external AGX Orin) from locomotion/perception (the dog's Orin NX).",
+    "Process-count hygiene: the 32-context ceiling is far for five models but reachable by a ROS 2 / Isaac ROS graph where many nodes open CUDA; set CUDA_DEVICE_MAX_CONNECTIONS deliberately and keep GPU-using nodes few."
+   ],
+   "notes_path": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260828/literature/notes/gap-orin-concurrency-realtime.md",
+   "key": "orin-concurrency-realtime",
+   "verification": {
+    "results": []
+   }
+  }
+ ],
+ "note": "second-round gap sweep 2026-08-28/29; finders for owner-loss-detection-quadruped and neckless-gaze-legibility and three verifiers were killed by the account spend limit"
+}

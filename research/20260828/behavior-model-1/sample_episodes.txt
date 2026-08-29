@@ -1,0 +1,296 @@
+=== family=chat_at_home seed=102430200547061 T=1469 taste=001100 pace=slow frames 358..387 ===
+# env=kitchen prof=warm/physical/slow/low hist=callback- callback- slapstick- dry+ slapstick- wordplay-
+  358 lis own=mid,b2,away,walk w="it charges in buttons" > <idle>
+  359 lis own=mid,b2,away,walk > <idle>
+  360 lis own=mid,b2,away,walk > <gaze_owner>
+  361 lis own=mid,b2,away,walk > <idle>
+  362 lis cue=joke_punchline/mid v1a1 own=mid,b2,away,walk > <idle>
+  363 lis own=mid,b2,away,walk > <idle>
+  364 lis own=mid,b2,eye,walk > <idle>
+  365 lis own=mid,b2,eye,walk > <idle>
+  366 lis own=mid,b2,eye,walk w="hah, hehehe" > <idle>
+  367 lis own=mid,b2,eye,walk > <idle>
+  368 lis own=mid,b2,eye,walk > <idle>
+  369 lis cue=laugh/hi v2a2 own=mid,b2,eye,walk > <idle>
+  370 lis own=occ,t0 > <idle>
+  371 lis own=mid,b2,eye,walk > <idle>
+  372 lis own=mid,b2,away,walk > <idle>
+  373 lis own=mid,b3,away,walk > <idle>
+  374 lis own=mid,b3,away,walk > <idle>
+  375 lis own=mid,b3,away,walk > <idle>
+  376 lis own=mid,b3,away,walk > <emote:chuckle>
+  377 lis own=mid,b3,away,walk self=emote:chuckle > <idle>
+  378 spk own=mid,b3,away,walk self=emote:chuckle > <idle>
+  379 spk own=mid,b3,away,walk self=emote:chuckle > <idle>
+  380 spk own=mid,b3,away,walk self=emote:chuckle > <idle>
+  381 spk own=mid,b3,away,walk self=emote:chuckle > <idle>
+  382 spk own=mid,b3,away,walk self=emote:chuckle > <idle>
+  383 spk own=mid,b3,away,walk self=emote:chuckle > <idle>
+  384 spk own=mid,b3,away,walk self=emote:chuckle > <idle>
+  385 spk own=mid,b3,away,walk self=emote:chuckle > <idle>
+  386 spk own=mid,b3,away,walk self=emote:chuckle > <idle>
+  387 spk own=mid,b3,away,walk self=emote:chuckle > <idle>
+
+=== family=joke_while_following seed=99032693057924 T=1325 taste=100110 pace=slow frames 443..472 ===
+# env=kitchen prof=playful/frequent/slow/low hist=callback+ dry+ pun- pun- pun- absurd+
+  443 lis own=mid,b5,eye,leave self=following task=follow/prog > <idle>
+  444 lis own=mid,b5,eye,leave self=following task=follow/prog w="but they were too kettle for me" > <idle>
+  445 lis own=mid,b5,eye,leave self=following task=follow/prog > <idle>
+  446 lis own=mid,b5,eye,leave self=following task=follow/prog > <idle>
+  447 lis cue=joke_punchline/lo v1a1 own=mid,b5,eye,leave self=following task=follow/prog > <idle>
+  448 lis own=mid,b5,eye,leave self=following task=follow/prog > <idle>
+  449 lis own=mid,b5,eye,leave self=following task=follow/prog > <idle>
+  450 lis own=mid,b5,eye,leave self=following task=follow/prog > <idle>
+  451 lis own=mid,b5,eye,leave self=following task=follow/prog > <idle>
+  452 lis own=mid,b6,eye,walk self=following task=follow/prog > <idle>
+  453 lis own=mid,b6,eye,walk self=following task=follow/prog > <idle>
+  454 lis own=mid,b6,eye,walk self=following task=follow/prog > <idle>
+  455 lis own=mid,b6,away,walk self=following task=follow/prog > <idle>
+  456 lis own=mid,b6,away,walk self=following task=follow/prog > <idle>
+  457 lis own=mid,b6,away,walk self=following task=follow/prog > <idle>
+  458 lis own=mid,b6,away,walk self=following task=follow/prog > <idle>
+  459 lis own=mid,b6,away,walk self=following task=follow/prog > <idle>
+  460 lis own=mid,b6,away,walk self=following task=follow/prog > <idle>
+  461 lis own=mid,b6,away,walk self=following task=follow/prog > <idle>
+  462 lis own=mid,b6,away,walk self=following task=follow/prog > <idle>
+  463 lis own=mid,b6,away,walk self=following task=follow/prog > <idle>
+  464 spk own=mid,b6,away,walk self=following task=follow/prog > <idle>
+  465 spk own=mid,b6,away,walk self=following task=follow/prog > <idle>
+  466 spk own=mid,b6,away,walk self=following task=follow/prog > <idle>
+  467 spk own=mid,b6,away,walk self=following task=follow/prog > <idle>
+  468 spk own=mid,b6,away,walk self=following task=follow/prog > <idle>
+  469 spk own=mid,b6,away,walk self=following task=follow/prog > <idle>
+  470 spk own=mid,b6,away,walk self=following task=follow/prog > <idle>
+  471 spk own=mid,b6,away,walk self=following task=follow/prog > <idle>
+  472 spk own=mid,b6,away,walk self=following task=follow/prog > <idle>
+
+=== family=lost_outdoors seed=227849753091512 T=1062 taste=000101 pace=slow frames 268..297 ===
+# env=outdoor prof=brief/rare/slow/high hist=slapstick- wordplay- callback- pun+ slapstick- dry-
+  268 lis own=occ,t1 self=following task=follow/prog > <idle>
+  269 lis own=occ,t1 self=following task=follow/prog > <idle>
+  270 lis own=occ,t1 self=following task=follow/prog > <idle>
+  271 lis own=occ,t1 self=following task=follow/prog > <idle>
+  272 lis own=occ,t3 self=following task=follow/prog > <idle>
+  273 lis own=occ,t3 self=following task=follow/prog > <emote:happy_wiggle>
+  274 lis own=occ,t3 self=emote:happy_wiggle task=follow/prog > <gaze_bearing_7>
+  275 lis own=occ,t3 self=emote:happy_wiggle task=follow/blocked > <idle>
+  276 lis own=occ,t3 self=emote:happy_wiggle task=follow/blocked > <idle>
+  277 lis own=occ,t3 self=emote:happy_wiggle task=follow/blocked > <idle>
+  278 lis own=occ,t3 self=emote:happy_wiggle task=follow/blocked > <idle>
+  279 lis own=occ,t3 self=emote:happy_wiggle task=follow/blocked > <idle>
+  280 lis own=occ,t3 self=emote:happy_wiggle task=follow/blocked > <idle>
+  281 lis own=occ,t3 self=emote:happy_wiggle task=follow/blocked > <idle>
+  282 lis own=occ,t3 self=emote:happy_wiggle task=follow/blocked > <idle>
+  283 lis own=occ,t3 self=emote:happy_wiggle task=follow/blocked > <idle>
+  284 spk own=occ,t3 self=following task=follow/blocked > <idle>
+  285 spk own=occ,t3 self=following task=follow/blocked > <idle>
+  286 spk own=occ,t3 self=following task=follow/blocked > <idle>
+  287 spk own=occ,t3 self=following task=follow/blocked > <idle>
+  288 spk own=occ,t3 self=following task=follow/blocked > <idle>
+  289 spk own=occ,t3 self=following task=follow/blocked > <idle>
+  290 spk own=occ,t3 self=following task=follow/blocked > <idle>
+  291 spk own=occ,t3 self=following task=follow/blocked > <idle>
+  292 spk own=occ,t3 self=following task=follow/blocked > <idle>
+  293 spk own=occ,t3 self=following task=follow/blocked > <idle>
+  294 spk own=occ,t3 self=following task=follow/blocked > <idle>
+  295 spk own=occ,t3 self=following task=follow/blocked > <idle>
+  296 spk own=occ,t3 self=following task=follow/blocked > <idle>
+  297 spk own=occ,t3 self=following task=follow/blocked > <idle>
+
+=== family=command_during_emote seed=140393111097344 T=679 taste=010100 pace=slow frames 141..170 ===
+# env=kitchen prof=playful/rare/slow/low hist=wordplay+ slapstick- callback- wordplay+ absurd- pun-
+  141 idle own=near,b7,away,appr > <idle>
+  142 lis own=near,b7,away,appr w="hey take a seat for me" > <idle>
+  143 lis own=near,b7,away,appr > <idle>
+  144 lis own=near,b7,away,appr > <gaze_owner>
+  145 lis cue=cmd:sit/hi own=near,b7,away,appr > <idle>
+  146 lis own=near,b7,away,appr > <idle>
+  147 lis own=near,b7,away,appr > <idle>
+  148 lis own=near,b7,away,appr > <idle>
+  149 lis own=near,b7,away,appr > <idle>
+  150 lis own=near,b7,away,appr > <skill:sit>
+  151 lis own=near,b7,away,appr self=skill:sit > <idle>
+  152 lis own=near,b7,away,appr self=skill:sit > <idle>
+  153 lis own=near,b7,away,appr self=skill:sit > <idle>
+  154 lis own=near,b7,eye,appr self=skill:sit > <idle>
+  155 lis own=near,b7,eye,appr self=skill:sit > <idle>
+  156 lis own=near,b7,eye,appr self=skill:sit > <idle>
+  157 lis own=near,b7,eye,appr self=skill:sit > <idle>
+  158 lis own=near,b7,eye,appr self=skill:sit > <idle>
+  159 lis own=near,b7,eye,appr self=skill:sit > <idle>
+  160 lis own=near,b7,eye,appr self=skill:sit > <idle>
+  161 lis own=near,b7,eye,appr self=skill:sit > <idle>
+  162 idle own=near,b7,eye,appr self=skill:sit > <idle>
+  163 idle own=near,b7,eye,appr self=skill:sit > <idle>
+  164 idle own=near,b7,eye,appr self=skill:sit > <idle>
+  165 idle own=near,b7,eye,appr self=skill:sit > <idle>
+  166 idle own=near,b7,eye,appr self=skill:sit > <idle>
+  167 idle own=near,b7,eye,appr self=skill:sit > <idle>
+  168 idle own=near,b7,eye,appr self=skill:sit > <idle>
+  169 idle own=near,b7,eye,appr self=skill:sit > <idle>
+  170 idle own=near,b7,eye,appr self=skill:sit > <idle>
+
+=== family=sad_owner_far seed=157941989334180 T=618 taste=100001 pace=normal frames 56..85 ===
+# env=living prof=brief/frequent/normal/high hist=dry- absurd- dry- absurd- pun+ pun+
+   56 lis own=far,b5,eye,walk w="ugh, it's been a day" > <idle>
+   57 lis own=far,b5,eye,walk > <idle>
+   58 lis own=far,b5,eye,walk > <gaze_owner>
+   59 lis own=far,b5,eye,walk > <idle>
+   60 lis cue=sigh/hi v-1a0 own=far,b5,eye,walk > <idle>
+   61 lis own=far,b5,eye,walk > <idle>
+   62 lis own=far,b5,eye,walk > <idle>
+   63 lis own=far,b5,eye,walk > <idle>
+   64 lis own=far,b5,eye,walk > <idle>
+   65 lis own=far,b5,eye,walk > <idle>
+   66 lis own=far,b5,eye,walk > <idle>
+   67 lis own=far,b5,eye,walk > <idle>
+   68 idle own=far,b5,eye,walk > <idle>
+   69 idle own=far,b5,eye,walk > <emote:comfort_bow>
+   70 idle own=far,b5,eye,walk self=emote:comfort_bow > <idle>
+   71 idle own=far,b5,eye,walk self=emote:comfort_bow > <twist:2:2>
+   72 idle own=far,b5,eye,walk self=emote:comfort_bow > <twist:2:2>
+   73 idle own=far,b5,eye,walk self=emote:comfort_bow > <twist:2:2>
+   74 idle own=far,b5,eye,walk self=emote:comfort_bow > <idle>
+   75 idle own=far,b5,eye,walk self=emote:comfort_bow > <idle>
+   76 idle own=far,b5,eye,walk self=emote:comfort_bow > <idle>
+   77 idle own=far,b5,eye,walk self=emote:comfort_bow > <idle>
+   78 idle own=far,b5,eye,walk > <idle>
+   79 idle own=far,b5,eye,walk > <idle>
+   80 idle own=far,b5,eye,walk > <idle>
+   81 idle own=far,b5,eye,walk > <idle>
+   82 idle own=far,b5,eye,walk > <idle>
+   83 idle own=far,b5,eye,walk > <idle>
+   84 idle own=far,b5,eye,walk > <idle>
+   85 idle own=far,b5,eye,walk > <idle>
+
+=== family=busy_navigation seed=102150725883339 T=1480 taste=111001 pace=slow frames 248..277 ===
+# env=hall prof=warm/frequent/slow/low hist=slapstick- absurd- dry+ pun+ wordplay+ wordplay+
+  248 idle own=near,b7,away,appr self=navigating busy task=goto/prog > <idle>
+  249 idle own=near,b7,away,appr self=navigating busy task=goto/prog > <idle>
+  250 idle own=near,b7,away,appr self=navigating busy task=goto/prog > <idle>
+  251 idle own=near,b7,away,appr self=navigating busy task=goto/prog > <idle>
+  252 idle own=near,b7,away,appr self=navigating CRIT task=goto/prog obs=doorway > <idle>
+  253 idle own=near,b7,away,appr self=navigating CRIT task=goto/prog obs=doorway > <idle>
+  254 idle own=near,b7,away,appr self=navigating CRIT task=goto/prog obs=doorway > <idle>
+  255 idle own=near,b7,away,appr self=navigating CRIT task=goto/blocked obs=doorway > <idle>
+  256 idle own=near,b7,away,appr self=navigating CRIT task=goto/blocked obs=doorway > <idle>
+  257 idle own=near,b7,away,appr self=navigating CRIT task=goto/blocked obs=doorway > <idle>
+  258 idle own=near,b7,away,appr self=navigating CRIT task=goto/blocked obs=doorway > <idle>
+  259 idle own=near,b7,away,appr self=navigating CRIT task=goto/blocked obs=doorway > <idle>
+  260 idle own=near,b7,away,appr self=navigating CRIT task=goto/blocked obs=doorway > <idle>
+  261 idle own=near,b7,away,appr self=navigating CRIT task=goto/blocked obs=doorway > <idle>
+  262 idle own=near,b7,away,appr self=navigating CRIT task=goto/blocked obs=doorway > <idle>
+  263 idle own=near,b7,away,appr self=navigating CRIT task=goto/blocked obs=doorway > <idle>
+  264 idle own=near,b7,away,appr self=navigating CRIT task=goto/blocked obs=doorway > <idle>
+  265 idle own=near,b7,away,appr self=navigating CRIT task=goto/blocked obs=doorway > <idle>
+  266 idle own=near,b7,away,appr self=navigating CRIT task=goto/blocked obs=doorway > <idle>
+  267 idle own=near,b7,away,appr self=navigating CRIT task=goto/blocked obs=doorway > <idle>
+  268 idle own=near,b7,away,appr self=navigating CRIT task=goto/blocked obs=doorway > <idle>
+  269 idle own=near,b7,away,appr self=navigating CRIT task=goto/blocked obs=doorway > <idle>
+  270 idle own=near,b7,away,appr self=navigating CRIT task=goto/blocked obs=doorway > <idle>
+  271 idle own=near,b7,away,appr self=navigating CRIT task=goto/blocked obs=doorway > <idle>
+  272 idle own=near,b7,away,appr self=navigating CRIT task=goto/blocked obs=doorway > <idle>
+  273 idle own=near,b7,away,appr self=navigating CRIT task=goto/blocked obs=doorway > <idle>
+  274 idle own=near,b7,away,appr self=navigating CRIT task=goto/blocked obs=doorway > <idle>
+  275 idle own=near,b7,eye,appr self=navigating CRIT task=goto/blocked obs=doorway > <idle>
+  276 idle own=near,b7,eye,appr self=navigating CRIT task=goto/blocked obs=doorway > <gaze_release>
+  277 idle own=near,b7,eye,appr self=navigating CRIT task=goto/blocked obs=doorway > <idle>
+
+=== family=greeting_and_praise seed=47596745657602 T=1607 taste=101011 pace=normal frames 189..218 ===
+# env=hall prof=playful/frequent/normal/low hist=slapstick+ callback+ wordplay- slapstick+ pun- callback+
+  189 idle own=mid,b6,away,leave > <idle>
+  190 lis own=mid,b6,away,leave w="look, hey you little guy" > <idle>
+  191 lis own=mid,b6,away,leave > <gaze_owner>
+  192 lis own=mid,b6,away,leave > <idle>
+  193 lis cue=greeting/mid v1a1 own=mid,b6,away,leave > <idle>
+  194 lis own=mid,b6,away,leave > <idle>
+  195 lis own=mid,b6,away,leave > <idle>
+  196 lis own=mid,b6,away,leave > <idle>
+  197 lis own=mid,b6,away,leave > <idle>
+  198 lis own=mid,b6,away,leave > <emote:paw_wave>
+  199 lis own=mid,b6,eye,leave self=emote:paw_wave > <idle>
+  200 lis own=mid,b6,eye,leave self=emote:paw_wave > <idle>
+  201 lis own=mid,b6,eye,leave self=emote:paw_wave > <idle>
+  202 lis own=mid,b6,eye,leave self=emote:paw_wave > <idle>
+  203 lis own=mid,b7,eye,leave self=emote:paw_wave > <idle>
+  204 lis own=mid,b7,eye,leave self=emote:paw_wave > <idle>
+  205 lis own=mid,b7,eye,leave self=emote:paw_wave > <idle>
+  206 lis own=mid,b7,eye,leave self=emote:paw_wave > <idle>
+  207 lis own=mid,b7,eye,leave self=emote:paw_wave > <idle>
+  208 lis own=mid,b7,away,leave self=emote:paw_wave > <idle>
+  209 lis own=mid,b7,away,leave self=emote:paw_wave > <idle>
+  210 spk own=mid,b7,away,leave > <idle>
+  211 spk own=mid,b7,away,leave > <idle>
+  212 spk own=mid,b7,away,leave > <idle>
+  213 spk own=mid,b7,away,leave > <idle>
+  214 spk own=mid,b7,eye,leave > <idle>
+  215 spk own=mid,b7,eye,leave > <idle>
+  216 spk own=mid,b7,eye,leave > <idle>
+  217 spk own=mid,b7,eye,leave > <idle>
+  218 spk own=mid,b7,eye,leave > <idle>
+
+=== family=joke_while_lost seed=86919959202245 T=920 taste=001001 pace=normal frames 103..132 ===
+# env=outdoor prof=warm/physical/normal/med hist=pun+ wordplay- pun+ absurd- wordplay- pun+
+  103 idle own=near,b6,away,still self=following task=follow/prog > <idle>
+  104 lis own=near,b6,away,still self=following task=follow/prog w="the whole railing came down" > <idle>
+  105 lis own=near,b6,away,still self=following task=follow/prog > <idle>
+  106 lis own=near,b6,away,still self=following task=follow/prog > <gaze_owner>
+  107 lis cue=joke_punchline/hi v1a1 own=near,b6,away,still self=following task=follow/prog > <idle>
+  108 lis own=near,b6,away,still self=following task=follow/prog > <idle>
+  109 lis own=near,b6,away,still self=following task=follow/prog > <idle>
+  110 lis own=near,b6,away,still self=following task=follow/prog > <idle>
+  111 lis own=near,b6,away,still self=following task=follow/prog > <idle>
+  112 lis own=near,b6,away,still self=following task=follow/prog > <idle>
+  113 lis own=near,b6,away,still self=following task=follow/prog > <idle>
+  114 lis own=near,b6,away,still self=following task=follow/prog > <idle>
+  115 lis own=near,b6,away,still self=following task=follow/prog > <idle>
+  116 lis own=near,b6,away,still self=following task=follow/prog > <idle>
+  117 lis own=near,b6,away,still self=following task=follow/prog > <idle>
+  118 lis own=near,b6,away,still self=following task=follow/prog > <idle>
+  119 lis own=near,b6,away,still self=following task=follow/prog > <idle>
+  120 lis own=near,b6,away,still self=following task=follow/prog > <idle>
+  121 lis own=near,b6,away,still self=following task=follow/prog > <idle>
+  122 lis own=near,b6,away,still self=following task=follow/prog > <idle>
+  123 lis own=near,b6,away,still self=following task=follow/prog > <idle>
+  124 spk own=near,b6,away,still self=following task=follow/prog > <idle>
+  125 spk own=near,b6,away,still self=following task=follow/prog > <idle>
+  126 spk own=near,b6,away,still self=following task=follow/prog > <idle>
+  127 spk own=near,b6,away,still self=following task=follow/prog > <idle>
+  128 spk own=near,b6,away,still self=following task=follow/prog > <idle>
+  129 spk own=near,b6,away,still self=following task=follow/prog > <idle>
+  130 spk own=near,b6,away,still self=following task=follow/prog > <idle>
+  131 spk own=near,b6,eye,still self=following task=follow/prog > <idle>
+  132 spk own=near,b6,eye,still self=following task=follow/prog > <idle>
+
+=== family=command_during_chuckle seed=21547544175805 T=1691 taste=111100 pace=normal frames 67..96 ===
+# env=hall prof=playful/rare/normal/med hist=dry+ absurd+ pun- absurd+ dry+ slapstick-
+   67 lis own=near,b6,eye,appr > <idle>
+   68 lis own=near,b6,eye,appr > <idle>
+   69 lis own=near,b6,eye,appr w="hey follow me will you" > <idle>
+   70 lis own=near,b6,eye,appr > <idle>
+   71 lis cue=cmd:follow/hi own=near,b6,eye,appr > <idle>
+   72 lis own=near,b6,eye,appr > <idle>
+   73 lis own=near,b6,eye,appr > <idle>
+   74 lis own=near,b6,eye,appr > <skill:follow>
+   75 lis own=near,b6,eye,appr self=skill:follow > <idle>
+   76 lis own=near,b6,eye,appr self=skill:follow > <idle>
+   77 lis own=near,b6,eye,appr self=skill:follow > <idle>
+   78 lis own=near,b6,eye,appr self=skill:follow > <idle>
+   79 lis own=near,b6,eye,appr self=skill:follow > <idle>
+   80 lis own=near,b6,eye,appr self=skill:follow > <idle>
+   81 lis own=near,b6,eye,appr self=skill:follow > <idle>
+   82 lis own=near,b6,eye,appr self=skill:follow > <idle>
+   83 lis own=near,b6,eye,appr self=skill:follow > <idle>
+   84 lis own=near,b6,eye,appr self=skill:follow > <idle>
+   85 lis own=near,b6,eye,appr self=skill:follow > <idle>
+   86 lis own=near,b6,eye,appr self=skill:follow > <idle>
+   87 lis own=near,b6,eye,appr self=skill:follow > <idle>
+   88 lis own=near,b6,eye,appr self=skill:follow > <idle>
+   89 spk own=near,b6,eye,appr self=skill:follow > <idle>
+   90 spk own=near,b6,eye,appr self=skill:follow > <idle>
+   91 lis own=near,b6,eye,appr self=skill:follow w="park it buddy" > <idle>
+   92 lis own=near,b6,eye,appr self=skill:follow > <idle>
+   93 lis cue=cmd:sit/lo own=near,b6,eye,appr self=skill:follow > <gaze_owner>
+   94 lis own=near,b6,eye,appr self=skill:follow > <idle>
+   95 lis own=near,b6,eye,appr self=skill:follow > <idle>
+   96 lis own=near,b6,eye,appr self=skill:follow > <skill:sit>

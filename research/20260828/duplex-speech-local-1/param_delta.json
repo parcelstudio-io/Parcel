@@ -1,0 +1,120 @@
+{
+  "hypothesis": "H-DS1b",
+  "moshi_version": "0.2.13",
+  "moshi_git_rev": "e6a55d2722a65870ef52a6c9f6ecfc0e90f38362",
+  "baseline_config": "moshi.models.loaders._lm_kwargs (moshiko-pytorch-bf16)",
+  "baseline_params": 7687729152,
+  "baseline_params_billions": 7.6877,
+  "act_vocab_sizes": {
+    "design_budget": 90,
+    "act_codec_bare_today": 54,
+    "act_codec_with_8_skills_6_emotes": 68
+  },
+  "variants": [
+    {
+      "variant": "V1_dedicated_depformer_step",
+      "description": "act = 9th depformer step with a dedicated per-step weight slot",
+      "act_card": 90,
+      "baseline_params": 7687729152,
+      "variant_params": 7769551872,
+      "delta_params": 81822720,
+      "delta_millions": 81.8227,
+      "bar_le_1M": false,
+      "pct_of_baseline": 1.0643
+    },
+    {
+      "variant": "V2_shared_depformer_slot",
+      "description": "act = depformer step 0 sharing step 0's weights (schedule 0,0,1..7)",
+      "act_card": 90,
+      "baseline_params": 7687729152,
+      "variant_params": 7688287232,
+      "delta_params": 558080,
+      "delta_millions": 0.5581,
+      "bar_le_1M": true,
+      "pct_of_baseline": 0.0073
+    },
+    {
+      "variant": "V3_extra_head",
+      "description": "act = extra_head off the temporal transformer (no depformer change)",
+      "act_card": 90,
+      "baseline_params": 7687729152,
+      "variant_params": 7688470528,
+      "delta_params": 741376,
+      "delta_millions": 0.7414,
+      "bar_le_1M": true,
+      "pct_of_baseline": 0.0096
+    },
+    {
+      "variant": "V1_dedicated_depformer_step",
+      "description": "act = 9th depformer step with a dedicated per-step weight slot",
+      "act_card": 54,
+      "baseline_params": 7687729152,
+      "variant_params": 7769330688,
+      "delta_params": 81601536,
+      "delta_millions": 81.6015,
+      "bar_le_1M": false,
+      "pct_of_baseline": 1.0615
+    },
+    {
+      "variant": "V2_shared_depformer_slot",
+      "description": "act = depformer step 0 sharing step 0's weights (schedule 0,0,1..7)",
+      "act_card": 54,
+      "baseline_params": 7687729152,
+      "variant_params": 7688066048,
+      "delta_params": 336896,
+      "delta_millions": 0.3369,
+      "bar_le_1M": true,
+      "pct_of_baseline": 0.0044
+    },
+    {
+      "variant": "V3_extra_head",
+      "description": "act = extra_head off the temporal transformer (no depformer change)",
+      "act_card": 54,
+      "baseline_params": 7687729152,
+      "variant_params": 7688175616,
+      "delta_params": 446464,
+      "delta_millions": 0.4465,
+      "bar_le_1M": true,
+      "pct_of_baseline": 0.0058
+    },
+    {
+      "variant": "V1_dedicated_depformer_step",
+      "description": "act = 9th depformer step with a dedicated per-step weight slot",
+      "act_card": 68,
+      "baseline_params": 7687729152,
+      "variant_params": 7769416704,
+      "delta_params": 81687552,
+      "delta_millions": 81.6876,
+      "bar_le_1M": false,
+      "pct_of_baseline": 1.0626
+    },
+    {
+      "variant": "V2_shared_depformer_slot",
+      "description": "act = depformer step 0 sharing step 0's weights (schedule 0,0,1..7)",
+      "act_card": 68,
+      "baseline_params": 7687729152,
+      "variant_params": 7688152064,
+      "delta_params": 422912,
+      "delta_millions": 0.4229,
+      "bar_le_1M": true,
+      "pct_of_baseline": 0.0055
+    },
+    {
+      "variant": "V3_extra_head",
+      "description": "act = extra_head off the temporal transformer (no depformer change)",
+      "act_card": 68,
+      "baseline_params": 7687729152,
+      "variant_params": 7688290304,
+      "delta_params": 561152,
+      "delta_millions": 0.5612,
+      "bar_le_1M": true,
+      "pct_of_baseline": 0.0073
+    }
+  ],
+  "v2_module_attribution_at_90": {
+    "emb[16] act input embedding (temporal transformer)": 372736,
+    "depformer_emb[0] act token -> depformer": 93184,
+    "linears[0] act output head": 92160,
+    "sum": 558080
+  }
+}

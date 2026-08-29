@@ -1,0 +1,8 @@
+[FL1b] clean          oracl:0.859/1 popul:0.000/None histo:0.732/33 beta:0.758/25 beta:0.732/46 beta:0.783/23 beta:0.784/22 beta:0.784/22 [0s]
+[FL1b] det_q0.0_m0.0  oracl:0.859/1 popul:0.000/None histo:0.621/None beta:0.603/None beta:0.581/None beta:0.659/None beta:0.667/None beta:0.708/None [1s]
+[FL1b] det_q0.0_m0.3  oracl:0.859/1 popul:0.000/None histo:0.563/None beta:0.456/None beta:0.459/None beta:0.542/None beta:0.587/None beta:0.632/None [1s]
+[FL1b] det_q0.1_m0.0  oracl:0.859/1 popul:0.000/None histo:0.653/None beta:0.595/None beta:0.606/None beta:0.675/None beta:0.692/None beta:0.697/56 [1s]
+[FL1b] det_q0.1_m0.3  oracl:0.859/1 popul:0.000/None histo:0.583/None beta:0.460/None beta:0.517/None beta:0.595/None beta:0.621/None beta:0.628/None [1s]
+[FL1b] det_q0.3_m0.0  oracl:0.859/1 popul:0.000/None histo:0.655/None beta:0.631/None beta:0.623/None beta:0.686/None beta:0.687/None beta:0.709/58 [2s]
+[FL1b] det_q0.3_m0.3  oracl:0.859/1 popul:0.000/None histo:0.621/None beta:0.552/None beta:0.532/None beta:0.628/None beta:0.667/None beta:0.667/None [2s]
+wrote fl1b.json

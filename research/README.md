@@ -55,6 +55,7 @@ VERDICT.md is a claim, not a finding.
   ratchets (`tests/test_dec0_debt_ratchet.py`, `tests/test_decig2_import_ratchet.py`).
 
 ## Index
+
 - `20260823/` — first program: see `20260823/README.md`.
 - `20260824/` — mountability decisions, Codex cross-review and the proposed
   portable living-dog HLD: see `20260824/README.md`.
@@ -62,3 +63,8 @@ VERDICT.md is a claim, not a finding.
   prompt v4, simulator-learning architecture, dynamic social-progress and
   pedestrian-stall research, research data plane, and the current motion
   `NO-GO`: see `20260826/README.md`.
+- `20260828/` — generalized agency/movement architecture, V1/V2 bounded
+  planning evidence, the refuted 2/9 current-RL-environment readiness audit,
+  adaptive-locomotion and terrain-planning eval designs, and a 30/60/90-day
+  simulator path; physical motion remains `NO-GO`: see `20260828/README.md`.
+- `20260828/LIVING_BEHAVIOR_MODEL_REPORT.md` — trainable full-duplex behavior model wave (BM-1/FL-1/HS-1/DS-1, verified literature review, SIM_TRAINING_PLAN); see `20260828/README.md`.
