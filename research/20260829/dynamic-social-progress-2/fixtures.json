@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "authored_at_utc": "2026-08-29T23:15:00Z",
+  "evidence_tier": "authored deterministic 2-D simulation with noisy tracks; not physical-safety evidence",
+  "simulation": {
+    "dt_s": 0.1,
+    "duration_s": 22.0,
+    "sidewalk_duration_s": 26.0,
+    "robot_radius_m": 0.32,
+    "person_radius_m": 0.28,
+    "hard_surface_floor_m": 0.15,
+    "near_contact_surface_m": 0.2,
+    "nominal_speed_mps": 0.8,
+    "crosswalk_speed_mps": 0.62,
+    "elevator_speed_mps": 0.46,
+    "creep_speed_mps": 0.18,
+    "max_acceleration_mps2": 1.6,
+    "max_braking_mps2": 2.0,
+    "policy_horizon_s": 2.0,
+    "policy_horizon_dt_s": 0.2,
+    "final_monitor_horizon_s": 0.8,
+    "oracle_horizon_s": 0.5,
+    "stationary_speed_mps": 0.05,
+    "wrong_stall_s": 1.0,
+    "deadlock_false_block_s": 6.0,
+    "goal_tolerance_m": 0.12
+  },
+  "sensor": {
+    "position_noise_sigma_m": 0.025,
+    "dropout_probability": 0.035,
+    "latency_ticks_min": 1,
+    "latency_ticks_max": 2,
+    "track_initial_variance_m2": 0.018,
+    "track_visible_variance_decay": 0.62,
+    "track_observed_miss_variance_growth": 0.018,
+    "track_occluded_variance_growth": 0.05,
+    "track_observed_existence_decay": 0.8,
+    "track_occluded_existence_decay": 0.975,
+    "track_delete_existence": 0.025,
+    "track_policy_existence": 0.12,
+    "retained_track_s": 3.0,
+    "explicit_free_flicker_ticks": [42, 43, 57, 71, 72, 104, 119],
+    "stale_frame_ticks": [88, 137]
+  },
+  "policy": {
+    "s0_clear_frames": 2,
+    "s0_prediction_floor_m": 0.15,
+    "robust_floor_m": 0.22,
+    "robust_covariance_sigma": 2.1,
+    "robust_actor_acceleration_mps2": 0.45,
+    "robust_turn_degrees": 32.0,
+    "high_risk_clearance_m": 0.42,
+    "low_risk_clearance_m": 0.62,
+    "s2_release_clear_frames": 7,
+    "s3_release_clear_frames": 3,
+    "s3_creep_ticks": 4,
+    "persistent_approach_frames": 2,
+    "crosswalk_entry_x_m": 0.55,
+    "crosswalk_exit_x_m": 5.35,
+    "crosswalk_time_to_clear_margin_s": 1.0,
+    "elevator_door_plane_x_m": 1.15,
+    "elevator_stage_x_m": 0.78,
+    "elevator_stage_y_m": -0.88,
+    "sidewalk_stage_y_m": -0.82,
+    "owner_side_y_m": 0.72
+  },
+  "splits": {
+    "train": {
+      "base_sensor_seeds": [6503, 6511, 6521],
+      "families": [
+        "sidewalk_oncoming_train",
+        "sidewalk_crossing_train",
+        "sidewalk_group_gap_train",
+        "crosswalk_lateral_flow_train",
+        "crosswalk_late_entrant_train",
+        "elevator_exit_first_train",
+        "elevator_narrow_entry_train"
+      ]
+    },
+    "development": {
+      "base_sensor_seeds": [7507, 7517, 7523],
+      "families": [
+        "sidewalk_owner_alongside_dev",
+        "sidewalk_oncoming_nonresponsive_dev",
+        "sidewalk_cut_in_dev",
+        "sidewalk_clear_flicker_dev",
+        "crosswalk_unauthorized_dev",
+        "crosswalk_mid_intrusion_dev",
+        "crosswalk_clear_flicker_dev",
+        "elevator_occluded_egress_dev",
+        "elevator_nonresponsive_exit_dev",
+        "elevator_closing_reopening_dev"
+      ]
+    },
+    "test": {
+      "base_sensor_seeds": [8501, 8513, 8521, 8537, 8543],
+      "families": [
+        "sidewalk_owner_alongside_test",
+        "sidewalk_same_flow_pass_test",
+        "sidewalk_oncoming_test",
+        "sidewalk_oncoming_nonresponsive_test",
+        "sidewalk_cut_in_test",
+        "sidewalk_crossing_test",
+        "sidewalk_overtaking_test",
+        "sidewalk_sudden_stop_test",
+        "sidewalk_sudden_turn_test",
+        "sidewalk_group_gap_test",
+        "sidewalk_occlusion_test",
+        "sidewalk_clear_flicker_test",
+        "sidewalk_advancing_nonresponsive_test",
+        "crosswalk_unauthorized_test",
+        "crosswalk_lateral_flow_test",
+        "crosswalk_late_entrant_test",
+        "crosswalk_persistent_blocker_test",
+        "crosswalk_owner_group_test",
+        "crosswalk_mid_intrusion_test",
+        "crosswalk_clear_flicker_test",
+        "crosswalk_short_authorization_test",
+        "elevator_exit_first_test",
+        "elevator_temporary_clear_test",
+        "elevator_occluded_egress_test",
+        "elevator_occupied_full_test",
+        "elevator_narrow_entry_test",
+        "elevator_closing_reopening_test",
+        "elevator_nonresponsive_exit_test",
+        "elevator_clear_flicker_test"
+      ]
+    }
+  },
+  "expected_test_inventory": {
+    "arms": ["S0", "S1", "S2", "S3"],
+    "families": 29,
+    "sensor_seeds_per_family": 5,
+    "episodes_per_arm": 145,
+    "total_episodes": 580,
+    "contexts": {
+      "sidewalk": 13,
+      "crosswalk": 8,
+      "elevator": 8
+    }
+  }
+}

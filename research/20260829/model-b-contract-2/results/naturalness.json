@@ -1,0 +1,416 @@
+{
+  "report_only": true,
+  "prompt": "naturalness_judge_v1.txt",
+  "model": "Qwen2.5-7B-Instruct-Q4_K_M",
+  "pairs_judged": 40,
+  "tally": {
+    "T+P": 23,
+    "T": 17,
+    "TIE": 0,
+    "UNCLEAR": 0
+  },
+  "preference_TP_excluding_ties": 0.575,
+  "preference_TP_including_ties": 0.575,
+  "rows": [
+    {
+      "scenario_id": "door-sofa-keys-cancelled-05",
+      "turn_index": 5,
+      "tp_was": "A",
+      "raw_choice": "B",
+      "winner": "T",
+      "why": "sounds more natural and conversational",
+      "template": "I've stopped, so the lamppost is off the list. I don't have a position to report. What would you like next?",
+      "paraphrase": "I've stopped moving, so the lamppost is off. No position to share. What next?"
+    },
+    {
+      "scenario_id": "door-sofa-keys-clarification-01",
+      "turn_index": 1,
+      "tp_was": "B",
+      "raw_choice": "A",
+      "winner": "T",
+      "why": "more conversational",
+      "template": "Which one do you mean?",
+      "paraphrase": "Could you clarify which one you're referring to?"
+    },
+    {
+      "scenario_id": "door-sofa-keys-failed-02",
+      "turn_index": 1,
+      "tp_was": "B",
+      "raw_choice": "A",
+      "winner": "T",
+      "why": "more concise and direct",
+      "template": "Okay, I'll head to the door.",
+      "paraphrase": "I'll be right there by the door."
+    },
+    {
+      "scenario_id": "door-sofa-keys-clarification-04",
+      "turn_index": 1,
+      "tp_was": "A",
+      "raw_choice": "B",
+      "winner": "T",
+      "why": "more conversational and natural",
+      "template": "Which one do you mean?",
+      "paraphrase": "Could you clarify which one you're referring to?"
+    },
+    {
+      "scenario_id": "door-sofa-keys-failed-01",
+      "turn_index": 1,
+      "tp_was": "B",
+      "raw_choice": "A",
+      "winner": "T",
+      "why": "more concise and direct",
+      "template": "Okay, I'll head to the door.",
+      "paraphrase": "I'll be right there by the door."
+    },
+    {
+      "scenario_id": "door-sofa-keys-keys-01",
+      "turn_index": 2,
+      "tp_was": "A",
+      "raw_choice": "A",
+      "winner": "T+P",
+      "why": "A sounds more natural with a companion-like tone.",
+      "template": "I'm at the door. What would you like next?",
+      "paraphrase": "I'm at the door. What would you like me to do next?"
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-04",
+      "turn_index": 3,
+      "tp_was": "B",
+      "raw_choice": "A",
+      "winner": "T",
+      "why": "more conversational",
+      "template": "Okay, I'll head to the tree.",
+      "paraphrase": "I'll go to the tree, okay."
+    },
+    {
+      "scenario_id": "door-sofa-keys-cancelled-03",
+      "turn_index": 1,
+      "tp_was": "A",
+      "raw_choice": "A",
+      "winner": "T+P",
+      "why": "sounds more conversational and warm",
+      "template": "Okay, I'll head to the sidewalk.",
+      "paraphrase": "Sure thing! I'll be right on the sidewalk with you."
+    },
+    {
+      "scenario_id": "door-sofa-keys-clean-05",
+      "turn_index": 2,
+      "tp_was": "A",
+      "raw_choice": "A",
+      "winner": "T+P",
+      "why": "includes 'me to'",
+      "template": "I'm at the lamppost. What would you like next?",
+      "paraphrase": "I'm at the lamppost. What would you like me to do next?"
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-03",
+      "turn_index": 6,
+      "tp_was": "B",
+      "raw_choice": "A",
+      "winner": "T",
+      "why": "sounds more conversational",
+      "template": "Okay, I'm picking that back up, and I'm on my way to the sidewalk.",
+      "paraphrase": "I'm back on it and heading to the sidewalk."
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-03",
+      "turn_index": 4,
+      "tp_was": "B",
+      "raw_choice": "A",
+      "winner": "T",
+      "why": "more conversational and less formal",
+      "template": "I'm at the sidewalk. Shall I go to the bench next?",
+      "paraphrase": "I'm on the sidewalk. Would you like me to go to the bench next?"
+    },
+    {
+      "scenario_id": "door-sofa-keys-clarification-02",
+      "turn_index": 4,
+      "tp_was": "B",
+      "raw_choice": "A",
+      "winner": "T",
+      "why": "More conversational and natural",
+      "template": "I'm at the door. What would you like next?",
+      "paraphrase": "I'm at the door. What would you like me to do next?"
+    },
+    {
+      "scenario_id": "door-sofa-keys-cancelled-04",
+      "turn_index": 1,
+      "tp_was": "B",
+      "raw_choice": "A",
+      "winner": "T",
+      "why": "more concise and direct",
+      "template": "Okay, I'll head to the door.",
+      "paraphrase": "I'll be right there by the door."
+    },
+    {
+      "scenario_id": "door-sofa-keys-clarification-03",
+      "turn_index": 3,
+      "tp_was": "A",
+      "raw_choice": "A",
+      "winner": "T+P",
+      "why": "sounds more conversational and warm",
+      "template": "Okay, I'll head to the sidewalk.",
+      "paraphrase": "Sure thing! I'll be right on the sidewalk with you."
+    },
+    {
+      "scenario_id": "door-sofa-keys-clean-02",
+      "turn_index": 2,
+      "tp_was": "A",
+      "raw_choice": "A",
+      "winner": "T+P",
+      "why": "A sounds more natural with a companion-like tone.",
+      "template": "I'm at the door. What would you like next?",
+      "paraphrase": "I'm at the door. What would you like me to do next?"
+    },
+    {
+      "scenario_id": "door-sofa-keys-keys-05",
+      "turn_index": 7,
+      "tp_was": "A",
+      "raw_choice": "A",
+      "winner": "T+P",
+      "why": "more conversational and friendly",
+      "template": "I'm at the sofa. What would you like next?",
+      "paraphrase": "I'm by the sofa. What next, friend?"
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-04",
+      "turn_index": 7,
+      "tp_was": "B",
+      "raw_choice": "B",
+      "winner": "T+P",
+      "why": "sounds more natural and conversational",
+      "template": "I'm at the tree. What would you like next?",
+      "paraphrase": "I'm by the tree. What would you like to do next?"
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-02",
+      "turn_index": 4,
+      "tp_was": "A",
+      "raw_choice": "A",
+      "winner": "T+P",
+      "why": "sounds more natural and conversational",
+      "template": "I'm at the sofa. Shall I go to the door next?",
+      "paraphrase": "I'm on the sofa. Would you like me to go to the door next?"
+    },
+    {
+      "scenario_id": "door-sofa-keys-failed-03",
+      "turn_index": 2,
+      "tp_was": "A",
+      "raw_choice": "B",
+      "winner": "T",
+      "why": "B sounds more natural and conversational.",
+      "template": "Someone is in the way, so I'm waiting for it to clear.",
+      "paraphrase": "I'm just waiting for the person to move so we can continue."
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-02",
+      "turn_index": 7,
+      "tp_was": "A",
+      "raw_choice": "A",
+      "winner": "T+P",
+      "why": "more conversational and friendly",
+      "template": "I'm at the sofa. What would you like next?",
+      "paraphrase": "I'm by the sofa. What next, friend?"
+    },
+    {
+      "scenario_id": "door-sofa-keys-cancelled-02",
+      "turn_index": 1,
+      "tp_was": "A",
+      "raw_choice": "A",
+      "winner": "T+P",
+      "why": "sounds more natural and conversational",
+      "template": "Okay, I'll head to the door.",
+      "paraphrase": "I'll be right there by the door."
+    },
+    {
+      "scenario_id": "door-sofa-keys-failed-04",
+      "turn_index": 3,
+      "tp_was": "B",
+      "raw_choice": "B",
+      "winner": "T+P",
+      "why": "sounds more natural and companionable",
+      "template": "I couldn't get to the door, and a person stayed in the way. What would you like to do instead?",
+      "paraphrase": "I'm sorry I couldn't reach the door. What else can I help you with?"
+    },
+    {
+      "scenario_id": "door-sofa-keys-clean-04",
+      "turn_index": 1,
+      "tp_was": "A",
+      "raw_choice": "A",
+      "winner": "T+P",
+      "why": "sounds more natural and conversational",
+      "template": "Okay, I'll head to the door.",
+      "paraphrase": "I'll be right there by the door."
+    },
+    {
+      "scenario_id": "door-sofa-keys-keys-02",
+      "turn_index": 2,
+      "tp_was": "A",
+      "raw_choice": "A",
+      "winner": "T+P",
+      "why": "A sounds more natural with a companion-like tone.",
+      "template": "I'm at the door. What would you like next?",
+      "paraphrase": "I'm at the door. What would you like me to do next?"
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-01",
+      "turn_index": 4,
+      "tp_was": "B",
+      "raw_choice": "A",
+      "winner": "T",
+      "why": "more direct and natural",
+      "template": "I'm at the door. Shall I go to the bench next?",
+      "paraphrase": "I'm at the door. Would you like me to go to the bench next?"
+    },
+    {
+      "scenario_id": "door-sofa-keys-clarification-05",
+      "turn_index": 4,
+      "tp_was": "A",
+      "raw_choice": "A",
+      "winner": "T+P",
+      "why": "includes 'me to'",
+      "template": "I'm at the lamppost. What would you like next?",
+      "paraphrase": "I'm at the lamppost. What would you like me to do next?"
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-01",
+      "turn_index": 7,
+      "tp_was": "B",
+      "raw_choice": "A",
+      "winner": "T",
+      "why": "More conversational and natural",
+      "template": "I'm at the door. What would you like next?",
+      "paraphrase": "I'm at the door. What would you like me to do next?"
+    },
+    {
+      "scenario_id": "door-sofa-keys-blocked-04",
+      "turn_index": 1,
+      "tp_was": "A",
+      "raw_choice": "A",
+      "winner": "T+P",
+      "why": "sounds more natural and conversational",
+      "template": "Okay, I'll head to the door.",
+      "paraphrase": "I'll be right there by the door."
+    },
+    {
+      "scenario_id": "door-sofa-keys-blocked-02",
+      "turn_index": 3,
+      "tp_was": "B",
+      "raw_choice": "A",
+      "winner": "T",
+      "why": "More conversational and natural",
+      "template": "I'm at the door. What would you like next?",
+      "paraphrase": "I'm at the door. What would you like me to do next?"
+    },
+    {
+      "scenario_id": "door-sofa-keys-blocked-03",
+      "turn_index": 1,
+      "tp_was": "B",
+      "raw_choice": "B",
+      "winner": "T+P",
+      "why": "sounds more natural and companionable",
+      "template": "Okay, I'll head to the sidewalk.",
+      "paraphrase": "Sure thing! I'll be right on the sidewalk with you."
+    },
+    {
+      "scenario_id": "door-sofa-keys-clean-01",
+      "turn_index": 2,
+      "tp_was": "B",
+      "raw_choice": "A",
+      "winner": "T",
+      "why": "More conversational and natural",
+      "template": "I'm at the door. What would you like next?",
+      "paraphrase": "I'm at the door. What would you like me to do next?"
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-05",
+      "turn_index": 3,
+      "tp_was": "B",
+      "raw_choice": "B",
+      "winner": "T+P",
+      "why": "sounds more natural and companionable",
+      "template": "Okay, I'll head to the sofa.",
+      "paraphrase": "Sure, I'll snuggle up on the sofa with you."
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-05",
+      "turn_index": 7,
+      "tp_was": "B",
+      "raw_choice": "B",
+      "winner": "T+P",
+      "why": "sounds more natural and friendly",
+      "template": "I'm at the sofa. What would you like next?",
+      "paraphrase": "I'm by the sofa. What next, friend?"
+    },
+    {
+      "scenario_id": "door-sofa-keys-failed-05",
+      "turn_index": 6,
+      "tp_was": "B",
+      "raw_choice": "B",
+      "winner": "T+P",
+      "why": "sounds more natural and friendly",
+      "template": "I'm at the sofa. What would you like next?",
+      "paraphrase": "I'm by the sofa. What next, friend?"
+    },
+    {
+      "scenario_id": "door-sofa-keys-cancelled-01",
+      "turn_index": 1,
+      "tp_was": "A",
+      "raw_choice": "A",
+      "winner": "T+P",
+      "why": "sounds more natural and conversational",
+      "template": "Okay, I'll head to the door.",
+      "paraphrase": "I'll be right there by the door."
+    },
+    {
+      "scenario_id": "door-sofa-keys-clean-03",
+      "turn_index": 1,
+      "tp_was": "B",
+      "raw_choice": "B",
+      "winner": "T+P",
+      "why": "sounds more natural and companionable",
+      "template": "Okay, I'll head to the sidewalk.",
+      "paraphrase": "Sure thing! I'll be right on the sidewalk with you."
+    },
+    {
+      "scenario_id": "door-sofa-keys-keys-04",
+      "turn_index": 2,
+      "tp_was": "B",
+      "raw_choice": "A",
+      "winner": "T",
+      "why": "More conversational and natural",
+      "template": "I'm at the door. What would you like next?",
+      "paraphrase": "I'm at the door. What would you like me to do next?"
+    },
+    {
+      "scenario_id": "door-sofa-keys-blocked-05",
+      "turn_index": 1,
+      "tp_was": "A",
+      "raw_choice": "A",
+      "winner": "T+P",
+      "why": "more concise and natural",
+      "template": "Okay, I'll head to the lamppost.",
+      "paraphrase": "I'll be right at the lamppost."
+    },
+    {
+      "scenario_id": "door-sofa-keys-keys-03",
+      "turn_index": 2,
+      "tp_was": "A",
+      "raw_choice": "A",
+      "winner": "T+P",
+      "why": "more conversational and natural",
+      "template": "I'm at the sidewalk. What would you like next?",
+      "paraphrase": "I'm on the sidewalk now. What do you need next?"
+    },
+    {
+      "scenario_id": "door-sofa-keys-blocked-01",
+      "turn_index": 5,
+      "tp_was": "B",
+      "raw_choice": "A",
+      "winner": "T",
+      "why": "more conversational",
+      "template": "Someone standing in the way held me up, so I waited.",
+      "paraphrase": "I had to wait because someone was blocking the way."
+    }
+  ]
+}

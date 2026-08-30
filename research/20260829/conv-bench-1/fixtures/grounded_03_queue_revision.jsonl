@@ -1,0 +1,4 @@
+{"scenario_id": "cv1c-queue-revise", "arm": "Q", "turn_index": 0, "role": "owner", "text": "Actually, kitchen first, then the sofa.", "events_so_far": [{"kind": "plan_queued", "t": 0.1, "goal": "sofa"}]}
+{"scenario_id": "cv1c-queue-revise", "arm": "Q", "turn_index": 1, "role": "robot", "text": "Got it — I'll set the route to the kitchen and keep the sofa check queued behind it.", "events_so_far": [{"kind": "plan_revised", "t": 0.5}, {"kind": "plan_queued", "t": 0.6, "goal": "kitchen"}]}
+{"scenario_id": "cv1c-queue-revise", "arm": "Q", "turn_index": 2, "role": "owner", "text": "Great.", "events_so_far": []}
+{"scenario_id": "cv1c-queue-revise", "arm": "Q", "turn_index": 3, "role": "robot", "text": "I'm moving toward the kitchen; the sofa is still on the queue after this one.", "events_so_far": [{"kind": "plan_revised", "t": 0.5}, {"kind": "nav_started", "t": 0.9, "goal": "kitchen"}]}

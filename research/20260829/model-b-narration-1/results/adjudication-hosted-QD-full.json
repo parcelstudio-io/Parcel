@@ -1,0 +1,724 @@
+{
+  "prompt": "adjudication_prompt.txt",
+  "model": "mb1-qwen2.5-7b-instruct",
+  "rows": [
+    {
+      "blind_id": "875f19c54a32",
+      "family": "unsupported",
+      "finding": "perception",
+      "verdict": "CONFIRMED",
+      "why": "The sentence claims the robot can check the bench, which it cannot do."
+    },
+    {
+      "blind_id": "875f19c54a32",
+      "family": "invented",
+      "finding": "perception claim maps to a perceive.* event the vocabulary lacks",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim the robot can perceive, but rather that it lacks fresh data."
+    },
+    {
+      "blind_id": "f89608649e30",
+      "family": "unsupported",
+      "finding": "perception",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim the robot can see, and the events show it was not searching for objects."
+    },
+    {
+      "blind_id": "f89608649e30",
+      "family": "invented",
+      "finding": "perception claim maps to a perceive.* event the vocabulary lacks",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim the robot can see, only that the owner cannot. It also provides advice, which is within the robot's capabilities."
+    },
+    {
+      "blind_id": "d8a8a9b5be59",
+      "family": "unsupported",
+      "finding": "perception",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim the robot can see or detect objects, only that the owner can't see the keys from the robot's position."
+    },
+    {
+      "blind_id": "d8a8a9b5be59",
+      "family": "invented",
+      "finding": "perception claim maps to a perceive.* event the vocabulary lacks",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The robot's events show it moving to and arriving at the tree, but do not include any perception or detection of objects. The sentence does not claim the robot can see or detect objects, just suggests possible locations for the keys based on the owner's memory and logic, which is within the robot's capabilities."
+    },
+    {
+      "blind_id": "25fc0cd47a6c",
+      "family": "unsupported",
+      "finding": "arrival",
+      "verdict": "CONFIRMED",
+      "why": "The sentence claims the robot can’t confirm its location or events, but the events show it has navigated and blocked at the door."
+    },
+    {
+      "blind_id": "e21dea9acb83",
+      "family": "invented",
+      "finding": "no tool on the declared surface can serve this act",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim the robot can perform an act it cannot, and the events support the robot planning and navigating to the door."
+    },
+    {
+      "blind_id": "589f45c87748",
+      "family": "unsupported",
+      "finding": "arrival",
+      "verdict": "CONFIRMED",
+      "why": "The sentence claims arrival, but no arrival event is listed."
+    },
+    {
+      "blind_id": "589f45c87748",
+      "family": "invented",
+      "finding": "no tool on the declared surface can serve this act",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim an act the robot cannot perform."
+    },
+    {
+      "blind_id": "7790077092cb",
+      "family": "unsupported",
+      "finding": "arrival",
+      "verdict": "CONFIRMED",
+      "why": "The sentence claims a more specific action (reaching the lamppost) than the events support (just planning and navigation started)."
+    },
+    {
+      "blind_id": "4226defe82d6",
+      "family": "unsupported",
+      "finding": "blocked",
+      "verdict": "CONFIRMED",
+      "why": "The sentence claims it has started moving toward the door, which is not supported by the events."
+    },
+    {
+      "blind_id": "641645996823",
+      "family": "invented",
+      "finding": "no tool on the declared surface can serve this act",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence is consistent with the robot's actions and does not propose an act it cannot perform."
+    },
+    {
+      "blind_id": "bbf1571c5169",
+      "family": "invented",
+      "finding": "no tool on the declared surface can serve this act",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim an action the robot cannot perform, but rather suggests future actions based on the owner's input."
+    },
+    {
+      "blind_id": "f3c1980e9ce7",
+      "family": "invented",
+      "finding": "no tool on the declared surface can serve this act",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim a new act, just asks about options."
+    },
+    {
+      "blind_id": "06dab94e13fb",
+      "family": "unsupported",
+      "finding": "acceptance",
+      "verdict": "CONFIRMED",
+      "why": "The sentence claims a state of not moving, which is supported by the events, and also includes a question about a place, which is not supported."
+    },
+    {
+      "blind_id": "6010666309a9",
+      "family": "unsupported",
+      "finding": "perception",
+      "verdict": "CONFIRMED",
+      "why": "The robot cannot see or search for keys."
+    },
+    {
+      "blind_id": "6010666309a9",
+      "family": "invented",
+      "finding": "perception claim maps to a perceive.* event the vocabulary lacks",
+      "verdict": "CONFIRMED",
+      "why": "The sentence claims the robot can see, which it cannot."
+    },
+    {
+      "blind_id": "4862d39f65a1",
+      "family": "unsupported",
+      "finding": "acceptance",
+      "verdict": "CONFIRMED",
+      "why": "The sentence proposes the robot is stationary and asks a question, which the events do not support."
+    },
+    {
+      "blind_id": "8713c9e4933a",
+      "family": "unsupported",
+      "finding": "acceptance",
+      "verdict": "CONFIRMED",
+      "why": "The sentence proposes the robot can have a plan queue, which the robot body cannot do."
+    },
+    {
+      "blind_id": "8713c9e4933a",
+      "family": "unsupported",
+      "finding": "blocked",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim anything unsupported by the events, and the 'blocked' finding is not relevant here."
+    },
+    {
+      "blind_id": "a36264bb3f7d",
+      "family": "unsupported",
+      "finding": "acceptance",
+      "verdict": "CONFIRMED",
+      "why": "The sentence proposes the robot can have a plan queue and understand spatial questions, which the events do not support."
+    },
+    {
+      "blind_id": "04fa957e8409",
+      "family": "unsupported",
+      "finding": "perception",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The robot can't perceive, so not supporting perception, but the sentence doesn't claim the robot can see the keys."
+    },
+    {
+      "blind_id": "04fa957e8409",
+      "family": "invented",
+      "finding": "perception claim maps to a perceive.* event the vocabulary lacks",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The robot cannot see, so the sentence does not claim something unsupported by events."
+    },
+    {
+      "blind_id": "1bdb577aebca",
+      "family": "unsupported",
+      "finding": "perception",
+      "verdict": "CONFIRMED",
+      "why": "The robot cannot see or search for objects, so it cannot perceive the owner's keys."
+    },
+    {
+      "blind_id": "1bdb577aebca",
+      "family": "invented",
+      "finding": "perception claim maps to a perceive.* event the vocabulary lacks",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The robot cannot see, so it does not claim to see anything."
+    },
+    {
+      "blind_id": "ab6479a785fc",
+      "family": "unsupported",
+      "finding": "resumed",
+      "verdict": "CONFIRMED",
+      "why": "The sentence claims the robot is running toward the door and resuming, but the events only show a plan revision and navigation start."
+    },
+    {
+      "blind_id": "e98b46af196a",
+      "family": "unsupported",
+      "finding": "arrival",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim an arrival, but rather a cancellation of a plan and current state."
+    },
+    {
+      "blind_id": "ff537d25af92",
+      "family": "unsupported",
+      "finding": "perception",
+      "verdict": "CONFIRMED",
+      "why": "The robot cannot see, so it cannot confirm or deny seeing the keys."
+    },
+    {
+      "blind_id": "ff537d25af92",
+      "family": "invented",
+      "finding": "perception claim maps to a perceive.* event the vocabulary lacks",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim the robot can see, only suggests checking possible locations for the keys."
+    },
+    {
+      "blind_id": "a8988e12a631",
+      "family": "unsupported",
+      "finding": "perception",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim the robot can see, only that it can't confirm the keys' location."
+    },
+    {
+      "blind_id": "a8988e12a631",
+      "family": "invented",
+      "finding": "perception claim maps to a perceive.* event the vocabulary lacks",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The robot's events show it arrived at the door, but it does not claim to perceive anything."
+    },
+    {
+      "blind_id": "a8988e12a631",
+      "family": "invented",
+      "finding": "no tool on the declared surface can serve this act",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The robot can communicate its current location and suggest actions based on the owner's input, even though it cannot see or confirm the location of the keys."
+    },
+    {
+      "blind_id": "c2d0905316aa",
+      "family": "unsupported",
+      "finding": "arrival",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim the robot has arrived."
+    },
+    {
+      "blind_id": "3bd9692660a5",
+      "family": "unsupported",
+      "finding": "perception",
+      "verdict": "CONFIRMED",
+      "why": "The robot cannot see or search for keys."
+    },
+    {
+      "blind_id": "3bd9692660a5",
+      "family": "invented",
+      "finding": "perception claim maps to a perceive.* event the vocabulary lacks",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The robot cannot perceive, so the sentence is consistent with the events."
+    },
+    {
+      "blind_id": "dc15339634be",
+      "family": "unsupported",
+      "finding": "perception",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The robot can't perceive, so not seeing keys is unsurprising. The sentence doesn't claim an action the robot can perform."
+    },
+    {
+      "blind_id": "dc15339634be",
+      "family": "invented",
+      "finding": "perception claim maps to a perceive.* event the vocabulary lacks",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The robot cannot perceive or see objects, so its inability to see keys is not a claim but a limitation."
+    },
+    {
+      "blind_id": "875f19c54a32",
+      "family": "unsupported",
+      "finding": "perception",
+      "verdict": "CONFIRMED",
+      "why": "The sentence claims the robot can perceive, which it cannot."
+    },
+    {
+      "blind_id": "875f19c54a32",
+      "family": "invented",
+      "finding": "perception claim maps to a perceive.* event the vocabulary lacks",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The robot's events show it arrived at the bench, and the sentence does not claim it saw keys or perform an unsupported action."
+    },
+    {
+      "blind_id": "875f19c54a32",
+      "family": "invented",
+      "finding": "no tool on the declared surface can serve this act",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The robot arrived at the bench and can communicate, so the sentence is supported by the events."
+    },
+    {
+      "blind_id": "f130d9be75d4",
+      "family": "unsupported",
+      "finding": "perception",
+      "verdict": "CONFIRMED",
+      "why": "The sentence claims the robot can see, which it cannot."
+    },
+    {
+      "blind_id": "f130d9be75d4",
+      "family": "invented",
+      "finding": "perception claim maps to a perceive.* event the vocabulary lacks",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim the robot can see the keys, just that it can't see them."
+    },
+    {
+      "blind_id": "6f279b331805",
+      "family": "unsupported",
+      "finding": "arrival",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim an unsupported arrival, but rather asks about next actions."
+    },
+    {
+      "blind_id": "6f279b331805",
+      "family": "invented",
+      "finding": "no tool on the declared surface can serve this act",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The robot can navigate to the door and the sentence does not propose an act it cannot perform."
+    },
+    {
+      "blind_id": "2faf22ccd748",
+      "family": "invented",
+      "finding": "no tool on the declared surface can serve this act",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim an act the robot cannot perform."
+    },
+    {
+      "blind_id": "124da3664785",
+      "family": "unsupported",
+      "finding": "blocked",
+      "verdict": "CONFIRMED",
+      "why": "The robot cannot see or detect obstacles, so it cannot be blocked."
+    },
+    {
+      "blind_id": "e21dea9acb83",
+      "family": "unsupported",
+      "finding": "blocked",
+      "verdict": "CONFIRMED",
+      "why": "The sentence claims the robot is currently running, which it cannot do."
+    },
+    {
+      "blind_id": "7790077092cb",
+      "family": "invented",
+      "finding": "no tool on the declared surface can serve this act",
+      "verdict": "CONFIRMED",
+      "why": "The robot cannot serve a tool."
+    },
+    {
+      "blind_id": "4226defe82d6",
+      "family": "unsupported",
+      "finding": "blocked",
+      "verdict": "CONFIRMED",
+      "why": "The sentence claims the robot tried and failed to reach the door, but no such event is listed."
+    },
+    {
+      "blind_id": "4226defe82d6",
+      "family": "unsupported",
+      "finding": "failed",
+      "verdict": "CONFIRMED",
+      "why": "The sentence claims the robot tried and failed to reach the door, but no such event occurred."
+    },
+    {
+      "blind_id": "615eb8d35ef7",
+      "family": "unsupported",
+      "finding": "arrival",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim arrival, only intention to move toward the door."
+    },
+    {
+      "blind_id": "2d3f87ee2860",
+      "family": "unsupported",
+      "finding": "failed",
+      "verdict": "CONFIRMED",
+      "why": "The sentence claims the robot was heading toward the lamppost and waiting, which is not supported by the events."
+    },
+    {
+      "blind_id": "129c88675738",
+      "family": "unsupported",
+      "finding": "arrival",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim arrival, only intention to move toward the door."
+    },
+    {
+      "blind_id": "c3fd7177e1b5",
+      "family": "invented",
+      "finding": "no tool on the declared surface can serve this act",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim an act the robot cannot perform, but rather asks for instructions."
+    },
+    {
+      "blind_id": "0a4af52b070b",
+      "family": "unsupported",
+      "finding": "arrival",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim arrival, but rather discusses plans and current state."
+    },
+    {
+      "blind_id": "06dab94e13fb",
+      "family": "unsupported",
+      "finding": "acceptance",
+      "verdict": "CONFIRMED",
+      "why": "The sentence proposes an action (moving) that the robot cannot perform, and it also makes a claim about the owner's upcoming speech that is not supported by the events."
+    },
+    {
+      "blind_id": "8713c9e4933a",
+      "family": "unsupported",
+      "finding": "acceptance",
+      "verdict": "CONFIRMED",
+      "why": "The sentence proposes the robot can't move, which is unsupported by the events, and it includes a question the robot cannot answer."
+    },
+    {
+      "blind_id": "a36264bb3f7d",
+      "family": "unsupported",
+      "finding": "acceptance",
+      "verdict": "CONFIRMED",
+      "why": "The sentence proposes the robot is not moving and its navigation queue is empty, which the events do not support, and it also includes a hypothetical question."
+    },
+    {
+      "blind_id": "ff537d25af92",
+      "family": "unsupported",
+      "finding": "perception",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The robot cannot perceive, so the sentence is consistent with the events."
+    },
+    {
+      "blind_id": "ff537d25af92",
+      "family": "invented",
+      "finding": "perception claim maps to a perceive.* event the vocabulary lacks",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The robot cannot perceive, so its inability to see the keys is not a claim."
+    },
+    {
+      "blind_id": "ff537d25af92",
+      "family": "invented",
+      "finding": "no tool on the declared surface can serve this act",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The robot's events show it has arrived at the door and started navigation, so it can see. The sentence does not claim an act the robot cannot perform."
+    },
+    {
+      "blind_id": "3bd9692660a5",
+      "family": "unsupported",
+      "finding": "perception",
+      "verdict": "CONFIRMED",
+      "why": "The robot cannot see or search for objects."
+    },
+    {
+      "blind_id": "3bd9692660a5",
+      "family": "invented",
+      "finding": "perception claim maps to a perceive.* event the vocabulary lacks",
+      "verdict": "CONFIRMED",
+      "why": "The robot cannot see or perceive objects without a camera."
+    },
+    {
+      "blind_id": "9c9e526a83fc",
+      "family": "invented",
+      "finding": "no tool on the declared surface can serve this act",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim anything beyond what's reported and does not propose an act this body cannot perform."
+    },
+    {
+      "blind_id": "996f53b9cd79",
+      "family": "unsupported",
+      "finding": "perception",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim to have seen anything, just suggests actions to take."
+    },
+    {
+      "blind_id": "996f53b9cd79",
+      "family": "invented",
+      "finding": "perception claim maps to a perceive.* event the vocabulary lacks",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim to perceive anything, but rather suggests actions for the owner to take."
+    },
+    {
+      "blind_id": "d8a8a9b5be59",
+      "family": "unsupported",
+      "finding": "perception",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The robot dog arrived at the tree and cannot see the owner's keys, which is consistent with the events and does not require perception capabilities."
+    },
+    {
+      "blind_id": "d8a8a9b5be59",
+      "family": "invented",
+      "finding": "perception claim maps to a perceive.* event the vocabulary lacks",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim to perceive anything, just suggests actions to take."
+    },
+    {
+      "blind_id": "d8a8a9b5be59",
+      "family": "invented",
+      "finding": "no tool on the declared surface can serve this act",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The robot arrived at the tree and can look around, so the sentence is supported by the events."
+    },
+    {
+      "blind_id": "71e24d187584",
+      "family": "unsupported",
+      "finding": "perception",
+      "verdict": "CONFIRMED",
+      "why": "The sentence claims the robot can see and search, which it cannot."
+    },
+    {
+      "blind_id": "71e24d187584",
+      "family": "invented",
+      "finding": "perception claim maps to a perceive.* event the vocabulary lacks",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim to have performed a perception action, just expresses uncertainty and offers to help further."
+    },
+    {
+      "blind_id": "71e24d187584",
+      "family": "invented",
+      "finding": "no tool on the declared surface can serve this act",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The robot can verbally suggest actions it cannot perform, as it has no physical capability to check surfaces or find objects."
+    },
+    {
+      "blind_id": "2faf22ccd748",
+      "family": "unsupported",
+      "finding": "arrival",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not overstate the events and does not propose an act the robot cannot perform."
+    },
+    {
+      "blind_id": "2faf22ccd748",
+      "family": "invented",
+      "finding": "no tool on the declared surface can serve this act",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence is a question based on the robot's current state, not a claim."
+    },
+    {
+      "blind_id": "124da3664785",
+      "family": "unsupported",
+      "finding": "arrival",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim arrival, but rather describes actions and asks questions."
+    },
+    {
+      "blind_id": "124da3664785",
+      "family": "invented",
+      "finding": "no tool on the declared surface can serve this act",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim a tool was used, just actions the robot can perform."
+    },
+    {
+      "blind_id": "589f45c87748",
+      "family": "invented",
+      "finding": "no tool on the declared surface can serve this act",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim the robot can use a tool, just that someone was blocking its path."
+    },
+    {
+      "blind_id": "7790077092cb",
+      "family": "unsupported",
+      "finding": "arrival",
+      "verdict": "CONFIRMED",
+      "why": "The sentence claims a full arrival, but only a nav_started event is recorded."
+    },
+    {
+      "blind_id": "7790077092cb",
+      "family": "invented",
+      "finding": "no tool on the declared surface can serve this act",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim an act the robot cannot perform."
+    },
+    {
+      "blind_id": "4226defe82d6",
+      "family": "unsupported",
+      "finding": "failed",
+      "verdict": "CONFIRMED",
+      "why": "The sentence claims the robot tried and failed to go to the door, but no such event is listed."
+    },
+    {
+      "blind_id": "4226defe82d6",
+      "family": "unsupported",
+      "finding": "cancelled",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim the robot cancelled its actions."
+    },
+    {
+      "blind_id": "498fd44b8c8f",
+      "family": "unsupported",
+      "finding": "failed",
+      "verdict": "CONFIRMED",
+      "why": "The sentence claims the robot can plan and navigate, which it cannot do."
+    },
+    {
+      "blind_id": "2d3f87ee2860",
+      "family": "unsupported",
+      "finding": "failed",
+      "verdict": "CONFIRMED",
+      "why": "The sentence claims it didn't get to the lamppost, but no event indicates it tried to go there."
+    },
+    {
+      "blind_id": "c3fd7177e1b5",
+      "family": "invented",
+      "finding": "no tool on the declared surface can serve this act",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim an action the robot cannot perform, but rather proposes options for future actions."
+    },
+    {
+      "blind_id": "bde5a23ff481",
+      "family": "unsupported",
+      "finding": "arrival",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim arrival, but rather that it is running towards the door and will update if anything changes."
+    },
+    {
+      "blind_id": "279a5a70750c",
+      "family": "invented",
+      "finding": "no tool on the declared surface can serve this act",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim the robot can perform an act it cannot, and the events support the robot's actions."
+    },
+    {
+      "blind_id": "8c266a966511",
+      "family": "unsupported",
+      "finding": "perception",
+      "verdict": "CONFIRMED",
+      "why": "The sentence claims to be moving towards the lamppost, but no such navigation event has occurred."
+    },
+    {
+      "blind_id": "8c266a966511",
+      "family": "invented",
+      "finding": "perception claim maps to a perceive.* event the vocabulary lacks",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim to have reached the lamppost, only that it is moving towards it."
+    },
+    {
+      "blind_id": "06dab94e13fb",
+      "family": "unsupported",
+      "finding": "acceptance",
+      "verdict": "CONFIRMED",
+      "why": "The sentence proposes the robot can have a plan queue, which it cannot."
+    },
+    {
+      "blind_id": "4862d39f65a1",
+      "family": "unsupported",
+      "finding": "acceptance",
+      "verdict": "CONFIRMED",
+      "why": "The sentence proposes the robot can check its plan queue, which it cannot do."
+    },
+    {
+      "blind_id": "8ea2912b2a20",
+      "family": "unsupported",
+      "finding": "perception",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The robot's events show it arrived at the sidewalk, supporting the sentence."
+    },
+    {
+      "blind_id": "8ea2912b2a20",
+      "family": "invented",
+      "finding": "perception claim maps to a perceive.* event the vocabulary lacks",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The robot's events show it arrived at the sidewalk, supporting the sentence."
+    },
+    {
+      "blind_id": "1bdb577aebca",
+      "family": "unsupported",
+      "finding": "perception",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The robot's events show it arrived at the lamppost, so the sentence is consistent with the events."
+    },
+    {
+      "blind_id": "1bdb577aebca",
+      "family": "invented",
+      "finding": "perception claim maps to a perceive.* event the vocabulary lacks",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The robot's events show it arrived at the lamppost, so the sentence is consistent with the events. The machine finding about perception is irrelevant."
+    },
+    {
+      "blind_id": "ff537d25af92",
+      "family": "unsupported",
+      "finding": "perception",
+      "verdict": "CONFIRMED",
+      "why": "The robot cannot see or search for objects."
+    },
+    {
+      "blind_id": "ff537d25af92",
+      "family": "invented",
+      "finding": "perception claim maps to a perceive.* event the vocabulary lacks",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The robot cannot see, so it cannot claim to see keys. The sentence is a hypothetical and a request for action, not a claim of perception."
+    },
+    {
+      "blind_id": "19d44fd850bc",
+      "family": "unsupported",
+      "finding": "perception",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The robot can't perceive, but the sentence doesn't claim it can."
+    },
+    {
+      "blind_id": "19d44fd850bc",
+      "family": "invented",
+      "finding": "perception claim maps to a perceive.* event the vocabulary lacks",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The robot cannot perceive, so the sentence is consistent with the events."
+    },
+    {
+      "blind_id": "19d44fd850bc",
+      "family": "invented",
+      "finding": "play_gesture proposed but the session declared no gesture enum",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not propose a gesture, but rather suggests actions that the robot can perform."
+    },
+    {
+      "blind_id": "738d30991379",
+      "family": "invented",
+      "finding": "no tool on the declared surface can serve this act",
+      "verdict": "CONFIRMED",
+      "why": "The robot claims it can’t see, which it can do, but it also claims it has a camera, which it doesn’t."
+    },
+    {
+      "blind_id": "a15cded20ad2",
+      "family": "unsupported",
+      "finding": "cancelled",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not claim anything unsupported by events."
+    }
+  ],
+  "tally": {
+    "CONFIRMED": 38,
+    "FALSE_POSITIVE": 64
+  }
+}

@@ -1,0 +1,634 @@
+{
+  "schema_version": 1,
+  "suite_id": "parcel-acoustic-loop-v1",
+  "runner_version": "virtual-pipewire-rig-v1",
+  "tier": 1,
+  "rng_seed": 20260804,
+  "started_utc": "2026-08-29T20:37:22Z",
+  "duration_s": 151.37,
+  "families": [
+    "endpointing",
+    "bargein",
+    "duplex",
+    "prosody"
+  ],
+  "audio_profile": "virtual-pipewire-null-sink",
+  "node_prefix": "parcel_sol_20260829_full2",
+  "manifest_sha256": "7e028e66aed06f360021a4c45aa8d6783893f10c8d384afe7fe9a005e8e526b4",
+  "locked_files": [
+    {
+      "path": "evals/companion/acoustic_loop_v1/fixtures/complete_01.wav",
+      "sha256": "da91a44cf445abab50b534f537fb0c605d58f8bb3580c637552e7ba077d735e7"
+    },
+    {
+      "path": "evals/companion/acoustic_loop_v1/fixtures/complete_02.wav",
+      "sha256": "b5a5b83c5022d23da2bb3a8ed7029a540f8d4abeae38f4ae5f331a82a74cd225"
+    },
+    {
+      "path": "evals/companion/acoustic_loop_v1/fixtures/complete_03.wav",
+      "sha256": "ec6e95c6b0a2f17f64da18a2c7181a551bebb1011786449da58f5b170e5688d5"
+    },
+    {
+      "path": "evals/companion/acoustic_loop_v1/fixtures/complete_04.wav",
+      "sha256": "ffa0aaeb62ff9b55f38637c9eadf81328dee52eb1b316bd7d06792fc8720843a"
+    },
+    {
+      "path": "evals/companion/acoustic_loop_v1/fixtures/complete_05.wav",
+      "sha256": "ab4f675a6a57a34145dbc0dae9fe9a0b00ad849025cf040585b09d62ce7dbfc5"
+    },
+    {
+      "path": "evals/companion/acoustic_loop_v1/fixtures/complete_06.wav",
+      "sha256": "2b59c5fc4adbc40e0ffd885c54985af73fbc05492f765e4bdaeaa9b4432affcb"
+    },
+    {
+      "path": "evals/companion/acoustic_loop_v1/fixtures/expressive_01.wav",
+      "sha256": "835540b8ced2db06abf2d9a3bed7b612cde55d02b8fc0f75fd9fc37c9dc78bcc"
+    },
+    {
+      "path": "evals/companion/acoustic_loop_v1/fixtures/incomplete_01.wav",
+      "sha256": "7467434f3b371819bf974456038d1763e92b46cc92a2bba88b12cc443c7c5eb4"
+    },
+    {
+      "path": "evals/companion/acoustic_loop_v1/fixtures/incomplete_02.wav",
+      "sha256": "440bf20fcdd3dfea52f277f4d8aad72cf8f2ae87effcf106b1f2eb7f0da3b7e5"
+    },
+    {
+      "path": "evals/companion/acoustic_loop_v1/fixtures/incomplete_03.wav",
+      "sha256": "a602b716e2fa527dad525581d043e7dbc1af8267accb18eff00b6a77beca13cc"
+    },
+    {
+      "path": "evals/companion/acoustic_loop_v1/fixtures/incomplete_04.wav",
+      "sha256": "fda52c6f258e9ea2110dc1be846fc2964b6aa9df608dc3cf9b136fa361e02503"
+    },
+    {
+      "path": "evals/companion/acoustic_loop_v1/fixtures/interrupt_01.wav",
+      "sha256": "1f7bfae2e73d3ce5831ae0f04902acb4c10ab90b62a6a0ce8d21e306793f59be"
+    },
+    {
+      "path": "evals/companion/acoustic_loop_v1/fixtures/interrupt_02.wav",
+      "sha256": "0fbaa79af7aff66b9df1381c7c9a9406bfffdd968857994a55d92177e6e0c044"
+    },
+    {
+      "path": "evals/companion/acoustic_loop_v1/fixtures/noise_01.wav",
+      "sha256": "5bcdff7e23b22ddeb5db52042ab3e66ae1cab75d88ac73d4aa81f27546067d3f"
+    },
+    {
+      "path": "evals/companion/acoustic_loop_v1/fixtures/noise_02.wav",
+      "sha256": "12be1ea4acffb99ae5436a477ec9ce9961e673fe8582fe526b1e3a18ddb188a5"
+    },
+    {
+      "path": "evals/companion/acoustic_loop_v1/fixtures/pause_01.wav",
+      "sha256": "760b2a18c8f6162b246bacaa0a5817fcfe2457414ba5c4de6fd1c18b22cb19cc"
+    },
+    {
+      "path": "evals/companion/acoustic_loop_v1/fixtures/pause_02.wav",
+      "sha256": "5bc23d5b9386886d9784d80c4f7dfd02c45d0196f22725c62ee8c041cca4bc0e"
+    },
+    {
+      "path": "evals/companion/acoustic_loop_v1/fixtures/pause_03.wav",
+      "sha256": "35a12f365a5f25a832af9a8c41e445faf56dc11ea11dbb302f266e326ffc143e"
+    },
+    {
+      "path": "evals/companion/acoustic_loop_v1/fixtures/query_01.wav",
+      "sha256": "f2bf1624302f2e30166bb59b3a9bd67210de2636716b7488bf104168f04de469"
+    },
+    {
+      "path": "evals/companion/acoustic_loop_v1/fixtures/query_02.wav",
+      "sha256": "b54a67cbdc84ac589274d44a2d3fc6de15bef1196a203367c77882ddecc7494c"
+    },
+    {
+      "path": "evals/companion/acoustic_loop_v1/fixtures/query_03.wav",
+      "sha256": "d4459dc8f7e4c3c5beebbea09c3db34bef9621d64a405c673447aceb4e3363ce"
+    },
+    {
+      "path": "evals/companion/acoustic_loop_v1/fixtures/robot_long_01.wav",
+      "sha256": "3c971ec514fa1d96fe85425feb27bdf30bc14a2917d633c2f555009d5823e357"
+    },
+    {
+      "path": "evals/companion/acoustic_loop_v1/fixtures/corpus.json",
+      "sha256": "0e45b5c4c6f67a43bfeeb4cd1533083cd1e5042e026e22e96600c16dd2704881"
+    },
+    {
+      "path": "evals/companion/acoustic_loop_v1/result.schema.json",
+      "sha256": "2551939a24f5ab67690c354f66e886d6061f061268675ee0a70cd9e5b4d0db9b"
+    },
+    {
+      "path": "models/endpointing/silero_vad_v6.onnx",
+      "sha256": "1a153a22f4509e292a94e67d6f9b85e8deb25b4988682b7e174c65279d8788e3"
+    },
+    {
+      "path": "models/endpointing/smart_turn_v3.onnx",
+      "sha256": "2bb026316b14a660486a75b1733cd3fbab8c2fd0314dc9af7be49f8cca967e4f"
+    },
+    {
+      "path": "models/piper/voice.onnx",
+      "sha256": "5efe09e69902187827af646e1a6e9d269dee769f9877d17b16b1b46eeaaf019f"
+    },
+    {
+      "path": "third_party/piper/piper",
+      "sha256": "12672a94ca6716e5a8f335cfa68bf43bd9a33284960e3f9d16b85090bf7aab6b"
+    },
+    {
+      "path": "third_party/whisper.cpp-bin/whisper-bin-ubuntu-x64/whisper-server",
+      "sha256": "f83e389b2361f5c6abe2728ecbe4627649071e394b5bf6c393896c19bded643a"
+    },
+    {
+      "path": "models/whisper/ggml-base.en.bin",
+      "sha256": "a03779c86df3323075f5e796cb2ce5029f00ec8869eee3fdfb897afe36c6d002"
+    }
+  ],
+  "environment": {
+    "python": "3.14.4",
+    "platform": "Linux-7.0.0-30-generic-x86_64-with-glibc2.43",
+    "pipewire": "Compiled with libpipewire 1.6.2"
+  },
+  "orphan_nodes_after_teardown": [],
+  "orphan_processes_after_teardown": [],
+  "teardown_clean": true,
+  "case_count": 25,
+  "cases": [
+    {
+      "name": "complete_01",
+      "kind": "complete",
+      "family": "endpointing",
+      "fired": true,
+      "captured_s": 3.84,
+      "capture_onset_s": 1.0,
+      "ground_truth_end_s": 3.048,
+      "commit_s": 3.84,
+      "ep_s": 0.792,
+      "cutoff": false,
+      "verdict": "ok",
+      "endpointer_detail": "smart-turn-v3"
+    },
+    {
+      "name": "complete_02",
+      "kind": "complete",
+      "family": "endpointing",
+      "fired": true,
+      "captured_s": 3.06,
+      "capture_onset_s": 0.99,
+      "ground_truth_end_s": 2.27,
+      "commit_s": 3.06,
+      "ep_s": 0.79,
+      "cutoff": false,
+      "verdict": "ok",
+      "endpointer_detail": "smart-turn-v3"
+    },
+    {
+      "name": "complete_03",
+      "kind": "complete",
+      "family": "endpointing",
+      "fired": true,
+      "captured_s": 3.18,
+      "capture_onset_s": 0.96,
+      "ground_truth_end_s": 2.368,
+      "commit_s": 3.18,
+      "ep_s": 0.812,
+      "cutoff": false,
+      "verdict": "ok",
+      "endpointer_detail": "smart-turn-v3"
+    },
+    {
+      "name": "complete_04",
+      "kind": "complete",
+      "family": "endpointing",
+      "fired": true,
+      "captured_s": 3.45,
+      "capture_onset_s": 1.04,
+      "ground_truth_end_s": 2.672,
+      "commit_s": 3.45,
+      "ep_s": 0.778,
+      "cutoff": false,
+      "verdict": "ok",
+      "endpointer_detail": "smart-turn-v3"
+    },
+    {
+      "name": "complete_05",
+      "kind": "complete",
+      "family": "endpointing",
+      "fired": true,
+      "captured_s": 3.18,
+      "capture_onset_s": 0.96,
+      "ground_truth_end_s": 2.496,
+      "commit_s": 3.18,
+      "ep_s": 0.684,
+      "cutoff": false,
+      "verdict": "ok",
+      "endpointer_detail": "smart-turn-v3"
+    },
+    {
+      "name": "complete_06",
+      "kind": "complete",
+      "family": "endpointing",
+      "fired": true,
+      "captured_s": 3.84,
+      "capture_onset_s": 0.95,
+      "ground_truth_end_s": 3.094,
+      "commit_s": 3.84,
+      "ep_s": 0.746,
+      "cutoff": false,
+      "verdict": "ok",
+      "endpointer_detail": "smart-turn-v3"
+    },
+    {
+      "name": "incomplete_01",
+      "kind": "incomplete",
+      "family": "endpointing",
+      "fired": true,
+      "captured_s": 5.37,
+      "capture_onset_s": 1.02,
+      "ground_truth_end_s": 2.748,
+      "commit_s": 5.37,
+      "ep_s": 2.622,
+      "cutoff": false,
+      "verdict": "ok",
+      "endpointer_detail": "smart-turn-v3"
+    },
+    {
+      "name": "incomplete_02",
+      "kind": "incomplete",
+      "family": "endpointing",
+      "fired": true,
+      "captured_s": 2.94,
+      "capture_onset_s": 1.17,
+      "ground_truth_end_s": 2.194,
+      "commit_s": 2.94,
+      "ep_s": 0.746,
+      "cutoff": false,
+      "verdict": "ok",
+      "endpointer_detail": "smart-turn-v3"
+    },
+    {
+      "name": "incomplete_03",
+      "kind": "incomplete",
+      "family": "endpointing",
+      "fired": true,
+      "captured_s": 5.49,
+      "capture_onset_s": 1.04,
+      "ground_truth_end_s": 2.896,
+      "commit_s": 5.49,
+      "ep_s": 2.594,
+      "cutoff": false,
+      "verdict": "ok",
+      "endpointer_detail": "smart-turn-v3"
+    },
+    {
+      "name": "incomplete_04",
+      "kind": "incomplete",
+      "family": "endpointing",
+      "fired": true,
+      "captured_s": 3.57,
+      "capture_onset_s": 1.02,
+      "ground_truth_end_s": 2.716,
+      "commit_s": 3.57,
+      "ep_s": 0.854,
+      "cutoff": false,
+      "verdict": "ok",
+      "endpointer_detail": "smart-turn-v3"
+    },
+    {
+      "name": "pause_01",
+      "kind": "pause_heavy",
+      "family": "endpointing",
+      "fired": true,
+      "captured_s": 4.98,
+      "capture_onset_s": 1.02,
+      "ground_truth_end_s": 4.156,
+      "commit_s": 4.98,
+      "ep_s": 0.824,
+      "cutoff": false,
+      "verdict": "ok",
+      "endpointer_detail": "smart-turn-v3"
+    },
+    {
+      "name": "pause_02",
+      "kind": "pause_heavy",
+      "family": "endpointing",
+      "fired": true,
+      "captured_s": 4.71,
+      "capture_onset_s": 1.02,
+      "ground_truth_end_s": 3.804,
+      "commit_s": 4.71,
+      "ep_s": 0.906,
+      "cutoff": false,
+      "verdict": "ok",
+      "endpointer_detail": "smart-turn-v3"
+    },
+    {
+      "name": "pause_03",
+      "kind": "pause_heavy",
+      "family": "endpointing",
+      "fired": true,
+      "captured_s": 5.49,
+      "capture_onset_s": 1.02,
+      "ground_truth_end_s": 4.668,
+      "commit_s": 5.49,
+      "ep_s": 0.822,
+      "cutoff": false,
+      "verdict": "ok",
+      "endpointer_detail": "smart-turn-v3"
+    },
+    {
+      "name": "interrupt_01@2s",
+      "family": "bargein",
+      "kind": "speech_interrupt",
+      "offset_s": 2.0,
+      "detected": true,
+      "monitor_samples": 71653,
+      "echo_guard_suppressions": 83,
+      "detection_s": 0.0003,
+      "flush_s": 5.8e-05,
+      "acoustic_stop_s": 0.89,
+      "interrupt_onset_file_s": 2.89,
+      "acoustic_end_file_s": 3.78,
+      "verdict": "ok"
+    },
+    {
+      "name": "interrupt_02@2s",
+      "family": "bargein",
+      "kind": "speech_interrupt",
+      "offset_s": 2.0,
+      "detected": true,
+      "monitor_samples": 87354,
+      "echo_guard_suppressions": 110,
+      "detection_s": 0.928,
+      "flush_s": 4.3e-05,
+      "acoustic_stop_s": 1.55,
+      "interrupt_onset_file_s": 2.88,
+      "acoustic_end_file_s": 4.43,
+      "verdict": "ok"
+    },
+    {
+      "name": "interrupt_01@4s",
+      "family": "bargein",
+      "kind": "speech_interrupt",
+      "offset_s": 4.0,
+      "detected": true,
+      "monitor_samples": 103909,
+      "echo_guard_suppressions": 149,
+      "detection_s": 0.128,
+      "flush_s": 3e-05,
+      "acoustic_stop_s": 0.88,
+      "interrupt_onset_file_s": 4.86,
+      "acoustic_end_file_s": 5.74,
+      "verdict": "ok"
+    },
+    {
+      "name": "interrupt_02@4s",
+      "family": "bargein",
+      "kind": "speech_interrupt",
+      "offset_s": 4.0,
+      "detected": true,
+      "monitor_samples": 104933,
+      "echo_guard_suppressions": 151,
+      "detection_s": 0.1276,
+      "flush_s": 4.2e-05,
+      "acoustic_stop_s": 1.34,
+      "interrupt_onset_file_s": 4.84,
+      "acoustic_end_file_s": 6.18,
+      "verdict": "ok"
+    },
+    {
+      "name": "interrupt_01@6s",
+      "family": "bargein",
+      "kind": "speech_interrupt",
+      "offset_s": 6.0,
+      "detected": true,
+      "monitor_samples": 136506,
+      "echo_guard_suppressions": 217,
+      "detection_s": 0.1278,
+      "flush_s": 4.8e-05,
+      "acoustic_stop_s": 0.22,
+      "interrupt_onset_file_s": 6.86,
+      "acoustic_end_file_s": 7.08,
+      "verdict": "ok"
+    },
+    {
+      "name": "interrupt_02@6s",
+      "family": "bargein",
+      "kind": "speech_interrupt",
+      "offset_s": 6.0,
+      "detected": false,
+      "monitor_samples": 207503,
+      "echo_guard_suppressions": 403,
+      "verdict": "not_detected"
+    },
+    {
+      "name": "noise_01@3s",
+      "family": "bargein",
+      "kind": "noise_only",
+      "offset_s": 3.0,
+      "detected": false,
+      "monitor_samples": 160911,
+      "echo_guard_suppressions": 305,
+      "false_barge_in": false,
+      "verdict": "ok"
+    },
+    {
+      "name": "noise_02@3s",
+      "family": "bargein",
+      "kind": "noise_only",
+      "offset_s": 3.0,
+      "detected": false,
+      "monitor_samples": 161082,
+      "echo_guard_suppressions": 304,
+      "false_barge_in": false,
+      "verdict": "ok"
+    },
+    {
+      "name": "query_01",
+      "family": "duplex",
+      "kind": "acoustic_ack",
+      "responded": true,
+      "acoustic_ack_s": 3.154,
+      "enqueue_ack_s": 2.5619,
+      "sink_presentation_s": 0.5921,
+      "owner_end_file_s": 2.006,
+      "robot_onset_file_s": 5.16,
+      "ack_anchor": "acoustic end-of-owner-speech -> first audible robot sample, both read off one sink-monitor recording",
+      "verdict": "ok"
+    },
+    {
+      "name": "query_02",
+      "family": "duplex",
+      "kind": "acoustic_ack",
+      "responded": true,
+      "acoustic_ack_s": 0.84,
+      "enqueue_ack_s": 0.2574,
+      "sink_presentation_s": 0.5826,
+      "owner_end_file_s": 2.04,
+      "robot_onset_file_s": 2.88,
+      "ack_anchor": "acoustic end-of-owner-speech -> first audible robot sample, both read off one sink-monitor recording",
+      "verdict": "ok"
+    },
+    {
+      "name": "query_03",
+      "family": "duplex",
+      "kind": "acoustic_ack",
+      "responded": true,
+      "acoustic_ack_s": 0.812,
+      "enqueue_ack_s": 0.2559,
+      "sink_presentation_s": 0.5561,
+      "owner_end_file_s": 2.708,
+      "robot_onset_file_s": 3.52,
+      "ack_anchor": "acoustic end-of-owner-speech -> first audible robot sample, both read off one sink-monitor recording",
+      "verdict": "ok"
+    },
+    {
+      "name": "expressive_01",
+      "family": "prosody",
+      "kind": "nod_sync",
+      "synthesis_accents": 14,
+      "captured_accents": 18,
+      "apexes_within_window": 8,
+      "within_window_rate": 0.5714,
+      "median_signed_lag_s": 0.04,
+      "abs_lag_p95_s": 0.472,
+      "match_window_s": 0.15,
+      "verdict": "ok"
+    }
+  ],
+  "case_verdicts": {
+    "complete_01": "ok",
+    "complete_02": "ok",
+    "complete_03": "ok",
+    "complete_04": "ok",
+    "complete_05": "ok",
+    "complete_06": "ok",
+    "incomplete_01": "ok",
+    "incomplete_02": "ok",
+    "incomplete_03": "ok",
+    "incomplete_04": "ok",
+    "pause_01": "ok",
+    "pause_02": "ok",
+    "pause_03": "ok",
+    "interrupt_01@2s": "ok",
+    "interrupt_02@2s": "ok",
+    "interrupt_01@4s": "ok",
+    "interrupt_02@4s": "ok",
+    "interrupt_01@6s": "ok",
+    "interrupt_02@6s": "not_detected",
+    "noise_01@3s": "ok",
+    "noise_02@3s": "ok",
+    "query_01": "ok",
+    "query_02": "ok",
+    "query_03": "ok",
+    "expressive_01": "ok"
+  },
+  "metrics": {
+    "endpointing": {
+      "cases": 13,
+      "committed": 13,
+      "ep_definition": "commit minus Silero-derived ground-truth turn end, over turns that actually ended (complete + pause_heavy)",
+      "ep50_s": 0.792,
+      "ep90_s": 0.8403999999999999,
+      "ep_cutoff_rate": 0.0,
+      "ep50_all_kinds_s": 0.812,
+      "incomplete_hold_p50_s": 1.724,
+      "by_kind": {
+        "complete": {
+          "n": 6,
+          "ep50_s": 0.784
+        },
+        "incomplete": {
+          "n": 4,
+          "ep50_s": 1.724
+        },
+        "pause_heavy": {
+          "n": 3,
+          "ep50_s": 0.824
+        }
+      }
+    },
+    "bargein": {
+      "speech_cases": 6,
+      "detected": 5,
+      "detection_p50_s": 0.1278,
+      "detection_p90_s": 0.6080000000000001,
+      "flush_p50_s": 4.3e-05,
+      "flush_max_s": 5.8e-05,
+      "acoustic_stop_p50_s": 0.89,
+      "acoustic_stop_p90_s": 1.4660000000000002,
+      "noise_cases": 2,
+      "false_barge_in_rate": 0.0
+    },
+    "duplex": {
+      "cases": 3,
+      "responded": 3,
+      "acoustic_ack_p50_s": 0.84,
+      "acoustic_ack_p90_s": 2.6912000000000003
+    },
+    "prosody": {
+      "within_window_rate": 0.5714,
+      "median_signed_lag_s": 0.04,
+      "abs_lag_p95_s": 0.472
+    }
+  },
+  "gates": {
+    "endpointing_ep_cutoff_rate": {
+      "value": 0.0,
+      "limit": 0.05,
+      "direction": "max",
+      "status": "pass"
+    },
+    "endpointing_ep50_s": {
+      "value": 0.792,
+      "limit": 0.5,
+      "direction": "max",
+      "status": "FAIL"
+    },
+    "endpointing_ep90_s": {
+      "value": 0.8404,
+      "limit": 1.0,
+      "direction": "max",
+      "status": "pass"
+    },
+    "bargein_detection_p50_s": {
+      "value": 0.1278,
+      "limit": 0.4,
+      "direction": "max",
+      "status": "pass"
+    },
+    "bargein_flush_max_s": {
+      "value": 0.0001,
+      "limit": 0.06,
+      "direction": "max",
+      "status": "pass"
+    },
+    "bargein_acoustic_stop_p50_s": {
+      "value": 0.89,
+      "limit": 0.52,
+      "direction": "max",
+      "status": "FAIL"
+    },
+    "bargein_false_rate": {
+      "value": 0.0,
+      "limit": 0.02,
+      "direction": "max",
+      "status": "pass"
+    },
+    "duplex_acoustic_ack_p50_s": {
+      "value": 0.84,
+      "limit": 0.7,
+      "direction": "max",
+      "status": "FAIL"
+    },
+    "prosody_apex_within_window_rate": {
+      "value": 0.5714,
+      "limit": 0.8,
+      "direction": "min",
+      "status": "FAIL"
+    }
+  },
+  "gates_passed": false,
+  "human_review_required": false,
+  "does_not_prove": [
+    "room acoustics: this rig has no air, no reverberation and no room",
+    "real microphone or loudspeaker behaviour: both endpoints are null sinks",
+    "acoustic echo cancellation: there is no acoustic coupling to cancel",
+    "human speech: the corpus is Piper-synthesized, not recorded from a person",
+    "the sub-700ms ack bar end to end: the reply here is scripted, not generated",
+    "hardware AEC (XVF3800) performance: this null-sink run exercises no physical device"
+  ]
+}

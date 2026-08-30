@@ -1,0 +1,34 @@
+{
+  "schema": "parcel.lit1-grounding-audit-manifest.v1",
+  "status": "posthoc_adversarial_audit",
+  "source": "../sim-loop-1/artifacts",
+  "files": [
+    {
+      "path": "../sim-loop-1/artifacts/door_sofa_keys-fake-s20260829-r1-20260829T162521.jsonl",
+      "sha256": "906270e095edb7eb9d07163361040ebc32a321ad44fa2a178d321d413d88a013"
+    },
+    {
+      "path": "../sim-loop-1/artifacts/door_sofa_keys-fake-s20260829-r2-20260829T162725.jsonl",
+      "sha256": "566ca42bca1f5c4af59c58e6ead0f672850e4f14e1bf10a431f650c23ce8f982"
+    },
+    {
+      "path": "../sim-loop-1/artifacts/door_sofa_keys-fake-s20260829-r3-20260829T162933.jsonl",
+      "sha256": "413348c0b02b0524629f8a2de45ac31f145133099a2a30d653cedf9d89625e56"
+    },
+    {
+      "path": "../sim-loop-1/artifacts/door_sofa_keys-fake-s20260829-r4-20260829T163137.jsonl",
+      "sha256": "ea9715a96d4946c2db129254de007f2a68db122ede9d4dcba67df738f219d0dc"
+    },
+    {
+      "path": "../sim-loop-1/artifacts/door_sofa_keys-fake-s20260829-r5-20260829T163339.jsonl",
+      "sha256": "4c6b228850e278fff8ee9ee0b82c6e2d252340f10042098f8df6c3a7a520d627"
+    }
+  ],
+  "oracle": {
+    "terminal_arrival_claim_patterns": ["reached", "arrived"],
+    "success_receipt_kind": "task_succeeded",
+    "failure_receipt_kind": "task_failed",
+    "require_independent_arrival_false_for_counterexample": true
+  }
+}
+

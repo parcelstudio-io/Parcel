@@ -1,0 +1,108 @@
+{
+  "all_task_count": 29,
+  "captured_at_utc": "2026-08-29T22:43:19.316985+00:00",
+  "clean_install_evidence": "raw/clean-install.json",
+  "clean_install_h1_supported": false,
+  "config_load_pass": true,
+  "configs": {
+    "Unitree-Go2-Flat": {
+      "action_terms": [
+        "joint_pos"
+      ],
+      "command_terms": [
+        "twist"
+      ],
+      "control_frequency_hz": 50.0,
+      "decimation": 4,
+      "entity_names": [
+        "robot"
+      ],
+      "event_terms": [
+        "base_com",
+        "encoder_bias",
+        "foot_friction",
+        "push_robot",
+        "reset_base",
+        "reset_robot_joints"
+      ],
+      "num_envs_default": 1,
+      "observation_groups": [
+        "actor",
+        "critic"
+      ],
+      "physics_timestep": 0.005,
+      "sensor_names": [
+        "feet_ground_contact",
+        "nonfoot_ground_touch"
+      ],
+      "terrain_generator_present": false,
+      "terrain_type": "plane"
+    },
+    "Unitree-Go2-Rough": {
+      "action_terms": [
+        "joint_pos"
+      ],
+      "command_terms": [
+        "twist"
+      ],
+      "control_frequency_hz": 50.0,
+      "decimation": 4,
+      "entity_names": [
+        "robot"
+      ],
+      "event_terms": [
+        "base_com",
+        "encoder_bias",
+        "foot_friction",
+        "push_robot",
+        "reset_base",
+        "reset_robot_joints"
+      ],
+      "num_envs_default": 1,
+      "observation_groups": [
+        "actor",
+        "critic"
+      ],
+      "physics_timestep": 0.005,
+      "sensor_names": [
+        "feet_ground_contact",
+        "nonfoot_ground_touch",
+        "terrain_scan"
+      ],
+      "terrain_generator_present": true,
+      "terrain_type": "generator"
+    }
+  },
+  "environment_only_remediation": [
+    "mujoco==3.5.0 (pair with upstream-pinned mujoco-warp==3.5.0)",
+    "scipy==1.17.1 (undeclared module-scope mjlab terrain dependency)"
+  ],
+  "exact_go2_tasks_pass": true,
+  "expected_go2_tasks": [
+    "Unitree-Go2-Flat",
+    "Unitree-Go2-Rough"
+  ],
+  "experiment": "MJLAB-1",
+  "go2_tasks": [
+    "Unitree-Go2-Flat",
+    "Unitree-Go2-Rough"
+  ],
+  "hypothesis": "MJF-H1-remediated",
+  "interpretation": "Registration after two environment-only repairs is not a clean-install pass and does not establish simulator execution or physical readiness.",
+  "packages": {
+    "mjlab": "1.2.0",
+    "mujoco": "3.5.0",
+    "mujoco-warp": "3.5.0",
+    "scipy": "1.17.1",
+    "unitree_rl_mjlab": "0.0.1"
+  },
+  "remediated_registration_supported": true,
+  "schema_version": 1,
+  "source": {
+    "commit": "1425b15f73bd4095f0df53709d7c389c3eb9e790",
+    "path": "/home/jaewoo-jang/.cache/parcel-0e/unitree_rl_mjlab-20260829",
+    "probe_sha256": "1f487559cbf273ea6f8d7f804a8e9f660a5ba6f64c56e7de4d57d2d4a12a3f72",
+    "source_patched": false,
+    "status_porcelain": ""
+  }
+}

@@ -1,0 +1,2 @@
+Requirement already satisfied: scipy==1.17.1 in /home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages (1.17.1)
+Requirement already satisfied: numpy<2.7,>=1.26.4 in /home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages (from scipy==1.17.1) (2.4.6)

@@ -1,0 +1,329 @@
+# Trainable Model A / Model B and research-data plan
+
+Date: 2026-08-29. Scope: a companion Go2 EDU+ with AGX Orin 64 GB, camera,
+Mid-360-class LiDAR, microphone array, speaker, and an intermittently available
+Starlink uplink. This is a training and evaluation plan, not physical-motion
+authorization.
+
+## 1. Recommendation
+
+Treat “Model A” as one trainable *embodied policy package* with a shared temporal
+state, but do not make it one clock or one authority boundary:
+
+```text
+10 Hz local state ──> small temporal encoder ──> trajectory/attention/expression proposals
+       ▲                      │
+       │                      └──> progress/risk/narratable state heads
+0.5–2 Hz visual/map lane ──> subgoal and replan proposals
+       ▲
+SteeringEventV1 from Model B + task/executive state
+```
+
+The fast head can be trained end to end with the temporal encoder. The slow visual
+language lane can share cached embeddings later, but its output remains a typed
+subgoal/plan operation. The 50 Hz control manager and vendor locomotion controller
+remain outside the learned model. This preserves a single learnable embodied state
+without asking an Orin-resident language model to meet a 10–50 Hz safety deadline.
+
+Treat “Model B” as two separately scored functions:
+
+1. **Steer:** owner/addressee-qualified utterance + scene/task/queue state -> typed
+   `stop|revise|interrupt_now|queue|keep|resume|status|clarify` proposal.
+2. **Narrate:** accepted executive/receipt event -> compact, faithful state item for
+   the hosted Realtime session.
+
+The hosted voice realizes prose and prosody; it does not decide that motion happened.
+Local STOP, owner/addressee gating, executive transactions, collision/braking gates,
+and receipt validation remain deterministic authority layers.
+
+## 2. Model A input and output
+
+### Input token groups
+
+At every 100 ms frame, use explicit modality IDs, age, validity, coordinate frame,
+and uncertainty:
+
+- proprioception: pose/covariance, body velocity, gait/mode, tilt, battery, fault and
+  gateway freshness;
+- LiDAR: a polar sector/ring representation plus a local traversability/occupancy
+  bird's-eye view, not the raw point cloud as flat tokens;
+- vision: cached image/depth embeddings and tracked semantic objects with stable IDs;
+- people: owner and pedestrian relative pose/velocity/covariance, predicted occupied
+  tubes, addressee and owner confidence;
+- mission: exact task/revision/step/attempt, goal, queue/suspended parents, committed
+  path prefix, revisable path tail and latest accepted steering event;
+- dialogue/audio event: speaking/listening/barge-in, final transcript reference,
+  sound class/bearing and uncertainty; and
+- memory: full-rate last 2 s, pooled 2–15 s, sparse changes 15–60 s, plus IDs of
+  retrieved durable facts. Missing is a mask, never an all-zero observation.
+
+The hosted session never receives this stream. It receives only change-triggered,
+accepted task and execution events.
+
+### Output heads
+
+- 0.5–1.0 s local trajectory chunk or bounded behavior vector, confidence, and
+  calibrated predicted collision/progress;
+- attention target and reviewed expression overlay with expiry;
+- plan operation (`keep`, `request_replan`, `hold`, `request_clarification`) and a
+  short subgoal when needed;
+- progress/deviation estimate and a *candidate* narration event code; and
+- uncertainty/out-of-distribution score.
+
+The executed trajectory is a braking-safe committed prefix plus a revisable tail.
+When a new instruction arrives, the executive changes task ownership first; Model A
+then changes only the revisable tail. A safety shield may reduce or stop the proposal,
+never enlarge it.
+
+## 3. Training objectives
+
+Do not train only on action imitation. That produces a policy that can copy the
+teacher while remaining poorly calibrated when the world or command changes.
+
+### Model A losses
+
+| Head | Label source | Training objective | Promotion measurement |
+|---|---|---|---|
+| local trajectory | deterministic champion, successful teleop, corrected rollouts | robust waypoint/velocity imitation with horizon mask | SR/SPL, jerk, gate intervention, stop distance |
+| subgoal/replan | validated plan and family-disjoint oracle | categorical/structured prediction | exact grounded operation and task lineage |
+| progress | evaluator truth and verified facts | calibrated ordinal/regression loss | DTG error, false-arrival count, ECE/Brier |
+| predicted occupancy | simulator actor truth, tracker replay | multimodal occupancy likelihood | min TTC, NLL, calibration under occlusion |
+| recovery | DAgger/counterexample branches | action plus time-to-recover | recovery success and clear-to-progress p95 |
+| attention/expression | reviewed behavior policy + human labels | constrained imitation/ranking | safety suppression and human preference |
+| temporal state | next-state/world-change labels | masked next-feature prediction | blind-family downstream delta only |
+
+Safety-gate acceptance is never a training label generated by Model A itself. Store
+the raw proposal and the independently admitted/executed command so the learner can
+distinguish “what it wanted” from “what was safe.”
+
+Use three data sources in order:
+
+1. deterministic teachers and successful existing product traces;
+2. simulator DAgger/counterexample replay, with the teacher correcting visited
+   off-distribution states; and
+3. consented physical shadow/teleoperation traces after stationary and tethered
+   commissioning.
+
+Fine-tune from interventions, but freeze the low-level safety controller. Published
+intervention work supports language-level override and correction data; it does not
+support allowing the corrected model to own the STOP boundary.
+
+### Model B losses
+
+- steering: class-balanced operation loss, target grounding, task-scope binding,
+  confidence calibration, and a high cost for unsafe `keep`/`resume`;
+- queue semantics: exact parent/child/revision transition loss over multi-turn traces;
+- narration selection: speak/silent, event class, tense, and evidence selection; and
+- response quality: train or prompt only over the already validated event frame, then
+  score concision, warmth, interruption handling, and factual entailment separately.
+
+Never train terminal narration from an LLM's self-assessment. The positive label is an
+authenticated terminal receipt bound to the exact executive tuple.
+
+## 4. Simulator curriculum
+
+One scenario manifest should run across several backends; do not build a new physics
+engine.
+
+### Rung 0 — deterministic transactions
+
+Millions of fast task/receipt/dialogue schedules: add, revise, retract, interrupt,
+queue, suspend, resume, duplicate, reorder, expire, restart, packet loss and barge-in.
+This is where Model B and task lineage are trained. The DMC-2 verifier becomes the
+non-negotiable authority oracle.
+
+### Rung 1 — headless semantic city
+
+Generate instruction/route/recovery data cheaply. Hold out layout families, target
+compositions, paraphrase authors, interruption schedules and pedestrian motion
+families together. Use NAV_INSTRUCT and follow/social metrics, not unit-test pass
+counts. Model A remains shadowed against the deterministic champion.
+
+### Rung 2 — Go2 dynamics
+
+Start with the official Unitree MuJoCo/mjlab flat-velocity baseline unchanged. Add
+payload, center-of-mass, friction, slope, actuator gain/delay and command-hold
+randomization. Reproduce the same policy observation/action contract in Isaac Lab or
+a second physics backend before calling the checkpoint transferable.
+
+### Rung 3 — sensors and people
+
+Add camera height/gait oscillation, lighting/exposure, depth/LiDAR noise, extrinsic
+and clock error, occlusion, dynamic people, owner loss/re-identification and the
+sidewalk/crosswalk/elevator manifests. Use HuNavSim or a compatible ROS 2 social
+scenario layer for controlled behaviors and metrics. People must include crossing,
+cut-in, group, overtaking, matched-velocity alongside, clear-flicker, doorway
+priority and elevator-exit-first cases.
+
+### Rung 4 — audio and network
+
+Replay owner/non-owner/side-talk speech, robot TTS echo, walking noise, direction of
+arrival, ASR substitutions, interruption timing, Starlink delay/loss, hosted timeout,
+session rollover and offline fallback. The simulated owner may create scenarios and
+rank candidates; blinded humans set the acceptance bar for naturalness and comfort.
+
+### Rung 5 — HIL and staged hardware
+
+Run the exact Orin processes, clocks, gateway serialization, watchdog, log spool and
+models with motor authority disabled. Then stationary hardware, tethered cleared-space
+motion and measured stopping follow the existing physical promotion ladder. Simulator
+success never skips a rung.
+
+## 5. Preregistered research hypotheses
+
+Each study freezes code/manifest/oracle hashes before the blind test and runs at least
+two fresh processes. Report exact counts, paired seed failures, confidence intervals
+and pass^k; do not tune on the frozen set.
+
+### A-H1 — temporal state earns scope
+
+- Arms: explicit temporal controller; snapshot-only learned head; age-binned temporal
+  learned head.
+- Blind split: unseen layout + command + interruption + pedestrian family jointly.
+- Required result: temporal head improves mission SR by at least 5 percentage points
+  over both controls, improves calibrated progress error, and does not increase raw
+  unsafe proposals, gate interventions, false arrivals or p99 latency.
+- Current evidence: DMC-1 failed this promotion test and its generator leaked cues;
+  learned Model A stays shadow-only.
+
+### A-H2 — committed prefix removes stop-and-go
+
+- Arms: stop while slow planner runs; naive chunk replacement; latency-sized committed
+  prefix plus revisable tail.
+- Randomize sense/inference/command delay and inject a revision at every trajectory
+  decile.
+- Required result: at least 30% lower waiting ratio and visible gaps, no lower SR/SPL,
+  zero stale-revision execution beyond the frozen prefix, and unchanged emergency-stop
+  behavior.
+
+### A-H3 — predicted occupancy prevents false stalls
+
+- Arms: scalar proximity; tracked TTC; multimodal predicted occupancy; predictor plus
+  asymmetric 1-frame-stop/2–4-fresh-frame-resume hysteresis.
+- Scenarios: alongside, overtaking, opposing pedestrian, cut-in, occlusion, crosswalk,
+  tight elevator and clear-flicker/dropout.
+- Required result: zero contacts in the acceptance corpus, lower false-stop time,
+  lower clear-to-progress p95, no increase in minimum-TTC violations, and calibrated
+  risk under held-out trajectories. A simulated zero-contact count is not a physical
+  collision probability.
+
+### B-H1 — task-stack steering generalizes
+
+- Arms: rules; learned steering classifier; classifier plus explicit queue/task graph.
+- Required result: family-blind exact operation/target/scope accuracy above 95%, queue
+  and clarify each above 90%, zero STOP misses, and exact resume lineage.
+- Current evidence: NAV-INT-1 blind overall 0.827, queue 0.667 and clarify 0.800; red.
+
+### B-H2 — receipt-grounded narration is faithful and useful
+
+- Arms: direct state digest; typed receipt events; typed events plus hosted prose.
+- Corruptions: wrong/stale task tuple, duplicate/out-of-order receipt, restart epoch,
+  stale speech generation and completion during barge-in.
+- Required result: zero false terminal/progress claims, 100% required deviation/terminal
+  event recall, correct tense, no post-barge-in stale speech, and a blinded human
+  preference improvement without increased verbosity.
+- Current evidence: DMC-2 proves the older seams independently. DMC-4 then
+  proves the owner-authored journal transaction, and a focused 26-test additive
+  step composes a process-local, non-actuating runtime observer. The live
+  session key/epoch, persistent cursor, separate-child resume lineage,
+  provider, audio, cancellation, and human-utility arms remain red or
+  unmeasured. The independent LIT-1 audit also found five failed terminals
+  followed by five scripted “I've reached the bench” claims, so terminal event
+  type must be a hard narration input, not merely a callback trigger.
+
+### C-H1 — event-driven hosted context preserves fluidity at budget
+
+- Arms: raw transcript/state polling; fixed-interval summary; change-triggered typed
+  events with proactive session rotation.
+- Required result: no lower multi-turn task-state accuracy or human preference,
+  lower input tokens and cost, p95 task-event-to-audible latency within the acoustic
+  gate, and graceful offline continuity during link loss.
+
+## 6. Long-term data plane
+
+Use immutable blobs plus relational lineage, not one SQLite file and not an opaque
+vector database.
+
+### Storage layers
+
+- **On robot:** encrypted bounded ring/spool. Full raw data is opt-in per research
+  session; ordinary operation retains derived events and short incident windows.
+- **Object store:** content-addressed MCAP/raw media, calibration bundles, manifests,
+  traces and model artifacts. Server-side encryption, lifecycle tiers and deletion
+  tombstones are mandatory.
+- **PostgreSQL:** identities, time ranges, provenance, consent, task/event lineage,
+  dataset membership, experiments, metrics and promotion decisions.
+- **Vector index:** optional index over explicitly retained semantic memories. It is a
+  retrieval accelerator, not the source of truth.
+
+### Minimum relational tables
+
+```text
+robot(robot_id, hardware_manifest_digest)
+session(session_id, robot_id, boot_epoch, started_at, ended_at, mode, consent_id)
+stream(stream_id, session_id, channel, schema, calibration_digest, clock_domain)
+blob(blob_digest, uri, media_type, bytes, encryption_key_id, retention_class)
+segment(segment_id, stream_id, t0_ns, t1_ns, blob_digest, quality_flags)
+mission(mission_id, session_id, owner_scope, root_task_id)
+task_revision(task_id, revision, parent_task_id, plan_digest, state, timestamps)
+execution_event(event_id, task_id, revision, step_id, attempt, kind, evidence_digest)
+action_receipt(receipt_id, execution_event_id, source_epoch, sequence, auth_metadata)
+conversation_turn(turn_id, session_id, speech_generation, transcript_digest, role)
+narrative_event(event_id, turn_id, receipt_id, tense, disposition, spoken_item_id)
+consent(consent_id, subject_id, scopes, valid_from, valid_until, policy_version)
+scenario(scenario_id, family_id, split, manifest_digest, oracle_digest)
+dataset_snapshot(dataset_id, manifest_digest, query_digest, created_at)
+dataset_member(dataset_id, segment_or_event_id, label_digest, split)
+model(model_id, artifact_digest, training_dataset_id, code_digest, config_digest)
+evaluation(eval_id, model_id, scenario_manifest_digest, result_digest, verdict)
+deployment(deployment_id, model_id, robot_id, signed_config_digest, rollback_id)
+deletion_tombstone(subject_or_blob_id, requested_at, completed_at, proof_digest)
+```
+
+Every training row must resolve back to source segments, calibration, consent, label,
+split, code and simulator version. Dataset snapshots are append-only manifests;
+corrections create a new label/version. A production process cannot write its own
+promotion verdict.
+
+Parcel already has useful foundations: the read-only, no-motion capture envelope in
+[`capture/`](../../src/parcel_robot/capture/), proposal-only learning contracts in
+[`learning_loop/`](../../src/parcel_robot/learning_loop/), the task executive in
+[`brain/executive.py`](../../src/parcel_robot/brain/executive.py), and the authenticated
+dialogue reducer in
+[`voice/companion_state.py`](../../src/parcel_robot/voice/companion_state.py). The
+missing pieces are an external spool/uploader, relational catalog, consent/deletion
+service, exact executive-to-receipt bridge and experiment registry.
+
+## 7. Compute and API budget
+
+- Keep safety, tracking, fast policy, VAD/AEC, task state and offline canned status on
+  the Orin. Size the slow visual-language lane only after an end-to-end concurrent
+  Orin benchmark; literature supports a small 0.5–2 Hz lane, not a 10 Hz VLM.
+- Use the $300/month Realtime budget for final natural-voice arms and owner pilots,
+  not bulk simulated rollouts. Use deterministic/fake voice for regression and
+  record `response.done` usage per mission.
+- Use the $100/month text budget for scenario generation, semantic adjudication and a
+  small planner challenger. Cache/freeze generated corpora and keep an independent
+  oracle; do not ask the same model to generate and judge acceptance labels.
+- Train the fast Model A head and Model B steering locally/server-side from stored
+  traces. Open/offline models are the default for bulk work; hosted models are a
+  bounded comparison arm.
+
+## 8. Immediate build order
+
+1. Implement the exact executive-result -> authenticated receipt bridge and an
+   explicit task stack; make DMC-2 architecture rows evaluable.
+2. Freeze `EmbodiedFrameV1`, `SemanticControlV1`, `SteeringEventV1`, and
+   `ExecutionNarrativeEventV1` with parser, version, expiry and trace tests.
+3. Make the explicit temporal controller the champion. Train Model A only in shadow
+   on product-shaped frames and rerun A-H1 on a truly family-disjoint corpus.
+4. Add the committed-prefix/revisable-tail handoff and run A-H2 under randomized
+   delays before adding a larger VLM.
+5. Implement tracked predicted occupancy and the asymmetric resume state machine;
+   build the sidewalk/crosswalk/elevator A-H3 corpus with independent truth.
+6. Close the four failed null-sink acoustic gates, then repeat with real mic,
+   loudspeaker, AEC and walking noise.
+7. Stand up the external object-store/PostgreSQL catalog and signed dataset/model/
+   evaluation manifests before collecting large quantities of owner data.
+8. Only then integrate official Go2 dynamics, second-engine transfer, HIL, stationary
+   hardware and tethered motion.

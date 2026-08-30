@@ -1,0 +1,87 @@
+{
+  "claim_boundary": "authored deterministic 2-D simulation with noisy tracks; not physical-safety evidence",
+  "files": {
+    "DESIGN.md": "5b5dfd0e691917c4bf4c46e9899aa8ce816fcd15899faa1385ec946ff3bec2c8",
+    "DEVELOPMENT_DECISIONS.md": "1ef6b2afc62e3d5993d313d8498cf7ef572b33a7e9c1c02c6c6634533e15a302",
+    "episode_manifest.json": "48aacd3ec89d5252a1c8a5a2afc2cb7c818db86346081e1a937ea3423a150c7c",
+    "experiment.py": "d05615c03fce4816be29c71bb2471e2ce2f239dab2d2c3524a614cef29780d15",
+    "fixtures.json": "cf99e62eb79b28fac789281d325f081f524bd0efd6e6d7db59719b55c07e4832",
+    "freeze_manifest.py": "2a05697e6e7d27cee52b26e7a7d6a4ed3b16e3553a1346f4370bf7997ab0fabf",
+    "verify_results.py": "73a66540320219ff44d0e0d80b76330f275c820d4d1c5ce796ef0f58dd55f139"
+  },
+  "fixture_canonical_sha256": "6bd91386c6d9e5cd21439ef384d49867bad6b258fa5abd1500bbdaf5c3f693cd",
+  "frozen_at_utc": "2026-08-29T23:45:10.934955+00:00",
+  "frozen_before_first_test_rollout": true,
+  "inventory": {
+    "development": {
+      "episodes": 120,
+      "families": 10,
+      "sensor_seeds": 3,
+      "trajectory_signatures": [
+        "09097fc4e3bed684df12d054cc843a43b13125437bf309b37ce31270b2b5056b",
+        "4692467e98769e2eae49ad8898647a8655f8620dfcec8569922d51f7281919a0",
+        "7b3d84bd44c9f38ede30e1e1a9284e9b997c485eefde304dda28d7bd586f0dd1",
+        "a7c21ab815d441febfdaeef4858989e592d7e67a69c1096f469d1ddc1a8bef72",
+        "b1fbde4a0f19f79ac3ca7b8ba4dbe44997b0267fffd25f5144e6c321247afe73",
+        "c853ad9990c6f444dfe4a855bab766c2e31715ebd6bad3761a04f4f476964f59",
+        "caa031fa4913835ba2e6c5684e9fc393448847bb6a4aa0b11c2518a17dd08c16",
+        "d7089639dc433be9de325d5811d30c0efaa8063390decbdd554097b21cd5c9a8",
+        "e07933613328b4f74b4db2a8c4a78a777c04b47412ff9873f1c0ea608c976822",
+        "f236ed8c85a8a531a6ffe1be699d6b83ceff01b12f4e665e62884b5886a975c0"
+      ]
+    },
+    "test": {
+      "episodes": 580,
+      "families": 29,
+      "sensor_seeds": 5,
+      "trajectory_signatures": [
+        "1831a4834d71f63c2090f5ef2ab8b2a17500836385487375b045adb57195fa3f",
+        "18605f6599fa94a1628044bca255687a9e12447fbb0dfc27fb968c959b88c10c",
+        "221f23d5843b8a6d6a6a2e8629fd451dc942464e9f0b4c63f56453b31bdd5210",
+        "27d8438e2a23903e52dc3c329baa563cce66943536e6d288a8232f43e673e4b9",
+        "33f2832061f8eb1d32f1a99e707f39c412139a6401ba0e1e502134effa1d1a73",
+        "4085bf09939453e0a33db34d9bce3ac03e44ebf186ad6a223e42786e498d814b",
+        "4ef609fc29d233f19ab451c5d6a4d3122dedd0c8d77431c4cee63596b3984fd6",
+        "5eb0d335e164be721aa21121a91dff503e0060f19d844efafeaaf9e1a56375ec",
+        "5f7077483fec365d50ae2d5742043c3f2b3551e75dbc527c740a5d6982ec4b9d",
+        "60e49832a4d8430f2c487ae42b854c3c16e4e295d9d32261d8e96b2f118103df",
+        "7490839d2917f7a72262d0bcfe82731a7a6de36f121ae55501bb8e7fd4a377df",
+        "7bf3a43c233f81af1f3a90e7bad7b60f2a5195f77db1402aec3a4f9448a819ed",
+        "85e040d4d125d014ae08a51f6c8a29a62028638f506f01331e1290a0566103f8",
+        "8a49b435bc1eae319bd8c9a034b97ca95a3bda3d90df23506b4b3783a591ba0e",
+        "95484844a4ff5753e0be34a0bf9d58f9c6eacc2671186ebc00f4d7809e15a70a",
+        "9eff0ede64b4dd3980486c8060fcd3e2d510db1256d4afc579561cef9688c1ee",
+        "a3bd518d76d7d5dbdd157689875e6c993d4188f26ed18ed441d21b2e7bf97bfa",
+        "a75125a8a543617023e7edf8bebfbcce3872f8fd0775cdb3de2b577ad72cb9f1",
+        "af146e8af75a6c832fa9c03667f108f8b8174dc0b49ffcbfef6ac67121705874",
+        "b62766f909f9f33bbc90be30b7d20ba96983f419a0e2b1e5c7a14753da1914b8",
+        "b8b9b2e6cddf1630d4660f85d438639bf6281193ab131c6e0f4a8fd8f95250fe",
+        "c1318e5570fcc0d4d6daa8ee1e6edf8a75c8882fbd09286ba8d16f6bb9e6f502",
+        "c6a86b8b25ac3e1cea9625e893ae47c577aa560a24627985b3f6d4d149b39605",
+        "d6d6b20c3bd54de07689538de04b50724d9f091c233848c0c425cb62767af6d7",
+        "dcfb4957e0721251070bc8c3a6d049800e6fcd296acbdc97b39b940877fa9a1c",
+        "ee2d2cad12047a7f36811af287d15f12ac473e25405153a105256556ab412f58",
+        "efcba9f1297d09bde7b18e2bddbc201fe0dd1e2efbbafdf21850aba0cfd9731d",
+        "f7d1e4cb0c11cbb476b7cd96b123f627912c472de53cb89096528337d539e1c0",
+        "f7fd01f6a4d42f3a511403f126f95af1160a0fc79447f8b2f6de8b2b73e373cf"
+      ]
+    },
+    "train": {
+      "episodes": 84,
+      "families": 7,
+      "sensor_seeds": 3,
+      "trajectory_signatures": [
+        "01a2b989108786a0f0340ae179f9683ab7aee90d5337610be9a9d7a2b59ee2b3",
+        "3bd2a05d1ddf8870ef269786b1b77ca8e18390b5019efa64144f90e25c863d12",
+        "4f22858713fe14307b7e172958f75a8c67168186195e0ef29d04c65bd360d3c6",
+        "5a8796d2c1effc2327b5e24aaff7f286f21f074ef720479986e66cecbd7a8b21",
+        "784a6cd56cb10fe799253ba516aae576b89d4e3cf374056878558567cac7e0c3",
+        "a4784adc8d562ca4d8a64cd5c4345b2cf9eb67f2eba2acc8673356d3565370cb",
+        "d76ed435669adb911ace4db6642c7d5d4375cd173440fdffa6488189c65ae6c0"
+      ]
+    }
+  },
+  "schema_version": 1,
+  "study": "DSP-2",
+  "test_episodes": 580
+}

@@ -1,0 +1,4 @@
+{"scenario_id": "cv1c-door-sofa", "arm": "Q", "turn_index": 0, "role": "owner", "text": "Go check the sofa for me.", "events_so_far": []}
+{"scenario_id": "cv1c-door-sofa", "arm": "Q", "turn_index": 1, "role": "robot", "text": "Sure — I'm heading to the sofa now.", "events_so_far": [{"kind": "plan_queued", "t": 0.2}, {"kind": "nav_started", "t": 0.4, "goal": "sofa"}]}
+{"scenario_id": "cv1c-door-sofa", "arm": "Q", "turn_index": 2, "role": "owner", "text": "How's it going?", "events_so_far": [{"kind": "nav_progress", "t": 4.1}]}
+{"scenario_id": "cv1c-door-sofa", "arm": "Q", "turn_index": 3, "role": "robot", "text": "We're there — the sofa is right in front of me.", "events_so_far": [{"kind": "nav_started", "t": 0.4}, {"kind": "nav_progress", "t": 4.1}, {"kind": "arrived", "t": 9.7, "goal": "sofa"}]}

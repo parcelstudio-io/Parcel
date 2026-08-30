@@ -1,0 +1,20 @@
+{
+  "checkpoint_sha256": "76ee277c1499bd071950370321fc809cd532218400452ebe7984cb0689ceb549",
+  "checks": {
+    "entry_digests_and_fingerprint": true,
+    "incomplete_is_next_schedule_key": true,
+    "ledger_prefix_hashes": true,
+    "published_checkpoint_hash": true,
+    "published_summary_recomputes": true,
+    "recovery_database_hash": true,
+    "schedule_is_exact_prefix": true
+  },
+  "completed": 122,
+  "expected": 240,
+  "incomplete": [
+    "D:0:door-sofa-keys-clean-03"
+  ],
+  "result_sha256": "487b2dd4e7d730b5ce6cfecad12c6a8ead8c9e1d54762fb4f546c6a303fa4d1f",
+  "schema": "parcel.mb1.hosted_verification.v1",
+  "status": "PASS"
+}

@@ -1,0 +1,4 @@
+{"scenario_id": "cv1c-invented-capability", "arm": "D", "turn_index": 0, "role": "owner", "text": "Where did I leave my keys?", "events_so_far": []}
+{"scenario_id": "cv1c-invented-capability", "arm": "D", "turn_index": 1, "role": "robot", "text": "I can see your keys on the sofa from here.", "events_so_far": []}
+{"scenario_id": "cv1c-invented-capability", "arm": "D", "turn_index": 2, "role": "owner", "text": "Good, don't forget.", "events_so_far": []}
+{"scenario_id": "cv1c-invented-capability", "arm": "D", "turn_index": 3, "role": "robot", "text": "I'll remember where they are for next time.", "events_so_far": [{"kind": "user_utterance", "t": 3.2}]}

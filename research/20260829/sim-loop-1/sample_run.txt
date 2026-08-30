@@ -1,0 +1,22 @@
+LIT-1 smoke — sim + runtime + one handle_text hop
+providers: {"session": "nav-interrupt-1/harness.py::LiveSession", "steering_rule": "model-b-narration-1/steer.py", "narration": "sim-loop-1 (LIT-1 own, labelled)", "queue_policy": "nav-interrupt-1/queue_policy.py"}
+socket: /home/jaewoo-jang/.cache/parcel-0e/lit1/s99.sock  (owner's socket? False)
+_realtime_spend_note: ''
+_curiosity_admitted_names(): []
+
+--- issuing: 'go to the lamppost' ---
+reply: "Okay—I'll go wait near lamppost safely."
+metrics: {"reasoning_source": "local_plan_sketch", "reasoning_error": null, "closed_intent": "", "goal_amend_ok": null, "goal_amend_reason": null, "goal_amend_replan": null, "goal_amend_committed": null, "goal_amend_abandoned": null, "local_plan_skills": ["NavigateTo"], "refused": false, "amendment_pending": false}
+terminal: True states=['succeeded']
+
+--- receipt timeline (ReportDisposition.action + last_detail verbatim) ---
+       t  kind                     action                   state        rev  last_detail
+   2.020  submit                   queued                   queued         1  accepted
+  40.659  task_succeeded           task_succeeded           succeeded      1  navigation_goal_verified
+
+structural receipt KIND sequence: ['submit', 'task_succeeded']
+motion samples: n=776 (19.0 Hz)
+max |vyaw|: 0.850 rad/s; max speed: 0.844 m/s
+end pose: (1.3235185309109565, 2.5646041333631997)
+
+teardown pgrep proof: {"socket": "/home/jaewoo-jang/.cache/parcel-0e/lit1/s99.sock", "sim_pid": 162580, "own_sim_alive": [], "clean": true}

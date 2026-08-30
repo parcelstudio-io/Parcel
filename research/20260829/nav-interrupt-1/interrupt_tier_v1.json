@@ -1,0 +1,1205 @@
+{
+  "tier_id": "interrupt_tier_v1",
+  "record_schema": "nav_instruct-style additive tier record (amendment N10)",
+  "frozen_baseline": false,
+  "seed": 20260829,
+  "generated_by": "research/20260829/nav-interrupt-1/gen_tier.py",
+  "evidence_tier": "desktop-sim",
+  "scene": "mujoco static city (parcel_robot.sim --static-city)",
+  "additive": "additive tier; evals/nav_instruct v1-v4 and every frozen digest are read-only to this experiment",
+  "note_owner_goal": "the owner-approach lane is a persistent FollowFormation whose task record succeeds ~1 s after dispatch, so it is never goal 1",
+  "pairs": [
+    [
+      "bench",
+      "come_here"
+    ],
+    [
+      "bench",
+      "lamppost"
+    ],
+    [
+      "bench",
+      "sidewalk"
+    ],
+    [
+      "bench",
+      "towards_lamppost"
+    ],
+    [
+      "lamppost",
+      "bench"
+    ],
+    [
+      "sidewalk",
+      "bench"
+    ],
+    [
+      "sidewalk",
+      "come_here"
+    ],
+    [
+      "towards_lamppost",
+      "bench"
+    ],
+    [
+      "towards_lamppost",
+      "come_here"
+    ],
+    [
+      "towards_lamppost",
+      "sidewalk"
+    ]
+  ],
+  "phrasing_families": {
+    "amend_actually": "actually, {plain}",
+    "amend_no": "no, {plain}",
+    "amend_instead": "instead {plain}",
+    "explicit_directive": "{plain}",
+    "queue_after_that": "after that, {plain}",
+    "hold_actually": "actually"
+  },
+  "family_class": {
+    "amend_actually": "amend_cue",
+    "amend_no": "amend_cue",
+    "amend_instead": "amend_cue",
+    "explicit_directive": "explicit_directive",
+    "queue_after_that": "queue",
+    "hold_actually": "hold"
+  },
+  "family_counts": {
+    "amend_actually": 5,
+    "amend_no": 5,
+    "amend_instead": 4,
+    "explicit_directive": 14,
+    "queue_after_that": 8,
+    "hold_actually": 4
+  },
+  "triggers": [
+    {
+      "kind": "fraction",
+      "fraction": 0.25,
+      "time_s": 45.0
+    },
+    {
+      "kind": "fraction",
+      "fraction": 0.5,
+      "time_s": 45.0
+    },
+    {
+      "kind": "fraction",
+      "fraction": 0.75,
+      "time_s": 45.0
+    },
+    {
+      "kind": "time",
+      "fraction": null,
+      "time_s": 6.0
+    }
+  ],
+  "episodes": [
+    {
+      "episode_id": "ni1-00-bench-come_here",
+      "goal_1": {
+        "key": "bench",
+        "place": "bench",
+        "text": "go to the bench"
+      },
+      "goal_2": {
+        "key": "come_here",
+        "place": "owner",
+        "text": "after that, go to the owner",
+        "family": "queue_after_that",
+        "family_class": "queue",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "fraction",
+        "fraction": 0.25,
+        "time_s": 45.0
+      },
+      "control_goal_1": "ctl-bench",
+      "control_goal_2": "ctl-come_here",
+      "sequence_control": "seq-come_here-then-bench"
+    },
+    {
+      "episode_id": "ni1-01-bench-come_here",
+      "goal_1": {
+        "key": "bench",
+        "place": "bench",
+        "text": "go to the bench"
+      },
+      "goal_2": {
+        "key": "come_here",
+        "place": "owner",
+        "text": "actually, go to the owner",
+        "family": "amend_actually",
+        "family_class": "amend_cue",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "fraction",
+        "fraction": 0.5,
+        "time_s": 45.0
+      },
+      "control_goal_1": "ctl-bench",
+      "control_goal_2": "ctl-come_here",
+      "sequence_control": "seq-come_here-then-bench"
+    },
+    {
+      "episode_id": "ni1-02-bench-come_here",
+      "goal_1": {
+        "key": "bench",
+        "place": "bench",
+        "text": "go to the bench"
+      },
+      "goal_2": {
+        "key": "come_here",
+        "place": "owner",
+        "text": "actually, go to the owner",
+        "family": "amend_actually",
+        "family_class": "amend_cue",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "fraction",
+        "fraction": 0.75,
+        "time_s": 45.0
+      },
+      "control_goal_1": "ctl-bench",
+      "control_goal_2": "ctl-come_here",
+      "sequence_control": "seq-come_here-then-bench"
+    },
+    {
+      "episode_id": "ni1-03-bench-come_here",
+      "goal_1": {
+        "key": "bench",
+        "place": "bench",
+        "text": "go to the bench"
+      },
+      "goal_2": {
+        "key": "come_here",
+        "place": "owner",
+        "text": "come here",
+        "family": "explicit_directive",
+        "family_class": "explicit_directive",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "time",
+        "fraction": null,
+        "time_s": 6.0
+      },
+      "control_goal_1": "ctl-bench",
+      "control_goal_2": "ctl-come_here",
+      "sequence_control": "seq-come_here-then-bench"
+    },
+    {
+      "episode_id": "ni1-04-bench-lamppost",
+      "goal_1": {
+        "key": "bench",
+        "place": "bench",
+        "text": "go to the bench"
+      },
+      "goal_2": {
+        "key": "lamppost",
+        "place": "lamppost",
+        "text": "go to the lamppost",
+        "family": "explicit_directive",
+        "family_class": "explicit_directive",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "fraction",
+        "fraction": 0.25,
+        "time_s": 45.0
+      },
+      "control_goal_1": "ctl-bench",
+      "control_goal_2": "ctl-lamppost",
+      "sequence_control": "seq-lamppost-then-bench"
+    },
+    {
+      "episode_id": "ni1-05-bench-lamppost",
+      "goal_1": {
+        "key": "bench",
+        "place": "bench",
+        "text": "go to the bench"
+      },
+      "goal_2": {
+        "key": "lamppost",
+        "place": "lamppost",
+        "text": "after that, go to the lamppost",
+        "family": "queue_after_that",
+        "family_class": "queue",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "fraction",
+        "fraction": 0.5,
+        "time_s": 45.0
+      },
+      "control_goal_1": "ctl-bench",
+      "control_goal_2": "ctl-lamppost",
+      "sequence_control": "seq-lamppost-then-bench"
+    },
+    {
+      "episode_id": "ni1-06-bench-lamppost",
+      "goal_1": {
+        "key": "bench",
+        "place": "bench",
+        "text": "go to the bench"
+      },
+      "goal_2": {
+        "key": "lamppost",
+        "place": "lamppost",
+        "text": "go to the lamppost",
+        "family": "explicit_directive",
+        "family_class": "explicit_directive",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "fraction",
+        "fraction": 0.75,
+        "time_s": 45.0
+      },
+      "control_goal_1": "ctl-bench",
+      "control_goal_2": "ctl-lamppost",
+      "sequence_control": "seq-lamppost-then-bench"
+    },
+    {
+      "episode_id": "ni1-07-bench-lamppost",
+      "goal_1": {
+        "key": "bench",
+        "place": "bench",
+        "text": "go to the bench"
+      },
+      "goal_2": {
+        "key": "lamppost",
+        "place": "lamppost",
+        "text": "instead go to the lamppost",
+        "family": "amend_instead",
+        "family_class": "amend_cue",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "time",
+        "fraction": null,
+        "time_s": 6.0
+      },
+      "control_goal_1": "ctl-bench",
+      "control_goal_2": "ctl-lamppost",
+      "sequence_control": "seq-lamppost-then-bench"
+    },
+    {
+      "episode_id": "ni1-08-bench-sidewalk",
+      "goal_1": {
+        "key": "bench",
+        "place": "bench",
+        "text": "go to the bench"
+      },
+      "goal_2": {
+        "key": "sidewalk",
+        "place": "sidewalk",
+        "text": "no, go to the sidewalk",
+        "family": "amend_no",
+        "family_class": "amend_cue",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "fraction",
+        "fraction": 0.25,
+        "time_s": 45.0
+      },
+      "control_goal_1": "ctl-bench",
+      "control_goal_2": "ctl-sidewalk",
+      "sequence_control": "seq-sidewalk-then-bench"
+    },
+    {
+      "episode_id": "ni1-09-bench-sidewalk",
+      "goal_1": {
+        "key": "bench",
+        "place": "bench",
+        "text": "go to the bench"
+      },
+      "goal_2": {
+        "key": "sidewalk",
+        "place": "sidewalk",
+        "text": "go to the sidewalk",
+        "family": "explicit_directive",
+        "family_class": "explicit_directive",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "fraction",
+        "fraction": 0.5,
+        "time_s": 45.0
+      },
+      "control_goal_1": "ctl-bench",
+      "control_goal_2": "ctl-sidewalk",
+      "sequence_control": "seq-sidewalk-then-bench"
+    },
+    {
+      "episode_id": "ni1-10-bench-sidewalk",
+      "goal_1": {
+        "key": "bench",
+        "place": "bench",
+        "text": "go to the bench"
+      },
+      "goal_2": {
+        "key": "sidewalk",
+        "place": "sidewalk",
+        "text": "go to the sidewalk",
+        "family": "explicit_directive",
+        "family_class": "explicit_directive",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "fraction",
+        "fraction": 0.75,
+        "time_s": 45.0
+      },
+      "control_goal_1": "ctl-bench",
+      "control_goal_2": "ctl-sidewalk",
+      "sequence_control": "seq-sidewalk-then-bench"
+    },
+    {
+      "episode_id": "ni1-11-bench-sidewalk",
+      "goal_1": {
+        "key": "bench",
+        "place": "bench",
+        "text": "go to the bench"
+      },
+      "goal_2": {
+        "key": "sidewalk",
+        "place": "sidewalk",
+        "text": "after that, go to the sidewalk",
+        "family": "queue_after_that",
+        "family_class": "queue",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "time",
+        "fraction": null,
+        "time_s": 6.0
+      },
+      "control_goal_1": "ctl-bench",
+      "control_goal_2": "ctl-sidewalk",
+      "sequence_control": "seq-sidewalk-then-bench"
+    },
+    {
+      "episode_id": "ni1-12-bench-towards_lamppost",
+      "goal_1": {
+        "key": "bench",
+        "place": "bench",
+        "text": "go to the bench"
+      },
+      "goal_2": {
+        "key": "towards_lamppost",
+        "place": "lamppost",
+        "text": "walk towards the lamppost",
+        "family": "explicit_directive",
+        "family_class": "explicit_directive",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "fraction",
+        "fraction": 0.25,
+        "time_s": 45.0
+      },
+      "control_goal_1": "ctl-bench",
+      "control_goal_2": "ctl-towards_lamppost",
+      "sequence_control": "seq-towards_lamppost-then-bench"
+    },
+    {
+      "episode_id": "ni1-13-bench-towards_lamppost",
+      "goal_1": {
+        "key": "bench",
+        "place": "bench",
+        "text": "go to the bench"
+      },
+      "goal_2": {
+        "key": "towards_lamppost",
+        "place": "lamppost",
+        "text": "no, walk towards the lamppost",
+        "family": "amend_no",
+        "family_class": "amend_cue",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "fraction",
+        "fraction": 0.5,
+        "time_s": 45.0
+      },
+      "control_goal_1": "ctl-bench",
+      "control_goal_2": "ctl-towards_lamppost",
+      "sequence_control": "seq-towards_lamppost-then-bench"
+    },
+    {
+      "episode_id": "ni1-14-bench-towards_lamppost",
+      "goal_1": {
+        "key": "bench",
+        "place": "bench",
+        "text": "go to the bench"
+      },
+      "goal_2": {
+        "key": "towards_lamppost",
+        "place": "lamppost",
+        "text": "walk towards the lamppost",
+        "family": "explicit_directive",
+        "family_class": "explicit_directive",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "fraction",
+        "fraction": 0.75,
+        "time_s": 45.0
+      },
+      "control_goal_1": "ctl-bench",
+      "control_goal_2": "ctl-towards_lamppost",
+      "sequence_control": "seq-towards_lamppost-then-bench"
+    },
+    {
+      "episode_id": "ni1-15-bench-towards_lamppost",
+      "goal_1": {
+        "key": "bench",
+        "place": "bench",
+        "text": "go to the bench"
+      },
+      "goal_2": {
+        "key": "towards_lamppost",
+        "place": "lamppost",
+        "text": "no, walk towards the lamppost",
+        "family": "amend_no",
+        "family_class": "amend_cue",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "time",
+        "fraction": null,
+        "time_s": 6.0
+      },
+      "control_goal_1": "ctl-bench",
+      "control_goal_2": "ctl-towards_lamppost",
+      "sequence_control": "seq-towards_lamppost-then-bench"
+    },
+    {
+      "episode_id": "ni1-16-lamppost-bench",
+      "goal_1": {
+        "key": "lamppost",
+        "place": "lamppost",
+        "text": "go to the lamppost"
+      },
+      "goal_2": {
+        "key": "bench",
+        "place": "bench",
+        "text": "go to the bench",
+        "family": "explicit_directive",
+        "family_class": "explicit_directive",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "fraction",
+        "fraction": 0.25,
+        "time_s": 45.0
+      },
+      "control_goal_1": "ctl-lamppost",
+      "control_goal_2": "ctl-bench",
+      "sequence_control": "seq-bench-then-lamppost"
+    },
+    {
+      "episode_id": "ni1-17-lamppost-bench",
+      "goal_1": {
+        "key": "lamppost",
+        "place": "lamppost",
+        "text": "go to the lamppost"
+      },
+      "goal_2": {
+        "key": "bench",
+        "place": "bench",
+        "text": "instead go to the bench",
+        "family": "amend_instead",
+        "family_class": "amend_cue",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "fraction",
+        "fraction": 0.5,
+        "time_s": 45.0
+      },
+      "control_goal_1": "ctl-lamppost",
+      "control_goal_2": "ctl-bench",
+      "sequence_control": "seq-bench-then-lamppost"
+    },
+    {
+      "episode_id": "ni1-18-lamppost-bench",
+      "goal_1": {
+        "key": "lamppost",
+        "place": "lamppost",
+        "text": "go to the lamppost"
+      },
+      "goal_2": {
+        "key": "bench",
+        "place": "bench",
+        "text": "no, go to the bench",
+        "family": "amend_no",
+        "family_class": "amend_cue",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "fraction",
+        "fraction": 0.75,
+        "time_s": 45.0
+      },
+      "control_goal_1": "ctl-lamppost",
+      "control_goal_2": "ctl-bench",
+      "sequence_control": "seq-bench-then-lamppost"
+    },
+    {
+      "episode_id": "ni1-19-lamppost-bench",
+      "goal_1": {
+        "key": "lamppost",
+        "place": "lamppost",
+        "text": "go to the lamppost"
+      },
+      "goal_2": {
+        "key": "bench",
+        "place": "bench",
+        "text": "instead go to the bench",
+        "family": "amend_instead",
+        "family_class": "amend_cue",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "time",
+        "fraction": null,
+        "time_s": 6.0
+      },
+      "control_goal_1": "ctl-lamppost",
+      "control_goal_2": "ctl-bench",
+      "sequence_control": "seq-bench-then-lamppost"
+    },
+    {
+      "episode_id": "ni1-20-sidewalk-bench",
+      "goal_1": {
+        "key": "sidewalk",
+        "place": "sidewalk",
+        "text": "go to the sidewalk"
+      },
+      "goal_2": {
+        "key": "bench",
+        "place": "bench",
+        "text": "go to the bench",
+        "family": "explicit_directive",
+        "family_class": "explicit_directive",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "fraction",
+        "fraction": 0.25,
+        "time_s": 45.0
+      },
+      "control_goal_1": "ctl-sidewalk",
+      "control_goal_2": "ctl-bench",
+      "sequence_control": "seq-bench-then-sidewalk"
+    },
+    {
+      "episode_id": "ni1-21-sidewalk-bench",
+      "goal_1": {
+        "key": "sidewalk",
+        "place": "sidewalk",
+        "text": "go to the sidewalk"
+      },
+      "goal_2": {
+        "key": "bench",
+        "place": "bench",
+        "text": "go to the bench",
+        "family": "explicit_directive",
+        "family_class": "explicit_directive",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "fraction",
+        "fraction": 0.5,
+        "time_s": 45.0
+      },
+      "control_goal_1": "ctl-sidewalk",
+      "control_goal_2": "ctl-bench",
+      "sequence_control": "seq-bench-then-sidewalk"
+    },
+    {
+      "episode_id": "ni1-22-sidewalk-bench",
+      "goal_1": {
+        "key": "sidewalk",
+        "place": "sidewalk",
+        "text": "go to the sidewalk"
+      },
+      "goal_2": {
+        "key": "bench",
+        "place": "bench",
+        "text": "after that, go to the bench",
+        "family": "queue_after_that",
+        "family_class": "queue",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "fraction",
+        "fraction": 0.75,
+        "time_s": 45.0
+      },
+      "control_goal_1": "ctl-sidewalk",
+      "control_goal_2": "ctl-bench",
+      "sequence_control": "seq-bench-then-sidewalk"
+    },
+    {
+      "episode_id": "ni1-23-sidewalk-bench",
+      "goal_1": {
+        "key": "sidewalk",
+        "place": "sidewalk",
+        "text": "go to the sidewalk"
+      },
+      "goal_2": {
+        "key": "bench",
+        "place": "bench",
+        "text": "actually",
+        "family": "hold_actually",
+        "family_class": "hold",
+        "has_goal": false
+      },
+      "trigger": {
+        "kind": "time",
+        "fraction": null,
+        "time_s": 6.0
+      },
+      "control_goal_1": "ctl-sidewalk",
+      "control_goal_2": "ctl-bench",
+      "sequence_control": "seq-bench-then-sidewalk"
+    },
+    {
+      "episode_id": "ni1-24-sidewalk-come_here",
+      "goal_1": {
+        "key": "sidewalk",
+        "place": "sidewalk",
+        "text": "go to the sidewalk"
+      },
+      "goal_2": {
+        "key": "come_here",
+        "place": "owner",
+        "text": "come here",
+        "family": "explicit_directive",
+        "family_class": "explicit_directive",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "fraction",
+        "fraction": 0.25,
+        "time_s": 45.0
+      },
+      "control_goal_1": "ctl-sidewalk",
+      "control_goal_2": "ctl-come_here",
+      "sequence_control": "seq-come_here-then-sidewalk"
+    },
+    {
+      "episode_id": "ni1-25-sidewalk-come_here",
+      "goal_1": {
+        "key": "sidewalk",
+        "place": "sidewalk",
+        "text": "go to the sidewalk"
+      },
+      "goal_2": {
+        "key": "come_here",
+        "place": "owner",
+        "text": "actually, go to the owner",
+        "family": "amend_actually",
+        "family_class": "amend_cue",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "fraction",
+        "fraction": 0.5,
+        "time_s": 45.0
+      },
+      "control_goal_1": "ctl-sidewalk",
+      "control_goal_2": "ctl-come_here",
+      "sequence_control": "seq-come_here-then-sidewalk"
+    },
+    {
+      "episode_id": "ni1-26-sidewalk-come_here",
+      "goal_1": {
+        "key": "sidewalk",
+        "place": "sidewalk",
+        "text": "go to the sidewalk"
+      },
+      "goal_2": {
+        "key": "come_here",
+        "place": "owner",
+        "text": "actually",
+        "family": "hold_actually",
+        "family_class": "hold",
+        "has_goal": false
+      },
+      "trigger": {
+        "kind": "fraction",
+        "fraction": 0.75,
+        "time_s": 45.0
+      },
+      "control_goal_1": "ctl-sidewalk",
+      "control_goal_2": "ctl-come_here",
+      "sequence_control": "seq-come_here-then-sidewalk"
+    },
+    {
+      "episode_id": "ni1-27-sidewalk-come_here",
+      "goal_1": {
+        "key": "sidewalk",
+        "place": "sidewalk",
+        "text": "go to the sidewalk"
+      },
+      "goal_2": {
+        "key": "come_here",
+        "place": "owner",
+        "text": "come here",
+        "family": "explicit_directive",
+        "family_class": "explicit_directive",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "time",
+        "fraction": null,
+        "time_s": 6.0
+      },
+      "control_goal_1": "ctl-sidewalk",
+      "control_goal_2": "ctl-come_here",
+      "sequence_control": "seq-come_here-then-sidewalk"
+    },
+    {
+      "episode_id": "ni1-28-towards_lamppost-bench",
+      "goal_1": {
+        "key": "towards_lamppost",
+        "place": "lamppost",
+        "text": "walk towards the lamppost"
+      },
+      "goal_2": {
+        "key": "bench",
+        "place": "bench",
+        "text": "after that, go to the bench",
+        "family": "queue_after_that",
+        "family_class": "queue",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "fraction",
+        "fraction": 0.25,
+        "time_s": 45.0
+      },
+      "control_goal_1": "ctl-towards_lamppost",
+      "control_goal_2": "ctl-bench",
+      "sequence_control": "seq-bench-then-towards_lamppost"
+    },
+    {
+      "episode_id": "ni1-29-towards_lamppost-bench",
+      "goal_1": {
+        "key": "towards_lamppost",
+        "place": "lamppost",
+        "text": "walk towards the lamppost"
+      },
+      "goal_2": {
+        "key": "bench",
+        "place": "bench",
+        "text": "go to the bench",
+        "family": "explicit_directive",
+        "family_class": "explicit_directive",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "fraction",
+        "fraction": 0.5,
+        "time_s": 45.0
+      },
+      "control_goal_1": "ctl-towards_lamppost",
+      "control_goal_2": "ctl-bench",
+      "sequence_control": "seq-bench-then-towards_lamppost"
+    },
+    {
+      "episode_id": "ni1-30-towards_lamppost-bench",
+      "goal_1": {
+        "key": "towards_lamppost",
+        "place": "lamppost",
+        "text": "walk towards the lamppost"
+      },
+      "goal_2": {
+        "key": "bench",
+        "place": "bench",
+        "text": "actually",
+        "family": "hold_actually",
+        "family_class": "hold",
+        "has_goal": false
+      },
+      "trigger": {
+        "kind": "fraction",
+        "fraction": 0.75,
+        "time_s": 45.0
+      },
+      "control_goal_1": "ctl-towards_lamppost",
+      "control_goal_2": "ctl-bench",
+      "sequence_control": "seq-bench-then-towards_lamppost"
+    },
+    {
+      "episode_id": "ni1-31-towards_lamppost-bench",
+      "goal_1": {
+        "key": "towards_lamppost",
+        "place": "lamppost",
+        "text": "walk towards the lamppost"
+      },
+      "goal_2": {
+        "key": "bench",
+        "place": "bench",
+        "text": "after that, go to the bench",
+        "family": "queue_after_that",
+        "family_class": "queue",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "time",
+        "fraction": null,
+        "time_s": 6.0
+      },
+      "control_goal_1": "ctl-towards_lamppost",
+      "control_goal_2": "ctl-bench",
+      "sequence_control": "seq-bench-then-towards_lamppost"
+    },
+    {
+      "episode_id": "ni1-32-towards_lamppost-come_here",
+      "goal_1": {
+        "key": "towards_lamppost",
+        "place": "lamppost",
+        "text": "walk towards the lamppost"
+      },
+      "goal_2": {
+        "key": "come_here",
+        "place": "owner",
+        "text": "actually, go to the owner",
+        "family": "amend_actually",
+        "family_class": "amend_cue",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "fraction",
+        "fraction": 0.25,
+        "time_s": 45.0
+      },
+      "control_goal_1": "ctl-towards_lamppost",
+      "control_goal_2": "ctl-come_here",
+      "sequence_control": "seq-come_here-then-towards_lamppost"
+    },
+    {
+      "episode_id": "ni1-33-towards_lamppost-come_here",
+      "goal_1": {
+        "key": "towards_lamppost",
+        "place": "lamppost",
+        "text": "walk towards the lamppost"
+      },
+      "goal_2": {
+        "key": "come_here",
+        "place": "owner",
+        "text": "actually, go to the owner",
+        "family": "amend_actually",
+        "family_class": "amend_cue",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "fraction",
+        "fraction": 0.5,
+        "time_s": 45.0
+      },
+      "control_goal_1": "ctl-towards_lamppost",
+      "control_goal_2": "ctl-come_here",
+      "sequence_control": "seq-come_here-then-towards_lamppost"
+    },
+    {
+      "episode_id": "ni1-34-towards_lamppost-come_here",
+      "goal_1": {
+        "key": "towards_lamppost",
+        "place": "lamppost",
+        "text": "walk towards the lamppost"
+      },
+      "goal_2": {
+        "key": "come_here",
+        "place": "owner",
+        "text": "no, go to the owner",
+        "family": "amend_no",
+        "family_class": "amend_cue",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "fraction",
+        "fraction": 0.75,
+        "time_s": 45.0
+      },
+      "control_goal_1": "ctl-towards_lamppost",
+      "control_goal_2": "ctl-come_here",
+      "sequence_control": "seq-come_here-then-towards_lamppost"
+    },
+    {
+      "episode_id": "ni1-35-towards_lamppost-come_here",
+      "goal_1": {
+        "key": "towards_lamppost",
+        "place": "lamppost",
+        "text": "walk towards the lamppost"
+      },
+      "goal_2": {
+        "key": "come_here",
+        "place": "owner",
+        "text": "after that, go to the owner",
+        "family": "queue_after_that",
+        "family_class": "queue",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "time",
+        "fraction": null,
+        "time_s": 6.0
+      },
+      "control_goal_1": "ctl-towards_lamppost",
+      "control_goal_2": "ctl-come_here",
+      "sequence_control": "seq-come_here-then-towards_lamppost"
+    },
+    {
+      "episode_id": "ni1-36-towards_lamppost-sidewalk",
+      "goal_1": {
+        "key": "towards_lamppost",
+        "place": "lamppost",
+        "text": "walk towards the lamppost"
+      },
+      "goal_2": {
+        "key": "sidewalk",
+        "place": "sidewalk",
+        "text": "go to the sidewalk",
+        "family": "explicit_directive",
+        "family_class": "explicit_directive",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "fraction",
+        "fraction": 0.25,
+        "time_s": 45.0
+      },
+      "control_goal_1": "ctl-towards_lamppost",
+      "control_goal_2": "ctl-sidewalk",
+      "sequence_control": "seq-sidewalk-then-towards_lamppost"
+    },
+    {
+      "episode_id": "ni1-37-towards_lamppost-sidewalk",
+      "goal_1": {
+        "key": "towards_lamppost",
+        "place": "lamppost",
+        "text": "walk towards the lamppost"
+      },
+      "goal_2": {
+        "key": "sidewalk",
+        "place": "sidewalk",
+        "text": "after that, go to the sidewalk",
+        "family": "queue_after_that",
+        "family_class": "queue",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "fraction",
+        "fraction": 0.5,
+        "time_s": 45.0
+      },
+      "control_goal_1": "ctl-towards_lamppost",
+      "control_goal_2": "ctl-sidewalk",
+      "sequence_control": "seq-sidewalk-then-towards_lamppost"
+    },
+    {
+      "episode_id": "ni1-38-towards_lamppost-sidewalk",
+      "goal_1": {
+        "key": "towards_lamppost",
+        "place": "lamppost",
+        "text": "walk towards the lamppost"
+      },
+      "goal_2": {
+        "key": "sidewalk",
+        "place": "sidewalk",
+        "text": "instead go to the sidewalk",
+        "family": "amend_instead",
+        "family_class": "amend_cue",
+        "has_goal": true
+      },
+      "trigger": {
+        "kind": "fraction",
+        "fraction": 0.75,
+        "time_s": 45.0
+      },
+      "control_goal_1": "ctl-towards_lamppost",
+      "control_goal_2": "ctl-sidewalk",
+      "sequence_control": "seq-sidewalk-then-towards_lamppost"
+    },
+    {
+      "episode_id": "ni1-39-towards_lamppost-sidewalk",
+      "goal_1": {
+        "key": "towards_lamppost",
+        "place": "lamppost",
+        "text": "walk towards the lamppost"
+      },
+      "goal_2": {
+        "key": "sidewalk",
+        "place": "sidewalk",
+        "text": "actually",
+        "family": "hold_actually",
+        "family_class": "hold",
+        "has_goal": false
+      },
+      "trigger": {
+        "kind": "time",
+        "fraction": null,
+        "time_s": 6.0
+      },
+      "control_goal_1": "ctl-towards_lamppost",
+      "control_goal_2": "ctl-sidewalk",
+      "sequence_control": "seq-sidewalk-then-towards_lamppost"
+    }
+  ],
+  "controls": [
+    {
+      "control_id": "ctl-bench",
+      "goal_key": "bench",
+      "text": "go to the bench",
+      "reps": 2
+    },
+    {
+      "control_id": "ctl-come_here",
+      "goal_key": "come_here",
+      "text": "come here",
+      "reps": 2
+    },
+    {
+      "control_id": "ctl-lamppost",
+      "goal_key": "lamppost",
+      "text": "go to the lamppost",
+      "reps": 2
+    },
+    {
+      "control_id": "ctl-sidewalk",
+      "goal_key": "sidewalk",
+      "text": "go to the sidewalk",
+      "reps": 2
+    },
+    {
+      "control_id": "ctl-towards_lamppost",
+      "goal_key": "towards_lamppost",
+      "text": "walk towards the lamppost",
+      "reps": 2
+    }
+  ],
+  "sequence_controls": [
+    {
+      "control_id": "seq-come_here-then-bench",
+      "first": {
+        "key": "come_here",
+        "text": "come here"
+      },
+      "second": {
+        "key": "bench",
+        "text": "go to the bench"
+      }
+    },
+    {
+      "control_id": "seq-lamppost-then-bench",
+      "first": {
+        "key": "lamppost",
+        "text": "go to the lamppost"
+      },
+      "second": {
+        "key": "bench",
+        "text": "go to the bench"
+      }
+    },
+    {
+      "control_id": "seq-sidewalk-then-bench",
+      "first": {
+        "key": "sidewalk",
+        "text": "go to the sidewalk"
+      },
+      "second": {
+        "key": "bench",
+        "text": "go to the bench"
+      }
+    },
+    {
+      "control_id": "seq-towards_lamppost-then-bench",
+      "first": {
+        "key": "towards_lamppost",
+        "text": "walk towards the lamppost"
+      },
+      "second": {
+        "key": "bench",
+        "text": "go to the bench"
+      }
+    },
+    {
+      "control_id": "seq-bench-then-lamppost",
+      "first": {
+        "key": "bench",
+        "text": "go to the bench"
+      },
+      "second": {
+        "key": "lamppost",
+        "text": "go to the lamppost"
+      }
+    },
+    {
+      "control_id": "seq-bench-then-sidewalk",
+      "first": {
+        "key": "bench",
+        "text": "go to the bench"
+      },
+      "second": {
+        "key": "sidewalk",
+        "text": "go to the sidewalk"
+      }
+    },
+    {
+      "control_id": "seq-come_here-then-sidewalk",
+      "first": {
+        "key": "come_here",
+        "text": "come here"
+      },
+      "second": {
+        "key": "sidewalk",
+        "text": "go to the sidewalk"
+      }
+    },
+    {
+      "control_id": "seq-bench-then-towards_lamppost",
+      "first": {
+        "key": "bench",
+        "text": "go to the bench"
+      },
+      "second": {
+        "key": "towards_lamppost",
+        "text": "walk towards the lamppost"
+      }
+    },
+    {
+      "control_id": "seq-come_here-then-towards_lamppost",
+      "first": {
+        "key": "come_here",
+        "text": "come here"
+      },
+      "second": {
+        "key": "towards_lamppost",
+        "text": "walk towards the lamppost"
+      }
+    },
+    {
+      "control_id": "seq-sidewalk-then-towards_lamppost",
+      "first": {
+        "key": "sidewalk",
+        "text": "go to the sidewalk"
+      },
+      "second": {
+        "key": "towards_lamppost",
+        "text": "walk towards the lamppost"
+      }
+    }
+  ]
+}

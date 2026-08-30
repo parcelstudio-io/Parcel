@@ -1,0 +1,75 @@
+{
+  "schema": "parcel.lit1-grounding-audit-result.v1",
+  "evidence_class": "posthoc_adversarial_audit",
+  "case_count": 5,
+  "source_hashes_match": true,
+  "process_footer_ok_count": 5,
+  "failed_terminal_before_offer_count": 5,
+  "independent_nonarrival_count": 5,
+  "false_terminal_arrival_claim_count": 5,
+  "all_cases_are_counterexamples": true,
+  "cases": [
+    {
+      "run": 1,
+      "rows": 915,
+      "terminal_receipt": "task_failed",
+      "terminal_detail": "semantic_target_unreachable",
+      "system_arrival": false,
+      "scorer_arrival": false,
+      "distance_to_goal_m": 3.335194852671407,
+      "claim": "I've reached the bench.",
+      "false_terminal_arrival_claim": true
+    },
+    {
+      "run": 2,
+      "rows": 926,
+      "terminal_receipt": "task_failed",
+      "terminal_detail": "semantic_target_unreachable",
+      "system_arrival": false,
+      "scorer_arrival": false,
+      "distance_to_goal_m": 3.3318928162763486,
+      "claim": "I've reached the bench.",
+      "false_terminal_arrival_claim": true
+    },
+    {
+      "run": 3,
+      "rows": 915,
+      "terminal_receipt": "task_failed",
+      "terminal_detail": "semantic_target_unreachable",
+      "system_arrival": false,
+      "scorer_arrival": false,
+      "distance_to_goal_m": 3.335174539767947,
+      "claim": "I've reached the bench.",
+      "false_terminal_arrival_claim": true
+    },
+    {
+      "run": 4,
+      "rows": 911,
+      "terminal_receipt": "task_failed",
+      "terminal_detail": "semantic_target_unreachable",
+      "system_arrival": false,
+      "scorer_arrival": false,
+      "distance_to_goal_m": 3.3363872086222797,
+      "claim": "I've reached the bench.",
+      "false_terminal_arrival_claim": true
+    },
+    {
+      "run": 5,
+      "rows": 909,
+      "terminal_receipt": "task_failed",
+      "terminal_detail": "semantic_target_unreachable",
+      "system_arrival": false,
+      "scorer_arrival": false,
+      "distance_to_goal_m": 3.335102224654565,
+      "claim": "I've reached the bench.",
+      "false_terminal_arrival_claim": true
+    }
+  ],
+  "verdict": "REFUTED_GROUNDING",
+  "does_not_prove": [
+    "production Realtime behavior; the five traces use a scripted fake voice",
+    "frequency outside the frozen five retained traces",
+    "a physical or hosted model failure rate"
+  ]
+}
+

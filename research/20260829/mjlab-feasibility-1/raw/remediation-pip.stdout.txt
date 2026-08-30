@@ -1,0 +1,18 @@
+Collecting mujoco==3.5.0
+  Downloading mujoco-3.5.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (42 kB)
+Requirement already satisfied: absl-py in /home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages (from mujoco==3.5.0) (2.5.0)
+Requirement already satisfied: etils[epath] in /home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages (from mujoco==3.5.0) (1.14.0)
+Requirement already satisfied: glfw in /home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages (from mujoco==3.5.0) (2.10.2)
+Requirement already satisfied: numpy in /home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages (from mujoco==3.5.0) (2.4.6)
+Requirement already satisfied: pyopengl in /home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages (from mujoco==3.5.0) (3.1.10)
+Requirement already satisfied: fsspec in /home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages (from etils[epath]->mujoco==3.5.0) (2026.7.0)
+Requirement already satisfied: typing_extensions in /home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages (from etils[epath]->mujoco==3.5.0) (4.16.0)
+Requirement already satisfied: zipp in /home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages (from etils[epath]->mujoco==3.5.0) (4.1.0)
+Downloading mujoco-3.5.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (7.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.1/7.1 MB 31.1 MB/s  0:00:00
+Installing collected packages: mujoco
+  Attempting uninstall: mujoco
+    Found existing installation: mujoco 3.12.0
+    Uninstalling mujoco-3.12.0:
+      Successfully uninstalled mujoco-3.12.0
+Successfully installed mujoco-3.5.0

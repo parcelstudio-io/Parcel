@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "experiment_id": "dmc3-composed-executive-model-b-bridge",
+  "seed": 20260829,
+  "source_epoch": 29,
+  "speech_generation": 3,
+  "event_ttl_ns": 5000000000,
+  "h1_trials": 256,
+  "h2_trials": 256,
+  "h3_trials": 128,
+  "h2_corruptions": [
+    "unknown_task_result",
+    "wrong_revision_result",
+    "wrong_step_result",
+    "wrong_attempt_result",
+    "late_old_step_result",
+    "post_terminal_result",
+    "missing_success_fact",
+    "altered_event_payload",
+    "altered_event_tag",
+    "duplicate_event",
+    "event_sequence_regression",
+    "wrong_source_epoch",
+    "future_event",
+    "expired_event",
+    "old_speech_generation",
+    "new_speech_generation"
+  ],
+  "frozen_hypotheses": ["D3-H1", "D3-H2", "D3-H3", "D3-H4"],
+  "evidence_tier": "product-contract process tests and deterministic replay",
+  "unsupported": [
+    "free-form language quality",
+    "acoustic duplex",
+    "owner recognition",
+    "perception",
+    "navigation success",
+    "collision avoidance",
+    "locomotion",
+    "provider delivery",
+    "Orin timing",
+    "robot safety"
+  ]
+}

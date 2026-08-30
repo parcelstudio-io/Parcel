@@ -1,0 +1,191 @@
+{
+  "bundle_files_sha256": {
+    "DESIGN.md": "657304b1cc8039b4a899e93a2b3c2fb896696d4ce77a33177003c5d31952a014",
+    "README.md": "207b7f08a06163f39d99ba9f9a3da726d8e5a87377c09fab16fa6ee314d0eb1c",
+    "RESULTS.md": "1ec8210cb4c0908b20656ba490a4b0e902534ba3373b05308ff6b78eab668528",
+    "VERDICT.md": "e9c8a460b3ac11c87f04dd4ac570817a3c7dae6979d3347d7f875cc873aa672f",
+    "applicability.json": "76406a80fead44314f438f2cf70b19218b34d09b8dd745c1b16a7d281e9afd74",
+    "assess_applicability.py": "3187493061c63ba4c77daca61921071ea9cfac9933d7df3c4048c4c02563ef7c",
+    "collect_training_artifacts.py": "0a256a96ad4fb3df856ec24b396c19acee9a09508037904a1a5337803d44839e",
+    "constraints.txt": "78637e0b5312d6dfb3e30a1b8a81c06f9a1abae513f81f401661f0e93f2f4f09",
+    "physics-run-3.json": "433f3a50b37cb7d5d4b018e7ba93c7b621c980e4b799f998bdb4eba6ce19d564",
+    "physics-run-4.json": "b97b94940a42db5cdcc8ce56ce08e3f6171d64fb042c8aa136cbf5a596610964",
+    "physics-run-5-posthoc-rss.json": "0d9e87022745b8121a14593724f34932948637694571324845ea1f9898b103a9",
+    "probe_physics.py": "a048429c8ae3084e78a593c9216fd48154e1812fcbdbf0536b9bbe11669ca88e",
+    "probe_registration.py": "1f487559cbf273ea6f8d7f804a8e9f660a5ba6f64c56e7de4d57d2d4a12a3f72",
+    "raw/clean-install.json": "5371ef3e9f3565b46c37201f33aab4ca7d285a9b21fca3e01107c8f07fc05d21",
+    "raw/pip-freeze.txt": "239afd8b15a6667c73ac58a481e276baecdd03061e4667aff5d865ca4a821b39",
+    "raw/remediation-final.json": "43f7b7fedaaef6957cd0628066bc015e27e8fc7f5e91de169bcdf91b5a757e9f",
+    "raw/scipy-remediation-final.json": "76d8439d62852ac684405daad687451d2020515e93451642745126c8d447cd53",
+    "raw/wandb-remediation.json": "ddeb354b4739c1a7fac99b91507bc8501454b000558e179ae39b95c3511978e8",
+    "raw/warp-remediation-final.json": "c07dea921cc8e58bf438d15ea75d5f77aa50d2adfbca2fc168a1d9e14d1915e0",
+    "registration.json": "cac8dc5c720378acc1754b23d36502148ebfeabccb6f6178de3f1072b15ed6f2",
+    "training-result.json": "7827765ded50d3bd863b78573c73357eb82288df1136a249e5bbc290ef1897cc",
+    "verify_results.py": "d83e00eb2e70e22a7b73d899be62c8a2e09f9d6661e61b165c856201fa3aeb96"
+  },
+  "bundle_root": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260829/mjlab-feasibility-1",
+  "experiment": "MJLAB-1",
+  "final_boundary": "A reproducibly pinned official Go2 lower-layer simulator pipeline is feasible on this workstation. Clean install, locomotion quality, Parcel integration, Orin performance, and physical safety are not established.",
+  "h1_clean_install": {
+    "checks": {
+      "expected_commit": true,
+      "expected_signature": true,
+      "import_failed": true,
+      "paired_warp_3_5": true,
+      "recorded_clean_h1_false": true,
+      "resolver_selected_mujoco_3_12": true,
+      "stderr_hash": true,
+      "upstream_source_clean_at_capture": true
+    },
+    "failure_verified": true,
+    "supported": false
+  },
+  "h1_remediated_registration": {
+    "checks": {
+      "commit": true,
+      "mujoco_pair": true,
+      "probe_hash": true,
+      "recorded": true,
+      "scipy_present": true,
+      "tasks_exact": true
+    },
+    "remediation_checks": {
+      "constraints_hash_present": true,
+      "full_freeze_hash_present": true,
+      "mujoco": true,
+      "scipy": true,
+      "wandb": true,
+      "warp": true
+    },
+    "remediation_sequence_supported": true,
+    "supported": true
+  },
+  "h2": {
+    "aggregate": {
+      "checked_environment_steps_including_warmup": 40960,
+      "evidentiary_fresh_process_runs": 2,
+      "process_wall_seconds_total": 24.395746811060235,
+      "throughput_max": 6199.343452965243,
+      "throughput_min": 5933.550162181001,
+      "timed_environment_steps": 32768
+    },
+    "checks": {
+      "run3": {
+        "all_checked_steps": true,
+        "commit": true,
+        "compatible_versions": true,
+        "finite": true,
+        "joint_count": true,
+        "num_envs": true,
+        "probe_hash": true,
+        "recorded_gate": true,
+        "recorded_result": true,
+        "schema": true,
+        "throughput": true,
+        "timed_sample_count": true,
+        "timed_steps": true,
+        "warmup_steps": true
+      },
+      "run4": {
+        "all_checked_steps": true,
+        "commit": true,
+        "compatible_versions": true,
+        "finite": true,
+        "joint_count": true,
+        "num_envs": true,
+        "probe_hash": true,
+        "recorded_gate": true,
+        "recorded_result": true,
+        "schema": true,
+        "throughput": true,
+        "timed_sample_count": true,
+        "timed_steps": true,
+        "warmup_steps": true
+      }
+    },
+    "supported_in_pinned_environment": true
+  },
+  "h2_posthoc_rss_supplement": {
+    "environment_steps_per_second": 5864.05085282887,
+    "exit_status": 0,
+    "labeled_post_hoc": true,
+    "maximum_resident_set_gib": 2.572315216064453,
+    "maximum_resident_set_kib": 2697268,
+    "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260829/mjlab-feasibility-1/raw/physics-run-5-posthoc-rss-time.txt",
+    "run_json_sha256": "0d9e87022745b8121a14593724f34932948637694571324845ea1f9898b103a9",
+    "run_pass": true,
+    "sha256": "b07ccf5a6e424d5458a5e98ff3cd0e9a1629d5f4caeb37a6a0bafe92cea7907f"
+  },
+  "h3": {
+    "checks": {
+      "all_recorded_gates": true,
+      "checkpoint": true,
+      "collector_hash": true,
+      "command_exit": true,
+      "configuration": true,
+      "iterations": true,
+      "recorded": true,
+      "retained": true,
+      "rss_recorded": true,
+      "sample_count": true,
+      "source_commit": true
+    },
+    "retained_artifact_checks": {
+      "agent.yaml": true,
+      "env.yaml": true,
+      "model_2.pt": true,
+      "policy.onnx": true
+    },
+    "supported_in_pinned_environment": true,
+    "training_resource_usage": {
+      "elapsed_wall_seconds": 13.2,
+      "exit_status": 0,
+      "maximum_resident_set_gib": 3.0089645385742188,
+      "maximum_resident_set_kib": 3155128,
+      "raw_fields": {
+        "Average resident set size (kbytes)": "0",
+        "Average shared text size (kbytes)": "0",
+        "Average stack size (kbytes)": "0",
+        "Average total size (kbytes)": "0",
+        "Average unshared data size (kbytes)": "0",
+        "Command being timed": "\"/home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/bin/python scripts/train.py Unitree-Go2-Flat --env.scene.num-envs=64 --agent.max-iterations=3 --agent.save-interval=1 --agent.seed=42 --agent.run-name=mjlab1-h3-pinned\"",
+        "Elapsed (wall clock) time (h:mm:ss or m:ss)": "0:13.20",
+        "Exit status": "0",
+        "File system inputs": "8",
+        "File system outputs": "49632",
+        "Involuntary context switches": "413",
+        "Major (requiring I/O) page faults": "0",
+        "Maximum resident set size (kbytes)": "3155128",
+        "Minor (reclaiming a frame) page faults": "570202",
+        "Page size (bytes)": "4096",
+        "Percent of CPU this job got": "203%",
+        "Signals delivered": "0",
+        "Socket messages received": "0",
+        "Socket messages sent": "0",
+        "Swaps": "0",
+        "System time (seconds)": "1.91",
+        "User time (seconds)": "24.93",
+        "Voluntary context switches": "5456"
+      }
+    }
+  },
+  "h4": {
+    "checks": {
+      "joint_count": true,
+      "lower_hooks": true,
+      "missing_scope_recorded": true,
+      "probe_hash": true,
+      "source_commit": true,
+      "strict_h4_false": true
+    },
+    "pinned_lower_layer_hooks_supported": true,
+    "strict_supported": false
+  },
+  "physical_readiness_supported": false,
+  "practical_pinned_environment_feasible": true,
+  "schema_version": 1,
+  "strict_all_preregistered_gates_supported": false,
+  "tamper_self_test_pass": true,
+  "verified_at_utc": "2026-08-29T23:04:50.974238+00:00",
+  "verifier_pass": true
+}

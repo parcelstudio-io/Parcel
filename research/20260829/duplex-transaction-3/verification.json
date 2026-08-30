@@ -1,0 +1,70 @@
+{
+  "H1_H3_passed_twice": true,
+  "checks": [
+    {
+      "H1_passed": true,
+      "H2_passed": true,
+      "H3_passed": true,
+      "H4_passed": false,
+      "errors": [],
+      "h2_coverage": {
+        "altered_event_payload": 16,
+        "altered_event_tag": 16,
+        "duplicate_event": 16,
+        "event_sequence_regression": 16,
+        "expired_event": 16,
+        "future_event": 16,
+        "late_old_step_result": 16,
+        "missing_success_fact": 16,
+        "new_speech_generation": 16,
+        "old_speech_generation": 16,
+        "post_terminal_result": 16,
+        "unknown_task_result": 16,
+        "wrong_attempt_result": 16,
+        "wrong_revision_result": 16,
+        "wrong_source_epoch": 16,
+        "wrong_step_result": 16
+      },
+      "normalized_trace_sha256": "d28625a78105f88703db7a8bd87dd4a72871ab7d92556e547101ea1882a94389",
+      "passed": false,
+      "trace_chain_root_sha256": "081fa416596366eb68bdd58c411e873b384c8502855fb15064e6c015b9b5759d"
+    },
+    {
+      "H1_passed": true,
+      "H2_passed": true,
+      "H3_passed": true,
+      "H4_passed": false,
+      "errors": [],
+      "h2_coverage": {
+        "altered_event_payload": 16,
+        "altered_event_tag": 16,
+        "duplicate_event": 16,
+        "event_sequence_regression": 16,
+        "expired_event": 16,
+        "future_event": 16,
+        "late_old_step_result": 16,
+        "missing_success_fact": 16,
+        "new_speech_generation": 16,
+        "old_speech_generation": 16,
+        "post_terminal_result": 16,
+        "unknown_task_result": 16,
+        "wrong_attempt_result": 16,
+        "wrong_revision_result": 16,
+        "wrong_source_epoch": 16,
+        "wrong_step_result": 16
+      },
+      "normalized_trace_sha256": "d28625a78105f88703db7a8bd87dd4a72871ab7d92556e547101ea1882a94389",
+      "passed": false,
+      "trace_chain_root_sha256": "081fa416596366eb68bdd58c411e873b384c8502855fb15064e6c015b9b5759d"
+    }
+  ],
+  "inputs": [
+    "research/20260829/duplex-transaction-3/run_a.json",
+    "research/20260829/duplex-transaction-3/run_b.json"
+  ],
+  "promotion_passed": false,
+  "schema_version": 1,
+  "two_run_digests_identical": true,
+  "verification_sha256": "9de33df19f5fb4305a0fb9f9c0491e7b80f551c6ba8f14af1735f7ce165a6ded",
+  "verifier_imports_bridge": false
+}

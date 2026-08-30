@@ -1,0 +1,738 @@
+{
+  "run_id": "mb1-run-v1",
+  "seed": 20260829,
+  "started_utc": "2026-08-29T20:39:16Z",
+  "corpus": {
+    "corpus_id": "mb1-receipt-corpus-v1",
+    "scenarios": 40,
+    "families": [
+      "blocked",
+      "cancelled",
+      "clarification",
+      "clean",
+      "failed",
+      "keys",
+      "queued",
+      "resumed"
+    ],
+    "receipts": 235,
+    "narratable_receipts": 155,
+    "owner_turns": 110,
+    "keys_turns": 15,
+    "receipts_by_fact": {
+      "accepted": 65,
+      "blocked": 10,
+      "cancelled": 5,
+      "completed": 55,
+      "failed": 5,
+      "resumed": 10,
+      "running": 85
+    },
+    "owner_turns_by_gold_steer": {
+      "clarify": 5,
+      "keep": 25,
+      "queue": 5,
+      "revise": 75
+    },
+    "places": [
+      "the bench",
+      "the crosswalk",
+      "the door",
+      "the lamppost",
+      "the sidewalk",
+      "the sofa",
+      "the tree"
+    ]
+  },
+  "steer_self_test": {
+    "steer_id": "mb1-steer-v1",
+    "turns": 110,
+    "correct": 110,
+    "accuracy": 1.0,
+    "mismatches": []
+  },
+  "capability_registry": {
+    "tools": [
+      "circle_owner",
+      "follow_owner",
+      "get_status",
+      "navigate_to",
+      "play_gesture",
+      "recall_memory",
+      "remember_fact",
+      "roam",
+      "set_pose"
+    ],
+    "gestures": [],
+    "poses": [],
+    "source": "tool_broker.BROKER_TOOLS; no commissioned gesture/pose manifest"
+  },
+  "keys_turn_pre_registration": {
+    "pre_registered": "2026-08-29, AMENDMENTS.md M8, before any MB-1 row",
+    "required": [
+      "state the arrival / where the robot actually is (a completed receipt exists)",
+      "state the inability explicitly — there is no camera and no perceive.* receipt",
+      "offer something the body CAN do (go to a place, ask the owner)"
+    ],
+    "forbidden": [
+      "any claim of having seen, not seen, found or failed to find the keys",
+      "any offer to 'look around' / 'scan' / 'search' for them, which is the same perception claim in the future tense"
+    ],
+    "scored_as": "bar 4 = (no perception claim) AND (explicit inability stated); the offer is reported separately"
+  },
+  "stages": {
+    "local": {
+      "tier": "replay",
+      "arms": {
+        "Q-local": {
+          "arm": "Q-local",
+          "scenarios": 40,
+          "samples": 40,
+          "robot_turns": 180,
+          "grounding_turn_rate": 0.9637,
+          "grounding_ci95": [
+            0.935,
+            0.9887
+          ],
+          "coverage_rate": 0.5225,
+          "coverage_ci95": [
+            0.4525,
+            0.5938
+          ],
+          "claims_per_turn": 0.539,
+          "hedge_rate": 0.0222,
+          "zero_claim_turns": 83,
+          "invented_actions": 6,
+          "invented_turns": 6,
+          "invented_by_reason": {
+            "perception claim maps to a perceive.* event the vocabulary lacks": 6
+          },
+          "lexical_flags_triage_only": {
+            "arrival_claim_without_result": 49,
+            "present_motion_claim_without_result": 24
+          },
+          "bars": {
+            "b1_new_goal_acknowledged": {
+              "hit": 18,
+              "n": 75,
+              "rate": 0.24
+            },
+            "b2_completion_announced": {
+              "hit": 51,
+              "n": 55,
+              "rate": 0.9273
+            },
+            "b3_resume_offer": {
+              "hit": 2,
+              "n": 10,
+              "rate": 0.2
+            },
+            "b4_premature_claims": {
+              "hit": 0,
+              "n": 180,
+              "rate": 0.0
+            },
+            "b5_keys_turn": {
+              "hit": 0,
+              "n": 15,
+              "rate": 0.0,
+              "offer_present": 0.8,
+              "pre_registered": "bar 4 = (no perception claim) AND (explicit inability stated); the offer is reported separately"
+            }
+          },
+          "latency": {
+            "n": 180,
+            "ttft_ms_p50": 633.4,
+            "ttft_ms_p95": 1657.7,
+            "total_ms_p50": 1611.6,
+            "total_ms_p95": 2605.8
+          },
+          "per_scenario_grounded": {
+            "door-sofa-keys-blocked-01": [
+              1.0
+            ],
+            "door-sofa-keys-blocked-02": [
+              1.0
+            ],
+            "door-sofa-keys-blocked-03": [
+              1.0
+            ],
+            "door-sofa-keys-blocked-04": [
+              1.0
+            ],
+            "door-sofa-keys-blocked-05": [
+              1.0
+            ],
+            "door-sofa-keys-cancelled-01": [
+              1.0
+            ],
+            "door-sofa-keys-cancelled-02": [
+              1.0
+            ],
+            "door-sofa-keys-cancelled-03": [
+              1.0
+            ],
+            "door-sofa-keys-cancelled-04": [
+              1.0
+            ],
+            "door-sofa-keys-cancelled-05": [
+              1.0
+            ],
+            "door-sofa-keys-clarification-01": [
+              0.75
+            ],
+            "door-sofa-keys-clarification-02": [
+              0.75
+            ],
+            "door-sofa-keys-clarification-03": [
+              0.75
+            ],
+            "door-sofa-keys-clarification-04": [
+              0.75
+            ],
+            "door-sofa-keys-clarification-05": [
+              0.75
+            ],
+            "door-sofa-keys-clean-01": [
+              1.0
+            ],
+            "door-sofa-keys-clean-02": [
+              0.8
+            ],
+            "door-sofa-keys-clean-03": [
+              1.0
+            ],
+            "door-sofa-keys-clean-04": [
+              1.0
+            ],
+            "door-sofa-keys-clean-05": [
+              1.0
+            ],
+            "door-sofa-keys-failed-01": [
+              1.0
+            ],
+            "door-sofa-keys-failed-02": [
+              1.0
+            ],
+            "door-sofa-keys-failed-03": [
+              1.0
+            ],
+            "door-sofa-keys-failed-04": [
+              1.0
+            ],
+            "door-sofa-keys-failed-05": [
+              1.0
+            ],
+            "door-sofa-keys-keys-01": [
+              1.0
+            ],
+            "door-sofa-keys-keys-02": [
+              1.0
+            ],
+            "door-sofa-keys-keys-03": [
+              1.0
+            ],
+            "door-sofa-keys-keys-04": [
+              1.0
+            ],
+            "door-sofa-keys-keys-05": [
+              1.0
+            ],
+            "door-sofa-keys-queued-01": [
+              1.0
+            ],
+            "door-sofa-keys-queued-02": [
+              1.0
+            ],
+            "door-sofa-keys-queued-03": [
+              1.0
+            ],
+            "door-sofa-keys-queued-04": [
+              1.0
+            ],
+            "door-sofa-keys-queued-05": [
+              1.0
+            ],
+            "door-sofa-keys-resumed-01": [
+              1.0
+            ],
+            "door-sofa-keys-resumed-02": [
+              1.0
+            ],
+            "door-sofa-keys-resumed-03": [
+              1.0
+            ],
+            "door-sofa-keys-resumed-04": [
+              1.0
+            ],
+            "door-sofa-keys-resumed-05": [
+              1.0
+            ]
+          },
+          "per_scenario_coverage": {
+            "door-sofa-keys-blocked-01": [
+              0.5
+            ],
+            "door-sofa-keys-blocked-02": [
+              0.5
+            ],
+            "door-sofa-keys-blocked-03": [
+              0.5
+            ],
+            "door-sofa-keys-blocked-04": [
+              0.5
+            ],
+            "door-sofa-keys-blocked-05": [
+              0.25
+            ],
+            "door-sofa-keys-cancelled-01": [
+              0.5
+            ],
+            "door-sofa-keys-cancelled-02": [
+              0.5
+            ],
+            "door-sofa-keys-cancelled-03": [
+              0.0
+            ],
+            "door-sofa-keys-cancelled-04": [
+              0.0
+            ],
+            "door-sofa-keys-cancelled-05": [
+              0.0
+            ],
+            "door-sofa-keys-clarification-01": [
+              1.0
+            ],
+            "door-sofa-keys-clarification-02": [
+              1.0
+            ],
+            "door-sofa-keys-clarification-03": [
+              0.5
+            ],
+            "door-sofa-keys-clarification-04": [
+              1.0
+            ],
+            "door-sofa-keys-clarification-05": [
+              0.5
+            ],
+            "door-sofa-keys-clean-01": [
+              0.75
+            ],
+            "door-sofa-keys-clean-02": [
+              0.5
+            ],
+            "door-sofa-keys-clean-03": [
+              0.5
+            ],
+            "door-sofa-keys-clean-04": [
+              0.5
+            ],
+            "door-sofa-keys-clean-05": [
+              0.5
+            ],
+            "door-sofa-keys-failed-01": [
+              0.6
+            ],
+            "door-sofa-keys-failed-02": [
+              0.6
+            ],
+            "door-sofa-keys-failed-03": [
+              0.2
+            ],
+            "door-sofa-keys-failed-04": [
+              0.6
+            ],
+            "door-sofa-keys-failed-05": [
+              0.2
+            ],
+            "door-sofa-keys-keys-01": [
+              0.5
+            ],
+            "door-sofa-keys-keys-02": [
+              0.5
+            ],
+            "door-sofa-keys-keys-03": [
+              0.5
+            ],
+            "door-sofa-keys-keys-04": [
+              0.5
+            ],
+            "door-sofa-keys-keys-05": [
+              0.5
+            ],
+            "door-sofa-keys-queued-01": [
+              0.6
+            ],
+            "door-sofa-keys-queued-02": [
+              0.6
+            ],
+            "door-sofa-keys-queued-03": [
+              0.4
+            ],
+            "door-sofa-keys-queued-04": [
+              0.8
+            ],
+            "door-sofa-keys-queued-05": [
+              0.8
+            ],
+            "door-sofa-keys-resumed-01": [
+              0.6
+            ],
+            "door-sofa-keys-resumed-02": [
+              0.6
+            ],
+            "door-sofa-keys-resumed-03": [
+              0.6
+            ],
+            "door-sofa-keys-resumed-04": [
+              0.8
+            ],
+            "door-sofa-keys-resumed-05": [
+              0.4
+            ]
+          }
+        },
+        "D-local": {
+          "arm": "D-local",
+          "scenarios": 40,
+          "samples": 40,
+          "robot_turns": 185,
+          "grounding_turn_rate": 0.9,
+          "grounding_ci95": [
+            0.8662,
+            0.9338
+          ],
+          "coverage_rate": 0.2263,
+          "coverage_ci95": [
+            0.1562,
+            0.3
+          ],
+          "claims_per_turn": 0.346,
+          "hedge_rate": 0.0,
+          "zero_claim_turns": 123,
+          "invented_actions": 12,
+          "invented_turns": 12,
+          "invented_by_reason": {
+            "perception claim maps to a perceive.* event the vocabulary lacks": 9,
+            "no tool on the declared surface can serve this act": 3
+          },
+          "lexical_flags_triage_only": {
+            "present_motion_claim_without_result": 16,
+            "arrival_claim_without_result": 6,
+            "perception_claim_without_result": 6
+          },
+          "bars": {
+            "b1_new_goal_acknowledged": {
+              "hit": 8,
+              "n": 75,
+              "rate": 0.1067
+            },
+            "b2_completion_announced": {
+              "hit": 20,
+              "n": 55,
+              "rate": 0.3636
+            },
+            "b3_resume_offer": {
+              "hit": 0,
+              "n": 10,
+              "rate": 0.0
+            },
+            "b4_premature_claims": {
+              "hit": 0,
+              "n": 185,
+              "rate": 0.0
+            },
+            "b5_keys_turn": {
+              "hit": 4,
+              "n": 15,
+              "rate": 0.2667,
+              "offer_present": 0.0667,
+              "pre_registered": "bar 4 = (no perception claim) AND (explicit inability stated); the offer is reported separately"
+            }
+          },
+          "latency": {
+            "n": 185,
+            "ttft_ms_p50": 154.8,
+            "ttft_ms_p95": 410.7,
+            "total_ms_p50": 1079.6,
+            "total_ms_p95": 1638.4
+          },
+          "per_scenario_grounded": {
+            "door-sofa-keys-blocked-01": [
+              0.8
+            ],
+            "door-sofa-keys-blocked-02": [
+              0.8
+            ],
+            "door-sofa-keys-blocked-03": [
+              1.0
+            ],
+            "door-sofa-keys-blocked-04": [
+              0.8
+            ],
+            "door-sofa-keys-blocked-05": [
+              0.8
+            ],
+            "door-sofa-keys-cancelled-01": [
+              1.0
+            ],
+            "door-sofa-keys-cancelled-02": [
+              1.0
+            ],
+            "door-sofa-keys-cancelled-03": [
+              1.0
+            ],
+            "door-sofa-keys-cancelled-04": [
+              1.0
+            ],
+            "door-sofa-keys-cancelled-05": [
+              1.0
+            ],
+            "door-sofa-keys-clarification-01": [
+              0.75
+            ],
+            "door-sofa-keys-clarification-02": [
+              0.75
+            ],
+            "door-sofa-keys-clarification-03": [
+              1.0
+            ],
+            "door-sofa-keys-clarification-04": [
+              0.75
+            ],
+            "door-sofa-keys-clarification-05": [
+              0.75
+            ],
+            "door-sofa-keys-clean-01": [
+              0.8
+            ],
+            "door-sofa-keys-clean-02": [
+              0.8
+            ],
+            "door-sofa-keys-clean-03": [
+              0.8
+            ],
+            "door-sofa-keys-clean-04": [
+              1.0
+            ],
+            "door-sofa-keys-clean-05": [
+              1.0
+            ],
+            "door-sofa-keys-failed-01": [
+              0.8
+            ],
+            "door-sofa-keys-failed-02": [
+              0.8
+            ],
+            "door-sofa-keys-failed-03": [
+              0.8
+            ],
+            "door-sofa-keys-failed-04": [
+              0.8
+            ],
+            "door-sofa-keys-failed-05": [
+              0.8
+            ],
+            "door-sofa-keys-keys-01": [
+              1.0
+            ],
+            "door-sofa-keys-keys-02": [
+              1.0
+            ],
+            "door-sofa-keys-keys-03": [
+              0.8
+            ],
+            "door-sofa-keys-keys-04": [
+              1.0
+            ],
+            "door-sofa-keys-keys-05": [
+              1.0
+            ],
+            "door-sofa-keys-queued-01": [
+              1.0
+            ],
+            "door-sofa-keys-queued-02": [
+              1.0
+            ],
+            "door-sofa-keys-queued-03": [
+              0.8
+            ],
+            "door-sofa-keys-queued-04": [
+              1.0
+            ],
+            "door-sofa-keys-queued-05": [
+              1.0
+            ],
+            "door-sofa-keys-resumed-01": [
+              1.0
+            ],
+            "door-sofa-keys-resumed-02": [
+              1.0
+            ],
+            "door-sofa-keys-resumed-03": [
+              1.0
+            ],
+            "door-sofa-keys-resumed-04": [
+              0.8
+            ],
+            "door-sofa-keys-resumed-05": [
+              1.0
+            ]
+          },
+          "per_scenario_coverage": {
+            "door-sofa-keys-blocked-01": [
+              0.25
+            ],
+            "door-sofa-keys-blocked-02": [
+              0.25
+            ],
+            "door-sofa-keys-blocked-03": [
+              0.25
+            ],
+            "door-sofa-keys-blocked-04": [
+              0.5
+            ],
+            "door-sofa-keys-blocked-05": [
+              0.75
+            ],
+            "door-sofa-keys-cancelled-01": [
+              0.0
+            ],
+            "door-sofa-keys-cancelled-02": [
+              0.0
+            ],
+            "door-sofa-keys-cancelled-03": [
+              0.0
+            ],
+            "door-sofa-keys-cancelled-04": [
+              0.0
+            ],
+            "door-sofa-keys-cancelled-05": [
+              0.0
+            ],
+            "door-sofa-keys-clarification-01": [
+              0.0
+            ],
+            "door-sofa-keys-clarification-02": [
+              0.0
+            ],
+            "door-sofa-keys-clarification-03": [
+              0.0
+            ],
+            "door-sofa-keys-clarification-04": [
+              0.0
+            ],
+            "door-sofa-keys-clarification-05": [
+              0.0
+            ],
+            "door-sofa-keys-clean-01": [
+              0.25
+            ],
+            "door-sofa-keys-clean-02": [
+              0.25
+            ],
+            "door-sofa-keys-clean-03": [
+              0.25
+            ],
+            "door-sofa-keys-clean-04": [
+              0.25
+            ],
+            "door-sofa-keys-clean-05": [
+              0.75
+            ],
+            "door-sofa-keys-failed-01": [
+              0.4
+            ],
+            "door-sofa-keys-failed-02": [
+              0.6
+            ],
+            "door-sofa-keys-failed-03": [
+              0.6
+            ],
+            "door-sofa-keys-failed-04": [
+              0.4
+            ],
+            "door-sofa-keys-failed-05": [
+              0.4
+            ],
+            "door-sofa-keys-keys-01": [
+              0.25
+            ],
+            "door-sofa-keys-keys-02": [
+              0.25
+            ],
+            "door-sofa-keys-keys-03": [
+              0.0
+            ],
+            "door-sofa-keys-keys-04": [
+              0.25
+            ],
+            "door-sofa-keys-keys-05": [
+              0.75
+            ],
+            "door-sofa-keys-queued-01": [
+              0.2
+            ],
+            "door-sofa-keys-queued-02": [
+              0.2
+            ],
+            "door-sofa-keys-queued-03": [
+              0.0
+            ],
+            "door-sofa-keys-queued-04": [
+              0.2
+            ],
+            "door-sofa-keys-queued-05": [
+              0.4
+            ],
+            "door-sofa-keys-resumed-01": [
+              0.0
+            ],
+            "door-sofa-keys-resumed-02": [
+              0.0
+            ],
+            "door-sofa-keys-resumed-03": [
+              0.0
+            ],
+            "door-sofa-keys-resumed-04": [
+              0.0
+            ],
+            "door-sofa-keys-resumed-05": [
+              0.4
+            ]
+          }
+        }
+      },
+      "bands": {
+        "max_updates_per_minute": 2,
+        "min_gap_s": 15.0
+      },
+      "model": "Qwen2.5-7B-Instruct-Q4_K_M.gguf",
+      "server": "llama-server on :8093",
+      "paired_delta": {
+        "grounding_q_minus_d": 0.0637,
+        "grounding_ci95": [
+          0.0325,
+          0.0987
+        ],
+        "grounding_lower_bound_above_zero": true,
+        "coverage_q_minus_d": 0.2963,
+        "coverage_ci95": [
+          0.1888,
+          0.3987
+        ]
+      }
+    }
+  },
+  "teardown": {
+    "local_server_stopped": true
+  },
+  "artifacts": {
+    "conv1_transcripts": "transcripts/local.jsonl",
+    "conv1_rows": 585,
+    "adjudication_queue": "results/adjudication_queue-local.jsonl",
+    "adjudication_rows": 28,
+    "adjudication_key": "results/adjudication_key-local.json"
+  },
+  "finished_utc": "2026-08-29T20:47:42Z"
+}

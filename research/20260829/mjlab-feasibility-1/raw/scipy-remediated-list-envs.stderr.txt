@@ -1,0 +1,5 @@
+╭─ Unrecognized options ─────────────────────────────╮
+│ Unrecognized options: Go2                          │
+│ ────────────────────────────────────────────────── │
+│ For full helptext, run scripts/list_envs.py --help │
+╰────────────────────────────────────────────────────╯

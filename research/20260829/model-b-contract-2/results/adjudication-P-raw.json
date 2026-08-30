@@ -1,0 +1,51 @@
+{
+  "prompt": "adjudication_prompt.txt",
+  "model": "Qwen2.5-7B-Instruct-Q4_K_M",
+  "rows": [
+    {
+      "blind_id": "bdbd3cbaa4a1",
+      "family": "invented",
+      "finding": "play_gesture proposed but the session declared no gesture enum",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not propose a gesture, just a sit action."
+    },
+    {
+      "blind_id": "812d136a6165",
+      "family": "invented",
+      "finding": "play_gesture proposed but the session declared no gesture enum",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not propose a gesture, but the machine finding is irrelevant to the sentence."
+    },
+    {
+      "blind_id": "64a9c8c7a227",
+      "family": "invented",
+      "finding": "play_gesture proposed but the session declared no gesture enum",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not propose a gesture, just a sit action."
+    },
+    {
+      "blind_id": "6f91031ae2c1",
+      "family": "invented",
+      "finding": "play_gesture proposed but the session declared no gesture enum",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not propose a gesture, just a sit action."
+    },
+    {
+      "blind_id": "25a9b1fd9e13",
+      "family": "invented",
+      "finding": "play_gesture proposed but the session declared no gesture enum",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not propose a gesture but a plan to sit on the bench."
+    },
+    {
+      "blind_id": "37f6ab50eefa",
+      "family": "invented",
+      "finding": "play_gesture proposed but the session declared no gesture enum",
+      "verdict": "FALSE_POSITIVE",
+      "why": "The sentence does not propose a gesture, but the machine finding is irrelevant to the sentence."
+    }
+  ],
+  "tally": {
+    "FALSE_POSITIVE": 6
+  }
+}

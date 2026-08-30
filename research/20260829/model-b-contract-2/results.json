@@ -1,0 +1,1287 @@
+{
+  "run_id": "mb2-run-v1",
+  "seed": 20260829,
+  "contract_id": "mb2-utterance-contract-v1",
+  "scorer_id": "mb1-scorer-v1",
+  "corpus_id": "mb1-receipt-corpus-v1",
+  "started_utc": "2026-08-30T00:27:41Z",
+  "corpus": {
+    "corpus_id": "mb1-receipt-corpus-v1",
+    "scenarios": 40,
+    "families": [
+      "blocked",
+      "cancelled",
+      "clarification",
+      "clean",
+      "failed",
+      "keys",
+      "queued",
+      "resumed"
+    ],
+    "receipts": 235,
+    "narratable_receipts": 155,
+    "owner_turns": 110,
+    "keys_turns": 15,
+    "receipts_by_fact": {
+      "accepted": 65,
+      "blocked": 10,
+      "cancelled": 5,
+      "completed": 55,
+      "failed": 5,
+      "resumed": 10,
+      "running": 85
+    },
+    "owner_turns_by_gold_steer": {
+      "clarify": 5,
+      "keep": 25,
+      "queue": 5,
+      "revise": 75
+    },
+    "places": [
+      "the bench",
+      "the crosswalk",
+      "the door",
+      "the lamppost",
+      "the sidewalk",
+      "the sofa",
+      "the tree"
+    ]
+  },
+  "bands": {
+    "max_updates_per_minute": 2,
+    "min_gap_s": 15.0
+  },
+  "speech_acts": [
+    "ack",
+    "progress",
+    "blocked",
+    "completed",
+    "failed",
+    "cancelled",
+    "resumed",
+    "resume_offer",
+    "capability_refusal"
+  ],
+  "capability_keys": [
+    "vision",
+    "manipulation",
+    "position_report",
+    "messaging",
+    "world_change"
+  ],
+  "templates": {
+    "ack(goal)": "Okay, I'll head to {goal}.",
+    "ack(goal, queued)": "Okay, I'll check {goal} after that.",
+    "progress": "I'm still on my way to {goal}.",
+    "blocked(class)": "{Someone|Something} is in the way, so I'm waiting for it to clear.",
+    "blocked(class, resolved)": "{Someone|Something} standing in the way held me up, so I waited.",
+    "completed(goal)": "I'm at {goal}.",
+    "failed(goal, class)": "I couldn't get to {goal}, and {a person|something} stayed in the way.",
+    "cancelled": "I've stopped, so {goal} is off the list.",
+    "resumed(goal)": "Okay, I'm picking that back up, and I'm on my way to {goal}.",
+    "resume_offer(goal)": "Shall I go to {goal} next?",
+    "capability_refusal(vision)": "I have no camera, so I can't look for things.",
+    "capability_refusal(position_report)": "I don't have a position to report.",
+    "capability_refusal(manipulation)": "I have no way to pick anything up.",
+    "capability_refusal(messaging)": "I have no way to contact anyone.",
+    "capability_refusal(world_change)": "I have no way to change anything in the room.",
+    "ask_clarify": "{question from steer.py}",
+    "closing": "What would you like next? / What would you like to do instead?"
+  },
+  "rejection_reason_enum": [
+    "empty",
+    "too_long",
+    "claim_not_licensed_by_act",
+    "unsupported_claim",
+    "invented_action",
+    "premature_arrival",
+    "foreign_place_name",
+    "missing_required_goal",
+    "missing_inability_statement",
+    "missing_offer",
+    "missing_question",
+    "unlicensed_number"
+  ],
+  "hosted_calls": 0,
+  "cost_usd": 0.0,
+  "host_at_start": {
+    "uptime": "20:35:48 up 7 days,  2:33,  1 user,  load average: 46.63, 25.03, 14.43",
+    "nvidia_smi": "NVIDIA RTX 5000 Ada Generation, 2027 MiB, 24 %",
+    "at_utc": "2026-08-30T00:35:48Z"
+  },
+  "updated_utc": "2026-08-30T00:35:48Z",
+  "capability_registry": {
+    "tools": [
+      "circle_owner",
+      "follow_owner",
+      "get_status",
+      "navigate_to",
+      "play_gesture",
+      "recall_memory",
+      "remember_fact",
+      "roam",
+      "set_pose"
+    ],
+    "gestures": [],
+    "poses": [],
+    "source": "tool_broker.BROKER_TOOLS; no commissioned gesture/pose manifest"
+  },
+  "references": {
+    "mb1_scripted_Q": {
+      "arm": "Q",
+      "scenarios": 40,
+      "samples": 40,
+      "robot_turns": 180,
+      "grounding_turn_rate": 1.0,
+      "grounding_ci95": [
+        1.0,
+        1.0
+      ],
+      "coverage_rate": 0.9688,
+      "coverage_ci95": [
+        0.9375,
+        0.9938
+      ],
+      "claims_per_turn": 1.361,
+      "hedge_rate": 0.0,
+      "zero_claim_turns": 20,
+      "invented_actions": 0,
+      "invented_turns": 0,
+      "invented_by_reason": {},
+      "lexical_flags_triage_only": {
+        "arrival_claim_without_result": 55
+      },
+      "bars": {
+        "b1_new_goal_acknowledged": {
+          "hit": 75,
+          "n": 75,
+          "rate": 1.0
+        },
+        "b2_completion_announced": {
+          "hit": 55,
+          "n": 55,
+          "rate": 1.0
+        },
+        "b3_resume_offer": {
+          "hit": 10,
+          "n": 10,
+          "rate": 1.0
+        },
+        "b4_premature_claims": {
+          "hit": 0,
+          "n": 180,
+          "rate": 0.0
+        },
+        "b5_keys_turn": {
+          "hit": 15,
+          "n": 15,
+          "rate": 1.0,
+          "offer_present": 1.0,
+          "pre_registered": "bar 4 = (no perception claim) AND (explicit inability stated); the offer is reported separately"
+        }
+      },
+      "latency": {
+        "n": 180,
+        "ttft_ms_p50": 0.0,
+        "ttft_ms_p95": 0.0,
+        "total_ms_p50": 0.1,
+        "total_ms_p95": 0.1
+      },
+      "reference": true,
+      "source": "model-b-narration-1/results.json :: stages.fake.arms.Q",
+      "note": "REFERENCE ROW, not an MB-2 arm: MB-1's scripted deterministic responder over a real RealtimeLane. A harness proof — the ceiling a hand-written responder reaches on this scorer, with no language model anywhere."
+    },
+    "mb1_hosted_Q": {
+      "arm": "Q",
+      "bars": {
+        "b1_new_goal_acknowledged": {
+          "hit": 99,
+          "n": 225,
+          "rate": 0.44
+        },
+        "b2_completion_announced": {
+          "hit": 11,
+          "n": 165,
+          "rate": 0.0667
+        },
+        "b3_resume_offer": {
+          "hit": 10,
+          "n": 30,
+          "rate": 0.3333
+        },
+        "b4_premature_claims": {
+          "hit": 13,
+          "n": 164,
+          "rate": 0.0793
+        },
+        "b5_keys_turn": {
+          "hit": 1,
+          "n": 25,
+          "offer_present": 0.52,
+          "pre_registered": "bar 4 = (no perception claim) AND (explicit inability stated); the offer is reported separately",
+          "rate": 0.04
+        }
+      },
+      "claims_per_turn": 1.299,
+      "coverage_ci95": [
+        0.185,
+        0.2733
+      ],
+      "coverage_rate": 0.2283,
+      "grounding_ci95": [
+        0.5051,
+        0.7094
+      ],
+      "grounding_turn_rate": 0.612,
+      "hedge_rate": 0.1341,
+      "invented_actions": 45,
+      "invented_by_reason": {
+        "no tool on the declared surface can serve this act": 22,
+        "perception claim maps to a perceive.* event the vocabulary lacks": 22,
+        "play_gesture proposed but the session declared no gesture enum": 1
+      },
+      "invented_turns": 39,
+      "latency": {
+        "n": 5,
+        "total_ms_p50": 3336.6,
+        "total_ms_p95": 3967.3,
+        "ttft_ms_p50": 1271.1,
+        "ttft_ms_p95": 1990.1
+      },
+      "lexical_flags_triage_only": {
+        "arrival_claim_without_result": 42,
+        "perception_claim_without_result": 1,
+        "present_motion_claim_without_result": 61
+      },
+      "robot_turns": 164,
+      "samples": 120,
+      "scenarios": 40,
+      "zero_claim_turns": 27,
+      "reference": true,
+      "source": "model-b-narration-1/results.json :: stages.hosted.arms.Q",
+      "note": "REFERENCE ROW, not an MB-2 arm: MB-1's hosted free-form narration (gpt-realtime-2.1-mini, 120 scenarios, hosted-live). The design MB-2 replaces. Point values are the pessimistic assignment of MB-1's recovered response slots; RESULTS.md there carries the admissible range."
+    }
+  },
+  "arm_T": {
+    "arm": "T",
+    "scenarios": 40,
+    "samples": 40,
+    "robot_turns": 180,
+    "grounding_turn_rate": 1.0,
+    "grounding_ci95": [
+      1.0,
+      1.0
+    ],
+    "coverage_rate": 0.9688,
+    "coverage_ci95": [
+      0.9375,
+      0.9938
+    ],
+    "claims_per_turn": 1.444,
+    "hedge_rate": 0.0,
+    "zero_claim_turns": 5,
+    "invented_actions": 0,
+    "invented_turns": 0,
+    "invented_by_reason": {},
+    "lexical_flags_triage_only": {},
+    "bars": {
+      "b1_new_goal_acknowledged": {
+        "hit": 75,
+        "n": 75,
+        "rate": 1.0
+      },
+      "b2_completion_announced": {
+        "hit": 55,
+        "n": 55,
+        "rate": 1.0
+      },
+      "b3_resume_offer": {
+        "hit": 10,
+        "n": 10,
+        "rate": 1.0
+      },
+      "b4_premature_claims": {
+        "hit": 0,
+        "n": 180,
+        "rate": 0.0
+      },
+      "b5_keys_turn": {
+        "hit": 15,
+        "n": 15,
+        "rate": 1.0,
+        "offer_present": 1.0,
+        "pre_registered": "bar 4 = (no perception claim) AND (explicit inability stated); the offer is reported separately"
+      }
+    },
+    "latency": {
+      "n": 180,
+      "ttft_ms_p50": 0.0,
+      "ttft_ms_p95": 0.0,
+      "total_ms_p50": 0.1,
+      "total_ms_p95": 0.2
+    },
+    "per_scenario_grounded": {
+      "door-sofa-keys-blocked-01": [
+        1.0
+      ],
+      "door-sofa-keys-blocked-02": [
+        1.0
+      ],
+      "door-sofa-keys-blocked-03": [
+        1.0
+      ],
+      "door-sofa-keys-blocked-04": [
+        1.0
+      ],
+      "door-sofa-keys-blocked-05": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-01": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-02": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-03": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-04": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-05": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-01": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-02": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-03": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-04": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-05": [
+        1.0
+      ],
+      "door-sofa-keys-clean-01": [
+        1.0
+      ],
+      "door-sofa-keys-clean-02": [
+        1.0
+      ],
+      "door-sofa-keys-clean-03": [
+        1.0
+      ],
+      "door-sofa-keys-clean-04": [
+        1.0
+      ],
+      "door-sofa-keys-clean-05": [
+        1.0
+      ],
+      "door-sofa-keys-failed-01": [
+        1.0
+      ],
+      "door-sofa-keys-failed-02": [
+        1.0
+      ],
+      "door-sofa-keys-failed-03": [
+        1.0
+      ],
+      "door-sofa-keys-failed-04": [
+        1.0
+      ],
+      "door-sofa-keys-failed-05": [
+        1.0
+      ],
+      "door-sofa-keys-keys-01": [
+        1.0
+      ],
+      "door-sofa-keys-keys-02": [
+        1.0
+      ],
+      "door-sofa-keys-keys-03": [
+        1.0
+      ],
+      "door-sofa-keys-keys-04": [
+        1.0
+      ],
+      "door-sofa-keys-keys-05": [
+        1.0
+      ],
+      "door-sofa-keys-queued-01": [
+        1.0
+      ],
+      "door-sofa-keys-queued-02": [
+        1.0
+      ],
+      "door-sofa-keys-queued-03": [
+        1.0
+      ],
+      "door-sofa-keys-queued-04": [
+        1.0
+      ],
+      "door-sofa-keys-queued-05": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-01": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-02": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-03": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-04": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-05": [
+        1.0
+      ]
+    },
+    "per_scenario_coverage": {
+      "door-sofa-keys-blocked-01": [
+        0.75
+      ],
+      "door-sofa-keys-blocked-02": [
+        0.75
+      ],
+      "door-sofa-keys-blocked-03": [
+        0.75
+      ],
+      "door-sofa-keys-blocked-04": [
+        0.75
+      ],
+      "door-sofa-keys-blocked-05": [
+        0.75
+      ],
+      "door-sofa-keys-cancelled-01": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-02": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-03": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-04": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-05": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-01": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-02": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-03": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-04": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-05": [
+        1.0
+      ],
+      "door-sofa-keys-clean-01": [
+        1.0
+      ],
+      "door-sofa-keys-clean-02": [
+        1.0
+      ],
+      "door-sofa-keys-clean-03": [
+        1.0
+      ],
+      "door-sofa-keys-clean-04": [
+        1.0
+      ],
+      "door-sofa-keys-clean-05": [
+        1.0
+      ],
+      "door-sofa-keys-failed-01": [
+        1.0
+      ],
+      "door-sofa-keys-failed-02": [
+        1.0
+      ],
+      "door-sofa-keys-failed-03": [
+        1.0
+      ],
+      "door-sofa-keys-failed-04": [
+        1.0
+      ],
+      "door-sofa-keys-failed-05": [
+        1.0
+      ],
+      "door-sofa-keys-keys-01": [
+        1.0
+      ],
+      "door-sofa-keys-keys-02": [
+        1.0
+      ],
+      "door-sofa-keys-keys-03": [
+        1.0
+      ],
+      "door-sofa-keys-keys-04": [
+        1.0
+      ],
+      "door-sofa-keys-keys-05": [
+        1.0
+      ],
+      "door-sofa-keys-queued-01": [
+        1.0
+      ],
+      "door-sofa-keys-queued-02": [
+        1.0
+      ],
+      "door-sofa-keys-queued-03": [
+        1.0
+      ],
+      "door-sofa-keys-queued-04": [
+        1.0
+      ],
+      "door-sofa-keys-queued-05": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-01": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-02": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-03": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-04": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-05": [
+        1.0
+      ]
+    },
+    "checker": {
+      "turns": 180,
+      "template_self_check_pass": 180,
+      "template_self_check_rate": 1.0,
+      "template_reject_reasons": {},
+      "template_words_max": 21
+    },
+    "latency_contract": {
+      "T_render_ms_p50": 0.001,
+      "T_render_ms_p95": 0.003,
+      "T_check_ms_p50": 0.118,
+      "T_render_plus_check_ms_p50": 0.119,
+      "T_render_plus_check_ms_p95": 0.236,
+      "T_render_plus_check_ms_max": 55.715,
+      "paraphrase_n": 0,
+      "paraphrase_ttft_ms_p50": null,
+      "paraphrase_ttft_ms_p95": null,
+      "paraphrase_total_ms_p50": null,
+      "paraphrase_total_ms_p95": null
+    },
+    "wall_s": 0.13,
+    "tier": "replay",
+    "mechanism": "MB-1 trigger table + band discipline; contract templates; no model, no network"
+  },
+  "host_at_end": {
+    "uptime": "20:35:48 up 7 days,  2:33,  1 user,  load average: 46.63, 25.03, 14.43",
+    "nvidia_smi": "NVIDIA RTX 5000 Ada Generation, 2027 MiB, 23 %",
+    "at_utc": "2026-08-30T00:35:48Z"
+  },
+  "arm_T+P": {
+    "arm": "T+P",
+    "scenarios": 40,
+    "samples": 40,
+    "robot_turns": 180,
+    "grounding_turn_rate": 1.0,
+    "grounding_ci95": [
+      1.0,
+      1.0
+    ],
+    "coverage_rate": 0.9113,
+    "coverage_ci95": [
+      0.8613,
+      0.9575
+    ],
+    "claims_per_turn": 0.939,
+    "hedge_rate": 0.0,
+    "zero_claim_turns": 18,
+    "invented_actions": 0,
+    "invented_turns": 0,
+    "invented_by_reason": {},
+    "lexical_flags_triage_only": {
+      "present_motion_claim_without_result": 2
+    },
+    "bars": {
+      "b1_new_goal_acknowledged": {
+        "hit": 75,
+        "n": 75,
+        "rate": 1.0
+      },
+      "b2_completion_announced": {
+        "hit": 48,
+        "n": 55,
+        "rate": 0.8727
+      },
+      "b3_resume_offer": {
+        "hit": 10,
+        "n": 10,
+        "rate": 1.0
+      },
+      "b4_premature_claims": {
+        "hit": 0,
+        "n": 180,
+        "rate": 0.0
+      },
+      "b5_keys_turn": {
+        "hit": 15,
+        "n": 15,
+        "rate": 1.0,
+        "offer_present": 1.0,
+        "pre_registered": "bar 4 = (no perception claim) AND (explicit inability stated); the offer is reported separately"
+      }
+    },
+    "latency": {
+      "n": 180,
+      "ttft_ms_p50": 152.8,
+      "ttft_ms_p95": 220.3,
+      "total_ms_p50": 716.8,
+      "total_ms_p95": 1094.1
+    },
+    "per_scenario_grounded": {
+      "door-sofa-keys-blocked-01": [
+        1.0
+      ],
+      "door-sofa-keys-blocked-02": [
+        1.0
+      ],
+      "door-sofa-keys-blocked-03": [
+        1.0
+      ],
+      "door-sofa-keys-blocked-04": [
+        1.0
+      ],
+      "door-sofa-keys-blocked-05": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-01": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-02": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-03": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-04": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-05": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-01": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-02": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-03": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-04": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-05": [
+        1.0
+      ],
+      "door-sofa-keys-clean-01": [
+        1.0
+      ],
+      "door-sofa-keys-clean-02": [
+        1.0
+      ],
+      "door-sofa-keys-clean-03": [
+        1.0
+      ],
+      "door-sofa-keys-clean-04": [
+        1.0
+      ],
+      "door-sofa-keys-clean-05": [
+        1.0
+      ],
+      "door-sofa-keys-failed-01": [
+        1.0
+      ],
+      "door-sofa-keys-failed-02": [
+        1.0
+      ],
+      "door-sofa-keys-failed-03": [
+        1.0
+      ],
+      "door-sofa-keys-failed-04": [
+        1.0
+      ],
+      "door-sofa-keys-failed-05": [
+        1.0
+      ],
+      "door-sofa-keys-keys-01": [
+        1.0
+      ],
+      "door-sofa-keys-keys-02": [
+        1.0
+      ],
+      "door-sofa-keys-keys-03": [
+        1.0
+      ],
+      "door-sofa-keys-keys-04": [
+        1.0
+      ],
+      "door-sofa-keys-keys-05": [
+        1.0
+      ],
+      "door-sofa-keys-queued-01": [
+        1.0
+      ],
+      "door-sofa-keys-queued-02": [
+        1.0
+      ],
+      "door-sofa-keys-queued-03": [
+        1.0
+      ],
+      "door-sofa-keys-queued-04": [
+        1.0
+      ],
+      "door-sofa-keys-queued-05": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-01": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-02": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-03": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-04": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-05": [
+        1.0
+      ]
+    },
+    "per_scenario_coverage": {
+      "door-sofa-keys-blocked-01": [
+        0.75
+      ],
+      "door-sofa-keys-blocked-02": [
+        0.75
+      ],
+      "door-sofa-keys-blocked-03": [
+        0.25
+      ],
+      "door-sofa-keys-blocked-04": [
+        0.75
+      ],
+      "door-sofa-keys-blocked-05": [
+        0.75
+      ],
+      "door-sofa-keys-cancelled-01": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-02": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-03": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-04": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-05": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-01": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-02": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-03": [
+        0.5
+      ],
+      "door-sofa-keys-clarification-04": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-05": [
+        1.0
+      ],
+      "door-sofa-keys-clean-01": [
+        1.0
+      ],
+      "door-sofa-keys-clean-02": [
+        1.0
+      ],
+      "door-sofa-keys-clean-03": [
+        0.75
+      ],
+      "door-sofa-keys-clean-04": [
+        1.0
+      ],
+      "door-sofa-keys-clean-05": [
+        1.0
+      ],
+      "door-sofa-keys-failed-01": [
+        1.0
+      ],
+      "door-sofa-keys-failed-02": [
+        1.0
+      ],
+      "door-sofa-keys-failed-03": [
+        0.8
+      ],
+      "door-sofa-keys-failed-04": [
+        1.0
+      ],
+      "door-sofa-keys-failed-05": [
+        1.0
+      ],
+      "door-sofa-keys-keys-01": [
+        1.0
+      ],
+      "door-sofa-keys-keys-02": [
+        1.0
+      ],
+      "door-sofa-keys-keys-03": [
+        0.75
+      ],
+      "door-sofa-keys-keys-04": [
+        1.0
+      ],
+      "door-sofa-keys-keys-05": [
+        1.0
+      ],
+      "door-sofa-keys-queued-01": [
+        1.0
+      ],
+      "door-sofa-keys-queued-02": [
+        1.0
+      ],
+      "door-sofa-keys-queued-03": [
+        0.8
+      ],
+      "door-sofa-keys-queued-04": [
+        1.0
+      ],
+      "door-sofa-keys-queued-05": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-01": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-02": [
+        0.8
+      ],
+      "door-sofa-keys-resumed-03": [
+        0.8
+      ],
+      "door-sofa-keys-resumed-04": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-05": [
+        1.0
+      ]
+    },
+    "checker": {
+      "turns": 180,
+      "template_self_check_pass": 180,
+      "template_self_check_rate": 1.0,
+      "template_reject_reasons": {},
+      "template_words_max": 21,
+      "paraphrases": 180,
+      "fallbacks": 32,
+      "fallback_rate": 0.1778,
+      "paraphrase_empty_or_error": 0,
+      "paraphrase_identical_to_template": 0,
+      "rejection_reasons": {
+        "missing_inability_statement:vision": 15,
+        "claim_not_licensed_by_act:acceptance": 8,
+        "invented_action:play_gesture proposed but the session declared no gesture enum": 6,
+        "missing_inability_statement:position_report": 4,
+        "missing_required_goal:sidewalk": 2,
+        "missing_offer": 1,
+        "missing_required_goal:lamppost": 1
+      },
+      "rejection_reason_families": {
+        "missing_inability_statement": 19,
+        "claim_not_licensed_by_act": 8,
+        "invented_action": 6,
+        "missing_required_goal": 3,
+        "missing_offer": 1
+      }
+    },
+    "latency_contract": {
+      "T_render_ms_p50": 0.004,
+      "T_render_ms_p95": 0.008,
+      "T_check_ms_p50": 0.382,
+      "T_render_plus_check_ms_p50": 0.389,
+      "T_render_plus_check_ms_p95": 0.562,
+      "T_render_plus_check_ms_max": 43.341,
+      "paraphrase_n": 180,
+      "paraphrase_ttft_ms_p50": 152.83,
+      "paraphrase_ttft_ms_p95": 220.323,
+      "paraphrase_total_ms_p50": 716.813,
+      "paraphrase_total_ms_p95": 1094.075
+    },
+    "wall_s": 135.58,
+    "tier": "replay",
+    "model": "Qwen2.5-7B-Instruct-Q4_K_M",
+    "server": "llama-server on :8093 (CPU build)",
+    "prompt": "paraphrase_v1.txt",
+    "temperature": 0.3,
+    "host_at_run": {
+      "uptime": "20:30:36 up 7 days,  2:27,  1 user,  load average: 52.04, 24.20, 11.04",
+      "nvidia_smi": "NVIDIA RTX 5000 Ada Generation, 2019 MiB, 26 %",
+      "at_utc": "2026-08-30T00:30:36Z"
+    }
+  },
+  "arm_P-raw_shadow": {
+    "arm": "P-raw",
+    "scenarios": 40,
+    "samples": 40,
+    "robot_turns": 180,
+    "grounding_turn_rate": 1.0,
+    "grounding_ci95": [
+      1.0,
+      1.0
+    ],
+    "coverage_rate": 0.9012,
+    "coverage_ci95": [
+      0.8463,
+      0.9488
+    ],
+    "claims_per_turn": 0.883,
+    "hedge_rate": 0.0,
+    "zero_claim_turns": 22,
+    "invented_actions": 6,
+    "invented_turns": 6,
+    "invented_by_reason": {
+      "play_gesture proposed but the session declared no gesture enum": 6
+    },
+    "lexical_flags_triage_only": {
+      "present_motion_claim_without_result": 2
+    },
+    "bars": {
+      "b1_new_goal_acknowledged": {
+        "hit": 75,
+        "n": 75,
+        "rate": 1.0
+      },
+      "b2_completion_announced": {
+        "hit": 48,
+        "n": 55,
+        "rate": 0.8727
+      },
+      "b3_resume_offer": {
+        "hit": 9,
+        "n": 10,
+        "rate": 0.9
+      },
+      "b4_premature_claims": {
+        "hit": 0,
+        "n": 180,
+        "rate": 0.0
+      },
+      "b5_keys_turn": {
+        "hit": 0,
+        "n": 15,
+        "rate": 0.0,
+        "offer_present": 1.0,
+        "pre_registered": "bar 4 = (no perception claim) AND (explicit inability stated); the offer is reported separately"
+      }
+    },
+    "latency": {
+      "n": 180,
+      "ttft_ms_p50": 152.8,
+      "ttft_ms_p95": 220.3,
+      "total_ms_p50": 716.8,
+      "total_ms_p95": 1094.1
+    },
+    "per_scenario_grounded": {
+      "door-sofa-keys-blocked-01": [
+        1.0
+      ],
+      "door-sofa-keys-blocked-02": [
+        1.0
+      ],
+      "door-sofa-keys-blocked-03": [
+        1.0
+      ],
+      "door-sofa-keys-blocked-04": [
+        1.0
+      ],
+      "door-sofa-keys-blocked-05": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-01": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-02": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-03": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-04": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-05": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-01": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-02": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-03": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-04": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-05": [
+        1.0
+      ],
+      "door-sofa-keys-clean-01": [
+        1.0
+      ],
+      "door-sofa-keys-clean-02": [
+        1.0
+      ],
+      "door-sofa-keys-clean-03": [
+        1.0
+      ],
+      "door-sofa-keys-clean-04": [
+        1.0
+      ],
+      "door-sofa-keys-clean-05": [
+        1.0
+      ],
+      "door-sofa-keys-failed-01": [
+        1.0
+      ],
+      "door-sofa-keys-failed-02": [
+        1.0
+      ],
+      "door-sofa-keys-failed-03": [
+        1.0
+      ],
+      "door-sofa-keys-failed-04": [
+        1.0
+      ],
+      "door-sofa-keys-failed-05": [
+        1.0
+      ],
+      "door-sofa-keys-keys-01": [
+        1.0
+      ],
+      "door-sofa-keys-keys-02": [
+        1.0
+      ],
+      "door-sofa-keys-keys-03": [
+        1.0
+      ],
+      "door-sofa-keys-keys-04": [
+        1.0
+      ],
+      "door-sofa-keys-keys-05": [
+        1.0
+      ],
+      "door-sofa-keys-queued-01": [
+        1.0
+      ],
+      "door-sofa-keys-queued-02": [
+        1.0
+      ],
+      "door-sofa-keys-queued-03": [
+        1.0
+      ],
+      "door-sofa-keys-queued-04": [
+        1.0
+      ],
+      "door-sofa-keys-queued-05": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-01": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-02": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-03": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-04": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-05": [
+        1.0
+      ]
+    },
+    "per_scenario_coverage": {
+      "door-sofa-keys-blocked-01": [
+        0.75
+      ],
+      "door-sofa-keys-blocked-02": [
+        0.75
+      ],
+      "door-sofa-keys-blocked-03": [
+        0.25
+      ],
+      "door-sofa-keys-blocked-04": [
+        0.75
+      ],
+      "door-sofa-keys-blocked-05": [
+        0.75
+      ],
+      "door-sofa-keys-cancelled-01": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-02": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-03": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-04": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-05": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-01": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-02": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-03": [
+        0.5
+      ],
+      "door-sofa-keys-clarification-04": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-05": [
+        1.0
+      ],
+      "door-sofa-keys-clean-01": [
+        1.0
+      ],
+      "door-sofa-keys-clean-02": [
+        1.0
+      ],
+      "door-sofa-keys-clean-03": [
+        0.75
+      ],
+      "door-sofa-keys-clean-04": [
+        1.0
+      ],
+      "door-sofa-keys-clean-05": [
+        1.0
+      ],
+      "door-sofa-keys-failed-01": [
+        1.0
+      ],
+      "door-sofa-keys-failed-02": [
+        1.0
+      ],
+      "door-sofa-keys-failed-03": [
+        0.6
+      ],
+      "door-sofa-keys-failed-04": [
+        1.0
+      ],
+      "door-sofa-keys-failed-05": [
+        0.8
+      ],
+      "door-sofa-keys-keys-01": [
+        1.0
+      ],
+      "door-sofa-keys-keys-02": [
+        1.0
+      ],
+      "door-sofa-keys-keys-03": [
+        0.75
+      ],
+      "door-sofa-keys-keys-04": [
+        1.0
+      ],
+      "door-sofa-keys-keys-05": [
+        1.0
+      ],
+      "door-sofa-keys-queued-01": [
+        1.0
+      ],
+      "door-sofa-keys-queued-02": [
+        1.0
+      ],
+      "door-sofa-keys-queued-03": [
+        0.8
+      ],
+      "door-sofa-keys-queued-04": [
+        1.0
+      ],
+      "door-sofa-keys-queued-05": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-01": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-02": [
+        0.8
+      ],
+      "door-sofa-keys-resumed-03": [
+        0.8
+      ],
+      "door-sofa-keys-resumed-04": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-05": [
+        1.0
+      ]
+    },
+    "report_only": true,
+    "note": "SHADOW ARM: the raw local paraphrases as they arrived, scored WITHOUT the checker. This is what the gate caught; T+P is the same turns after it."
+  },
+  "blind_flag_audit": {
+    "adjudicated": 6,
+    "tally": {
+      "FALSE_POSITIVE": 6
+    },
+    "false_positive_rate": 1.0,
+    "report_only": true,
+    "output": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260829/model-b-contract-2/results/adjudication-P-raw.json",
+    "prompt_file": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260829/model-b-narration-1/adjudication_prompt.txt",
+    "over": "P-raw shadow arm (T and T+P produce no flags by construction)"
+  },
+  "naturalness_judge": {
+    "report_only": true,
+    "prompt": "naturalness_judge_v1.txt",
+    "model": "Qwen2.5-7B-Instruct-Q4_K_M",
+    "pairs_judged": 40,
+    "tally": {
+      "T+P": 23,
+      "T": 17,
+      "TIE": 0,
+      "UNCLEAR": 0
+    },
+    "preference_TP_excluding_ties": 0.575,
+    "preference_TP_including_ties": 0.575
+  }
+}

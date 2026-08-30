@@ -1,0 +1,3276 @@
+{
+  "experiment": "LIT-1",
+  "groups": {
+    "door_sofa_keys:base:fake": {
+      "scenario": "door_sofa_keys",
+      "variant": "base",
+      "voice": "fake",
+      "seed": 20260829,
+      "runs": [
+        {
+          "scenario": "door_sofa_keys",
+          "variant": "base",
+          "seed": 20260829,
+          "voice": "fake",
+          "jsonl": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260829/sim-loop-1/artifacts/door_sofa_keys-fake-s20260829-r1-20260829T162521.jsonl",
+          "receipt_kinds": [
+            "submit",
+            "task_suspended",
+            "replacement_activated",
+            "task_failed",
+            "re_issue",
+            "submit",
+            "task_failed"
+          ],
+          "receipts": [
+            {
+              "t": 3.966,
+              "kind": "submit",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "queued",
+              "state": "queued",
+              "plan_revision": 1,
+              "last_detail": "accepted",
+              "accepted": true,
+              "note": "submit"
+            },
+            {
+              "t": 33.242,
+              "kind": "task_suspended",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "suspend",
+              "state": "suspended",
+              "plan_revision": 1,
+              "last_detail": "suspended:goal_amend",
+              "accepted": null,
+              "note": "request_interrupt"
+            },
+            {
+              "t": 33.25,
+              "kind": "replacement_activated",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "queued",
+              "state": "queued",
+              "plan_revision": 2,
+              "last_detail": "replacement_activated",
+              "accepted": true,
+              "note": "replace"
+            },
+            {
+              "t": 71.28,
+              "kind": "task_failed",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "task_failed",
+              "state": "failed",
+              "plan_revision": 2,
+              "last_detail": "semantic_target_unreachable",
+              "accepted": true,
+              "note": "report"
+            },
+            {
+              "t": 72.097,
+              "kind": "re_issue",
+              "source": "harness",
+              "task_id": "",
+              "action": "re_issue",
+              "state": "",
+              "plan_revision": 0,
+              "last_detail": "",
+              "accepted": null,
+              "note": "NAV-INT-1 N1: the displaced goal is re-issued, never resumed \u2014 a fresh task, a fresh plan revision"
+            },
+            {
+              "t": 73.485,
+              "kind": "submit",
+              "source": "executive",
+              "task_id": "parcel-task-5d9d3032cd6382364b47e6af",
+              "action": "queued",
+              "state": "queued",
+              "plan_revision": 1,
+              "last_detail": "accepted",
+              "accepted": true,
+              "note": "submit"
+            },
+            {
+              "t": 123.728,
+              "kind": "task_failed",
+              "source": "executive",
+              "task_id": "parcel-task-5d9d3032cd6382364b47e6af",
+              "action": "task_failed",
+              "state": "failed",
+              "plan_revision": 1,
+              "last_detail": "semantic_target_unreachable",
+              "accepted": true,
+              "note": "report"
+            }
+          ],
+          "latencies": {
+            "trigger_s": 28.759,
+            "speech_start_s": 28.759,
+            "speech_end_s": 33.242,
+            "cue_s": 33.254,
+            "trigger_to_speech_start_ms": 0.4,
+            "utterance_to_cue_ms": 11.8,
+            "handle_text_ms": 12.2,
+            "speech_end_to_receipt_ms": 0.1,
+            "cue_to_receipt_ms": -11.6,
+            "first_receipt_kind": "task_suspended",
+            "first_receipt_action": "suspend",
+            "switch_ms": 324.6,
+            "switch_evidence": {
+              "samples_n": 100,
+              "run_start_t": 33.567,
+              "run_vyaw": [
+                0.195,
+                0.342,
+                0.52
+              ],
+              "heading_error_rad": 2.1561
+            },
+            "known_before": {
+              "parcel-task-0f7f3844d501f2bc0e3cdcaa": [
+                "running",
+                1
+              ]
+            },
+            "goal_xy": [
+              -2.5,
+              3.045
+            ]
+          },
+          "spend_usd": 0.0,
+          "refusals": [],
+          "provenance_counts": {
+            "harness": 15,
+            "fake": 14,
+            "sim": 885
+          },
+          "motion_during_speech": {
+            "goal_a": {
+              "n": 27,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "amend": {
+              "n": 89,
+              "moving_samples": 89,
+              "moving_fraction": 1.0,
+              "max_speed_mps": 0.702,
+              "max_abs_vyaw": 0.3454,
+              "yielded": false
+            },
+            "confirm": {
+              "n": 16,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "confirm:reissue": {
+              "n": 28,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            }
+          },
+          "name_scan_leaks": [],
+          "teardown": {
+            "socket": "/home/jaewoo-jang/.cache/parcel-0e/lit1/s1.sock",
+            "sim_pid": 328540,
+            "own_sim_alive": [],
+            "clean": true
+          },
+          "ok": true,
+          "error": "",
+          "notes": [
+            "spend attributed by session_id (none); the shared wave ledger moved $0.069237 during this run, which includes MB-1's concurrent hosted turns and is NOT this run's cost"
+          ],
+          "grounding_check": {
+            "scored": true,
+            "lines_scored": 8,
+            "honest_capability_refusal": true,
+            "honest_phrases_found": [
+              "no camera",
+              "can't look",
+              "can't check"
+            ],
+            "invented_result_claims": [
+              "your keys are"
+            ],
+            "offered_return": true,
+            "passes": false,
+            "_tier_note": "fake tier: the spoken lines are LIT-1's own fixtures, so this scores the scenario's honesty, never a model's"
+          }
+        },
+        {
+          "scenario": "door_sofa_keys",
+          "variant": "base",
+          "seed": 20260829,
+          "voice": "fake",
+          "jsonl": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260829/sim-loop-1/artifacts/door_sofa_keys-fake-s20260829-r2-20260829T162725.jsonl",
+          "receipt_kinds": [
+            "submit",
+            "task_suspended",
+            "replacement_activated",
+            "task_failed",
+            "re_issue",
+            "submit",
+            "task_failed"
+          ],
+          "receipts": [
+            {
+              "t": 3.413,
+              "kind": "submit",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "queued",
+              "state": "queued",
+              "plan_revision": 1,
+              "last_detail": "accepted",
+              "accepted": true,
+              "note": "submit"
+            },
+            {
+              "t": 37.149,
+              "kind": "task_suspended",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "suspend",
+              "state": "suspended",
+              "plan_revision": 1,
+              "last_detail": "suspended:goal_amend",
+              "accepted": null,
+              "note": "request_interrupt"
+            },
+            {
+              "t": 37.153,
+              "kind": "ignored_stale_result",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "ignored_stale_result",
+              "state": "suspended",
+              "plan_revision": 1,
+              "last_detail": "suspended:goal_amend",
+              "accepted": false,
+              "note": "report"
+            },
+            {
+              "t": 37.157,
+              "kind": "replacement_activated",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "queued",
+              "state": "queued",
+              "plan_revision": 2,
+              "last_detail": "replacement_activated",
+              "accepted": true,
+              "note": "replace"
+            },
+            {
+              "t": 75.191,
+              "kind": "task_failed",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "task_failed",
+              "state": "failed",
+              "plan_revision": 2,
+              "last_detail": "semantic_target_unreachable",
+              "accepted": true,
+              "note": "report"
+            },
+            {
+              "t": 75.999,
+              "kind": "re_issue",
+              "source": "harness",
+              "task_id": "",
+              "action": "re_issue",
+              "state": "",
+              "plan_revision": 0,
+              "last_detail": "",
+              "accepted": null,
+              "note": "NAV-INT-1 N1: the displaced goal is re-issued, never resumed \u2014 a fresh task, a fresh plan revision"
+            },
+            {
+              "t": 77.385,
+              "kind": "submit",
+              "source": "executive",
+              "task_id": "parcel-task-5d9d3032cd6382364b47e6af",
+              "action": "queued",
+              "state": "queued",
+              "plan_revision": 1,
+              "last_detail": "accepted",
+              "accepted": true,
+              "note": "submit"
+            },
+            {
+              "t": 127.558,
+              "kind": "task_failed",
+              "source": "executive",
+              "task_id": "parcel-task-5d9d3032cd6382364b47e6af",
+              "action": "task_failed",
+              "state": "failed",
+              "plan_revision": 1,
+              "last_detail": "semantic_target_unreachable",
+              "accepted": true,
+              "note": "report"
+            }
+          ],
+          "latencies": {
+            "trigger_s": 32.666,
+            "speech_start_s": 32.666,
+            "speech_end_s": 37.149,
+            "cue_s": 37.16,
+            "trigger_to_speech_start_ms": -0.2,
+            "utterance_to_cue_ms": 11.5,
+            "handle_text_ms": 11.3,
+            "speech_end_to_receipt_ms": 0.5,
+            "cue_to_receipt_ms": -11.0,
+            "first_receipt_kind": "task_suspended",
+            "first_receipt_action": "suspend",
+            "switch_ms": 339.6,
+            "switch_evidence": {
+              "samples_n": 100,
+              "run_start_t": 37.489,
+              "run_vyaw": [
+                0.183,
+                0.34,
+                0.499
+              ],
+              "heading_error_rad": 2.1569
+            },
+            "known_before": {
+              "parcel-task-0f7f3844d501f2bc0e3cdcaa": [
+                "running",
+                1
+              ]
+            },
+            "goal_xy": [
+              -2.5,
+              3.045
+            ]
+          },
+          "spend_usd": 0.0,
+          "refusals": [],
+          "provenance_counts": {
+            "harness": 15,
+            "fake": 14,
+            "sim": 896
+          },
+          "motion_during_speech": {
+            "goal_a": {
+              "n": 27,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "amend": {
+              "n": 90,
+              "moving_samples": 90,
+              "moving_fraction": 1.0,
+              "max_speed_mps": 0.7049,
+              "max_abs_vyaw": 0.4152,
+              "yielded": false
+            },
+            "confirm": {
+              "n": 16,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "confirm:reissue": {
+              "n": 28,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            }
+          },
+          "name_scan_leaks": [],
+          "teardown": {
+            "socket": "/home/jaewoo-jang/.cache/parcel-0e/lit1/s2.sock",
+            "sim_pid": 345154,
+            "own_sim_alive": [],
+            "clean": true
+          },
+          "ok": true,
+          "error": "",
+          "notes": [
+            "spend attributed by session_id (none); the shared wave ledger moved $0.067743 during this run, which includes MB-1's concurrent hosted turns and is NOT this run's cost"
+          ],
+          "grounding_check": {
+            "scored": true,
+            "lines_scored": 8,
+            "honest_capability_refusal": true,
+            "honest_phrases_found": [
+              "no camera",
+              "can't look",
+              "can't check"
+            ],
+            "invented_result_claims": [
+              "your keys are"
+            ],
+            "offered_return": true,
+            "passes": false,
+            "_tier_note": "fake tier: the spoken lines are LIT-1's own fixtures, so this scores the scenario's honesty, never a model's"
+          }
+        },
+        {
+          "scenario": "door_sofa_keys",
+          "variant": "base",
+          "seed": 20260829,
+          "voice": "fake",
+          "jsonl": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260829/sim-loop-1/artifacts/door_sofa_keys-fake-s20260829-r3-20260829T162933.jsonl",
+          "receipt_kinds": [
+            "submit",
+            "task_suspended",
+            "replacement_activated",
+            "task_failed",
+            "re_issue",
+            "submit",
+            "task_failed"
+          ],
+          "receipts": [
+            {
+              "t": 3.603,
+              "kind": "submit",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "queued",
+              "state": "queued",
+              "plan_revision": 1,
+              "last_detail": "accepted",
+              "accepted": true,
+              "note": "submit"
+            },
+            {
+              "t": 33.548,
+              "kind": "task_suspended",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "suspend",
+              "state": "suspended",
+              "plan_revision": 1,
+              "last_detail": "suspended:goal_amend",
+              "accepted": null,
+              "note": "request_interrupt"
+            },
+            {
+              "t": 33.559,
+              "kind": "replacement_activated",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "queued",
+              "state": "queued",
+              "plan_revision": 2,
+              "last_detail": "replacement_activated",
+              "accepted": true,
+              "note": "replace"
+            },
+            {
+              "t": 71.532,
+              "kind": "task_failed",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "task_failed",
+              "state": "failed",
+              "plan_revision": 2,
+              "last_detail": "semantic_target_unreachable",
+              "accepted": true,
+              "note": "report"
+            },
+            {
+              "t": 72.41,
+              "kind": "re_issue",
+              "source": "harness",
+              "task_id": "",
+              "action": "re_issue",
+              "state": "",
+              "plan_revision": 0,
+              "last_detail": "",
+              "accepted": null,
+              "note": "NAV-INT-1 N1: the displaced goal is re-issued, never resumed \u2014 a fresh task, a fresh plan revision"
+            },
+            {
+              "t": 73.796,
+              "kind": "submit",
+              "source": "executive",
+              "task_id": "parcel-task-5d9d3032cd6382364b47e6af",
+              "action": "queued",
+              "state": "queued",
+              "plan_revision": 1,
+              "last_detail": "accepted",
+              "accepted": true,
+              "note": "submit"
+            },
+            {
+              "t": 124.109,
+              "kind": "task_failed",
+              "source": "executive",
+              "task_id": "parcel-task-5d9d3032cd6382364b47e6af",
+              "action": "task_failed",
+              "state": "failed",
+              "plan_revision": 1,
+              "last_detail": "semantic_target_unreachable",
+              "accepted": true,
+              "note": "report"
+            }
+          ],
+          "latencies": {
+            "trigger_s": 29.065,
+            "speech_start_s": 29.065,
+            "speech_end_s": 33.548,
+            "cue_s": 33.564,
+            "trigger_to_speech_start_ms": 0.2,
+            "utterance_to_cue_ms": 15.9,
+            "handle_text_ms": 16.1,
+            "speech_end_to_receipt_ms": 0.2,
+            "cue_to_receipt_ms": -15.6,
+            "first_receipt_kind": "task_suspended",
+            "first_receipt_action": "suspend",
+            "switch_ms": 239.5,
+            "switch_evidence": {
+              "samples_n": 100,
+              "run_start_t": 33.788,
+              "run_vyaw": [
+                0.181,
+                0.341,
+                0.493
+              ],
+              "heading_error_rad": 2.1237
+            },
+            "known_before": {
+              "parcel-task-0f7f3844d501f2bc0e3cdcaa": [
+                "running",
+                1
+              ]
+            },
+            "goal_xy": [
+              -2.5,
+              3.045
+            ]
+          },
+          "spend_usd": 0.0,
+          "refusals": [],
+          "provenance_counts": {
+            "harness": 15,
+            "fake": 14,
+            "sim": 885
+          },
+          "motion_during_speech": {
+            "goal_a": {
+              "n": 27,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "amend": {
+              "n": 89,
+              "moving_samples": 89,
+              "moving_fraction": 1.0,
+              "max_speed_mps": 0.6147,
+              "max_abs_vyaw": 0.3433,
+              "yielded": false
+            },
+            "confirm": {
+              "n": 16,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "confirm:reissue": {
+              "n": 28,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            }
+          },
+          "name_scan_leaks": [],
+          "teardown": {
+            "socket": "/home/jaewoo-jang/.cache/parcel-0e/lit1/s3.sock",
+            "sim_pid": 354899,
+            "own_sim_alive": [],
+            "clean": true
+          },
+          "ok": true,
+          "error": "",
+          "notes": [
+            "spend attributed by session_id (none); the shared wave ledger moved $0.057402 during this run, which includes MB-1's concurrent hosted turns and is NOT this run's cost"
+          ],
+          "grounding_check": {
+            "scored": true,
+            "lines_scored": 8,
+            "honest_capability_refusal": true,
+            "honest_phrases_found": [
+              "no camera",
+              "can't look",
+              "can't check"
+            ],
+            "invented_result_claims": [
+              "your keys are"
+            ],
+            "offered_return": true,
+            "passes": false,
+            "_tier_note": "fake tier: the spoken lines are LIT-1's own fixtures, so this scores the scenario's honesty, never a model's"
+          }
+        },
+        {
+          "scenario": "door_sofa_keys",
+          "variant": "base",
+          "seed": 20260829,
+          "voice": "fake",
+          "jsonl": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260829/sim-loop-1/artifacts/door_sofa_keys-fake-s20260829-r4-20260829T163137.jsonl",
+          "receipt_kinds": [
+            "submit",
+            "task_suspended",
+            "replacement_activated",
+            "task_failed",
+            "re_issue",
+            "submit",
+            "task_failed"
+          ],
+          "receipts": [
+            {
+              "t": 3.652,
+              "kind": "submit",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "queued",
+              "state": "queued",
+              "plan_revision": 1,
+              "last_detail": "accepted",
+              "accepted": true,
+              "note": "submit"
+            },
+            {
+              "t": 30.883,
+              "kind": "task_suspended",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "suspend",
+              "state": "suspended",
+              "plan_revision": 1,
+              "last_detail": "suspended:goal_amend",
+              "accepted": null,
+              "note": "request_interrupt"
+            },
+            {
+              "t": 30.889,
+              "kind": "replacement_activated",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "queued",
+              "state": "queued",
+              "plan_revision": 2,
+              "last_detail": "replacement_activated",
+              "accepted": true,
+              "note": "replace"
+            },
+            {
+              "t": 68.877,
+              "kind": "task_failed",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "task_failed",
+              "state": "failed",
+              "plan_revision": 2,
+              "last_detail": "semantic_target_unreachable",
+              "accepted": true,
+              "note": "report"
+            },
+            {
+              "t": 69.734,
+              "kind": "re_issue",
+              "source": "harness",
+              "task_id": "",
+              "action": "re_issue",
+              "state": "",
+              "plan_revision": 0,
+              "last_detail": "",
+              "accepted": null,
+              "note": "NAV-INT-1 N1: the displaced goal is re-issued, never resumed \u2014 a fresh task, a fresh plan revision"
+            },
+            {
+              "t": 71.123,
+              "kind": "submit",
+              "source": "executive",
+              "task_id": "parcel-task-5d9d3032cd6382364b47e6af",
+              "action": "queued",
+              "state": "queued",
+              "plan_revision": 1,
+              "last_detail": "accepted",
+              "accepted": true,
+              "note": "submit"
+            },
+            {
+              "t": 121.346,
+              "kind": "task_failed",
+              "source": "executive",
+              "task_id": "parcel-task-5d9d3032cd6382364b47e6af",
+              "action": "task_failed",
+              "state": "failed",
+              "plan_revision": 1,
+              "last_detail": "semantic_target_unreachable",
+              "accepted": true,
+              "note": "report"
+            }
+          ],
+          "latencies": {
+            "trigger_s": 26.4,
+            "speech_start_s": 26.4,
+            "speech_end_s": 30.882,
+            "cue_s": 30.892,
+            "trigger_to_speech_start_ms": 0.4,
+            "utterance_to_cue_ms": 10.5,
+            "handle_text_ms": 9.9,
+            "speech_end_to_receipt_ms": 1.0,
+            "cue_to_receipt_ms": -9.5,
+            "first_receipt_kind": "task_suspended",
+            "first_receipt_action": "suspend",
+            "switch_ms": 312.1,
+            "switch_evidence": {
+              "samples_n": 100,
+              "run_start_t": 31.194,
+              "run_vyaw": [
+                0.18,
+                0.339,
+                0.504
+              ],
+              "heading_error_rad": 2.1232
+            },
+            "known_before": {
+              "parcel-task-0f7f3844d501f2bc0e3cdcaa": [
+                "running",
+                1
+              ]
+            },
+            "goal_xy": [
+              -2.5,
+              3.045
+            ]
+          },
+          "spend_usd": 0.0,
+          "refusals": [],
+          "provenance_counts": {
+            "harness": 15,
+            "fake": 14,
+            "sim": 881
+          },
+          "motion_during_speech": {
+            "goal_a": {
+              "n": 27,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "amend": {
+              "n": 89,
+              "moving_samples": 89,
+              "moving_fraction": 1.0,
+              "max_speed_mps": 0.5383,
+              "max_abs_vyaw": 0.3507,
+              "yielded": false
+            },
+            "confirm": {
+              "n": 16,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "confirm:reissue": {
+              "n": 27,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            }
+          },
+          "name_scan_leaks": [],
+          "teardown": {
+            "socket": "/home/jaewoo-jang/.cache/parcel-0e/lit1/s4.sock",
+            "sim_pid": 360385,
+            "own_sim_alive": [],
+            "clean": true
+          },
+          "ok": true,
+          "error": "",
+          "notes": [
+            "spend attributed by session_id (none); the shared wave ledger moved $0.045307 during this run, which includes MB-1's concurrent hosted turns and is NOT this run's cost"
+          ],
+          "grounding_check": {
+            "scored": true,
+            "lines_scored": 8,
+            "honest_capability_refusal": true,
+            "honest_phrases_found": [
+              "no camera",
+              "can't look",
+              "can't check"
+            ],
+            "invented_result_claims": [
+              "your keys are"
+            ],
+            "offered_return": true,
+            "passes": false,
+            "_tier_note": "fake tier: the spoken lines are LIT-1's own fixtures, so this scores the scenario's honesty, never a model's"
+          }
+        },
+        {
+          "scenario": "door_sofa_keys",
+          "variant": "base",
+          "seed": 20260829,
+          "voice": "fake",
+          "jsonl": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260829/sim-loop-1/artifacts/door_sofa_keys-fake-s20260829-r5-20260829T163339.jsonl",
+          "receipt_kinds": [
+            "submit",
+            "task_suspended",
+            "replacement_activated",
+            "task_failed",
+            "re_issue",
+            "submit",
+            "task_failed"
+          ],
+          "receipts": [
+            {
+              "t": 3.789,
+              "kind": "submit",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "queued",
+              "state": "queued",
+              "plan_revision": 1,
+              "last_detail": "accepted",
+              "accepted": true,
+              "note": "submit"
+            },
+            {
+              "t": 30.355,
+              "kind": "task_suspended",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "suspend",
+              "state": "suspended",
+              "plan_revision": 1,
+              "last_detail": "suspended:goal_amend",
+              "accepted": null,
+              "note": "request_interrupt"
+            },
+            {
+              "t": 30.365,
+              "kind": "replacement_activated",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "queued",
+              "state": "queued",
+              "plan_revision": 2,
+              "last_detail": "replacement_activated",
+              "accepted": true,
+              "note": "replace"
+            },
+            {
+              "t": 68.408,
+              "kind": "task_failed",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "task_failed",
+              "state": "failed",
+              "plan_revision": 2,
+              "last_detail": "semantic_target_unreachable",
+              "accepted": true,
+              "note": "report"
+            },
+            {
+              "t": 69.227,
+              "kind": "re_issue",
+              "source": "harness",
+              "task_id": "",
+              "action": "re_issue",
+              "state": "",
+              "plan_revision": 0,
+              "last_detail": "",
+              "accepted": null,
+              "note": "NAV-INT-1 N1: the displaced goal is re-issued, never resumed \u2014 a fresh task, a fresh plan revision"
+            },
+            {
+              "t": 70.622,
+              "kind": "submit",
+              "source": "executive",
+              "task_id": "parcel-task-5d9d3032cd6382364b47e6af",
+              "action": "queued",
+              "state": "queued",
+              "plan_revision": 1,
+              "last_detail": "accepted",
+              "accepted": true,
+              "note": "submit"
+            },
+            {
+              "t": 120.993,
+              "kind": "task_failed",
+              "source": "executive",
+              "task_id": "parcel-task-5d9d3032cd6382364b47e6af",
+              "action": "task_failed",
+              "state": "failed",
+              "plan_revision": 1,
+              "last_detail": "semantic_target_unreachable",
+              "accepted": true,
+              "note": "report"
+            }
+          ],
+          "latencies": {
+            "trigger_s": 25.871,
+            "speech_start_s": 25.871,
+            "speech_end_s": 30.354,
+            "cue_s": 30.371,
+            "trigger_to_speech_start_ms": -0.0,
+            "utterance_to_cue_ms": 16.6,
+            "handle_text_ms": 16.5,
+            "speech_end_to_receipt_ms": 0.5,
+            "cue_to_receipt_ms": -16.1,
+            "first_receipt_kind": "task_suspended",
+            "first_receipt_action": "suspend",
+            "switch_ms": 325.3,
+            "switch_evidence": {
+              "samples_n": 100,
+              "run_start_t": 30.679,
+              "run_vyaw": [
+                0.18,
+                0.347,
+                0.496
+              ],
+              "heading_error_rad": 2.1248
+            },
+            "known_before": {
+              "parcel-task-0f7f3844d501f2bc0e3cdcaa": [
+                "running",
+                1
+              ]
+            },
+            "goal_xy": [
+              -2.5,
+              3.045
+            ]
+          },
+          "spend_usd": 0.0,
+          "refusals": [],
+          "provenance_counts": {
+            "harness": 15,
+            "fake": 14,
+            "sim": 879
+          },
+          "motion_during_speech": {
+            "goal_a": {
+              "n": 27,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "amend": {
+              "n": 89,
+              "moving_samples": 89,
+              "moving_fraction": 1.0,
+              "max_speed_mps": 0.5791,
+              "max_abs_vyaw": 0.4922,
+              "yielded": false
+            },
+            "confirm": {
+              "n": 16,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "confirm:reissue": {
+              "n": 28,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            }
+          },
+          "name_scan_leaks": [],
+          "teardown": {
+            "socket": "/home/jaewoo-jang/.cache/parcel-0e/lit1/s5.sock",
+            "sim_pid": 376205,
+            "own_sim_alive": [],
+            "clean": true
+          },
+          "ok": true,
+          "error": "",
+          "notes": [
+            "spend attributed by session_id (none); the shared wave ledger moved $0.022268 during this run, which includes MB-1's concurrent hosted turns and is NOT this run's cost"
+          ],
+          "grounding_check": {
+            "scored": true,
+            "lines_scored": 8,
+            "honest_capability_refusal": true,
+            "honest_phrases_found": [
+              "no camera",
+              "can't look",
+              "can't check"
+            ],
+            "invented_result_claims": [
+              "your keys are"
+            ],
+            "offered_return": true,
+            "passes": false,
+            "_tier_note": "fake tier: the spoken lines are LIT-1's own fixtures, so this scores the scenario's honesty, never a model's"
+          }
+        }
+      ],
+      "summary": {
+        "runs": 5,
+        "ok_runs": 5,
+        "receipt_sequences": [
+          [
+            "submit",
+            "task_suspended",
+            "replacement_activated",
+            "task_failed",
+            "re_issue",
+            "submit",
+            "task_failed"
+          ],
+          [
+            "submit",
+            "task_suspended",
+            "replacement_activated",
+            "task_failed",
+            "re_issue",
+            "submit",
+            "task_failed"
+          ],
+          [
+            "submit",
+            "task_suspended",
+            "replacement_activated",
+            "task_failed",
+            "re_issue",
+            "submit",
+            "task_failed"
+          ],
+          [
+            "submit",
+            "task_suspended",
+            "replacement_activated",
+            "task_failed",
+            "re_issue",
+            "submit",
+            "task_failed"
+          ],
+          [
+            "submit",
+            "task_suspended",
+            "replacement_activated",
+            "task_failed",
+            "re_issue",
+            "submit",
+            "task_failed"
+          ]
+        ],
+        "distinct_sequences": [
+          [
+            "submit",
+            "task_suspended",
+            "replacement_activated",
+            "task_failed",
+            "re_issue",
+            "submit",
+            "task_failed"
+          ]
+        ],
+        "identical_receipt_kinds": true,
+        "identical_n_of_m": "5/5",
+        "per_hop_latency_ms": {
+          "handle_text_ms": {
+            "n": 5,
+            "p50": 12.2,
+            "min": 9.9,
+            "max": 16.5,
+            "p95": null,
+            "p95_note": "withheld: n=5 < 20 (amendment L9)"
+          },
+          "utterance_to_cue_ms": {
+            "n": 5,
+            "p50": 11.8,
+            "min": 10.5,
+            "max": 16.6,
+            "p95": null,
+            "p95_note": "withheld: n=5 < 20 (amendment L9)"
+          },
+          "speech_end_to_receipt_ms": {
+            "n": 5,
+            "p50": 0.5,
+            "min": 0.1,
+            "max": 1.0,
+            "p95": null,
+            "p95_note": "withheld: n=5 < 20 (amendment L9)"
+          },
+          "cue_to_receipt_ms": {
+            "n": 5,
+            "p50": -11.6,
+            "min": -16.1,
+            "max": -9.5,
+            "p95": null,
+            "p95_note": "withheld: n=5 < 20 (amendment L9)"
+          },
+          "switch_ms": {
+            "n": 5,
+            "p50": 324.6,
+            "min": 239.5,
+            "max": 339.6,
+            "p95": null,
+            "p95_note": "withheld: n=5 < 20 (amendment L9)"
+          }
+        },
+        "spend_usd_total": 0.0,
+        "provenance_counts": {
+          "harness": 75,
+          "fake": 70,
+          "sim": 4426
+        },
+        "refusals": [],
+        "name_scan_leaks": [],
+        "teardown_clean": true,
+        "motion_during_speech": [
+          {
+            "goal_a": {
+              "n": 27,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "amend": {
+              "n": 89,
+              "moving_samples": 89,
+              "moving_fraction": 1.0,
+              "max_speed_mps": 0.702,
+              "max_abs_vyaw": 0.3454,
+              "yielded": false
+            },
+            "confirm": {
+              "n": 16,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "confirm:reissue": {
+              "n": 28,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            }
+          },
+          {
+            "goal_a": {
+              "n": 27,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "amend": {
+              "n": 90,
+              "moving_samples": 90,
+              "moving_fraction": 1.0,
+              "max_speed_mps": 0.7049,
+              "max_abs_vyaw": 0.4152,
+              "yielded": false
+            },
+            "confirm": {
+              "n": 16,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "confirm:reissue": {
+              "n": 28,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            }
+          },
+          {
+            "goal_a": {
+              "n": 27,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "amend": {
+              "n": 89,
+              "moving_samples": 89,
+              "moving_fraction": 1.0,
+              "max_speed_mps": 0.6147,
+              "max_abs_vyaw": 0.3433,
+              "yielded": false
+            },
+            "confirm": {
+              "n": 16,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "confirm:reissue": {
+              "n": 28,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            }
+          },
+          {
+            "goal_a": {
+              "n": 27,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "amend": {
+              "n": 89,
+              "moving_samples": 89,
+              "moving_fraction": 1.0,
+              "max_speed_mps": 0.5383,
+              "max_abs_vyaw": 0.3507,
+              "yielded": false
+            },
+            "confirm": {
+              "n": 16,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "confirm:reissue": {
+              "n": 27,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            }
+          },
+          {
+            "goal_a": {
+              "n": 27,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "amend": {
+              "n": 89,
+              "moving_samples": 89,
+              "moving_fraction": 1.0,
+              "max_speed_mps": 0.5791,
+              "max_abs_vyaw": 0.4922,
+              "yielded": false
+            },
+            "confirm": {
+              "n": 16,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "confirm:reissue": {
+              "n": 28,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            }
+          }
+        ],
+        "grounding_checks": [
+          {
+            "scored": true,
+            "lines_scored": 8,
+            "honest_capability_refusal": true,
+            "honest_phrases_found": [
+              "no camera",
+              "can't look",
+              "can't check"
+            ],
+            "invented_result_claims": [
+              "your keys are"
+            ],
+            "offered_return": true,
+            "passes": false,
+            "_tier_note": "fake tier: the spoken lines are LIT-1's own fixtures, so this scores the scenario's honesty, never a model's"
+          },
+          {
+            "scored": true,
+            "lines_scored": 8,
+            "honest_capability_refusal": true,
+            "honest_phrases_found": [
+              "no camera",
+              "can't look",
+              "can't check"
+            ],
+            "invented_result_claims": [
+              "your keys are"
+            ],
+            "offered_return": true,
+            "passes": false,
+            "_tier_note": "fake tier: the spoken lines are LIT-1's own fixtures, so this scores the scenario's honesty, never a model's"
+          },
+          {
+            "scored": true,
+            "lines_scored": 8,
+            "honest_capability_refusal": true,
+            "honest_phrases_found": [
+              "no camera",
+              "can't look",
+              "can't check"
+            ],
+            "invented_result_claims": [
+              "your keys are"
+            ],
+            "offered_return": true,
+            "passes": false,
+            "_tier_note": "fake tier: the spoken lines are LIT-1's own fixtures, so this scores the scenario's honesty, never a model's"
+          },
+          {
+            "scored": true,
+            "lines_scored": 8,
+            "honest_capability_refusal": true,
+            "honest_phrases_found": [
+              "no camera",
+              "can't look",
+              "can't check"
+            ],
+            "invented_result_claims": [
+              "your keys are"
+            ],
+            "offered_return": true,
+            "passes": false,
+            "_tier_note": "fake tier: the spoken lines are LIT-1's own fixtures, so this scores the scenario's honesty, never a model's"
+          },
+          {
+            "scored": true,
+            "lines_scored": 8,
+            "honest_capability_refusal": true,
+            "honest_phrases_found": [
+              "no camera",
+              "can't look",
+              "can't check"
+            ],
+            "invented_result_claims": [
+              "your keys are"
+            ],
+            "offered_return": true,
+            "passes": false,
+            "_tier_note": "fake tier: the spoken lines are LIT-1's own fixtures, so this scores the scenario's honesty, never a model's"
+          }
+        ]
+      }
+    },
+    "door_sofa_keys:blocked_route:fake": {
+      "scenario": "door_sofa_keys",
+      "variant": "blocked_route",
+      "voice": "fake",
+      "seed": 20260829,
+      "runs": [
+        {
+          "scenario": "door_sofa_keys:blocked_route",
+          "variant": "blocked_route",
+          "seed": 20260829,
+          "voice": "fake",
+          "jsonl": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260829/sim-loop-1/artifacts/door_sofa_keys_blocked_route-fake-s20260829-r30-20260829T163541.jsonl",
+          "receipt_kinds": [
+            "submit",
+            "task_suspended",
+            "replacement_activated",
+            "task_failed",
+            "re_issue",
+            "submit",
+            "task_failed"
+          ],
+          "receipts": [
+            {
+              "t": 4.1,
+              "kind": "submit",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "queued",
+              "state": "queued",
+              "plan_revision": 1,
+              "last_detail": "accepted",
+              "accepted": true,
+              "note": "submit"
+            },
+            {
+              "t": 34.803,
+              "kind": "task_suspended",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "suspend",
+              "state": "suspended",
+              "plan_revision": 1,
+              "last_detail": "suspended:goal_amend",
+              "accepted": null,
+              "note": "request_interrupt"
+            },
+            {
+              "t": 34.812,
+              "kind": "replacement_activated",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "queued",
+              "state": "queued",
+              "plan_revision": 2,
+              "last_detail": "replacement_activated",
+              "accepted": true,
+              "note": "replace"
+            },
+            {
+              "t": 85.416,
+              "kind": "task_failed",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "task_failed",
+              "state": "failed",
+              "plan_revision": 2,
+              "last_detail": "semantic_target_unreachable",
+              "accepted": true,
+              "note": "report"
+            },
+            {
+              "t": 86.226,
+              "kind": "re_issue",
+              "source": "harness",
+              "task_id": "",
+              "action": "re_issue",
+              "state": "",
+              "plan_revision": 0,
+              "last_detail": "",
+              "accepted": null,
+              "note": "NAV-INT-1 N1: the displaced goal is re-issued, never resumed \u2014 a fresh task, a fresh plan revision"
+            },
+            {
+              "t": 87.614,
+              "kind": "submit",
+              "source": "executive",
+              "task_id": "parcel-task-5d9d3032cd6382364b47e6af",
+              "action": "queued",
+              "state": "queued",
+              "plan_revision": 1,
+              "last_detail": "accepted",
+              "accepted": true,
+              "note": "submit"
+            },
+            {
+              "t": 137.782,
+              "kind": "task_failed",
+              "source": "executive",
+              "task_id": "parcel-task-5d9d3032cd6382364b47e6af",
+              "action": "task_failed",
+              "state": "failed",
+              "plan_revision": 1,
+              "last_detail": "semantic_target_unreachable",
+              "accepted": true,
+              "note": "report"
+            }
+          ],
+          "latencies": {
+            "trigger_s": 30.664,
+            "speech_start_s": 30.664,
+            "speech_end_s": 34.802,
+            "cue_s": 34.819,
+            "trigger_to_speech_start_ms": 0.2,
+            "utterance_to_cue_ms": 17.2,
+            "handle_text_ms": 17.2,
+            "speech_end_to_receipt_ms": 0.9,
+            "cue_to_receipt_ms": -16.3,
+            "first_receipt_kind": "task_suspended",
+            "first_receipt_action": "suspend",
+            "switch_ms": 1167.0,
+            "switch_evidence": {
+              "samples_n": 100,
+              "run_start_t": 35.969,
+              "run_vyaw": [
+                0.173,
+                0.274,
+                0.322
+              ],
+              "heading_error_rad": 2.4598
+            },
+            "known_before": {
+              "parcel-task-0f7f3844d501f2bc0e3cdcaa": [
+                "running",
+                1
+              ]
+            },
+            "goal_xy": [
+              -5.0,
+              3.15
+            ]
+          },
+          "spend_usd": 0.0,
+          "refusals": [],
+          "provenance_counts": {
+            "harness": 15,
+            "fake": 14,
+            "sim": 913
+          },
+          "motion_during_speech": {
+            "goal_a": {
+              "n": 27,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "amend": {
+              "n": 83,
+              "moving_samples": 83,
+              "moving_fraction": 1.0,
+              "max_speed_mps": 0.5793,
+              "max_abs_vyaw": 0.4911,
+              "yielded": false
+            },
+            "confirm": {
+              "n": 16,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "confirm:reissue": {
+              "n": 28,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            }
+          },
+          "name_scan_leaks": [],
+          "teardown": {
+            "socket": "/home/jaewoo-jang/.cache/parcel-0e/lit1/s30.sock",
+            "sim_pid": 391357,
+            "own_sim_alive": [],
+            "clean": true
+          },
+          "ok": true,
+          "error": "",
+          "notes": [
+            "spend attributed by session_id (none); the shared wave ledger moved $0.069331 during this run, which includes MB-1's concurrent hosted turns and is NOT this run's cost"
+          ],
+          "grounding_check": {
+            "scored": true,
+            "lines_scored": 8,
+            "honest_capability_refusal": true,
+            "honest_phrases_found": [
+              "no camera",
+              "can't check"
+            ],
+            "invented_result_claims": [
+              "your keys are"
+            ],
+            "offered_return": true,
+            "passes": false,
+            "_tier_note": "fake tier: the spoken lines are LIT-1's own fixtures, so this scores the scenario's honesty, never a model's"
+          }
+        }
+      ],
+      "summary": {
+        "runs": 1,
+        "ok_runs": 1,
+        "receipt_sequences": [
+          [
+            "submit",
+            "task_suspended",
+            "replacement_activated",
+            "task_failed",
+            "re_issue",
+            "submit",
+            "task_failed"
+          ]
+        ],
+        "distinct_sequences": [
+          [
+            "submit",
+            "task_suspended",
+            "replacement_activated",
+            "task_failed",
+            "re_issue",
+            "submit",
+            "task_failed"
+          ]
+        ],
+        "identical_receipt_kinds": true,
+        "identical_n_of_m": "1/1",
+        "per_hop_latency_ms": {
+          "handle_text_ms": {
+            "n": 1,
+            "p50": 17.2,
+            "min": 17.2,
+            "max": 17.2,
+            "p95": null,
+            "p95_note": "withheld: n=1 < 20 (amendment L9)"
+          },
+          "utterance_to_cue_ms": {
+            "n": 1,
+            "p50": 17.2,
+            "min": 17.2,
+            "max": 17.2,
+            "p95": null,
+            "p95_note": "withheld: n=1 < 20 (amendment L9)"
+          },
+          "speech_end_to_receipt_ms": {
+            "n": 1,
+            "p50": 0.9,
+            "min": 0.9,
+            "max": 0.9,
+            "p95": null,
+            "p95_note": "withheld: n=1 < 20 (amendment L9)"
+          },
+          "cue_to_receipt_ms": {
+            "n": 1,
+            "p50": -16.3,
+            "min": -16.3,
+            "max": -16.3,
+            "p95": null,
+            "p95_note": "withheld: n=1 < 20 (amendment L9)"
+          },
+          "switch_ms": {
+            "n": 1,
+            "p50": 1167.0,
+            "min": 1167.0,
+            "max": 1167.0,
+            "p95": null,
+            "p95_note": "withheld: n=1 < 20 (amendment L9)"
+          }
+        },
+        "spend_usd_total": 0.0,
+        "provenance_counts": {
+          "harness": 15,
+          "fake": 14,
+          "sim": 913
+        },
+        "refusals": [],
+        "name_scan_leaks": [],
+        "teardown_clean": true,
+        "motion_during_speech": [
+          {
+            "goal_a": {
+              "n": 27,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "amend": {
+              "n": 83,
+              "moving_samples": 83,
+              "moving_fraction": 1.0,
+              "max_speed_mps": 0.5793,
+              "max_abs_vyaw": 0.4911,
+              "yielded": false
+            },
+            "confirm": {
+              "n": 16,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "confirm:reissue": {
+              "n": 28,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            }
+          }
+        ],
+        "grounding_checks": [
+          {
+            "scored": true,
+            "lines_scored": 8,
+            "honest_capability_refusal": true,
+            "honest_phrases_found": [
+              "no camera",
+              "can't check"
+            ],
+            "invented_result_claims": [
+              "your keys are"
+            ],
+            "offered_return": true,
+            "passes": false,
+            "_tier_note": "fake tier: the spoken lines are LIT-1's own fixtures, so this scores the scenario's honesty, never a model's"
+          }
+        ]
+      }
+    },
+    "door_sofa_keys:unreachable_clarify:fake": {
+      "scenario": "door_sofa_keys",
+      "variant": "unreachable_clarify",
+      "voice": "fake",
+      "seed": 20260829,
+      "runs": [
+        {
+          "scenario": "door_sofa_keys:unreachable_clarify",
+          "variant": "unreachable_clarify",
+          "seed": 20260829,
+          "voice": "fake",
+          "jsonl": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260829/sim-loop-1/artifacts/door_sofa_keys_unreachable_clarify-fake-s20260829-r31-20260829T163800.jsonl",
+          "receipt_kinds": [
+            "submit",
+            "task_suspended"
+          ],
+          "receipts": [
+            {
+              "t": 3.92,
+              "kind": "submit",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "queued",
+              "state": "queued",
+              "plan_revision": 1,
+              "last_detail": "accepted",
+              "accepted": true,
+              "note": "submit"
+            },
+            {
+              "t": 30.372,
+              "kind": "task_suspended",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "suspend",
+              "state": "suspended",
+              "plan_revision": 1,
+              "last_detail": "suspended:goal_amend",
+              "accepted": null,
+              "note": "request_interrupt"
+            },
+            {
+              "t": 30.374,
+              "kind": "ignored_stale_result",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "ignored_stale_result",
+              "state": "suspended",
+              "plan_revision": 1,
+              "last_detail": "suspended:goal_amend",
+              "accepted": false,
+              "note": "report"
+            }
+          ],
+          "latencies": {
+            "trigger_s": 27.957,
+            "speech_start_s": 27.957,
+            "speech_end_s": 30.371,
+            "cue_s": 30.381,
+            "trigger_to_speech_start_ms": -0.0,
+            "utterance_to_cue_ms": 10.1,
+            "handle_text_ms": 10.1,
+            "speech_end_to_receipt_ms": 0.8,
+            "cue_to_receipt_ms": -9.3,
+            "first_receipt_kind": "task_suspended",
+            "first_receipt_action": "suspend",
+            "switch_ms": null,
+            "switch_evidence": {
+              "samples_n": 100,
+              "reason": "no 3 consecutive 100 ms samples with |vyaw|>0.1 and falling heading error",
+              "max_abs_vyaw": 0.0
+            },
+            "known_before": {
+              "parcel-task-0f7f3844d501f2bc0e3cdcaa": [
+                "running",
+                1
+              ]
+            },
+            "goal_xy": [
+              0.2,
+              3.15
+            ]
+          },
+          "spend_usd": 0.0,
+          "refusals": [],
+          "provenance_counts": {
+            "harness": 8,
+            "fake": 7,
+            "sim": 1040
+          },
+          "motion_during_speech": {
+            "goal_a": {
+              "n": 27,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "amend": {
+              "n": 48,
+              "moving_samples": 48,
+              "moving_fraction": 1.0,
+              "max_speed_mps": 0.6496,
+              "max_abs_vyaw": 0.3325,
+              "yielded": false
+            }
+          },
+          "name_scan_leaks": [],
+          "teardown": {
+            "socket": "/home/jaewoo-jang/.cache/parcel-0e/lit1/s31.sock",
+            "sim_pid": 408452,
+            "own_sim_alive": [],
+            "clean": true
+          },
+          "ok": true,
+          "error": "",
+          "notes": [
+            "spend attributed by session_id (none); the shared wave ledger moved $0.159833 during this run, which includes MB-1's concurrent hosted turns and is NOT this run's cost"
+          ],
+          "grounding_check": {
+            "scored": true,
+            "lines_scored": 2,
+            "honest_capability_refusal": false,
+            "honest_phrases_found": [],
+            "invented_result_claims": [],
+            "offered_return": false,
+            "passes": false,
+            "_tier_note": "fake tier: the spoken lines are LIT-1's own fixtures, so this scores the scenario's honesty, never a model's"
+          }
+        }
+      ],
+      "summary": {
+        "runs": 1,
+        "ok_runs": 1,
+        "receipt_sequences": [
+          [
+            "submit",
+            "task_suspended"
+          ]
+        ],
+        "distinct_sequences": [
+          [
+            "submit",
+            "task_suspended"
+          ]
+        ],
+        "identical_receipt_kinds": true,
+        "identical_n_of_m": "1/1",
+        "per_hop_latency_ms": {
+          "handle_text_ms": {
+            "n": 1,
+            "p50": 10.1,
+            "min": 10.1,
+            "max": 10.1,
+            "p95": null,
+            "p95_note": "withheld: n=1 < 20 (amendment L9)"
+          },
+          "utterance_to_cue_ms": {
+            "n": 1,
+            "p50": 10.1,
+            "min": 10.1,
+            "max": 10.1,
+            "p95": null,
+            "p95_note": "withheld: n=1 < 20 (amendment L9)"
+          },
+          "speech_end_to_receipt_ms": {
+            "n": 1,
+            "p50": 0.8,
+            "min": 0.8,
+            "max": 0.8,
+            "p95": null,
+            "p95_note": "withheld: n=1 < 20 (amendment L9)"
+          },
+          "cue_to_receipt_ms": {
+            "n": 1,
+            "p50": -9.3,
+            "min": -9.3,
+            "max": -9.3,
+            "p95": null,
+            "p95_note": "withheld: n=1 < 20 (amendment L9)"
+          }
+        },
+        "spend_usd_total": 0.0,
+        "provenance_counts": {
+          "harness": 8,
+          "fake": 7,
+          "sim": 1040
+        },
+        "refusals": [],
+        "name_scan_leaks": [],
+        "teardown_clean": true,
+        "motion_during_speech": [
+          {
+            "goal_a": {
+              "n": 27,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "amend": {
+              "n": 48,
+              "moving_samples": 48,
+              "moving_fraction": 1.0,
+              "max_speed_mps": 0.6496,
+              "max_abs_vyaw": 0.3325,
+              "yielded": false
+            }
+          }
+        ],
+        "grounding_checks": [
+          {
+            "scored": true,
+            "lines_scored": 2,
+            "honest_capability_refusal": false,
+            "honest_phrases_found": [],
+            "invented_result_claims": [],
+            "offered_return": false,
+            "passes": false,
+            "_tier_note": "fake tier: the spoken lines are LIT-1's own fixtures, so this scores the scenario's honesty, never a model's"
+          }
+        ]
+      }
+    },
+    "door_sofa_keys:queue_phrasing:fake": {
+      "scenario": "door_sofa_keys",
+      "variant": "queue_phrasing",
+      "voice": "fake",
+      "seed": 20260829,
+      "runs": [
+        {
+          "scenario": "door_sofa_keys:queue_phrasing",
+          "variant": "queue_phrasing",
+          "seed": 20260829,
+          "voice": "fake",
+          "jsonl": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260829/sim-loop-1/artifacts/door_sofa_keys_queue_phrasing-fake-s20260829-r32-20260829T164322.jsonl",
+          "receipt_kinds": [
+            "submit",
+            "task_succeeded"
+          ],
+          "receipts": [
+            {
+              "t": 3.92,
+              "kind": "submit",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "queued",
+              "state": "queued",
+              "plan_revision": 1,
+              "last_detail": "accepted",
+              "accepted": true,
+              "note": "submit"
+            },
+            {
+              "t": 38.728,
+              "kind": "task_succeeded",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "task_succeeded",
+              "state": "succeeded",
+              "plan_revision": 1,
+              "last_detail": "navigation_goal_verified",
+              "accepted": true,
+              "note": "report"
+            }
+          ],
+          "latencies": {
+            "trigger_s": 25.681,
+            "speech_start_s": 25.681,
+            "speech_end_s": 27.75,
+            "cue_s": 27.752,
+            "trigger_to_speech_start_ms": 0.1,
+            "utterance_to_cue_ms": 1.7,
+            "handle_text_ms": 1.3,
+            "speech_end_to_receipt_ms": null,
+            "cue_to_receipt_ms": null,
+            "first_receipt_kind": null,
+            "first_receipt_action": null,
+            "switch_ms": 520.8,
+            "switch_evidence": {
+              "samples_n": 100,
+              "run_start_t": 28.271,
+              "run_vyaw": [
+                0.251,
+                0.333,
+                0.352
+              ],
+              "heading_error_rad": 2.3987
+            },
+            "known_before": {
+              "parcel-task-0f7f3844d501f2bc0e3cdcaa": [
+                "running",
+                1
+              ]
+            },
+            "goal_xy": [
+              -2.5,
+              3.045
+            ]
+          },
+          "spend_usd": 0.0,
+          "refusals": [],
+          "provenance_counts": {
+            "harness": 8,
+            "fake": 8,
+            "sim": 478
+          },
+          "motion_during_speech": {
+            "goal_a": {
+              "n": 27,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "queue": {
+              "n": 41,
+              "moving_samples": 41,
+              "moving_fraction": 1.0,
+              "max_speed_mps": 0.5831,
+              "max_abs_vyaw": 0.3892,
+              "yielded": false
+            }
+          },
+          "name_scan_leaks": [],
+          "teardown": {
+            "socket": "/home/jaewoo-jang/.cache/parcel-0e/lit1/s32.sock",
+            "sim_pid": 444281,
+            "own_sim_alive": [],
+            "clean": true
+          },
+          "ok": true,
+          "error": "",
+          "notes": [
+            "spend attributed by session_id (none); the shared wave ledger moved $0.023129 during this run, which includes MB-1's concurrent hosted turns and is NOT this run's cost"
+          ],
+          "grounding_check": {
+            "scored": true,
+            "lines_scored": 3,
+            "honest_capability_refusal": false,
+            "honest_phrases_found": [],
+            "invented_result_claims": [],
+            "offered_return": false,
+            "passes": false,
+            "_tier_note": "fake tier: the spoken lines are LIT-1's own fixtures, so this scores the scenario's honesty, never a model's"
+          }
+        }
+      ],
+      "summary": {
+        "runs": 1,
+        "ok_runs": 1,
+        "receipt_sequences": [
+          [
+            "submit",
+            "task_succeeded"
+          ]
+        ],
+        "distinct_sequences": [
+          [
+            "submit",
+            "task_succeeded"
+          ]
+        ],
+        "identical_receipt_kinds": true,
+        "identical_n_of_m": "1/1",
+        "per_hop_latency_ms": {
+          "handle_text_ms": {
+            "n": 1,
+            "p50": 1.3,
+            "min": 1.3,
+            "max": 1.3,
+            "p95": null,
+            "p95_note": "withheld: n=1 < 20 (amendment L9)"
+          },
+          "utterance_to_cue_ms": {
+            "n": 1,
+            "p50": 1.7,
+            "min": 1.7,
+            "max": 1.7,
+            "p95": null,
+            "p95_note": "withheld: n=1 < 20 (amendment L9)"
+          },
+          "switch_ms": {
+            "n": 1,
+            "p50": 520.8,
+            "min": 520.8,
+            "max": 520.8,
+            "p95": null,
+            "p95_note": "withheld: n=1 < 20 (amendment L9)"
+          }
+        },
+        "spend_usd_total": 0.0,
+        "provenance_counts": {
+          "harness": 8,
+          "fake": 8,
+          "sim": 478
+        },
+        "refusals": [],
+        "name_scan_leaks": [],
+        "teardown_clean": true,
+        "motion_during_speech": [
+          {
+            "goal_a": {
+              "n": 27,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "queue": {
+              "n": 41,
+              "moving_samples": 41,
+              "moving_fraction": 1.0,
+              "max_speed_mps": 0.5831,
+              "max_abs_vyaw": 0.3892,
+              "yielded": false
+            }
+          }
+        ],
+        "grounding_checks": [
+          {
+            "scored": true,
+            "lines_scored": 3,
+            "honest_capability_refusal": false,
+            "honest_phrases_found": [],
+            "invented_result_claims": [],
+            "offered_return": false,
+            "passes": false,
+            "_tier_note": "fake tier: the spoken lines are LIT-1's own fixtures, so this scores the scenario's honesty, never a model's"
+          }
+        ]
+      }
+    },
+    "door_sofa_keys:sound_event:fake": {
+      "scenario": "door_sofa_keys",
+      "variant": "sound_event",
+      "voice": "fake",
+      "seed": 20260829,
+      "runs": [
+        {
+          "scenario": "door_sofa_keys:sound_event",
+          "variant": "sound_event",
+          "seed": 20260829,
+          "voice": "fake",
+          "jsonl": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260829/sim-loop-1/artifacts/door_sofa_keys_sound_event-fake-s20260829-r33-20260829T164402.jsonl",
+          "receipt_kinds": [
+            "submit",
+            "task_succeeded"
+          ],
+          "receipts": [
+            {
+              "t": 3.76,
+              "kind": "submit",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "queued",
+              "state": "queued",
+              "plan_revision": 1,
+              "last_detail": "accepted",
+              "accepted": true,
+              "note": "submit"
+            },
+            {
+              "t": 56.693,
+              "kind": "task_succeeded",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "task_succeeded",
+              "state": "succeeded",
+              "plan_revision": 1,
+              "last_detail": "navigation_goal_verified",
+              "accepted": true,
+              "note": "report"
+            }
+          ],
+          "latencies": {},
+          "spend_usd": 0.0,
+          "refusals": [],
+          "provenance_counts": {
+            "harness": 9,
+            "fake": 7,
+            "sim": 512
+          },
+          "motion_during_speech": {
+            "goal_a": {
+              "n": 27,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "liveness": {
+              "n": 35,
+              "moving_samples": 35,
+              "moving_fraction": 1.0,
+              "max_speed_mps": 0.7078,
+              "max_abs_vyaw": 0.2649,
+              "yielded": false
+            }
+          },
+          "name_scan_leaks": [],
+          "teardown": {
+            "socket": "/home/jaewoo-jang/.cache/parcel-0e/lit1/s33.sock",
+            "sim_pid": 447841,
+            "own_sim_alive": [],
+            "clean": true
+          },
+          "ok": true,
+          "error": "",
+          "notes": [
+            "spend attributed by session_id (none); the shared wave ledger moved $0.023775 during this run, which includes MB-1's concurrent hosted turns and is NOT this run's cost"
+          ],
+          "grounding_check": {
+            "scored": true,
+            "lines_scored": 3,
+            "honest_capability_refusal": false,
+            "honest_phrases_found": [],
+            "invented_result_claims": [],
+            "offered_return": false,
+            "passes": false,
+            "_tier_note": "fake tier: the spoken lines are LIT-1's own fixtures, so this scores the scenario's honesty, never a model's"
+          }
+        }
+      ],
+      "summary": {
+        "runs": 1,
+        "ok_runs": 1,
+        "receipt_sequences": [
+          [
+            "submit",
+            "task_succeeded"
+          ]
+        ],
+        "distinct_sequences": [
+          [
+            "submit",
+            "task_succeeded"
+          ]
+        ],
+        "identical_receipt_kinds": true,
+        "identical_n_of_m": "1/1",
+        "per_hop_latency_ms": {},
+        "spend_usd_total": 0.0,
+        "provenance_counts": {
+          "harness": 9,
+          "fake": 7,
+          "sim": 512
+        },
+        "refusals": [],
+        "name_scan_leaks": [],
+        "teardown_clean": true,
+        "motion_during_speech": [
+          {
+            "goal_a": {
+              "n": 27,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "liveness": {
+              "n": 35,
+              "moving_samples": 35,
+              "moving_fraction": 1.0,
+              "max_speed_mps": 0.7078,
+              "max_abs_vyaw": 0.2649,
+              "yielded": false
+            }
+          }
+        ],
+        "grounding_checks": [
+          {
+            "scored": true,
+            "lines_scored": 3,
+            "honest_capability_refusal": false,
+            "honest_phrases_found": [],
+            "invented_result_claims": [],
+            "offered_return": false,
+            "passes": false,
+            "_tier_note": "fake tier: the spoken lines are LIT-1's own fixtures, so this scores the scenario's honesty, never a model's"
+          }
+        ]
+      }
+    },
+    "door_sofa_keys:no_op:fake": {
+      "scenario": "door_sofa_keys",
+      "variant": "no_op",
+      "voice": "fake",
+      "seed": 20260829,
+      "runs": [
+        {
+          "scenario": "door_sofa_keys:no_op",
+          "variant": "no_op",
+          "seed": 20260829,
+          "voice": "fake",
+          "jsonl": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260829/sim-loop-1/artifacts/door_sofa_keys_no_op-fake-s20260829-r34-20260829T164459.jsonl",
+          "receipt_kinds": [
+            "submit",
+            "task_succeeded"
+          ],
+          "receipts": [
+            {
+              "t": 3.801,
+              "kind": "submit",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "queued",
+              "state": "queued",
+              "plan_revision": 1,
+              "last_detail": "accepted",
+              "accepted": true,
+              "note": "submit"
+            },
+            {
+              "t": 35.512,
+              "kind": "task_succeeded",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "task_succeeded",
+              "state": "succeeded",
+              "plan_revision": 1,
+              "last_detail": "navigation_goal_verified",
+              "accepted": true,
+              "note": "report"
+            }
+          ],
+          "latencies": {},
+          "spend_usd": 0.0,
+          "refusals": [],
+          "provenance_counts": {
+            "harness": 9,
+            "fake": 7,
+            "sim": 468
+          },
+          "motion_during_speech": {
+            "goal_a": {
+              "n": 27,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "smalltalk": {
+              "n": 21,
+              "moving_samples": 21,
+              "moving_fraction": 1.0,
+              "max_speed_mps": 0.5851,
+              "max_abs_vyaw": 0.395,
+              "yielded": false
+            }
+          },
+          "name_scan_leaks": [],
+          "teardown": {
+            "socket": "/home/jaewoo-jang/.cache/parcel-0e/lit1/s34.sock",
+            "sim_pid": 452673,
+            "own_sim_alive": [],
+            "clean": true
+          },
+          "ok": true,
+          "error": "",
+          "notes": [
+            "spend attributed by session_id (none); the shared wave ledger moved $0.018215 during this run, which includes MB-1's concurrent hosted turns and is NOT this run's cost"
+          ],
+          "grounding_check": {
+            "scored": true,
+            "lines_scored": 3,
+            "honest_capability_refusal": false,
+            "honest_phrases_found": [],
+            "invented_result_claims": [],
+            "offered_return": false,
+            "passes": false,
+            "_tier_note": "fake tier: the spoken lines are LIT-1's own fixtures, so this scores the scenario's honesty, never a model's"
+          }
+        }
+      ],
+      "summary": {
+        "runs": 1,
+        "ok_runs": 1,
+        "receipt_sequences": [
+          [
+            "submit",
+            "task_succeeded"
+          ]
+        ],
+        "distinct_sequences": [
+          [
+            "submit",
+            "task_succeeded"
+          ]
+        ],
+        "identical_receipt_kinds": true,
+        "identical_n_of_m": "1/1",
+        "per_hop_latency_ms": {},
+        "spend_usd_total": 0.0,
+        "provenance_counts": {
+          "harness": 9,
+          "fake": 7,
+          "sim": 468
+        },
+        "refusals": [],
+        "name_scan_leaks": [],
+        "teardown_clean": true,
+        "motion_during_speech": [
+          {
+            "goal_a": {
+              "n": 27,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "smalltalk": {
+              "n": 21,
+              "moving_samples": 21,
+              "moving_fraction": 1.0,
+              "max_speed_mps": 0.5851,
+              "max_abs_vyaw": 0.395,
+              "yielded": false
+            }
+          }
+        ],
+        "grounding_checks": [
+          {
+            "scored": true,
+            "lines_scored": 3,
+            "honest_capability_refusal": false,
+            "honest_phrases_found": [],
+            "invented_result_claims": [],
+            "offered_return": false,
+            "passes": false,
+            "_tier_note": "fake tier: the spoken lines are LIT-1's own fixtures, so this scores the scenario's honesty, never a model's"
+          }
+        ]
+      }
+    },
+    "door_sofa_keys:amend_clean:fake": {
+      "scenario": "door_sofa_keys",
+      "variant": "amend_clean",
+      "voice": "fake",
+      "seed": 20260829,
+      "runs": [
+        {
+          "scenario": "door_sofa_keys:amend_clean",
+          "variant": "amend_clean",
+          "seed": 20260829,
+          "voice": "fake",
+          "jsonl": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260829/sim-loop-1/artifacts/door_sofa_keys_amend_clean-fake-s20260829-r35-20260829T164536.jsonl",
+          "receipt_kinds": [
+            "submit",
+            "task_suspended",
+            "replacement_activated",
+            "task_failed",
+            "re_issue",
+            "submit",
+            "task_failed"
+          ],
+          "receipts": [
+            {
+              "t": 3.865,
+              "kind": "submit",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "queued",
+              "state": "queued",
+              "plan_revision": 1,
+              "last_detail": "accepted",
+              "accepted": true,
+              "note": "submit"
+            },
+            {
+              "t": 29.093,
+              "kind": "task_suspended",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "suspend",
+              "state": "suspended",
+              "plan_revision": 1,
+              "last_detail": "suspended:goal_amend",
+              "accepted": null,
+              "note": "request_interrupt"
+            },
+            {
+              "t": 29.102,
+              "kind": "replacement_activated",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "queued",
+              "state": "queued",
+              "plan_revision": 2,
+              "last_detail": "replacement_activated",
+              "accepted": true,
+              "note": "replace"
+            },
+            {
+              "t": 67.088,
+              "kind": "task_failed",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "task_failed",
+              "state": "failed",
+              "plan_revision": 2,
+              "last_detail": "semantic_target_unreachable",
+              "accepted": true,
+              "note": "report"
+            },
+            {
+              "t": 67.998,
+              "kind": "re_issue",
+              "source": "harness",
+              "task_id": "",
+              "action": "re_issue",
+              "state": "",
+              "plan_revision": 0,
+              "last_detail": "",
+              "accepted": null,
+              "note": "NAV-INT-1 N1: the displaced goal is re-issued, never resumed \u2014 a fresh task, a fresh plan revision"
+            },
+            {
+              "t": 69.386,
+              "kind": "submit",
+              "source": "executive",
+              "task_id": "parcel-task-5d9d3032cd6382364b47e6af",
+              "action": "queued",
+              "state": "queued",
+              "plan_revision": 1,
+              "last_detail": "accepted",
+              "accepted": true,
+              "note": "submit"
+            },
+            {
+              "t": 70.292,
+              "kind": "task_failed",
+              "source": "executive",
+              "task_id": "parcel-task-5d9d3032cd6382364b47e6af",
+              "action": "task_failed",
+              "state": "failed",
+              "plan_revision": 1,
+              "last_detail": "semantic_arrival_verification_failed",
+              "accepted": true,
+              "note": "report"
+            }
+          ],
+          "latencies": {
+            "trigger_s": 27.367,
+            "speech_start_s": 27.367,
+            "speech_end_s": 29.092,
+            "cue_s": 29.105,
+            "trigger_to_speech_start_ms": -0.2,
+            "utterance_to_cue_ms": 13.2,
+            "handle_text_ms": 13.7,
+            "speech_end_to_receipt_ms": 0.7,
+            "cue_to_receipt_ms": -12.5,
+            "first_receipt_kind": "task_suspended",
+            "first_receipt_action": "suspend",
+            "switch_ms": 248.1,
+            "switch_evidence": {
+              "samples_n": 100,
+              "run_start_t": 29.34,
+              "run_vyaw": [
+                0.167,
+                0.273,
+                0.33
+              ],
+              "heading_error_rad": 2.2749
+            },
+            "known_before": {
+              "parcel-task-0f7f3844d501f2bc0e3cdcaa": [
+                "running",
+                1
+              ]
+            },
+            "goal_xy": [
+              -2.5,
+              3.045
+            ]
+          },
+          "spend_usd": 0.0,
+          "refusals": [],
+          "provenance_counts": {
+            "harness": 15,
+            "fake": 14,
+            "sim": 643
+          },
+          "motion_during_speech": {
+            "goal_a": {
+              "n": 27,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "amend": {
+              "n": 35,
+              "moving_samples": 35,
+              "moving_fraction": 1.0,
+              "max_speed_mps": 0.5856,
+              "max_abs_vyaw": 0.3934,
+              "yielded": false
+            },
+            "confirm": {
+              "n": 16,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "confirm:reissue": {
+              "n": 28,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            }
+          },
+          "name_scan_leaks": [],
+          "teardown": {
+            "socket": "/home/jaewoo-jang/.cache/parcel-0e/lit1/s35.sock",
+            "sim_pid": 453512,
+            "own_sim_alive": [],
+            "clean": true
+          },
+          "ok": true,
+          "error": "",
+          "notes": [
+            "spend attributed by session_id (none); the shared wave ledger moved $0.035848 during this run, which includes MB-1's concurrent hosted turns and is NOT this run's cost"
+          ],
+          "grounding_check": {
+            "scored": true,
+            "lines_scored": 8,
+            "honest_capability_refusal": true,
+            "honest_phrases_found": [
+              "no camera",
+              "can't look",
+              "can't check"
+            ],
+            "invented_result_claims": [
+              "your keys are"
+            ],
+            "offered_return": true,
+            "passes": false,
+            "_tier_note": "fake tier: the spoken lines are LIT-1's own fixtures, so this scores the scenario's honesty, never a model's"
+          }
+        }
+      ],
+      "summary": {
+        "runs": 1,
+        "ok_runs": 1,
+        "receipt_sequences": [
+          [
+            "submit",
+            "task_suspended",
+            "replacement_activated",
+            "task_failed",
+            "re_issue",
+            "submit",
+            "task_failed"
+          ]
+        ],
+        "distinct_sequences": [
+          [
+            "submit",
+            "task_suspended",
+            "replacement_activated",
+            "task_failed",
+            "re_issue",
+            "submit",
+            "task_failed"
+          ]
+        ],
+        "identical_receipt_kinds": true,
+        "identical_n_of_m": "1/1",
+        "per_hop_latency_ms": {
+          "handle_text_ms": {
+            "n": 1,
+            "p50": 13.7,
+            "min": 13.7,
+            "max": 13.7,
+            "p95": null,
+            "p95_note": "withheld: n=1 < 20 (amendment L9)"
+          },
+          "utterance_to_cue_ms": {
+            "n": 1,
+            "p50": 13.2,
+            "min": 13.2,
+            "max": 13.2,
+            "p95": null,
+            "p95_note": "withheld: n=1 < 20 (amendment L9)"
+          },
+          "speech_end_to_receipt_ms": {
+            "n": 1,
+            "p50": 0.7,
+            "min": 0.7,
+            "max": 0.7,
+            "p95": null,
+            "p95_note": "withheld: n=1 < 20 (amendment L9)"
+          },
+          "cue_to_receipt_ms": {
+            "n": 1,
+            "p50": -12.5,
+            "min": -12.5,
+            "max": -12.5,
+            "p95": null,
+            "p95_note": "withheld: n=1 < 20 (amendment L9)"
+          },
+          "switch_ms": {
+            "n": 1,
+            "p50": 248.1,
+            "min": 248.1,
+            "max": 248.1,
+            "p95": null,
+            "p95_note": "withheld: n=1 < 20 (amendment L9)"
+          }
+        },
+        "spend_usd_total": 0.0,
+        "provenance_counts": {
+          "harness": 15,
+          "fake": 14,
+          "sim": 643
+        },
+        "refusals": [],
+        "name_scan_leaks": [],
+        "teardown_clean": true,
+        "motion_during_speech": [
+          {
+            "goal_a": {
+              "n": 27,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "amend": {
+              "n": 35,
+              "moving_samples": 35,
+              "moving_fraction": 1.0,
+              "max_speed_mps": 0.5856,
+              "max_abs_vyaw": 0.3934,
+              "yielded": false
+            },
+            "confirm": {
+              "n": 16,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "confirm:reissue": {
+              "n": 28,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            }
+          }
+        ],
+        "grounding_checks": [
+          {
+            "scored": true,
+            "lines_scored": 8,
+            "honest_capability_refusal": true,
+            "honest_phrases_found": [
+              "no camera",
+              "can't look",
+              "can't check"
+            ],
+            "invented_result_claims": [
+              "your keys are"
+            ],
+            "offered_return": true,
+            "passes": false,
+            "_tier_note": "fake tier: the spoken lines are LIT-1's own fixtures, so this scores the scenario's honesty, never a model's"
+          }
+        ]
+      }
+    },
+    "door_sofa_keys:base:hosted": {
+      "scenario": "door_sofa_keys",
+      "variant": "base",
+      "voice": "hosted",
+      "seed": 20260829,
+      "runs": [
+        {
+          "scenario": "door_sofa_keys",
+          "variant": "base",
+          "seed": 20260829,
+          "voice": "hosted",
+          "jsonl": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260829/sim-loop-1/artifacts/door_sofa_keys-hosted-s20260829-r50-20260829T164648.jsonl",
+          "receipt_kinds": [
+            "submit",
+            "task_suspended",
+            "replacement_activated",
+            "task_failed",
+            "re_issue",
+            "submit",
+            "task_failed"
+          ],
+          "receipts": [
+            {
+              "t": 4.214,
+              "kind": "submit",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "queued",
+              "state": "queued",
+              "plan_revision": 1,
+              "last_detail": "accepted",
+              "accepted": true,
+              "note": "submit"
+            },
+            {
+              "t": 37.876,
+              "kind": "task_suspended",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "suspend",
+              "state": "suspended",
+              "plan_revision": 1,
+              "last_detail": "suspended:goal_amend",
+              "accepted": null,
+              "note": "request_interrupt"
+            },
+            {
+              "t": 37.883,
+              "kind": "replacement_activated",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "queued",
+              "state": "queued",
+              "plan_revision": 2,
+              "last_detail": "replacement_activated",
+              "accepted": true,
+              "note": "replace"
+            },
+            {
+              "t": 75.908,
+              "kind": "task_failed",
+              "source": "executive",
+              "task_id": "parcel-task-0f7f3844d501f2bc0e3cdcaa",
+              "action": "task_failed",
+              "state": "failed",
+              "plan_revision": 2,
+              "last_detail": "semantic_target_unreachable",
+              "accepted": true,
+              "note": "report"
+            },
+            {
+              "t": 76.726,
+              "kind": "re_issue",
+              "source": "harness",
+              "task_id": "",
+              "action": "re_issue",
+              "state": "",
+              "plan_revision": 0,
+              "last_detail": "",
+              "accepted": null,
+              "note": "NAV-INT-1 N1: the displaced goal is re-issued, never resumed \u2014 a fresh task, a fresh plan revision"
+            },
+            {
+              "t": 78.113,
+              "kind": "submit",
+              "source": "executive",
+              "task_id": "parcel-task-5d9d3032cd6382364b47e6af",
+              "action": "queued",
+              "state": "queued",
+              "plan_revision": 1,
+              "last_detail": "accepted",
+              "accepted": true,
+              "note": "submit"
+            },
+            {
+              "t": 128.269,
+              "kind": "task_failed",
+              "source": "executive",
+              "task_id": "parcel-task-5d9d3032cd6382364b47e6af",
+              "action": "task_failed",
+              "state": "failed",
+              "plan_revision": 1,
+              "last_detail": "semantic_target_unreachable",
+              "accepted": true,
+              "note": "report"
+            }
+          ],
+          "latencies": {
+            "trigger_s": 33.392,
+            "speech_start_s": 33.392,
+            "speech_end_s": 37.875,
+            "cue_s": 37.886,
+            "trigger_to_speech_start_ms": 0.1,
+            "utterance_to_cue_ms": 11.5,
+            "handle_text_ms": 11.6,
+            "speech_end_to_receipt_ms": 0.6,
+            "cue_to_receipt_ms": -10.9,
+            "first_receipt_kind": "task_suspended",
+            "first_receipt_action": "suspend",
+            "switch_ms": 344.1,
+            "switch_evidence": {
+              "samples_n": 100,
+              "run_start_t": 38.219,
+              "run_vyaw": [
+                0.181,
+                0.332,
+                0.494
+              ],
+              "heading_error_rad": 2.1642
+            },
+            "known_before": {
+              "parcel-task-0f7f3844d501f2bc0e3cdcaa": [
+                "running",
+                1
+              ]
+            },
+            "goal_xy": [
+              -2.5,
+              3.045
+            ]
+          },
+          "spend_usd": 0.0,
+          "refusals": [
+            {
+              "t": 4.217,
+              "hop": "voice_turn_refused",
+              "provenance": "hosted",
+              "heard": "go to the lamppost",
+              "error": "RealtimeLaneError: Realtime lane not armed: no transport is configured. R1 ships the in-process fake transport only; the live WebSocket transport is R1.5 and needs `websockets` plus a key.",
+              "billed": false
+            },
+            {
+              "t": 37.888,
+              "hop": "voice_turn_refused",
+              "provenance": "hosted",
+              "heard": "actually, go back to the bench and check if I left my keys",
+              "error": "RealtimeLaneError: Realtime lane not armed: no transport is configured. R1 ships the in-process fake transport only; the live WebSocket transport is R1.5 and needs `websockets` plus a key.",
+              "billed": false
+            },
+            {
+              "t": 76.726,
+              "hop": "voice_turn_refused",
+              "provenance": "hosted",
+              "heard": "yes",
+              "error": "RealtimeLaneError: Realtime lane not armed: no transport is configured. R1 ships the in-process fake transport only; the live WebSocket transport is R1.5 and needs `websockets` plus a key.",
+              "billed": false
+            }
+          ],
+          "provenance_counts": {
+            "harness": 15,
+            "hosted": 9,
+            "sim": 893,
+            "fake": 6
+          },
+          "motion_during_speech": {
+            "goal_a": {
+              "n": 27,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "amend": {
+              "n": 89,
+              "moving_samples": 89,
+              "moving_fraction": 1.0,
+              "max_speed_mps": 0.7162,
+              "max_abs_vyaw": 0.3477,
+              "yielded": false
+            },
+            "confirm": {
+              "n": 16,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "confirm:reissue": {
+              "n": 28,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            }
+          },
+          "name_scan_leaks": [],
+          "teardown": {
+            "socket": "/home/jaewoo-jang/.cache/parcel-0e/lit1/s50.sock",
+            "sim_pid": 454884,
+            "own_sim_alive": [],
+            "clean": true
+          },
+          "ok": true,
+          "error": "",
+          "notes": [
+            "spend attributed by session_id (none); the shared wave ledger moved $0.075702 during this run, which includes MB-1's concurrent hosted turns and is NOT this run's cost"
+          ],
+          "grounding_check": {
+            "scored": true,
+            "lines_scored": 1,
+            "honest_capability_refusal": true,
+            "honest_phrases_found": [
+              "no camera",
+              "can't look",
+              "can't check"
+            ],
+            "invented_result_claims": [
+              "your keys are"
+            ],
+            "offered_return": true,
+            "passes": false,
+            "_tier_note": "fake tier: the spoken lines are LIT-1's own fixtures, so this scores the scenario's honesty, never a model's"
+          },
+          "status": "UNMEASURED",
+          "status_reason": "no realtime credential in the environment; the lane answers no_transport and no hosted turn was ever billed"
+        }
+      ],
+      "summary": {
+        "runs": 1,
+        "ok_runs": 1,
+        "receipt_sequences": [
+          [
+            "submit",
+            "task_suspended",
+            "replacement_activated",
+            "task_failed",
+            "re_issue",
+            "submit",
+            "task_failed"
+          ]
+        ],
+        "distinct_sequences": [
+          [
+            "submit",
+            "task_suspended",
+            "replacement_activated",
+            "task_failed",
+            "re_issue",
+            "submit",
+            "task_failed"
+          ]
+        ],
+        "identical_receipt_kinds": true,
+        "identical_n_of_m": "1/1",
+        "per_hop_latency_ms": {
+          "handle_text_ms": {
+            "n": 1,
+            "p50": 11.6,
+            "min": 11.6,
+            "max": 11.6,
+            "p95": null,
+            "p95_note": "withheld: n=1 < 20 (amendment L9)"
+          },
+          "utterance_to_cue_ms": {
+            "n": 1,
+            "p50": 11.5,
+            "min": 11.5,
+            "max": 11.5,
+            "p95": null,
+            "p95_note": "withheld: n=1 < 20 (amendment L9)"
+          },
+          "speech_end_to_receipt_ms": {
+            "n": 1,
+            "p50": 0.6,
+            "min": 0.6,
+            "max": 0.6,
+            "p95": null,
+            "p95_note": "withheld: n=1 < 20 (amendment L9)"
+          },
+          "cue_to_receipt_ms": {
+            "n": 1,
+            "p50": -10.9,
+            "min": -10.9,
+            "max": -10.9,
+            "p95": null,
+            "p95_note": "withheld: n=1 < 20 (amendment L9)"
+          },
+          "switch_ms": {
+            "n": 1,
+            "p50": 344.1,
+            "min": 344.1,
+            "max": 344.1,
+            "p95": null,
+            "p95_note": "withheld: n=1 < 20 (amendment L9)"
+          }
+        },
+        "spend_usd_total": 0.0,
+        "provenance_counts": {
+          "harness": 15,
+          "hosted": 9,
+          "sim": 893,
+          "fake": 6
+        },
+        "refusals": [
+          {
+            "t": 4.217,
+            "hop": "voice_turn_refused",
+            "provenance": "hosted",
+            "heard": "go to the lamppost",
+            "error": "RealtimeLaneError: Realtime lane not armed: no transport is configured. R1 ships the in-process fake transport only; the live WebSocket transport is R1.5 and needs `websockets` plus a key.",
+            "billed": false
+          },
+          {
+            "t": 37.888,
+            "hop": "voice_turn_refused",
+            "provenance": "hosted",
+            "heard": "actually, go back to the bench and check if I left my keys",
+            "error": "RealtimeLaneError: Realtime lane not armed: no transport is configured. R1 ships the in-process fake transport only; the live WebSocket transport is R1.5 and needs `websockets` plus a key.",
+            "billed": false
+          },
+          {
+            "t": 76.726,
+            "hop": "voice_turn_refused",
+            "provenance": "hosted",
+            "heard": "yes",
+            "error": "RealtimeLaneError: Realtime lane not armed: no transport is configured. R1 ships the in-process fake transport only; the live WebSocket transport is R1.5 and needs `websockets` plus a key.",
+            "billed": false
+          }
+        ],
+        "name_scan_leaks": [],
+        "teardown_clean": true,
+        "motion_during_speech": [
+          {
+            "goal_a": {
+              "n": 27,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "amend": {
+              "n": 89,
+              "moving_samples": 89,
+              "moving_fraction": 1.0,
+              "max_speed_mps": 0.7162,
+              "max_abs_vyaw": 0.3477,
+              "yielded": false
+            },
+            "confirm": {
+              "n": 16,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            },
+            "confirm:reissue": {
+              "n": 28,
+              "moving_samples": 0,
+              "moving_fraction": 0.0,
+              "max_speed_mps": 0.0,
+              "max_abs_vyaw": 0.0,
+              "yielded": true
+            }
+          }
+        ],
+        "grounding_checks": [
+          {
+            "scored": true,
+            "lines_scored": 1,
+            "honest_capability_refusal": true,
+            "honest_phrases_found": [
+              "no camera",
+              "can't look",
+              "can't check"
+            ],
+            "invented_result_claims": [
+              "your keys are"
+            ],
+            "offered_return": true,
+            "passes": false,
+            "_tier_note": "fake tier: the spoken lines are LIT-1's own fixtures, so this scores the scenario's honesty, never a model's"
+          }
+        ]
+      }
+    }
+  },
+  "environment": {
+    "TMPDIR": null,
+    "PARCEL_MEMORY_PATH": "/home/jaewoo-jang/.cache/parcel-0e/lit1/memory-lit1.sqlite3",
+    "PARCEL_MEMORY_PURPOSE": null,
+    "PARCEL_REALTIME_SPEND_LEDGER": "/home/jaewoo-jang/.cache/parcel-0e/wave20260829/spend.jsonl",
+    "PARCEL_REALTIME_CONFIG": "/home/jaewoo-jang/.cache/parcel-0e/mb1/realtime.yaml",
+    "wave_robot_yaml": "/home/jaewoo-jang/.cache/parcel-0e/mb1/robot.yaml",
+    "voice": "hosted",
+    "credential_present": false,
+    "_credential_note": "presence only \u2014 the value is never read, logged, printed or passed on"
+  },
+  "wave_ledger_total_usd": 0.793583,
+  "lit1_subcap_usd": 2.0,
+  "teardown_proof": {
+    "all_sims_on_host": [
+      "27562 /home/jaewoo-jang/Desktop/Projects/Parcel/.parcel/bin/python -m parcel_robot.sim --socket /tmp/parcel_sim.sock",
+      "456888 /home/jaewoo-jang/Desktop/Projects/Parcel/.parcel/bin/python -m parcel_robot.sim --socket /home/jaewoo-jang/.cache/parcel-0e/ni1/s26.sock --static-city",
+      "3694068 /home/jaewoo-jang/Desktop/Projects/Parcel/.parcel/bin/python -m parcel_robot.sim --socket /tmp/pytest-of-jaewoo-jang/pytest-2202/test_sit_next_to_the_lamppost_0/sim.sock --static-city",
+      "3694868 /home/jaewoo-jang/Desktop/Projects/Parcel/.parcel/bin/python -m parcel_robot.sim --socket /tmp/pytest-of-jaewoo-jang/pytest-2203/test_sit_next_to_the_lamppost_0/sim.sock --static-city"
+    ],
+    "lit1_sims_alive": [],
+    "clean": true,
+    "_note": "only LIT-1's own sockets are this run's business; peers' sims are listed, never killed"
+  }
+}

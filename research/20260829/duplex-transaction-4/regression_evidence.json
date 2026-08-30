@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "guard": "env -u TMPDIR ~/.cache/parcel-guard/pytest_guard.sh",
+  "pre_freeze": {
+    "focused": {
+      "label": "dmc4-pre-freeze-focused",
+      "passed": 28,
+      "failed": 0,
+      "duration_s": 0.35
+    },
+    "broad": {
+      "label": "dmc4-pre-freeze-broad",
+      "passed": 307,
+      "skipped": 4,
+      "failed": 0,
+      "warnings": 2,
+      "duration_s": 23.92
+    }
+  },
+  "post_evidence": {
+    "focused": {
+      "label": "dmc4-final-focused",
+      "passed": 28,
+      "failed": 0,
+      "duration_s": 0.36
+    },
+    "broad": {
+      "label": "dmc4-final-broad",
+      "passed": 307,
+      "skipped": 4,
+      "failed": 0,
+      "warnings": 2,
+      "duration_s": 23.82
+    }
+  },
+  "notes": [
+    "The four skips were retained test-suite skips, not DMC-4 failures.",
+    "The two warnings were existing footprint-radius deprecation warnings."
+  ]
+}

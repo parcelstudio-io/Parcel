@@ -1,0 +1,45 @@
+{
+  "all_five_detected": true,
+  "cases": [
+    {
+      "detected": true,
+      "errors": [
+        "population scalar mismatch"
+      ],
+      "tamper": "result_scalar"
+    },
+    {
+      "detected": true,
+      "errors": [
+        "H1 completeness oracle failed",
+        "H2 bridge oracle failed"
+      ],
+      "tamper": "raw_journal_row"
+    },
+    {
+      "detected": true,
+      "errors": [
+        "H1 completeness oracle failed",
+        "H2 bridge oracle failed"
+      ],
+      "tamper": "authenticated_event"
+    },
+    {
+      "detected": true,
+      "errors": [
+        "manifest digest mismatch"
+      ],
+      "tamper": "manifest_hash"
+    },
+    {
+      "detected": true,
+      "errors": [
+        "source hash mismatch: research/20260829/duplex-transaction-4/DESIGN.md"
+      ],
+      "tamper": "source_file"
+    }
+  ],
+  "input": "research/20260829/duplex-transaction-4/run_a.json",
+  "schema_version": 1,
+  "tamper_check_sha256": "b57518ed87aeb103f83c23028711ce5b1be74fe4496044f27713afef10b0229c"
+}

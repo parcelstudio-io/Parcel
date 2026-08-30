@@ -1,0 +1,1 @@
+{"$id":"parcel-research-ma2-p0-trace-row-v1","$schema":"https://json-schema.org/draft/2020-12/schema","required":["episode_id","frame","policy_input","actions","scorer_only","previous_row_hash","row_hash"],"type":"object"}

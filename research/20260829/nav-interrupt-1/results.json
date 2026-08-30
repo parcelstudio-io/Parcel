@@ -1,0 +1,1835 @@
+{
+  "experiment": "NAV-INT-1",
+  "evidence_tier": "desktop-sim",
+  "seed": 20260829,
+  "tier_id": "interrupt_tier_v1",
+  "generated_at": "2026-08-29T17:00:06-0400",
+  "wall_s": 0.0,
+  "amendments_applied": [
+    "N1",
+    "N2",
+    "N3",
+    "N4"
+  ],
+  "reasoner": "local_plan_sketch (use_llm=False; no LLM planner in this fixture)",
+  "counts": {
+    "controls": 10,
+    "sequence_controls": 5,
+    "tier_episodes": 40,
+    "tier_errors": 0
+  },
+  "controls_by_goal": {
+    "bench": {
+      "n": 2,
+      "system": 0,
+      "scorer": 2,
+      "both": 0,
+      "success_both": {
+        "k": 0,
+        "n": 2,
+        "p": 0.0,
+        "lo": 0.0,
+        "hi": 0.6576
+      },
+      "success_system": {
+        "k": 0,
+        "n": 2,
+        "p": 0.0,
+        "lo": 0.0,
+        "hi": 0.6576
+      },
+      "mean_spl": 0.0,
+      "mean_dtg_m": 0.0,
+      "mean_path_m": 2.416
+    },
+    "lamppost": {
+      "n": 2,
+      "system": 2,
+      "scorer": 2,
+      "both": 2,
+      "success_both": {
+        "k": 2,
+        "n": 2,
+        "p": 1.0,
+        "lo": 0.3424,
+        "hi": 1.0
+      },
+      "success_system": {
+        "k": 2,
+        "n": 2,
+        "p": 1.0,
+        "lo": 0.3424,
+        "hi": 1.0
+      },
+      "mean_spl": 0.4635,
+      "mean_dtg_m": 0.0,
+      "mean_path_m": 3.9955
+    },
+    "sidewalk": {
+      "n": 2,
+      "system": 2,
+      "scorer": 2,
+      "both": 2,
+      "success_both": {
+        "k": 2,
+        "n": 2,
+        "p": 1.0,
+        "lo": 0.3424,
+        "hi": 1.0
+      },
+      "success_system": {
+        "k": 2,
+        "n": 2,
+        "p": 1.0,
+        "lo": 0.3424,
+        "hi": 1.0
+      },
+      "mean_spl": 0.766,
+      "mean_dtg_m": 0.0,
+      "mean_path_m": 3.132
+    },
+    "towards_lamppost": {
+      "n": 2,
+      "system": 2,
+      "scorer": 2,
+      "both": 2,
+      "success_both": {
+        "k": 2,
+        "n": 2,
+        "p": 1.0,
+        "lo": 0.3424,
+        "hi": 1.0
+      },
+      "success_system": {
+        "k": 2,
+        "n": 2,
+        "p": 1.0,
+        "lo": 0.3424,
+        "hi": 1.0
+      },
+      "mean_spl": 0.9555,
+      "mean_dtg_m": 0.0,
+      "mean_path_m": 0.6865
+    },
+    "come_here": {
+      "n": 2,
+      "system": 2,
+      "scorer": 2,
+      "both": 2,
+      "success_both": {
+        "k": 2,
+        "n": 2,
+        "p": 1.0,
+        "lo": 0.3424,
+        "hi": 1.0
+      },
+      "success_system": {
+        "k": 2,
+        "n": 2,
+        "p": 1.0,
+        "lo": 0.3424,
+        "hi": 1.0
+      },
+      "mean_spl": 1.0,
+      "mean_dtg_m": 0.226,
+      "mean_path_m": 2.9995
+    }
+  },
+  "authority_disagreement": {
+    "note": "NAV-QUALITY authority-disagreement class, per goal, over every scored leg (controls + post-interruption leg + re-issue leg). Not an interruption effect: it reproduces from rest.",
+    "totals": {
+      "n_scored_legs": 80,
+      "agreement": 63,
+      "tolerated_boundary": 0,
+      "system_failed_but_arrived": 11,
+      "system_succeeded_but_not_arrived": 6,
+      "unknown": 0
+    },
+    "by_goal": {
+      "bench": {
+        "n_scored_legs": 29,
+        "agreement": 18,
+        "tolerated_boundary": 0,
+        "system_failed_but_arrived": 11,
+        "system_succeeded_but_not_arrived": 0,
+        "unknown": 0,
+        "legs": {
+          "control": 2,
+          "goal_1_uninterrupted": 3,
+          "goal_1_continued": 2,
+          "reissue": 15,
+          "amended_goal": 7
+        },
+        "rate_system_failed_but_arrived": 0.3793,
+        "rate_system_succeeded_but_not_arrived": 0.0
+      },
+      "lamppost": {
+        "n_scored_legs": 10,
+        "agreement": 10,
+        "tolerated_boundary": 0,
+        "system_failed_but_arrived": 0,
+        "system_succeeded_but_not_arrived": 0,
+        "unknown": 0,
+        "legs": {
+          "control": 2,
+          "amended_goal": 3,
+          "reissue": 5
+        },
+        "rate_system_failed_but_arrived": 0.0,
+        "rate_system_succeeded_but_not_arrived": 0.0
+      },
+      "sidewalk": {
+        "n_scored_legs": 17,
+        "agreement": 11,
+        "tolerated_boundary": 0,
+        "system_failed_but_arrived": 0,
+        "system_succeeded_but_not_arrived": 6,
+        "unknown": 0,
+        "legs": {
+          "control": 2,
+          "amended_goal": 4,
+          "reissue": 9,
+          "goal_1_uninterrupted": 1,
+          "goal_1_continued": 1
+        },
+        "rate_system_failed_but_arrived": 0.0,
+        "rate_system_succeeded_but_not_arrived": 0.3529
+      },
+      "towards_lamppost": {
+        "n_scored_legs": 17,
+        "agreement": 17,
+        "tolerated_boundary": 0,
+        "system_failed_but_arrived": 0,
+        "system_succeeded_but_not_arrived": 0,
+        "unknown": 0,
+        "legs": {
+          "control": 2,
+          "amended_goal": 4,
+          "goal_1_uninterrupted": 4,
+          "reissue": 3,
+          "goal_1_continued": 4
+        },
+        "rate_system_failed_but_arrived": 0.0,
+        "rate_system_succeeded_but_not_arrived": 0.0
+      },
+      "come_here": {
+        "n_scored_legs": 7,
+        "agreement": 7,
+        "tolerated_boundary": 0,
+        "system_failed_but_arrived": 0,
+        "system_succeeded_but_not_arrived": 0,
+        "unknown": 0,
+        "legs": {
+          "control": 2,
+          "reissue": 2,
+          "amended_goal": 3
+        },
+        "rate_system_failed_but_arrived": 0.0,
+        "rate_system_succeeded_but_not_arrived": 0.0
+      }
+    }
+  },
+  "h_ni1a": {
+    "note": "measured only on the rows the runtime was actually interrupted on; the queue family is HELD in the harness by amendment N9 and never reaches handle_text mid-task, so it carries no admission row",
+    "n_interrupted": 32,
+    "n_with_goal_2": 28,
+    "n_held_pre_runtime": 8,
+    "n_hold_rows": 4,
+    "detectability_bound": "n=40 (rule of three): a zero count bounds the true rate at <= 3/40 = 7.5 % with 95 % confidence",
+    "admission_rate": {
+      "k": 24,
+      "n": 32,
+      "p": 0.75,
+      "lo": 0.5789,
+      "hi": 0.8675
+    },
+    "admission_latency_label": "admission-at-any-poll (amendment N2): handle_text entry -> first suspend/replace/submit receipt observed by the 50 Hz sampler",
+    "admission_latency_ms_mean": 13.4038,
+    "admission_latency_ms_p50": 12.4,
+    "admission_latency_ms_p95": 22.4,
+    "admission_latency_ms_max": 28.5,
+    "admission_within_1000ms": {
+      "k": 26,
+      "n": 26,
+      "p": 1.0,
+      "lo": 0.8713,
+      "hi": 1.0
+    },
+    "inband_handle_text_ms_mean": 11.3313,
+    "inband_handle_text_ms_max": 20.2,
+    "receipt_kinds": {
+      "None": 6,
+      "new_task": 5,
+      "replace": 5,
+      "suspend": 16
+    },
+    "amended_goal_success_both_authorities": {
+      "k": 11,
+      "n": 28,
+      "p": 0.3929,
+      "lo": 0.2357,
+      "hi": 0.5759
+    },
+    "amended_goal_success_system_only": {
+      "k": 14,
+      "n": 28,
+      "p": 0.5,
+      "lo": 0.3263,
+      "hi": 0.6737
+    },
+    "amended_goal_success_scorer_only": {
+      "k": 14,
+      "n": 28,
+      "p": 0.5,
+      "lo": 0.3263,
+      "hi": 0.6737
+    },
+    "n_interruption_refused_goal_1_continued": 7,
+    "from_rest_control_success_goal2_weighted": 0.75,
+    "delta_success_vs_from_rest": -0.3571,
+    "paired_by_goal": {
+      "come_here": {
+        "n": 9,
+        "amended_success": 3,
+        "control_rate": 1.0,
+        "control_n": 2,
+        "amended_rate": 0.3333,
+        "delta": -0.6667
+      },
+      "lamppost": {
+        "n": 3,
+        "amended_success": 3,
+        "control_rate": 1.0,
+        "control_n": 2,
+        "amended_rate": 1.0,
+        "delta": 0.0
+      },
+      "sidewalk": {
+        "n": 5,
+        "amended_success": 1,
+        "control_rate": 1.0,
+        "control_n": 2,
+        "amended_rate": 0.2,
+        "delta": -0.8
+      },
+      "towards_lamppost": {
+        "n": 4,
+        "amended_success": 4,
+        "control_rate": 1.0,
+        "control_n": 2,
+        "amended_rate": 1.0,
+        "delta": 0.0
+      },
+      "bench": {
+        "n": 7,
+        "amended_success": 0,
+        "control_rate": 0.0,
+        "control_n": 2,
+        "amended_rate": 0.0,
+        "delta": 0.0
+      }
+    },
+    "mean_spl_amended": 0.2542,
+    "mean_dtg_amended_m": 1.2594,
+    "collisions_in_switch_window_sim_flag": 0,
+    "collisions_in_switch_window_clearance_le_0": 0,
+    "min_clearance_in_switch_window_m": 0.8293984377986356,
+    "false_arrivals_in_switch_window": 0,
+    "amended_goal_false_arrival_category": 3,
+    "authority_categories": {
+      "agreement": 15,
+      "authority_disagreement": 3,
+      "false_arrival": 3
+    },
+    "by_family_class": {
+      "amend_cue": {
+        "n": 14,
+        "admission": {
+          "k": 7,
+          "n": 14,
+          "p": 0.5,
+          "lo": 0.268,
+          "hi": 0.732
+        },
+        "median_latency_ms": 8.6,
+        "max_latency_ms": 17.7,
+        "receipt_kinds": {
+          "None": 5,
+          "replace": 5,
+          "suspend": 4
+        },
+        "closed_intent": {
+          "goal-amend": 14
+        },
+        "goal_amend_ok": {
+          "False": 5,
+          "True": 9
+        },
+        "goal_amend_replan": {
+          "None": 5,
+          "local_retarget_no_planner": 9
+        },
+        "amended_success": {
+          "k": 4,
+          "n": 14,
+          "p": 0.2857,
+          "lo": 0.1172,
+          "hi": 0.5465
+        }
+      },
+      "explicit_directive": {
+        "n": 14,
+        "admission": {
+          "k": 14,
+          "n": 14,
+          "p": 1.0,
+          "lo": 0.7847,
+          "hi": 1.0
+        },
+        "median_latency_ms": 13.9,
+        "max_latency_ms": 28.5,
+        "receipt_kinds": {
+          "new_task": 5,
+          "suspend": 9
+        },
+        "closed_intent": {
+          "": 11,
+          "come": 3
+        },
+        "goal_amend_ok": {
+          "None": 14
+        },
+        "goal_amend_replan": {
+          "None": 14
+        },
+        "amended_success": {
+          "k": 7,
+          "n": 14,
+          "p": 0.5,
+          "lo": 0.268,
+          "hi": 0.732
+        }
+      },
+      "hold": {
+        "n": 4,
+        "admission": {
+          "k": 3,
+          "n": 4,
+          "p": 0.75,
+          "lo": 0.3006,
+          "hi": 0.9544
+        },
+        "median_latency_ms": 15.9,
+        "max_latency_ms": 16.4,
+        "receipt_kinds": {
+          "None": 1,
+          "suspend": 3
+        },
+        "closed_intent": {
+          "goal-amend": 4
+        },
+        "goal_amend_ok": {
+          "False": 1,
+          "True": 3
+        },
+        "goal_amend_replan": {
+          "None": 1,
+          "waiting_for_goal": 3
+        },
+        "amended_success": null
+      }
+    },
+    "by_trigger_fraction": {
+      "0.25": {
+        "n": 8,
+        "admission": {
+          "k": 7,
+          "n": 8,
+          "p": 0.875,
+          "lo": 0.5291,
+          "hi": 0.9776
+        },
+        "amended_success": {
+          "k": 4,
+          "n": 8,
+          "p": 0.5,
+          "lo": 0.2152,
+          "hi": 0.7848
+        }
+      },
+      "0.5": {
+        "n": 8,
+        "admission": {
+          "k": 5,
+          "n": 8,
+          "p": 0.625,
+          "lo": 0.3057,
+          "hi": 0.8632
+        },
+        "amended_success": {
+          "k": 1,
+          "n": 8,
+          "p": 0.125,
+          "lo": 0.0224,
+          "hi": 0.4709
+        }
+      },
+      "0.75": {
+        "n": 9,
+        "admission": {
+          "k": 5,
+          "n": 9,
+          "p": 0.5556,
+          "lo": 0.2667,
+          "hi": 0.8112
+        },
+        "amended_success": {
+          "k": 2,
+          "n": 7,
+          "p": 0.2857,
+          "lo": 0.0822,
+          "hi": 0.6411
+        }
+      },
+      "None": {
+        "n": 7,
+        "admission": {
+          "k": 7,
+          "n": 7,
+          "p": 1.0,
+          "lo": 0.6457,
+          "hi": 1.0
+        },
+        "amended_success": {
+          "k": 4,
+          "n": 5,
+          "p": 0.8,
+          "lo": 0.3755,
+          "hi": 0.9638
+        }
+      }
+    },
+    "hold_rows": [
+      {
+        "episode_id": "ni1-23-sidewalk-bench",
+        "goal_amend_ok": true,
+        "goal_amend_replan": "waiting_for_goal",
+        "receipt_kind": "suspend",
+        "states_after_hold": [
+          "suspended"
+        ],
+        "details_after_hold": [
+          "suspended:goal_amend"
+        ],
+        "path_during_hold_m": 0.0
+      },
+      {
+        "episode_id": "ni1-26-sidewalk-come_here",
+        "goal_amend_ok": true,
+        "goal_amend_replan": "waiting_for_goal",
+        "receipt_kind": "suspend",
+        "states_after_hold": [
+          "suspended"
+        ],
+        "details_after_hold": [
+          "suspended:goal_amend"
+        ],
+        "path_during_hold_m": 0.043
+      },
+      {
+        "episode_id": "ni1-30-towards_lamppost-bench",
+        "goal_amend_ok": false,
+        "goal_amend_replan": null,
+        "receipt_kind": null,
+        "states_after_hold": [
+          "succeeded"
+        ],
+        "details_after_hold": [
+          "navigation_goal_verified"
+        ],
+        "path_during_hold_m": 0.0
+      },
+      {
+        "episode_id": "ni1-39-towards_lamppost-sidewalk",
+        "goal_amend_ok": true,
+        "goal_amend_replan": "waiting_for_goal",
+        "receipt_kind": "suspend",
+        "states_after_hold": [
+          "suspended"
+        ],
+        "details_after_hold": [
+          "suspended:goal_amend"
+        ],
+        "path_during_hold_m": 0.0
+      }
+    ]
+  },
+  "h_ni1b": {
+    "label": "re-issue (amendment N1): the runtime consumes the parked ResumeIntent on commit, so the harness re-issues the remembered directive text as a NEW task; queue-family utterances are held PRE-runtime (amendment N9)",
+    "n_reissued": 34,
+    "n_both_goals_reachable_from_rest": 9,
+    "return_rate": {
+      "k": 8,
+      "n": 9,
+      "p": 0.8889,
+      "lo": 0.565,
+      "hi": 0.9801
+    },
+    "return_rate_all_reissued": {
+      "k": 13,
+      "n": 34,
+      "p": 0.3824,
+      "lo": 0.239,
+      "hi": 0.5496
+    },
+    "return_rate_scorer_only": {
+      "k": 15,
+      "n": 34,
+      "p": 0.4412,
+      "lo": 0.2888,
+      "hi": 0.6055
+    },
+    "return_rate_scorer_only_both_reachable": {
+      "k": 8,
+      "n": 9,
+      "p": 0.8889,
+      "lo": 0.565,
+      "hi": 0.9801
+    },
+    "return_rate_note": "return_rate is the pre-registered system-AND-scorer rate; return_rate_scorer_only_both_reachable is the same episodes scored on the independent K0 predicate alone, so the policy is not penalised for the product's terminal-verification bug (see authority_disagreement)",
+    "reissue_trigger_terminal_state": {
+      "failed": 10,
+      "succeeded": 19,
+      "suspended": 5
+    },
+    "reissue_trigger_was_a_false_failed": 6,
+    "path_ratio_reference": "oracle: start -> interruption pose -> goal 2 -> goal 1, straight line from the ACTUAL interruption pose (amendment N8)",
+    "path_ratio_oracle_mean": 1.4905,
+    "path_ratio_oracle_p50": 1.305,
+    "path_ratio_oracle_p95": 2.253,
+    "n_path_ratio_oracle": 8,
+    "path_ratio_vs_measured_sequence_mean": null,
+    "n_path_ratio_measured": 0,
+    "path_ratio_by_trigger_fraction": {
+      "0.25": {
+        "n": 2,
+        "mean": 1.6448
+      },
+      "0.5": {
+        "n": 2,
+        "mean": 1.4065
+      },
+      "0.75": {
+        "n": 1,
+        "mean": 1.2225
+      },
+      "None": {
+        "n": 4,
+        "mean": 1.533
+      }
+    },
+    "by_family_class": {
+      "amend_cue": {
+        "n": 1,
+        "return_rate": {
+          "k": 1,
+          "n": 1,
+          "p": 1.0,
+          "lo": 0.2065,
+          "hi": 1.0
+        }
+      },
+      "explicit_directive": {
+        "n": 3,
+        "return_rate": {
+          "k": 3,
+          "n": 3,
+          "p": 1.0,
+          "lo": 0.4385,
+          "hi": 1.0
+        }
+      },
+      "hold": {
+        "n": 3,
+        "return_rate": {
+          "k": 3,
+          "n": 3,
+          "p": 1.0,
+          "lo": 0.4385,
+          "hi": 1.0
+        }
+      },
+      "queue": {
+        "n": 2,
+        "return_rate": {
+          "k": 1,
+          "n": 2,
+          "p": 0.5,
+          "lo": 0.0945,
+          "hi": 0.9055
+        }
+      }
+    },
+    "queue_actions": {
+      "hold_pre_runtime": 8,
+      "no_displacement": 9,
+      "no_reissue": 6,
+      "reissue": 34,
+      "revise_observed": 23,
+      "start_goal": 40
+    },
+    "sequence_controls_measured": 5,
+    "sequence_controls_both_reached": 0.0
+  },
+  "h_ni1c": {
+    "primary_set": "gold_blind.json (verifier-authored, frozen by sha256 before the classifier ran \u2014 amendment N7)",
+    "blind_sha256": "c253df2f707b158c4f6aaab42ce9fae77e98aae9502ef4bea987e2bae1fc1e65",
+    "blind_sha256_expected": "c253df2f707b158c4f6aaab42ce9fae77e98aae9502ef4bea987e2bae1fc1e65",
+    "blind_sha256_matches": true,
+    "blind": {
+      "n": 110,
+      "overall_accuracy": 0.8273,
+      "overall_wilson95": {
+        "k": 91,
+        "n": 110,
+        "p": 0.8273,
+        "lo": 0.7459,
+        "hi": 0.8865
+      },
+      "per_class": {
+        "revise": {
+          "n": 30,
+          "correct": 27,
+          "accuracy": 0.9,
+          "wilson95": {
+            "k": 27,
+            "n": 30,
+            "p": 0.9,
+            "lo": 0.7438,
+            "hi": 0.9654
+          }
+        },
+        "keep": {
+          "n": 30,
+          "correct": 28,
+          "accuracy": 0.9333,
+          "wilson95": {
+            "k": 28,
+            "n": 30,
+            "p": 0.9333,
+            "lo": 0.7868,
+            "hi": 0.9815
+          }
+        },
+        "queue": {
+          "n": 30,
+          "correct": 20,
+          "accuracy": 0.6667,
+          "wilson95": {
+            "k": 20,
+            "n": 30,
+            "p": 0.6667,
+            "lo": 0.4878,
+            "hi": 0.8077
+          }
+        },
+        "clarify": {
+          "n": 20,
+          "correct": 16,
+          "accuracy": 0.8,
+          "wilson95": {
+            "k": 16,
+            "n": 20,
+            "p": 0.8,
+            "lo": 0.584,
+            "hi": 0.9193
+          }
+        }
+      },
+      "confusion": {
+        "revise": {
+          "revise": 27,
+          "keep": 3,
+          "queue": 0,
+          "clarify": 0
+        },
+        "keep": {
+          "revise": 0,
+          "keep": 28,
+          "queue": 0,
+          "clarify": 2
+        },
+        "queue": {
+          "revise": 0,
+          "keep": 9,
+          "queue": 20,
+          "clarify": 1
+        },
+        "clarify": {
+          "revise": 0,
+          "keep": 4,
+          "queue": 0,
+          "clarify": 16
+        }
+      },
+      "misses": [
+        {
+          "id": "g002",
+          "utterance": "once you get there, head to the bench",
+          "gold": "queue",
+          "predicted": "keep",
+          "reason": "not_a_navigation_command",
+          "adversarial": false
+        },
+        {
+          "id": "g003",
+          "utterance": "once you get there, head to the tree",
+          "gold": "queue",
+          "predicted": "keep",
+          "reason": "not_a_navigation_command",
+          "adversarial": false
+        },
+        {
+          "id": "g008",
+          "utterance": "after the lamppost, the bench",
+          "gold": "queue",
+          "predicted": "keep",
+          "reason": "not_a_navigation_command",
+          "adversarial": true
+        },
+        {
+          "id": "g009",
+          "utterance": "go back",
+          "gold": "clarify",
+          "predicted": "keep",
+          "reason": "not_a_navigation_command",
+          "adversarial": true
+        },
+        {
+          "id": "g013",
+          "utterance": "and after that come here",
+          "gold": "queue",
+          "predicted": "clarify",
+          "reason": "queue_cue_unknown_place",
+          "adversarial": true
+        },
+        {
+          "id": "g017",
+          "utterance": "scratch that, sidewalk",
+          "gold": "revise",
+          "predicted": "keep",
+          "reason": "not_a_navigation_command",
+          "adversarial": true
+        },
+        {
+          "id": "g028",
+          "utterance": "hold on, go to the planter",
+          "gold": "revise",
+          "predicted": "keep",
+          "reason": "not_a_navigation_command",
+          "adversarial": true
+        },
+        {
+          "id": "g032",
+          "utterance": "go there",
+          "gold": "clarify",
+          "predicted": "keep",
+          "reason": "not_a_navigation_command",
+          "adversarial": true
+        },
+        {
+          "id": "g043",
+          "utterance": "once you get there, head to the lamppost",
+          "gold": "queue",
+          "predicted": "keep",
+          "reason": "not_a_navigation_command",
+          "adversarial": false
+        },
+        {
+          "id": "g047",
+          "utterance": "once you get there, head to the sidewalk",
+          "gold": "queue",
+          "predicted": "keep",
+          "reason": "not_a_navigation_command",
+          "adversarial": false
+        },
+        {
+          "id": "g060",
+          "utterance": "next, the planter",
+          "gold": "queue",
+          "predicted": "keep",
+          "reason": "not_a_navigation_command",
+          "adversarial": true
+        },
+        {
+          "id": "g067",
+          "utterance": "go over there",
+          "gold": "clarify",
+          "predicted": "keep",
+          "reason": "not_a_navigation_command",
+          "adversarial": false
+        },
+        {
+          "id": "g071",
+          "utterance": "do the tree after",
+          "gold": "queue",
+          "predicted": "keep",
+          "reason": "not_a_navigation_command",
+          "adversarial": true
+        },
+        {
+          "id": "g075",
+          "utterance": "later, go to the bench",
+          "gold": "queue",
+          "predicted": "keep",
+          "reason": "not_a_navigation_command",
+          "adversarial": true
+        },
+        {
+          "id": "g079",
+          "utterance": "go back to the sofa and check if I left my keys",
+          "gold": "clarify",
+          "predicted": "keep",
+          "reason": "not_a_navigation_command",
+          "adversarial": false
+        },
+        {
+          "id": "g091",
+          "utterance": "forget the sidewalk, go to the bench",
+          "gold": "revise",
+          "predicted": "keep",
+          "reason": "not_a_navigation_command",
+          "adversarial": true
+        },
+        {
+          "id": "g094",
+          "utterance": "no, keep going",
+          "gold": "keep",
+          "predicted": "clarify",
+          "reason": "amend_cue_unknown_place",
+          "adversarial": true
+        },
+        {
+          "id": "g100",
+          "utterance": "no worries, continue",
+          "gold": "keep",
+          "predicted": "clarify",
+          "reason": "amend_cue_unknown_place",
+          "adversarial": true
+        },
+        {
+          "id": "g106",
+          "utterance": "when you reach it, come back",
+          "gold": "queue",
+          "predicted": "keep",
+          "reason": "not_a_navigation_command",
+          "adversarial": true
+        }
+      ]
+    },
+    "blind_adversarial": {
+      "n": 40,
+      "overall_accuracy": 0.675,
+      "overall_wilson95": {
+        "k": 27,
+        "n": 40,
+        "p": 0.675,
+        "lo": 0.5202,
+        "hi": 0.7992
+      },
+      "per_class": {
+        "revise": {
+          "n": 10,
+          "correct": 7,
+          "accuracy": 0.7,
+          "wilson95": {
+            "k": 7,
+            "n": 10,
+            "p": 0.7,
+            "lo": 0.3968,
+            "hi": 0.8922
+          }
+        },
+        "keep": {
+          "n": 10,
+          "correct": 8,
+          "accuracy": 0.8,
+          "wilson95": {
+            "k": 8,
+            "n": 10,
+            "p": 0.8,
+            "lo": 0.4902,
+            "hi": 0.9433
+          }
+        },
+        "queue": {
+          "n": 10,
+          "correct": 4,
+          "accuracy": 0.4,
+          "wilson95": {
+            "k": 4,
+            "n": 10,
+            "p": 0.4,
+            "lo": 0.1682,
+            "hi": 0.6873
+          }
+        },
+        "clarify": {
+          "n": 10,
+          "correct": 8,
+          "accuracy": 0.8,
+          "wilson95": {
+            "k": 8,
+            "n": 10,
+            "p": 0.8,
+            "lo": 0.4902,
+            "hi": 0.9433
+          }
+        }
+      },
+      "confusion": {
+        "revise": {
+          "revise": 7,
+          "keep": 3,
+          "queue": 0,
+          "clarify": 0
+        },
+        "keep": {
+          "revise": 0,
+          "keep": 8,
+          "queue": 0,
+          "clarify": 2
+        },
+        "queue": {
+          "revise": 0,
+          "keep": 5,
+          "queue": 4,
+          "clarify": 1
+        },
+        "clarify": {
+          "revise": 0,
+          "keep": 2,
+          "queue": 0,
+          "clarify": 8
+        }
+      },
+      "misses": [
+        {
+          "id": "g008",
+          "utterance": "after the lamppost, the bench",
+          "gold": "queue",
+          "predicted": "keep",
+          "reason": "not_a_navigation_command",
+          "adversarial": true
+        },
+        {
+          "id": "g009",
+          "utterance": "go back",
+          "gold": "clarify",
+          "predicted": "keep",
+          "reason": "not_a_navigation_command",
+          "adversarial": true
+        },
+        {
+          "id": "g013",
+          "utterance": "and after that come here",
+          "gold": "queue",
+          "predicted": "clarify",
+          "reason": "queue_cue_unknown_place",
+          "adversarial": true
+        },
+        {
+          "id": "g017",
+          "utterance": "scratch that, sidewalk",
+          "gold": "revise",
+          "predicted": "keep",
+          "reason": "not_a_navigation_command",
+          "adversarial": true
+        },
+        {
+          "id": "g028",
+          "utterance": "hold on, go to the planter",
+          "gold": "revise",
+          "predicted": "keep",
+          "reason": "not_a_navigation_command",
+          "adversarial": true
+        },
+        {
+          "id": "g032",
+          "utterance": "go there",
+          "gold": "clarify",
+          "predicted": "keep",
+          "reason": "not_a_navigation_command",
+          "adversarial": true
+        },
+        {
+          "id": "g060",
+          "utterance": "next, the planter",
+          "gold": "queue",
+          "predicted": "keep",
+          "reason": "not_a_navigation_command",
+          "adversarial": true
+        },
+        {
+          "id": "g071",
+          "utterance": "do the tree after",
+          "gold": "queue",
+          "predicted": "keep",
+          "reason": "not_a_navigation_command",
+          "adversarial": true
+        },
+        {
+          "id": "g075",
+          "utterance": "later, go to the bench",
+          "gold": "queue",
+          "predicted": "keep",
+          "reason": "not_a_navigation_command",
+          "adversarial": true
+        },
+        {
+          "id": "g091",
+          "utterance": "forget the sidewalk, go to the bench",
+          "gold": "revise",
+          "predicted": "keep",
+          "reason": "not_a_navigation_command",
+          "adversarial": true
+        },
+        {
+          "id": "g094",
+          "utterance": "no, keep going",
+          "gold": "keep",
+          "predicted": "clarify",
+          "reason": "amend_cue_unknown_place",
+          "adversarial": true
+        },
+        {
+          "id": "g100",
+          "utterance": "no worries, continue",
+          "gold": "keep",
+          "predicted": "clarify",
+          "reason": "amend_cue_unknown_place",
+          "adversarial": true
+        },
+        {
+          "id": "g106",
+          "utterance": "when you reach it, come back",
+          "gold": "queue",
+          "predicted": "keep",
+          "reason": "not_a_navigation_command",
+          "adversarial": true
+        }
+      ]
+    },
+    "blind_non_adversarial": {
+      "n": 70,
+      "overall_accuracy": 0.9143,
+      "overall_wilson95": {
+        "k": 64,
+        "n": 70,
+        "p": 0.9143,
+        "lo": 0.8253,
+        "hi": 0.9601
+      },
+      "per_class": {
+        "revise": {
+          "n": 20,
+          "correct": 20,
+          "accuracy": 1.0,
+          "wilson95": {
+            "k": 20,
+            "n": 20,
+            "p": 1.0,
+            "lo": 0.8389,
+            "hi": 1.0
+          }
+        },
+        "keep": {
+          "n": 20,
+          "correct": 20,
+          "accuracy": 1.0,
+          "wilson95": {
+            "k": 20,
+            "n": 20,
+            "p": 1.0,
+            "lo": 0.8389,
+            "hi": 1.0
+          }
+        },
+        "queue": {
+          "n": 20,
+          "correct": 16,
+          "accuracy": 0.8,
+          "wilson95": {
+            "k": 16,
+            "n": 20,
+            "p": 0.8,
+            "lo": 0.584,
+            "hi": 0.9193
+          }
+        },
+        "clarify": {
+          "n": 10,
+          "correct": 8,
+          "accuracy": 0.8,
+          "wilson95": {
+            "k": 8,
+            "n": 10,
+            "p": 0.8,
+            "lo": 0.4902,
+            "hi": 0.9433
+          }
+        }
+      },
+      "confusion": {
+        "revise": {
+          "revise": 20,
+          "keep": 0,
+          "queue": 0,
+          "clarify": 0
+        },
+        "keep": {
+          "revise": 0,
+          "keep": 20,
+          "queue": 0,
+          "clarify": 0
+        },
+        "queue": {
+          "revise": 0,
+          "keep": 4,
+          "queue": 16,
+          "clarify": 0
+        },
+        "clarify": {
+          "revise": 0,
+          "keep": 2,
+          "queue": 0,
+          "clarify": 8
+        }
+      },
+      "misses": [
+        {
+          "id": "g002",
+          "utterance": "once you get there, head to the bench",
+          "gold": "queue",
+          "predicted": "keep",
+          "reason": "not_a_navigation_command",
+          "adversarial": false
+        },
+        {
+          "id": "g003",
+          "utterance": "once you get there, head to the tree",
+          "gold": "queue",
+          "predicted": "keep",
+          "reason": "not_a_navigation_command",
+          "adversarial": false
+        },
+        {
+          "id": "g043",
+          "utterance": "once you get there, head to the lamppost",
+          "gold": "queue",
+          "predicted": "keep",
+          "reason": "not_a_navigation_command",
+          "adversarial": false
+        },
+        {
+          "id": "g047",
+          "utterance": "once you get there, head to the sidewalk",
+          "gold": "queue",
+          "predicted": "keep",
+          "reason": "not_a_navigation_command",
+          "adversarial": false
+        },
+        {
+          "id": "g067",
+          "utterance": "go over there",
+          "gold": "clarify",
+          "predicted": "keep",
+          "reason": "not_a_navigation_command",
+          "adversarial": false
+        },
+        {
+          "id": "g079",
+          "utterance": "go back to the sofa and check if I left my keys",
+          "gold": "clarify",
+          "predicted": "keep",
+          "reason": "not_a_navigation_command",
+          "adversarial": false
+        }
+      ]
+    },
+    "blind_v2_post_hoc": {
+      "n": 110,
+      "overall_accuracy": 0.9727,
+      "overall_wilson95": {
+        "k": 107,
+        "n": 110,
+        "p": 0.9727,
+        "lo": 0.9229,
+        "hi": 0.9907
+      },
+      "per_class": {
+        "revise": {
+          "n": 30,
+          "correct": 30,
+          "accuracy": 1.0,
+          "wilson95": {
+            "k": 30,
+            "n": 30,
+            "p": 1.0,
+            "lo": 0.8865,
+            "hi": 1.0
+          }
+        },
+        "keep": {
+          "n": 30,
+          "correct": 28,
+          "accuracy": 0.9333,
+          "wilson95": {
+            "k": 28,
+            "n": 30,
+            "p": 0.9333,
+            "lo": 0.7868,
+            "hi": 0.9815
+          }
+        },
+        "queue": {
+          "n": 30,
+          "correct": 29,
+          "accuracy": 0.9667,
+          "wilson95": {
+            "k": 29,
+            "n": 30,
+            "p": 0.9667,
+            "lo": 0.8333,
+            "hi": 0.9941
+          }
+        },
+        "clarify": {
+          "n": 20,
+          "correct": 20,
+          "accuracy": 1.0,
+          "wilson95": {
+            "k": 20,
+            "n": 20,
+            "p": 1.0,
+            "lo": 0.8389,
+            "hi": 1.0
+          }
+        }
+      },
+      "confusion": {
+        "revise": {
+          "revise": 30,
+          "keep": 0,
+          "queue": 0,
+          "clarify": 0
+        },
+        "keep": {
+          "revise": 0,
+          "keep": 28,
+          "queue": 0,
+          "clarify": 2
+        },
+        "queue": {
+          "revise": 0,
+          "keep": 0,
+          "queue": 29,
+          "clarify": 1
+        },
+        "clarify": {
+          "revise": 0,
+          "keep": 0,
+          "queue": 0,
+          "clarify": 20
+        }
+      },
+      "misses": [
+        {
+          "id": "g013",
+          "utterance": "and after that come here",
+          "gold": "queue",
+          "predicted": "clarify",
+          "reason": "queue_cue_unresolvable_target",
+          "adversarial": true
+        },
+        {
+          "id": "g021",
+          "utterance": "go on",
+          "gold": "keep",
+          "predicted": "clarify",
+          "reason": "motion_directive_without_a_place",
+          "adversarial": true
+        },
+        {
+          "id": "g040",
+          "utterance": "go go go",
+          "gold": "keep",
+          "predicted": "clarify",
+          "reason": "motion_directive_without_a_place",
+          "adversarial": true
+        }
+      ],
+      "caveat": "POST-HOC: classify_v2 was written AFTER this set was opened. It is not a blind measurement and the H-NI1c criterion is not read on it."
+    },
+    "blind_v2_post_hoc_adversarial": {
+      "n": 40,
+      "overall_accuracy": 0.925,
+      "overall_wilson95": {
+        "k": 37,
+        "n": 40,
+        "p": 0.925,
+        "lo": 0.8014,
+        "hi": 0.9742
+      },
+      "per_class": {
+        "revise": {
+          "n": 10,
+          "correct": 10,
+          "accuracy": 1.0,
+          "wilson95": {
+            "k": 10,
+            "n": 10,
+            "p": 1.0,
+            "lo": 0.7225,
+            "hi": 1.0
+          }
+        },
+        "keep": {
+          "n": 10,
+          "correct": 8,
+          "accuracy": 0.8,
+          "wilson95": {
+            "k": 8,
+            "n": 10,
+            "p": 0.8,
+            "lo": 0.4902,
+            "hi": 0.9433
+          }
+        },
+        "queue": {
+          "n": 10,
+          "correct": 9,
+          "accuracy": 0.9,
+          "wilson95": {
+            "k": 9,
+            "n": 10,
+            "p": 0.9,
+            "lo": 0.5958,
+            "hi": 0.9821
+          }
+        },
+        "clarify": {
+          "n": 10,
+          "correct": 10,
+          "accuracy": 1.0,
+          "wilson95": {
+            "k": 10,
+            "n": 10,
+            "p": 1.0,
+            "lo": 0.7225,
+            "hi": 1.0
+          }
+        }
+      },
+      "confusion": {
+        "revise": {
+          "revise": 10,
+          "keep": 0,
+          "queue": 0,
+          "clarify": 0
+        },
+        "keep": {
+          "revise": 0,
+          "keep": 8,
+          "queue": 0,
+          "clarify": 2
+        },
+        "queue": {
+          "revise": 0,
+          "keep": 0,
+          "queue": 9,
+          "clarify": 1
+        },
+        "clarify": {
+          "revise": 0,
+          "keep": 0,
+          "queue": 0,
+          "clarify": 10
+        }
+      },
+      "misses": [
+        {
+          "id": "g013",
+          "utterance": "and after that come here",
+          "gold": "queue",
+          "predicted": "clarify",
+          "reason": "queue_cue_unresolvable_target",
+          "adversarial": true
+        },
+        {
+          "id": "g021",
+          "utterance": "go on",
+          "gold": "keep",
+          "predicted": "clarify",
+          "reason": "motion_directive_without_a_place",
+          "adversarial": true
+        },
+        {
+          "id": "g040",
+          "utterance": "go go go",
+          "gold": "keep",
+          "predicted": "clarify",
+          "reason": "motion_directive_without_a_place",
+          "adversarial": true
+        }
+      ]
+    },
+    "dev_set_note": "gold.json is the executor's own DEV set, authored before the blind set existed; it is reported for transparency and no bar reads on it",
+    "dev_pre_registered": {
+      "n": 60,
+      "overall_accuracy": 1.0,
+      "overall_wilson95": {
+        "k": 60,
+        "n": 60,
+        "p": 1.0,
+        "lo": 0.9398,
+        "hi": 1.0
+      },
+      "per_class": {
+        "revise": {
+          "n": 20,
+          "correct": 20,
+          "accuracy": 1.0,
+          "wilson95": {
+            "k": 20,
+            "n": 20,
+            "p": 1.0,
+            "lo": 0.8389,
+            "hi": 1.0
+          }
+        },
+        "keep": {
+          "n": 20,
+          "correct": 20,
+          "accuracy": 1.0,
+          "wilson95": {
+            "k": 20,
+            "n": 20,
+            "p": 1.0,
+            "lo": 0.8389,
+            "hi": 1.0
+          }
+        },
+        "queue": {
+          "n": 20,
+          "correct": 20,
+          "accuracy": 1.0,
+          "wilson95": {
+            "k": 20,
+            "n": 20,
+            "p": 1.0,
+            "lo": 0.8389,
+            "hi": 1.0
+          }
+        }
+      },
+      "confusion": {
+        "revise": {
+          "revise": 20,
+          "keep": 0,
+          "queue": 0,
+          "clarify": 0
+        },
+        "keep": {
+          "revise": 0,
+          "keep": 20,
+          "queue": 0,
+          "clarify": 0
+        },
+        "queue": {
+          "revise": 0,
+          "keep": 0,
+          "queue": 20,
+          "clarify": 0
+        }
+      },
+      "misses": []
+    },
+    "dev_pre_registered_progress_ablation": {
+      "n": 60,
+      "overall_accuracy": 1.0,
+      "overall_wilson95": {
+        "k": 60,
+        "n": 60,
+        "p": 1.0,
+        "lo": 0.9398,
+        "hi": 1.0
+      },
+      "per_class": {
+        "revise": {
+          "n": 20,
+          "correct": 20,
+          "accuracy": 1.0,
+          "wilson95": {
+            "k": 20,
+            "n": 20,
+            "p": 1.0,
+            "lo": 0.8389,
+            "hi": 1.0
+          }
+        },
+        "keep": {
+          "n": 20,
+          "correct": 20,
+          "accuracy": 1.0,
+          "wilson95": {
+            "k": 20,
+            "n": 20,
+            "p": 1.0,
+            "lo": 0.8389,
+            "hi": 1.0
+          }
+        },
+        "queue": {
+          "n": 20,
+          "correct": 20,
+          "accuracy": 1.0,
+          "wilson95": {
+            "k": 20,
+            "n": 20,
+            "p": 1.0,
+            "lo": 0.8389,
+            "hi": 1.0
+          }
+        }
+      },
+      "confusion": {
+        "revise": {
+          "revise": 20,
+          "keep": 0,
+          "queue": 0,
+          "clarify": 0
+        },
+        "keep": {
+          "revise": 0,
+          "keep": 20,
+          "queue": 0,
+          "clarify": 0
+        },
+        "queue": {
+          "revise": 0,
+          "keep": 0,
+          "queue": 20,
+          "clarify": 0
+        }
+      },
+      "misses": []
+    },
+    "dev_supplementary_clarify": {
+      "n": 20,
+      "overall_accuracy": 1.0,
+      "overall_wilson95": {
+        "k": 20,
+        "n": 20,
+        "p": 1.0,
+        "lo": 0.8389,
+        "hi": 1.0
+      },
+      "per_class": {
+        "clarify": {
+          "n": 20,
+          "correct": 20,
+          "accuracy": 1.0,
+          "wilson95": {
+            "k": 20,
+            "n": 20,
+            "p": 1.0,
+            "lo": 0.8389,
+            "hi": 1.0
+          }
+        }
+      },
+      "confusion": {
+        "clarify": {
+          "revise": 0,
+          "keep": 0,
+          "queue": 0,
+          "clarify": 20
+        }
+      },
+      "misses": []
+    },
+    "dev_supplementary_context": {
+      "n": 10,
+      "overall_accuracy": 1.0,
+      "overall_wilson95": {
+        "k": 10,
+        "n": 10,
+        "p": 1.0,
+        "lo": 0.7225,
+        "hi": 1.0
+      },
+      "per_class": {
+        "revise": {
+          "n": 3,
+          "correct": 3,
+          "accuracy": 1.0,
+          "wilson95": {
+            "k": 3,
+            "n": 3,
+            "p": 1.0,
+            "lo": 0.4385,
+            "hi": 1.0
+          }
+        },
+        "keep": {
+          "n": 3,
+          "correct": 3,
+          "accuracy": 1.0,
+          "wilson95": {
+            "k": 3,
+            "n": 3,
+            "p": 1.0,
+            "lo": 0.4385,
+            "hi": 1.0
+          }
+        },
+        "queue": {
+          "n": 4,
+          "correct": 4,
+          "accuracy": 1.0,
+          "wilson95": {
+            "k": 4,
+            "n": 4,
+            "p": 1.0,
+            "lo": 0.5101,
+            "hi": 1.0
+          }
+        }
+      },
+      "confusion": {
+        "revise": {
+          "revise": 3,
+          "keep": 0,
+          "queue": 0,
+          "clarify": 0
+        },
+        "keep": {
+          "revise": 0,
+          "keep": 3,
+          "queue": 0,
+          "clarify": 0
+        },
+        "queue": {
+          "revise": 0,
+          "keep": 0,
+          "queue": 4,
+          "clarify": 0
+        }
+      },
+      "misses": []
+    },
+    "dev_supplementary_context_progress_ablation": {
+      "n": 10,
+      "overall_accuracy": 0.7,
+      "overall_wilson95": {
+        "k": 7,
+        "n": 10,
+        "p": 0.7,
+        "lo": 0.3968,
+        "hi": 0.8922
+      },
+      "per_class": {
+        "revise": {
+          "n": 3,
+          "correct": 3,
+          "accuracy": 1.0,
+          "wilson95": {
+            "k": 3,
+            "n": 3,
+            "p": 1.0,
+            "lo": 0.4385,
+            "hi": 1.0
+          }
+        },
+        "keep": {
+          "n": 3,
+          "correct": 3,
+          "accuracy": 1.0,
+          "wilson95": {
+            "k": 3,
+            "n": 3,
+            "p": 1.0,
+            "lo": 0.4385,
+            "hi": 1.0
+          }
+        },
+        "queue": {
+          "n": 4,
+          "correct": 1,
+          "accuracy": 0.25,
+          "wilson95": {
+            "k": 1,
+            "n": 4,
+            "p": 0.25,
+            "lo": 0.0456,
+            "hi": 0.6994
+          }
+        }
+      },
+      "confusion": {
+        "revise": {
+          "revise": 3,
+          "keep": 0,
+          "queue": 0,
+          "clarify": 0
+        },
+        "keep": {
+          "revise": 0,
+          "keep": 3,
+          "queue": 0,
+          "clarify": 0
+        },
+        "queue": {
+          "revise": 3,
+          "keep": 0,
+          "queue": 1,
+          "clarify": 0
+        }
+      },
+      "misses": [
+        {
+          "id": null,
+          "utterance": "go to the bench",
+          "gold": "queue",
+          "predicted": "revise",
+          "reason": "bare_new_goal",
+          "adversarial": false
+        },
+        {
+          "id": null,
+          "utterance": "go to the lamppost",
+          "gold": "queue",
+          "predicted": "revise",
+          "reason": "bare_new_goal",
+          "adversarial": false
+        },
+        {
+          "id": null,
+          "utterance": "head to the sidewalk",
+          "gold": "queue",
+          "predicted": "revise",
+          "reason": "bare_new_goal",
+          "adversarial": false
+        }
+      ]
+    }
+  },
+  "orphan_check": {
+    "pattern": "parcel_robot\\.sim --socket .*ni1",
+    "launched_by_this_process": [],
+    "survivors_ours": [],
+    "survivors_other_processes": [],
+    "clean": true
+  }
+}

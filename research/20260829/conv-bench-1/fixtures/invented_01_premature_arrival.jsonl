@@ -1,0 +1,4 @@
+{"scenario_id": "cv1c-premature", "arm": "D", "turn_index": 0, "role": "owner", "text": "Head to the door and tell me when you get there.", "events_so_far": []}
+{"scenario_id": "cv1c-premature", "arm": "D", "turn_index": 1, "role": "robot", "text": "On my way.", "events_so_far": [{"kind": "nav_started", "t": 0.3, "goal": "door"}]}
+{"scenario_id": "cv1c-premature", "arm": "D", "turn_index": 2, "role": "owner", "text": "Well?", "events_so_far": [{"kind": "nav_progress", "t": 2.0}]}
+{"scenario_id": "cv1c-premature", "arm": "D", "turn_index": 3, "role": "robot", "text": "We're at the door.", "events_so_far": [{"kind": "nav_started", "t": 0.3}, {"kind": "nav_progress", "t": 2.0}]}

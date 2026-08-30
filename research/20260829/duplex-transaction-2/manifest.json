@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "suite_id": "parcel-duplex-transaction-v2",
+  "seed": 20260829,
+  "trials_per_seam": 256,
+  "seams": {
+    "executive": [
+      "valid_succeeded",
+      "wrong_task",
+      "wrong_revision",
+      "wrong_step",
+      "wrong_attempt",
+      "not_running",
+      "unverified_success",
+      "post_terminal"
+    ],
+    "receipt": [
+      "valid_succeeded",
+      "raw_untrusted",
+      "wrong_channel",
+      "wrong_action",
+      "premature_terminal",
+      "duplicate",
+      "sequence_regression",
+      "timestamp_regression",
+      "future",
+      "expired",
+      "post_terminal"
+    ],
+    "claim": [
+      "valid_terminal",
+      "start_receipt",
+      "wrong_channel",
+      "wrong_receipt_id",
+      "wrong_mission",
+      "wrong_action",
+      "wrong_name",
+      "wrong_manifest",
+      "wrong_status",
+      "unretained",
+      "future_proposal",
+      "stale_proposal",
+      "expired_receipt",
+      "unrelated_receipt"
+    ]
+  },
+  "normalization": {
+    "excluded_result_fields": ["started_utc", "duration_s", "result_sha256"]
+  }
+}

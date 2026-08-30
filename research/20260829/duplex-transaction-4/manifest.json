@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "experiment_id": "dmc4-authoritative-executive-journal",
+  "seed": 20260829,
+  "source_epoch": 44,
+  "speech_generation": 5,
+  "event_ttl_ns": 5000000000,
+  "cases_per_family": 64,
+  "parent_child_cases": 64,
+  "corruption_cases": 256,
+  "producer_threads": 32,
+  "normal_journal_capacity": 4096,
+  "overflow_journal_capacity": 8,
+  "transition_families": [
+    "submission",
+    "replacement",
+    "tick",
+    "report",
+    "dispatch_failure",
+    "interruption",
+    "explicit_lifecycle"
+  ],
+  "corruptions": [
+    "skipped_cursor",
+    "overwritten_cursor",
+    "narrative_queue_overflow",
+    "duplicate_event",
+    "reordered_event",
+    "stale_epoch",
+    "stale_speech_generation",
+    "expired_event",
+    "future_event",
+    "tag_corruption",
+    "task_mutation",
+    "revision_mutation",
+    "step_mutation",
+    "attempt_mutation",
+    "plan_mutation",
+    "action_mutation",
+    "fact_mutation",
+    "evidence_mutation",
+    "post_terminal_transition",
+    "event_sequence_gap"
+  ],
+  "not_constructible": [
+    {
+      "outcome": "tick_empty_all_steps_completion",
+      "reason": "PlanIR requires at least one step and report commits final success terminally",
+      "code_pointers": [
+        "src/parcel_robot/brain/contracts.py:PlanIR.__post_init__",
+        "src/parcel_robot/brain/executive.py:TaskExecutive.report",
+        "src/parcel_robot/brain/executive.py:TaskExecutive.tick"
+      ]
+    }
+  ],
+  "physical_authority": false,
+  "provider_calls_allowed": false
+}

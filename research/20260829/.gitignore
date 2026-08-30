@@ -1,0 +1,19 @@
+# Bulk research artifacts kept out of git (E3: every excluded file is pinned by
+# sha256 + byte size in EXCLUDED_ARTIFACTS.sha256, committed beside this file).
+# Nothing a gate or test reads is listed here (tests read duplex-transaction-4/*.py).
+model-a-stream-2/**/*.zst
+duplex-transaction-2/results-run1.json
+duplex-transaction-2/results-run2.json
+dynamic-social-progress-2/evidence/pass-1.json
+dynamic-social-progress-2/evidence/pass-2.json
+latency-handoff-1/run_a.json
+latency-handoff-1/run_b.json
+latency-handoff-1/run_c.json
+latency-handoff-1/run_d.json
+duplex-transaction-3/run_amendment1_a.json
+duplex-transaction-3/run_amendment1_b.json
+duplex-transaction-3/run_a.json
+duplex-transaction-3/run_b.json
+duplex-mission-control-1/results-run1.json
+duplex-mission-control-1/results-run2.json
+duplex-mission-control-1/results.json

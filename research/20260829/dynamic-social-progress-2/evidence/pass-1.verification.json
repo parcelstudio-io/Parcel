@@ -1,0 +1,17 @@
+{
+  "checks": {
+    "error_count": 0,
+    "independent_policy_import": false
+  },
+  "errors": [],
+  "result": "research/20260829/dynamic-social-progress-2/evidence/pass-1.json",
+  "status": "PASS",
+  "tamper_self_test": {
+    "all_rejected": true,
+    "tamper_rejected": {
+      "action": true,
+      "actor_trajectory": true,
+      "semantic_phase": true
+    }
+  }
+}

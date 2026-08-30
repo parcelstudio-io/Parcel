@@ -1,0 +1,352 @@
+{
+  "actions": [
+    "north",
+    "south",
+    "east",
+    "west",
+    "hold",
+    "replan",
+    "orient",
+    "idle_expression"
+  ],
+  "counts": {
+    "dev": 8000,
+    "test": 20000,
+    "train": 80000
+  },
+  "features": [
+    "has_task",
+    "stop_latched",
+    "sensors_fresh",
+    "edge_state",
+    "route_invalid",
+    "sound_active",
+    "sound_allowed",
+    "at_goal",
+    "plan_north",
+    "plan_south",
+    "plan_east",
+    "plan_west",
+    "critical_zone",
+    "command_changed",
+    "blocked_reported"
+  ],
+  "history_gru": {
+    "fit": {
+      "best_dev_macro_f1": 1.0,
+      "loss_by_epoch": [
+        0.5003507462412119,
+        0.00660476468577981,
+        0.001553621437959373,
+        0.0006008502217009664,
+        0.00030769949909299613,
+        0.0001963946103816852
+      ]
+    },
+    "held_out": {
+      "accuracy": 0.99995,
+      "confusion": [
+        [
+          2500,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          2500,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          2500,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          2499,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          2500,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2500,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2500,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2500
+        ]
+      ],
+      "macro_f1": 0.999949999998,
+      "per_class": {
+        "east": {
+          "f1": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "support": 2500
+        },
+        "hold": {
+          "f1": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "support": 2500
+        },
+        "idle_expression": {
+          "f1": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "support": 2500
+        },
+        "north": {
+          "f1": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "support": 2500
+        },
+        "orient": {
+          "f1": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "support": 2500
+        },
+        "replan": {
+          "f1": 0.9998000399920016,
+          "precision": 0.9996001599360256,
+          "recall": 1.0,
+          "support": 2500
+        },
+        "south": {
+          "f1": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "support": 2500
+        },
+        "west": {
+          "f1": 0.9997999599919984,
+          "precision": 1.0,
+          "recall": 0.9996,
+          "support": 2500
+        }
+      }
+    },
+    "latency_cpu_single_thread": {
+      "max_ms": 0.212622,
+      "p50_ms": 0.14552,
+      "p95_ms": 0.16179454999999998,
+      "p99_ms": 0.1634582,
+      "samples": 2000
+    },
+    "parameters": 20232
+  },
+  "macro_f1_delta_history_minus_snapshot": 0.018861356301588694,
+  "schema": "parcel.dmc1.local-policy-training.v1",
+  "seed": 8292026,
+  "snapshot_mlp": {
+    "fit": {
+      "best_dev_macro_f1": 0.9793266898129357,
+      "loss_by_epoch": [
+        0.5257404661893844,
+        0.07694776306152344,
+        0.07472246248722077,
+        0.07435973848700524,
+        0.07343688778877258,
+        0.07365117987245322
+      ]
+    },
+    "held_out": {
+      "accuracy": 0.98165,
+      "confusion": [
+        [
+          2500,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          2500,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          2500,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          2500,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          93,
+          89,
+          90,
+          95,
+          2133,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2500,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2500,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2500
+        ]
+      ],
+      "macro_f1": 0.9810886436964114,
+      "per_class": {
+        "east": {
+          "f1": 0.9823182711198428,
+          "precision": 0.9652509652509652,
+          "recall": 1.0,
+          "support": 2500
+        },
+        "hold": {
+          "f1": 0.9207856680336715,
+          "precision": 1.0,
+          "recall": 0.8532,
+          "support": 2500
+        },
+        "idle_expression": {
+          "f1": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "support": 2500
+        },
+        "north": {
+          "f1": 0.98173964264677,
+          "precision": 0.9641342074816814,
+          "recall": 1.0,
+          "support": 2500
+        },
+        "orient": {
+          "f1": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "support": 2500
+        },
+        "replan": {
+          "f1": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "support": 2500
+        },
+        "south": {
+          "f1": 0.9825112988799372,
+          "precision": 0.9656237929702588,
+          "recall": 1.0,
+          "support": 2500
+        },
+        "west": {
+          "f1": 0.9813542688910697,
+          "precision": 0.9633911368015414,
+          "recall": 1.0,
+          "support": 2500
+        }
+      }
+    },
+    "latency_cpu_single_thread": {
+      "max_ms": 0.040281,
+      "p50_ms": 0.015594,
+      "p95_ms": 0.015824,
+      "p99_ms": 0.026027019999999984,
+      "samples": 2000
+    },
+    "parameters": 5704
+  },
+  "window_frames": 16
+}

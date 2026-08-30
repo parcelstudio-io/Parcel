@@ -1,0 +1,41 @@
+{
+  "captured_at_utc": "2026-08-29T22:44:32.517812+00:00",
+  "check": {
+    "returncode": 1,
+    "stderr_file": "warp-remediation-check.stderr.txt",
+    "stdout_file": "warp-remediation-check.stdout.txt",
+    "wall_seconds": 1.5564007179345936
+  },
+  "experiment": "MJLAB-1",
+  "interpretation": "This third environment-only pin records another open-ended dependency drift. It does not retroactively support the clean-install gate.",
+  "phase": "warp_api_compatibility_remediation",
+  "remediated_import_supported": false,
+  "remediation": {
+    "argv": [
+      "/home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/bin/python",
+      "-m",
+      "pip",
+      "install",
+      "--only-binary=:all:",
+      "warp-lang==1.12.0"
+    ],
+    "installed_version": "1.12.0",
+    "rationale": "Use mjlab 1.2.0's exact supported lower bound, warp-lang 1.12.0, because its Simulation implementation directly accesses wp.context.",
+    "returncode": 0,
+    "stderr_file": "warp-remediation-pip.stderr.txt",
+    "stdout_file": "warp-remediation-pip.stdout.txt",
+    "wall_seconds": 5.747372549958527
+  },
+  "schema_version": 1,
+  "source_commit": "1425b15f73bd4095f0df53709d7c389c3eb9e790",
+  "source_patched": false,
+  "source_status_porcelain": "",
+  "trigger": {
+    "error": "AttributeError: module 'warp' has no attribute 'context'",
+    "mjlab_requirement": "warp-lang>=1.12.0",
+    "mujoco_warp_requirement": "warp-lang>=1.11.0",
+    "prior_log": "physics-run-1.log",
+    "prior_log_sha256": "f496bb9e74e524cc2c3d3cf1384c87aec92a630aae6441db9bc3e874124965bc",
+    "resolver_selected_warp": "1.16.0"
+  }
+}

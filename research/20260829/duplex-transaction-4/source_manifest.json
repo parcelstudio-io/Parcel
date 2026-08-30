@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "experiment_id": "dmc4-authoritative-executive-journal",
+  "frozen_at": "2026-08-29T00:00:00Z",
+  "status": "FROZEN_BEFORE_EVIDENCE",
+  "files": {
+    "research/20260829/duplex-transaction-4/DESIGN.md": "0012cabe16479f0220f431debc1943cf27b36acb0f1ff85fc3b0f716165b5c73",
+    "research/20260829/duplex-transaction-4/manifest.json": "3e53054ce4ddc6d0056c9e6c0eb11e44ada3bc63e11a7a773b26275b99cf48c3",
+    "research/20260829/duplex-transaction-4/run.py": "55b08d48189089d5112ec3181767244983b205e3878de3abaf26109e09363e99",
+    "research/20260829/duplex-transaction-4/tamper_check.py": "3d19b9468a6447092be0bcacc857da27c13e9f899af158e07e1eb340729f3be9",
+    "research/20260829/duplex-transaction-4/verify_results.py": "13adf556121a8db0446a6efbea2df354eb4d4f1350d120f37d70ae046b123864",
+    "src/parcel_robot/brain/contracts.py": "fdab89f35df041ff07933cdbee4e091ca5bccffddf1fa88364c70a807b116d13",
+    "src/parcel_robot/brain/execution_narrative_bridge.py": "a346ad3eabb85d00811cf0b2fbe99d51c5d74de37e92aa45d98863d2bc5070e9",
+    "src/parcel_robot/brain/executive.py": "230ae4712222f8760d2b91d19cdeb8a66fe73610800db3edbbbdebb1509e8687",
+    "src/parcel_robot/brain/validator.py": "ecd02dc00f2f8b9df2b8c9f8722bc2ca063473211f18807ba6a6bdf9ae40d105",
+    "src/parcel_robot/contracts/execution_narrative_v1.py": "3108b68888f60729752ddbd2394726b7fb07b68324680861b59a07aacb33cbe2",
+    "src/parcel_robot/revision.py": "49492956321d103979c7ed9988c2458e6ddf2d417c2351f1864b8500280ec13a",
+    "src/parcel_robot/voice/execution_narrative.py": "53d09616185e8c1d933fa19ee85a9040f811b4530a0adbf6fad585d611b50bea",
+    "tests/test_duplex_transaction_v4.py": "3edd8be4e00bd0f958b9b63946387493d2a35e649385644af6c1812cb9fac5e5",
+    "tests/test_execution_narrative_bridge.py": "bf8db6763972a045a192b9f6c9c9fe8b222b0c271acc011aecab28a0725b707d"
+  }
+}

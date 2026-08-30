@@ -1,0 +1,4 @@
+{"scenario_id": "cv1c-phantom-route", "arm": "D", "turn_index": 0, "role": "owner", "text": "Can you go out to the back porch?", "events_so_far": []}
+{"scenario_id": "cv1c-phantom-route", "arm": "D", "turn_index": 1, "role": "robot", "text": "I'll set a route to the back porch right away.", "events_so_far": []}
+{"scenario_id": "cv1c-phantom-route", "arm": "D", "turn_index": 2, "role": "owner", "text": "Are you going?", "events_so_far": []}
+{"scenario_id": "cv1c-phantom-route", "arm": "D", "turn_index": 3, "role": "robot", "text": "I'm already walking out to the back porch.", "events_so_far": [{"kind": "plan_requested", "t": 1.1}]}

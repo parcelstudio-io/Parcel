@@ -1,0 +1,56 @@
+NAV-INT-1 — sample episode (desktop-sim, MuJoCo static city, live runtime)
+episode      : ni1-00-bench-come_here
+goal 1       : 'go to the bench'
+goal 2       : 'after that, go to the owner'  (family queue_after_that, class queue)
+trigger      : {'kind': 'fraction', 'fraction': 0.25, 'time_s': 45.0} -> fired fraction at progress 0.258 (1.017 m of 3.94 m), t=16.6 s, pose [-0.318, 0.966]
+steering     : queue (queue_cue_with_goal)
+
+admission (label: admission-at-any-poll — amendment N2)
+  admitted            : None
+  receipt kind        : None
+  latency             : None ms (in-band handle_text None ms)
+  closed_intent       : None
+  goal_amend_ok       : None
+  goal_amend_replan   : None
+  goal_amend_committed: None
+  held pre-runtime    : True
+  reply               : None
+
+leg after the interruption -- goal_1_uninterrupted (goal bench; differential arrival authority, copied from the e2e)
+  states              : ['failed']
+  system_arrival      : False
+  scorer_arrival      : True
+  authority_category  : authority_disagreement
+  DTG                 : 0.0 m
+  SPL                 : 0.0
+  final pose          : [-0.677, 2.276]
+
+switch window
+  span                : 14.6 .. 26.6 s
+  sim collision flags : 0
+  collision (clearance<=0): False
+  false arrival       : {'claimed': False, 'false_arrival': False}
+  min clearance       : 0.8644874544182315 m (596 samples in window)
+
+plan-queue policy (amendment N1: RE-ISSUE, never a resume)
+  {'action': 'start_goal', 'goal_key': 'bench', 'text': 'go to the bench', 't': 5.001}
+  {'action': 'hold_pre_runtime', 'classifier_label': 'queue', 'classifier_reason': 'queue_cue_with_goal', 'queued': 'come_here', 'spoken': 'after that, go to the owner', 'will_issue': 'go to the owner', 't': 16.6}
+  {'action': 'reissue', 'goal_key': 'come_here', 'text': 'go to the owner', 'spoken': 'after that, go to the owner', 'origin': 'held_pre_runtime', 'terminal_state': 'failed', 't': 43.87}
+  re-issued           : 'go to the owner'
+  states              : ['succeeded']
+  system/scorer       : True/True
+  DTG                 : 0.227 m
+  final pose          : [3.185, 0.404]
+
+total path (all legs) : 6.708 m (oracle 1.017 m, ratio 6.5969)
+collisions (whole ep) : 0 (min clearance 0.825901735642318 m)
+wall clock            : 71.2 s
+
+RECEIPT TIMELINE (sampler-observed executive transitions, 50 Hz poll)
+   t (s)  task                         rev        from -> to         skill / detail
+    5.09  parcel-task-0f7f3844d501f2bc   1        None -> queued     NavigateTo :: accepted
+    5.17  parcel-task-0f7f3844d501f2bc   1      queued -> running    NavigateTo :: dispatched
+   43.82  parcel-task-0f7f3844d501f2bc   1     running -> failed     NavigateTo :: semantic_arrival_verification_failed
+   43.88  parcel-task-4c7a45eebf67fb1d   1        None -> queued     FollowFormation :: accepted
+   43.92  parcel-task-4c7a45eebf67fb1d   1      queued -> running    FollowFormation :: dispatched
+   44.02  parcel-task-4c7a45eebf67fb1d   1     running -> succeeded  None :: owner_follow_verified

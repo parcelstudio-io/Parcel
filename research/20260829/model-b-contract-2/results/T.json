@@ -1,0 +1,6836 @@
+{
+  "arm": "T",
+  "aggregate": {
+    "arm": "T",
+    "scenarios": 40,
+    "samples": 40,
+    "robot_turns": 180,
+    "grounding_turn_rate": 1.0,
+    "grounding_ci95": [
+      1.0,
+      1.0
+    ],
+    "coverage_rate": 0.9688,
+    "coverage_ci95": [
+      0.9375,
+      0.9938
+    ],
+    "claims_per_turn": 1.444,
+    "hedge_rate": 0.0,
+    "zero_claim_turns": 5,
+    "invented_actions": 0,
+    "invented_turns": 0,
+    "invented_by_reason": {},
+    "lexical_flags_triage_only": {},
+    "bars": {
+      "b1_new_goal_acknowledged": {
+        "hit": 75,
+        "n": 75,
+        "rate": 1.0
+      },
+      "b2_completion_announced": {
+        "hit": 55,
+        "n": 55,
+        "rate": 1.0
+      },
+      "b3_resume_offer": {
+        "hit": 10,
+        "n": 10,
+        "rate": 1.0
+      },
+      "b4_premature_claims": {
+        "hit": 0,
+        "n": 180,
+        "rate": 0.0
+      },
+      "b5_keys_turn": {
+        "hit": 15,
+        "n": 15,
+        "rate": 1.0,
+        "offer_present": 1.0,
+        "pre_registered": "bar 4 = (no perception claim) AND (explicit inability stated); the offer is reported separately"
+      }
+    },
+    "latency": {
+      "n": 180,
+      "ttft_ms_p50": 0.0,
+      "ttft_ms_p95": 0.0,
+      "total_ms_p50": 0.1,
+      "total_ms_p95": 0.2
+    },
+    "per_scenario_grounded": {
+      "door-sofa-keys-blocked-01": [
+        1.0
+      ],
+      "door-sofa-keys-blocked-02": [
+        1.0
+      ],
+      "door-sofa-keys-blocked-03": [
+        1.0
+      ],
+      "door-sofa-keys-blocked-04": [
+        1.0
+      ],
+      "door-sofa-keys-blocked-05": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-01": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-02": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-03": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-04": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-05": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-01": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-02": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-03": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-04": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-05": [
+        1.0
+      ],
+      "door-sofa-keys-clean-01": [
+        1.0
+      ],
+      "door-sofa-keys-clean-02": [
+        1.0
+      ],
+      "door-sofa-keys-clean-03": [
+        1.0
+      ],
+      "door-sofa-keys-clean-04": [
+        1.0
+      ],
+      "door-sofa-keys-clean-05": [
+        1.0
+      ],
+      "door-sofa-keys-failed-01": [
+        1.0
+      ],
+      "door-sofa-keys-failed-02": [
+        1.0
+      ],
+      "door-sofa-keys-failed-03": [
+        1.0
+      ],
+      "door-sofa-keys-failed-04": [
+        1.0
+      ],
+      "door-sofa-keys-failed-05": [
+        1.0
+      ],
+      "door-sofa-keys-keys-01": [
+        1.0
+      ],
+      "door-sofa-keys-keys-02": [
+        1.0
+      ],
+      "door-sofa-keys-keys-03": [
+        1.0
+      ],
+      "door-sofa-keys-keys-04": [
+        1.0
+      ],
+      "door-sofa-keys-keys-05": [
+        1.0
+      ],
+      "door-sofa-keys-queued-01": [
+        1.0
+      ],
+      "door-sofa-keys-queued-02": [
+        1.0
+      ],
+      "door-sofa-keys-queued-03": [
+        1.0
+      ],
+      "door-sofa-keys-queued-04": [
+        1.0
+      ],
+      "door-sofa-keys-queued-05": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-01": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-02": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-03": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-04": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-05": [
+        1.0
+      ]
+    },
+    "per_scenario_coverage": {
+      "door-sofa-keys-blocked-01": [
+        0.75
+      ],
+      "door-sofa-keys-blocked-02": [
+        0.75
+      ],
+      "door-sofa-keys-blocked-03": [
+        0.75
+      ],
+      "door-sofa-keys-blocked-04": [
+        0.75
+      ],
+      "door-sofa-keys-blocked-05": [
+        0.75
+      ],
+      "door-sofa-keys-cancelled-01": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-02": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-03": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-04": [
+        1.0
+      ],
+      "door-sofa-keys-cancelled-05": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-01": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-02": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-03": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-04": [
+        1.0
+      ],
+      "door-sofa-keys-clarification-05": [
+        1.0
+      ],
+      "door-sofa-keys-clean-01": [
+        1.0
+      ],
+      "door-sofa-keys-clean-02": [
+        1.0
+      ],
+      "door-sofa-keys-clean-03": [
+        1.0
+      ],
+      "door-sofa-keys-clean-04": [
+        1.0
+      ],
+      "door-sofa-keys-clean-05": [
+        1.0
+      ],
+      "door-sofa-keys-failed-01": [
+        1.0
+      ],
+      "door-sofa-keys-failed-02": [
+        1.0
+      ],
+      "door-sofa-keys-failed-03": [
+        1.0
+      ],
+      "door-sofa-keys-failed-04": [
+        1.0
+      ],
+      "door-sofa-keys-failed-05": [
+        1.0
+      ],
+      "door-sofa-keys-keys-01": [
+        1.0
+      ],
+      "door-sofa-keys-keys-02": [
+        1.0
+      ],
+      "door-sofa-keys-keys-03": [
+        1.0
+      ],
+      "door-sofa-keys-keys-04": [
+        1.0
+      ],
+      "door-sofa-keys-keys-05": [
+        1.0
+      ],
+      "door-sofa-keys-queued-01": [
+        1.0
+      ],
+      "door-sofa-keys-queued-02": [
+        1.0
+      ],
+      "door-sofa-keys-queued-03": [
+        1.0
+      ],
+      "door-sofa-keys-queued-04": [
+        1.0
+      ],
+      "door-sofa-keys-queued-05": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-01": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-02": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-03": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-04": [
+        1.0
+      ],
+      "door-sofa-keys-resumed-05": [
+        1.0
+      ]
+    },
+    "checker": {
+      "turns": 180,
+      "template_self_check_pass": 180,
+      "template_self_check_rate": 1.0,
+      "template_reject_reasons": {},
+      "template_words_max": 21
+    },
+    "latency_contract": {
+      "T_render_ms_p50": 0.001,
+      "T_render_ms_p95": 0.003,
+      "T_check_ms_p50": 0.118,
+      "T_render_plus_check_ms_p50": 0.119,
+      "T_render_plus_check_ms_p95": 0.236,
+      "T_render_plus_check_ms_max": 55.715,
+      "paraphrase_n": 0,
+      "paraphrase_ttft_ms_p50": null,
+      "paraphrase_ttft_ms_p95": null,
+      "paraphrase_total_ms_p50": null,
+      "paraphrase_total_ms_p95": null
+    },
+    "wall_s": 0.13,
+    "tier": "replay",
+    "mechanism": "MB-1 trigger table + band discipline; contract templates; no model, no network"
+  },
+  "turns": [
+    {
+      "scenario_id": "door-sofa-keys-clean-01",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the door",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the door.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the door.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0073,
+      "check_ms": 55.7076,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clean-01",
+      "turn_index": 2,
+      "at_s": 9.2,
+      "trigger_event_id": "T1:completed@9.2",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the door"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the door. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the door. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0071,
+      "check_ms": 0.1903,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clean-01",
+      "turn_index": 4,
+      "at_s": 12.61,
+      "trigger_event_id": "T2:running@12.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the bench",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the bench.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the bench.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0023,
+      "check_ms": 0.116,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clean-01",
+      "turn_index": 5,
+      "at_s": 20.4,
+      "trigger_event_id": "T2:completed@20.4",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the bench"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the bench. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the bench. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0024,
+      "check_ms": 0.1289,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clean-01",
+      "turn_index": 7,
+      "at_s": 23.01,
+      "trigger_event_id": "",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the bench"
+            }
+          },
+          {
+            "act": "capability_refusal",
+            "slots": {
+              "keys": [
+                "vision"
+              ]
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the bench. I have no camera, so I can't look for things. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the bench. I have no camera, so I can't look for things. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 19
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0051,
+      "check_ms": 0.2411,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clean-02",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the door",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the door.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the door.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0018,
+      "check_ms": 0.1028,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clean-02",
+      "turn_index": 2,
+      "at_s": 9.2,
+      "trigger_event_id": "T1:completed@9.2",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the door"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the door. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the door. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0016,
+      "check_ms": 0.1217,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clean-02",
+      "turn_index": 4,
+      "at_s": 12.61,
+      "trigger_event_id": "T2:running@12.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the sofa",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the sofa.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the sofa.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0014,
+      "check_ms": 0.0975,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clean-02",
+      "turn_index": 5,
+      "at_s": 20.4,
+      "trigger_event_id": "T2:completed@20.4",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the sofa"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the sofa. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the sofa. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0015,
+      "check_ms": 0.1218,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clean-02",
+      "turn_index": 7,
+      "at_s": 23.01,
+      "trigger_event_id": "",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the sofa"
+            }
+          },
+          {
+            "act": "capability_refusal",
+            "slots": {
+              "keys": [
+                "vision"
+              ]
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the sofa. I have no camera, so I can't look for things. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the sofa. I have no camera, so I can't look for things. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 19
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0032,
+      "check_ms": 0.2229,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clean-03",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the sidewalk",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the sidewalk.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the sidewalk.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0015,
+      "check_ms": 0.0969,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clean-03",
+      "turn_index": 2,
+      "at_s": 9.2,
+      "trigger_event_id": "T1:completed@9.2",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the sidewalk"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the sidewalk. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the sidewalk. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0014,
+      "check_ms": 0.1162,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clean-03",
+      "turn_index": 4,
+      "at_s": 12.61,
+      "trigger_event_id": "T2:running@12.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the bench",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the bench.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the bench.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.0967,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clean-03",
+      "turn_index": 5,
+      "at_s": 20.4,
+      "trigger_event_id": "T2:completed@20.4",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the bench"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the bench. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the bench. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.1482,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clean-03",
+      "turn_index": 7,
+      "at_s": 23.01,
+      "trigger_event_id": "",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the bench"
+            }
+          },
+          {
+            "act": "capability_refusal",
+            "slots": {
+              "keys": [
+                "vision"
+              ]
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the bench. I have no camera, so I can't look for things. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the bench. I have no camera, so I can't look for things. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 19
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0024,
+      "check_ms": 0.2231,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clean-04",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the door",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the door.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the door.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0014,
+      "check_ms": 0.097,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clean-04",
+      "turn_index": 2,
+      "at_s": 9.2,
+      "trigger_event_id": "T1:completed@9.2",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the door"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the door. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the door. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.1181,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clean-04",
+      "turn_index": 4,
+      "at_s": 12.61,
+      "trigger_event_id": "T2:running@12.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the tree",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the tree.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the tree.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0012,
+      "check_ms": 0.0943,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clean-04",
+      "turn_index": 5,
+      "at_s": 20.4,
+      "trigger_event_id": "T2:completed@20.4",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the tree"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the tree. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the tree. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0014,
+      "check_ms": 0.1147,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clean-04",
+      "turn_index": 7,
+      "at_s": 23.01,
+      "trigger_event_id": "",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the tree"
+            }
+          },
+          {
+            "act": "capability_refusal",
+            "slots": {
+              "keys": [
+                "vision"
+              ]
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the tree. I have no camera, so I can't look for things. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the tree. I have no camera, so I can't look for things. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 19
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0022,
+      "check_ms": 0.2341,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clean-05",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the lamppost",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the lamppost.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the lamppost.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.0959,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clean-05",
+      "turn_index": 2,
+      "at_s": 9.2,
+      "trigger_event_id": "T1:completed@9.2",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the lamppost"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the lamppost. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the lamppost. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0014,
+      "check_ms": 0.1159,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clean-05",
+      "turn_index": 4,
+      "at_s": 12.61,
+      "trigger_event_id": "T2:running@12.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the sofa",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the sofa.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the sofa.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0012,
+      "check_ms": 0.0969,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clean-05",
+      "turn_index": 5,
+      "at_s": 20.4,
+      "trigger_event_id": "T2:completed@20.4",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the sofa"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the sofa. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the sofa. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0014,
+      "check_ms": 0.1153,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clean-05",
+      "turn_index": 7,
+      "at_s": 23.01,
+      "trigger_event_id": "",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the sofa"
+            }
+          },
+          {
+            "act": "capability_refusal",
+            "slots": {
+              "keys": [
+                "vision"
+              ]
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the sofa. I have no camera, so I can't look for things. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the sofa. I have no camera, so I can't look for things. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 19
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0023,
+      "check_ms": 0.2132,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-blocked-01",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the door",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the door.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the door.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0014,
+      "check_ms": 0.0926,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-blocked-01",
+      "turn_index": 2,
+      "at_s": 5.0,
+      "trigger_event_id": "T1:blocked@5.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "blocked",
+            "slots": {
+              "goal": "the door",
+              "klass": "person"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Someone is in the way, so I'm waiting for it to clear.",
+      "candidate": "",
+      "spoken": "Someone is in the way, so I'm waiting for it to clear.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "blocked"
+        ],
+        "words": 12
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0031,
+      "check_ms": 0.1556,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-blocked-01",
+      "turn_index": 3,
+      "at_s": 18.5,
+      "trigger_event_id": "T1:completed@18.5",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the door"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the door. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the door. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0014,
+      "check_ms": 0.118,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-blocked-01",
+      "turn_index": 5,
+      "at_s": 21.01,
+      "trigger_event_id": "",
+      "acts": {
+        "acts": [
+          {
+            "act": "blocked",
+            "slots": {
+              "goal": "the door",
+              "klass": "person",
+              "resolved": true
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Someone standing in the way held me up, so I waited.",
+      "candidate": "",
+      "spoken": "Someone standing in the way held me up, so I waited.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "blocked"
+        ],
+        "words": 11
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0021,
+      "check_ms": 0.1491,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-blocked-02",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the door",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the door.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the door.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0014,
+      "check_ms": 0.0934,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-blocked-02",
+      "turn_index": 2,
+      "at_s": 5.0,
+      "trigger_event_id": "T1:blocked@5.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "blocked",
+            "slots": {
+              "goal": "the door",
+              "klass": "person"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Someone is in the way, so I'm waiting for it to clear.",
+      "candidate": "",
+      "spoken": "Someone is in the way, so I'm waiting for it to clear.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "blocked"
+        ],
+        "words": 12
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0016,
+      "check_ms": 0.1514,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-blocked-02",
+      "turn_index": 3,
+      "at_s": 18.5,
+      "trigger_event_id": "T1:completed@18.5",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the door"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the door. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the door. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0016,
+      "check_ms": 0.1327,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-blocked-02",
+      "turn_index": 5,
+      "at_s": 21.01,
+      "trigger_event_id": "",
+      "acts": {
+        "acts": [
+          {
+            "act": "blocked",
+            "slots": {
+              "goal": "the door",
+              "klass": "person",
+              "resolved": true
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Someone standing in the way held me up, so I waited.",
+      "candidate": "",
+      "spoken": "Someone standing in the way held me up, so I waited.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "blocked"
+        ],
+        "words": 11
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0016,
+      "check_ms": 0.1407,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-blocked-03",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the sidewalk",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the sidewalk.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the sidewalk.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0014,
+      "check_ms": 0.0953,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-blocked-03",
+      "turn_index": 2,
+      "at_s": 5.0,
+      "trigger_event_id": "T1:blocked@5.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "blocked",
+            "slots": {
+              "goal": "the sidewalk",
+              "klass": "person"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Someone is in the way, so I'm waiting for it to clear.",
+      "candidate": "",
+      "spoken": "Someone is in the way, so I'm waiting for it to clear.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "blocked"
+        ],
+        "words": 12
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0014,
+      "check_ms": 0.1481,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-blocked-03",
+      "turn_index": 3,
+      "at_s": 18.5,
+      "trigger_event_id": "T1:completed@18.5",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the sidewalk"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the sidewalk. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the sidewalk. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0014,
+      "check_ms": 0.1171,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-blocked-03",
+      "turn_index": 5,
+      "at_s": 21.01,
+      "trigger_event_id": "",
+      "acts": {
+        "acts": [
+          {
+            "act": "blocked",
+            "slots": {
+              "goal": "the sidewalk",
+              "klass": "person",
+              "resolved": true
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Someone standing in the way held me up, so I waited.",
+      "candidate": "",
+      "spoken": "Someone standing in the way held me up, so I waited.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "blocked"
+        ],
+        "words": 11
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.1437,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-blocked-04",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the door",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the door.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the door.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.1135,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-blocked-04",
+      "turn_index": 2,
+      "at_s": 5.0,
+      "trigger_event_id": "T1:blocked@5.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "blocked",
+            "slots": {
+              "goal": "the door",
+              "klass": "person"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Someone is in the way, so I'm waiting for it to clear.",
+      "candidate": "",
+      "spoken": "Someone is in the way, so I'm waiting for it to clear.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "blocked"
+        ],
+        "words": 12
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0015,
+      "check_ms": 0.1487,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-blocked-04",
+      "turn_index": 3,
+      "at_s": 18.5,
+      "trigger_event_id": "T1:completed@18.5",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the door"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the door. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the door. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0014,
+      "check_ms": 0.1143,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-blocked-04",
+      "turn_index": 5,
+      "at_s": 21.01,
+      "trigger_event_id": "",
+      "acts": {
+        "acts": [
+          {
+            "act": "blocked",
+            "slots": {
+              "goal": "the door",
+              "klass": "person",
+              "resolved": true
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Someone standing in the way held me up, so I waited.",
+      "candidate": "",
+      "spoken": "Someone standing in the way held me up, so I waited.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "blocked"
+        ],
+        "words": 11
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.1386,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-blocked-05",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the lamppost",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the lamppost.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the lamppost.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0012,
+      "check_ms": 0.0945,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-blocked-05",
+      "turn_index": 2,
+      "at_s": 5.0,
+      "trigger_event_id": "T1:blocked@5.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "blocked",
+            "slots": {
+              "goal": "the lamppost",
+              "klass": "person"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Someone is in the way, so I'm waiting for it to clear.",
+      "candidate": "",
+      "spoken": "Someone is in the way, so I'm waiting for it to clear.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "blocked"
+        ],
+        "words": 12
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.1461,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-blocked-05",
+      "turn_index": 3,
+      "at_s": 18.5,
+      "trigger_event_id": "T1:completed@18.5",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the lamppost"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the lamppost. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the lamppost. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.1196,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-blocked-05",
+      "turn_index": 5,
+      "at_s": 21.01,
+      "trigger_event_id": "",
+      "acts": {
+        "acts": [
+          {
+            "act": "blocked",
+            "slots": {
+              "goal": "the lamppost",
+              "klass": "person",
+              "resolved": true
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Someone standing in the way held me up, so I waited.",
+      "candidate": "",
+      "spoken": "Someone standing in the way held me up, so I waited.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "blocked"
+        ],
+        "words": 11
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.1593,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-failed-01",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the door",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the door.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the door.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.0907,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-failed-01",
+      "turn_index": 2,
+      "at_s": 6.0,
+      "trigger_event_id": "T1:blocked@6.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "blocked",
+            "slots": {
+              "goal": "the door",
+              "klass": "person"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Someone is in the way, so I'm waiting for it to clear.",
+      "candidate": "",
+      "spoken": "Someone is in the way, so I'm waiting for it to clear.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "blocked"
+        ],
+        "words": 12
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.1445,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-failed-01",
+      "turn_index": 3,
+      "at_s": 16.0,
+      "trigger_event_id": "T1:failed@16.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "failed",
+            "slots": {
+              "goal": "the door",
+              "klass": "person"
+            }
+          }
+        ],
+        "closing": "What would you like to do instead?"
+      },
+      "template": "I couldn't get to the door, and a person stayed in the way. What would you like to do instead?",
+      "candidate": "",
+      "spoken": "I couldn't get to the door, and a person stayed in the way. What would you like to do instead?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "failed"
+        ],
+        "words": 20
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0026,
+      "check_ms": 0.2251,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-failed-01",
+      "turn_index": 5,
+      "at_s": 19.61,
+      "trigger_event_id": "T2:running@19.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the bench",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the bench.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the bench.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0012,
+      "check_ms": 0.1021,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-failed-01",
+      "turn_index": 6,
+      "at_s": 26.0,
+      "trigger_event_id": "T2:completed@26.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the bench"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the bench. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the bench. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0015,
+      "check_ms": 0.1187,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-failed-02",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the door",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the door.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the door.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.1155,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-failed-02",
+      "turn_index": 2,
+      "at_s": 6.0,
+      "trigger_event_id": "T1:blocked@6.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "blocked",
+            "slots": {
+              "goal": "the door",
+              "klass": "person"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Someone is in the way, so I'm waiting for it to clear.",
+      "candidate": "",
+      "spoken": "Someone is in the way, so I'm waiting for it to clear.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "blocked"
+        ],
+        "words": 12
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0014,
+      "check_ms": 0.1536,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-failed-02",
+      "turn_index": 3,
+      "at_s": 16.0,
+      "trigger_event_id": "T1:failed@16.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "failed",
+            "slots": {
+              "goal": "the door",
+              "klass": "person"
+            }
+          }
+        ],
+        "closing": "What would you like to do instead?"
+      },
+      "template": "I couldn't get to the door, and a person stayed in the way. What would you like to do instead?",
+      "candidate": "",
+      "spoken": "I couldn't get to the door, and a person stayed in the way. What would you like to do instead?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "failed"
+        ],
+        "words": 20
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0035,
+      "check_ms": 0.225,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-failed-02",
+      "turn_index": 5,
+      "at_s": 19.61,
+      "trigger_event_id": "T2:running@19.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the sofa",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the sofa.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the sofa.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.0946,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-failed-02",
+      "turn_index": 6,
+      "at_s": 26.0,
+      "trigger_event_id": "T2:completed@26.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the sofa"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the sofa. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the sofa. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0015,
+      "check_ms": 0.1176,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-failed-03",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the sidewalk",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the sidewalk.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the sidewalk.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.0946,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-failed-03",
+      "turn_index": 2,
+      "at_s": 6.0,
+      "trigger_event_id": "T1:blocked@6.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "blocked",
+            "slots": {
+              "goal": "the sidewalk",
+              "klass": "person"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Someone is in the way, so I'm waiting for it to clear.",
+      "candidate": "",
+      "spoken": "Someone is in the way, so I'm waiting for it to clear.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "blocked"
+        ],
+        "words": 12
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.1604,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-failed-03",
+      "turn_index": 3,
+      "at_s": 16.0,
+      "trigger_event_id": "T1:failed@16.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "failed",
+            "slots": {
+              "goal": "the sidewalk",
+              "klass": "person"
+            }
+          }
+        ],
+        "closing": "What would you like to do instead?"
+      },
+      "template": "I couldn't get to the sidewalk, and a person stayed in the way. What would you like to do instead?",
+      "candidate": "",
+      "spoken": "I couldn't get to the sidewalk, and a person stayed in the way. What would you like to do instead?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "failed"
+        ],
+        "words": 20
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0016,
+      "check_ms": 0.2238,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-failed-03",
+      "turn_index": 5,
+      "at_s": 19.61,
+      "trigger_event_id": "T2:running@19.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the bench",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the bench.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the bench.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.0967,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-failed-03",
+      "turn_index": 6,
+      "at_s": 26.0,
+      "trigger_event_id": "T2:completed@26.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the bench"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the bench. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the bench. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0014,
+      "check_ms": 0.1182,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-failed-04",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the door",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the door.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the door.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0012,
+      "check_ms": 0.09,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-failed-04",
+      "turn_index": 2,
+      "at_s": 6.0,
+      "trigger_event_id": "T1:blocked@6.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "blocked",
+            "slots": {
+              "goal": "the door",
+              "klass": "person"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Someone is in the way, so I'm waiting for it to clear.",
+      "candidate": "",
+      "spoken": "Someone is in the way, so I'm waiting for it to clear.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "blocked"
+        ],
+        "words": 12
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.1572,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-failed-04",
+      "turn_index": 3,
+      "at_s": 16.0,
+      "trigger_event_id": "T1:failed@16.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "failed",
+            "slots": {
+              "goal": "the door",
+              "klass": "person"
+            }
+          }
+        ],
+        "closing": "What would you like to do instead?"
+      },
+      "template": "I couldn't get to the door, and a person stayed in the way. What would you like to do instead?",
+      "candidate": "",
+      "spoken": "I couldn't get to the door, and a person stayed in the way. What would you like to do instead?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "failed"
+        ],
+        "words": 20
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0016,
+      "check_ms": 0.2416,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-failed-04",
+      "turn_index": 5,
+      "at_s": 19.61,
+      "trigger_event_id": "T2:running@19.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the tree",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the tree.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the tree.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0012,
+      "check_ms": 0.0959,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-failed-04",
+      "turn_index": 6,
+      "at_s": 26.0,
+      "trigger_event_id": "T2:completed@26.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the tree"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the tree. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the tree. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0014,
+      "check_ms": 0.1155,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-failed-05",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the lamppost",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the lamppost.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the lamppost.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.093,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-failed-05",
+      "turn_index": 2,
+      "at_s": 6.0,
+      "trigger_event_id": "T1:blocked@6.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "blocked",
+            "slots": {
+              "goal": "the lamppost",
+              "klass": "person"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Someone is in the way, so I'm waiting for it to clear.",
+      "candidate": "",
+      "spoken": "Someone is in the way, so I'm waiting for it to clear.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "blocked"
+        ],
+        "words": 12
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0015,
+      "check_ms": 0.1531,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-failed-05",
+      "turn_index": 3,
+      "at_s": 16.0,
+      "trigger_event_id": "T1:failed@16.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "failed",
+            "slots": {
+              "goal": "the lamppost",
+              "klass": "person"
+            }
+          }
+        ],
+        "closing": "What would you like to do instead?"
+      },
+      "template": "I couldn't get to the lamppost, and a person stayed in the way. What would you like to do instead?",
+      "candidate": "",
+      "spoken": "I couldn't get to the lamppost, and a person stayed in the way. What would you like to do instead?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "failed"
+        ],
+        "words": 20
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0016,
+      "check_ms": 0.2234,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-failed-05",
+      "turn_index": 5,
+      "at_s": 19.61,
+      "trigger_event_id": "T2:running@19.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the sofa",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the sofa.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the sofa.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.1086,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-failed-05",
+      "turn_index": 6,
+      "at_s": 26.0,
+      "trigger_event_id": "T2:completed@26.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the sofa"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the sofa. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the sofa. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0015,
+      "check_ms": 0.1201,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-01",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the door",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the door.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the door.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.0925,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-01",
+      "turn_index": 3,
+      "at_s": 4.31,
+      "trigger_event_id": "T2:accepted@4.3",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the bench",
+              "queued": true
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll check the bench after that.",
+      "candidate": "",
+      "spoken": "Okay, I'll check the bench after that.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "acceptance",
+          "queued"
+        ],
+        "words": 7
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0015,
+      "check_ms": 0.1154,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-01",
+      "turn_index": 4,
+      "at_s": 10.5,
+      "trigger_event_id": "T1:completed@10.5",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the door"
+            }
+          },
+          {
+            "act": "resume_offer",
+            "slots": {
+              "goal": "the bench"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "I'm at the door. Shall I go to the bench next?",
+      "candidate": "",
+      "spoken": "I'm at the door. Shall I go to the bench next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 11
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0023,
+      "check_ms": 0.1393,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-01",
+      "turn_index": 6,
+      "at_s": 13.61,
+      "trigger_event_id": "T2:running@13.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "resumed",
+            "slots": {
+              "goal": "the bench"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'm picking that back up, and I'm on my way to the bench.",
+      "candidate": "",
+      "spoken": "Okay, I'm picking that back up, and I'm on my way to the bench.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance",
+          "resumed"
+        ],
+        "words": 14
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0041,
+      "check_ms": 0.1811,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-01",
+      "turn_index": 7,
+      "at_s": 20.0,
+      "trigger_event_id": "T2:completed@20.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the bench"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the bench. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the bench. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0015,
+      "check_ms": 0.1182,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-02",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the door",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the door.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the door.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0014,
+      "check_ms": 0.1012,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-02",
+      "turn_index": 3,
+      "at_s": 4.31,
+      "trigger_event_id": "T2:accepted@4.3",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the sofa",
+              "queued": true
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll check the sofa after that.",
+      "candidate": "",
+      "spoken": "Okay, I'll check the sofa after that.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "acceptance",
+          "queued"
+        ],
+        "words": 7
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.1087,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-02",
+      "turn_index": 4,
+      "at_s": 10.5,
+      "trigger_event_id": "T1:completed@10.5",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the door"
+            }
+          },
+          {
+            "act": "resume_offer",
+            "slots": {
+              "goal": "the sofa"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "I'm at the door. Shall I go to the sofa next?",
+      "candidate": "",
+      "spoken": "I'm at the door. Shall I go to the sofa next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 11
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0019,
+      "check_ms": 0.1384,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-02",
+      "turn_index": 6,
+      "at_s": 13.61,
+      "trigger_event_id": "T2:running@13.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "resumed",
+            "slots": {
+              "goal": "the sofa"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'm picking that back up, and I'm on my way to the sofa.",
+      "candidate": "",
+      "spoken": "Okay, I'm picking that back up, and I'm on my way to the sofa.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance",
+          "resumed"
+        ],
+        "words": 14
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0014,
+      "check_ms": 0.1802,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-02",
+      "turn_index": 7,
+      "at_s": 20.0,
+      "trigger_event_id": "T2:completed@20.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the sofa"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the sofa. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the sofa. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0014,
+      "check_ms": 0.1204,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-03",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the sidewalk",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the sidewalk.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the sidewalk.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.0956,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-03",
+      "turn_index": 3,
+      "at_s": 4.31,
+      "trigger_event_id": "T2:accepted@4.3",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the bench",
+              "queued": true
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll check the bench after that.",
+      "candidate": "",
+      "spoken": "Okay, I'll check the bench after that.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "acceptance",
+          "queued"
+        ],
+        "words": 7
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0012,
+      "check_ms": 0.1341,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-03",
+      "turn_index": 4,
+      "at_s": 10.5,
+      "trigger_event_id": "T1:completed@10.5",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the sidewalk"
+            }
+          },
+          {
+            "act": "resume_offer",
+            "slots": {
+              "goal": "the bench"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "I'm at the sidewalk. Shall I go to the bench next?",
+      "candidate": "",
+      "spoken": "I'm at the sidewalk. Shall I go to the bench next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 11
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0018,
+      "check_ms": 0.1409,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-03",
+      "turn_index": 6,
+      "at_s": 13.61,
+      "trigger_event_id": "T2:running@13.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "resumed",
+            "slots": {
+              "goal": "the bench"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'm picking that back up, and I'm on my way to the bench.",
+      "candidate": "",
+      "spoken": "Okay, I'm picking that back up, and I'm on my way to the bench.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance",
+          "resumed"
+        ],
+        "words": 14
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.1762,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-03",
+      "turn_index": 7,
+      "at_s": 20.0,
+      "trigger_event_id": "T2:completed@20.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the bench"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the bench. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the bench. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0014,
+      "check_ms": 0.1214,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-04",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the door",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the door.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the door.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.0907,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-04",
+      "turn_index": 3,
+      "at_s": 4.31,
+      "trigger_event_id": "T2:accepted@4.3",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the tree",
+              "queued": true
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll check the tree after that.",
+      "candidate": "",
+      "spoken": "Okay, I'll check the tree after that.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "acceptance",
+          "queued"
+        ],
+        "words": 7
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0012,
+      "check_ms": 0.1066,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-04",
+      "turn_index": 4,
+      "at_s": 10.5,
+      "trigger_event_id": "T1:completed@10.5",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the door"
+            }
+          },
+          {
+            "act": "resume_offer",
+            "slots": {
+              "goal": "the tree"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "I'm at the door. Shall I go to the tree next?",
+      "candidate": "",
+      "spoken": "I'm at the door. Shall I go to the tree next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 11
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0017,
+      "check_ms": 0.146,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-04",
+      "turn_index": 6,
+      "at_s": 13.61,
+      "trigger_event_id": "T2:running@13.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "resumed",
+            "slots": {
+              "goal": "the tree"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'm picking that back up, and I'm on my way to the tree.",
+      "candidate": "",
+      "spoken": "Okay, I'm picking that back up, and I'm on my way to the tree.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance",
+          "resumed"
+        ],
+        "words": 14
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.175,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-04",
+      "turn_index": 7,
+      "at_s": 20.0,
+      "trigger_event_id": "T2:completed@20.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the tree"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the tree. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the tree. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0014,
+      "check_ms": 0.1157,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-05",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the lamppost",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the lamppost.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the lamppost.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0012,
+      "check_ms": 0.0935,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-05",
+      "turn_index": 3,
+      "at_s": 4.31,
+      "trigger_event_id": "T2:accepted@4.3",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the sofa",
+              "queued": true
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll check the sofa after that.",
+      "candidate": "",
+      "spoken": "Okay, I'll check the sofa after that.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "acceptance",
+          "queued"
+        ],
+        "words": 7
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0012,
+      "check_ms": 0.1057,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-05",
+      "turn_index": 4,
+      "at_s": 10.5,
+      "trigger_event_id": "T1:completed@10.5",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the lamppost"
+            }
+          },
+          {
+            "act": "resume_offer",
+            "slots": {
+              "goal": "the sofa"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "I'm at the lamppost. Shall I go to the sofa next?",
+      "candidate": "",
+      "spoken": "I'm at the lamppost. Shall I go to the sofa next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 11
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0016,
+      "check_ms": 0.1389,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-05",
+      "turn_index": 6,
+      "at_s": 13.61,
+      "trigger_event_id": "T2:running@13.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "resumed",
+            "slots": {
+              "goal": "the sofa"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'm picking that back up, and I'm on my way to the sofa.",
+      "candidate": "",
+      "spoken": "Okay, I'm picking that back up, and I'm on my way to the sofa.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance",
+          "resumed"
+        ],
+        "words": 14
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0012,
+      "check_ms": 0.1737,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-05",
+      "turn_index": 7,
+      "at_s": 20.0,
+      "trigger_event_id": "T2:completed@20.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the sofa"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the sofa. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the sofa. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.1396,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-01",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the door",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the door.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the door.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0014,
+      "check_ms": 0.0914,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-01",
+      "turn_index": 3,
+      "at_s": 5.61,
+      "trigger_event_id": "T2:running@5.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the bench",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the bench.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the bench.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.1008,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-01",
+      "turn_index": 4,
+      "at_s": 12.0,
+      "trigger_event_id": "T2:completed@12.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the bench"
+            }
+          },
+          {
+            "act": "resume_offer",
+            "slots": {
+              "goal": "the door"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "I'm at the bench. Shall I go to the door next?",
+      "candidate": "",
+      "spoken": "I'm at the bench. Shall I go to the door next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 11
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0019,
+      "check_ms": 0.1422,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-01",
+      "turn_index": 6,
+      "at_s": 15.61,
+      "trigger_event_id": "T1:running@15.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "resumed",
+            "slots": {
+              "goal": "the door"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'm picking that back up, and I'm on my way to the door.",
+      "candidate": "",
+      "spoken": "Okay, I'm picking that back up, and I'm on my way to the door.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance",
+          "resumed"
+        ],
+        "words": 14
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.1758,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-01",
+      "turn_index": 7,
+      "at_s": 22.0,
+      "trigger_event_id": "T1:completed@22.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the door"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the door. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the door. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0015,
+      "check_ms": 0.1195,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-02",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the door",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the door.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the door.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.1126,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-02",
+      "turn_index": 3,
+      "at_s": 5.61,
+      "trigger_event_id": "T2:running@5.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the sofa",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the sofa.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the sofa.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.0889,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-02",
+      "turn_index": 4,
+      "at_s": 12.0,
+      "trigger_event_id": "T2:completed@12.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the sofa"
+            }
+          },
+          {
+            "act": "resume_offer",
+            "slots": {
+              "goal": "the door"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "I'm at the sofa. Shall I go to the door next?",
+      "candidate": "",
+      "spoken": "I'm at the sofa. Shall I go to the door next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 11
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0018,
+      "check_ms": 0.1348,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-02",
+      "turn_index": 6,
+      "at_s": 15.61,
+      "trigger_event_id": "T1:running@15.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "resumed",
+            "slots": {
+              "goal": "the door"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'm picking that back up, and I'm on my way to the door.",
+      "candidate": "",
+      "spoken": "Okay, I'm picking that back up, and I'm on my way to the door.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance",
+          "resumed"
+        ],
+        "words": 14
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.1776,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-02",
+      "turn_index": 7,
+      "at_s": 22.0,
+      "trigger_event_id": "T1:completed@22.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the door"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the door. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the door. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0014,
+      "check_ms": 0.1138,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-03",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the sidewalk",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the sidewalk.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the sidewalk.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.0936,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-03",
+      "turn_index": 3,
+      "at_s": 5.61,
+      "trigger_event_id": "T2:running@5.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the bench",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the bench.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the bench.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0012,
+      "check_ms": 0.102,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-03",
+      "turn_index": 4,
+      "at_s": 12.0,
+      "trigger_event_id": "T2:completed@12.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the bench"
+            }
+          },
+          {
+            "act": "resume_offer",
+            "slots": {
+              "goal": "the sidewalk"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "I'm at the bench. Shall I go to the sidewalk next?",
+      "candidate": "",
+      "spoken": "I'm at the bench. Shall I go to the sidewalk next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 11
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0017,
+      "check_ms": 0.169,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-03",
+      "turn_index": 6,
+      "at_s": 15.61,
+      "trigger_event_id": "T1:running@15.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "resumed",
+            "slots": {
+              "goal": "the sidewalk"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'm picking that back up, and I'm on my way to the sidewalk.",
+      "candidate": "",
+      "spoken": "Okay, I'm picking that back up, and I'm on my way to the sidewalk.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance",
+          "resumed"
+        ],
+        "words": 14
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.1826,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-03",
+      "turn_index": 7,
+      "at_s": 22.0,
+      "trigger_event_id": "T1:completed@22.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the sidewalk"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the sidewalk. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the sidewalk. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.1236,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-04",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the door",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the door.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the door.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0014,
+      "check_ms": 0.095,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-04",
+      "turn_index": 3,
+      "at_s": 5.61,
+      "trigger_event_id": "T2:running@5.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the tree",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the tree.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the tree.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.0952,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-04",
+      "turn_index": 4,
+      "at_s": 12.0,
+      "trigger_event_id": "T2:completed@12.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the tree"
+            }
+          },
+          {
+            "act": "resume_offer",
+            "slots": {
+              "goal": "the door"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "I'm at the tree. Shall I go to the door next?",
+      "candidate": "",
+      "spoken": "I'm at the tree. Shall I go to the door next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 11
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0018,
+      "check_ms": 0.1383,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-04",
+      "turn_index": 6,
+      "at_s": 15.61,
+      "trigger_event_id": "T1:running@15.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "resumed",
+            "slots": {
+              "goal": "the door"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'm picking that back up, and I'm on my way to the door.",
+      "candidate": "",
+      "spoken": "Okay, I'm picking that back up, and I'm on my way to the door.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance",
+          "resumed"
+        ],
+        "words": 14
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.1994,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-04",
+      "turn_index": 7,
+      "at_s": 22.0,
+      "trigger_event_id": "T1:completed@22.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the door"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the door. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the door. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0015,
+      "check_ms": 0.1149,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-05",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the lamppost",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the lamppost.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the lamppost.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.0937,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-05",
+      "turn_index": 3,
+      "at_s": 5.61,
+      "trigger_event_id": "T2:running@5.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the sofa",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the sofa.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the sofa.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0012,
+      "check_ms": 0.0908,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-05",
+      "turn_index": 4,
+      "at_s": 12.0,
+      "trigger_event_id": "T2:completed@12.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the sofa"
+            }
+          },
+          {
+            "act": "resume_offer",
+            "slots": {
+              "goal": "the lamppost"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "I'm at the sofa. Shall I go to the lamppost next?",
+      "candidate": "",
+      "spoken": "I'm at the sofa. Shall I go to the lamppost next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 11
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0019,
+      "check_ms": 0.1392,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-05",
+      "turn_index": 6,
+      "at_s": 15.61,
+      "trigger_event_id": "T1:running@15.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "resumed",
+            "slots": {
+              "goal": "the lamppost"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'm picking that back up, and I'm on my way to the lamppost.",
+      "candidate": "",
+      "spoken": "Okay, I'm picking that back up, and I'm on my way to the lamppost.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance",
+          "resumed"
+        ],
+        "words": 14
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0012,
+      "check_ms": 0.1776,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-05",
+      "turn_index": 7,
+      "at_s": 22.0,
+      "trigger_event_id": "T1:completed@22.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the lamppost"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the lamppost. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the lamppost. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0015,
+      "check_ms": 0.1457,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clarification-01",
+      "turn_index": 1,
+      "at_s": 0.01,
+      "trigger_event_id": "",
+      "acts": {
+        "acts": [
+          {
+            "act": "ask_clarify",
+            "slots": {
+              "question": "Which one do you mean?"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Which one do you mean?",
+      "candidate": "",
+      "spoken": "Which one do you mean?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [],
+        "words": 5
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0021,
+      "check_ms": 0.0683,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clarification-01",
+      "turn_index": 3,
+      "at_s": 3.61,
+      "trigger_event_id": "T1:running@3.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the door",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the door.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the door.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.0892,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clarification-01",
+      "turn_index": 4,
+      "at_s": 11.0,
+      "trigger_event_id": "T1:completed@11.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the door"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the door. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the door. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0014,
+      "check_ms": 0.111,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clarification-01",
+      "turn_index": 6,
+      "at_s": 14.01,
+      "trigger_event_id": "",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the door"
+            }
+          },
+          {
+            "act": "capability_refusal",
+            "slots": {
+              "keys": [
+                "vision"
+              ]
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the door. I have no camera, so I can't look for things. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the door. I have no camera, so I can't look for things. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 19
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0031,
+      "check_ms": 0.2203,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clarification-02",
+      "turn_index": 1,
+      "at_s": 0.01,
+      "trigger_event_id": "",
+      "acts": {
+        "acts": [
+          {
+            "act": "ask_clarify",
+            "slots": {
+              "question": "Which one do you mean?"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Which one do you mean?",
+      "candidate": "",
+      "spoken": "Which one do you mean?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [],
+        "words": 5
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0017,
+      "check_ms": 0.0662,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clarification-02",
+      "turn_index": 3,
+      "at_s": 3.61,
+      "trigger_event_id": "T1:running@3.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the door",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the door.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the door.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.0885,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clarification-02",
+      "turn_index": 4,
+      "at_s": 11.0,
+      "trigger_event_id": "T1:completed@11.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the door"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the door. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the door. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.1342,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clarification-02",
+      "turn_index": 6,
+      "at_s": 14.01,
+      "trigger_event_id": "",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the door"
+            }
+          },
+          {
+            "act": "capability_refusal",
+            "slots": {
+              "keys": [
+                "vision"
+              ]
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the door. I have no camera, so I can't look for things. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the door. I have no camera, so I can't look for things. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 19
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0022,
+      "check_ms": 0.209,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clarification-03",
+      "turn_index": 1,
+      "at_s": 0.01,
+      "trigger_event_id": "",
+      "acts": {
+        "acts": [
+          {
+            "act": "ask_clarify",
+            "slots": {
+              "question": "Which one do you mean?"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Which one do you mean?",
+      "candidate": "",
+      "spoken": "Which one do you mean?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [],
+        "words": 5
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.066,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clarification-03",
+      "turn_index": 3,
+      "at_s": 3.61,
+      "trigger_event_id": "T1:running@3.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the sidewalk",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the sidewalk.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the sidewalk.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0012,
+      "check_ms": 0.0976,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clarification-03",
+      "turn_index": 4,
+      "at_s": 11.0,
+      "trigger_event_id": "T1:completed@11.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the sidewalk"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the sidewalk. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the sidewalk. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0014,
+      "check_ms": 0.1156,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clarification-03",
+      "turn_index": 6,
+      "at_s": 14.01,
+      "trigger_event_id": "",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the sidewalk"
+            }
+          },
+          {
+            "act": "capability_refusal",
+            "slots": {
+              "keys": [
+                "vision"
+              ]
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the sidewalk. I have no camera, so I can't look for things. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the sidewalk. I have no camera, so I can't look for things. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 19
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0021,
+      "check_ms": 0.2121,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clarification-04",
+      "turn_index": 1,
+      "at_s": 0.01,
+      "trigger_event_id": "",
+      "acts": {
+        "acts": [
+          {
+            "act": "ask_clarify",
+            "slots": {
+              "question": "Which one do you mean?"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Which one do you mean?",
+      "candidate": "",
+      "spoken": "Which one do you mean?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [],
+        "words": 5
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0012,
+      "check_ms": 0.0649,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clarification-04",
+      "turn_index": 3,
+      "at_s": 3.61,
+      "trigger_event_id": "T1:running@3.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the door",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the door.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the door.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0012,
+      "check_ms": 0.0893,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clarification-04",
+      "turn_index": 4,
+      "at_s": 11.0,
+      "trigger_event_id": "T1:completed@11.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the door"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the door. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the door. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0014,
+      "check_ms": 0.1092,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clarification-04",
+      "turn_index": 6,
+      "at_s": 14.01,
+      "trigger_event_id": "",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the door"
+            }
+          },
+          {
+            "act": "capability_refusal",
+            "slots": {
+              "keys": [
+                "vision"
+              ]
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the door. I have no camera, so I can't look for things. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the door. I have no camera, so I can't look for things. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 19
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0021,
+      "check_ms": 0.2087,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clarification-05",
+      "turn_index": 1,
+      "at_s": 0.01,
+      "trigger_event_id": "",
+      "acts": {
+        "acts": [
+          {
+            "act": "ask_clarify",
+            "slots": {
+              "question": "Which one do you mean?"
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Which one do you mean?",
+      "candidate": "",
+      "spoken": "Which one do you mean?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [],
+        "words": 5
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0012,
+      "check_ms": 0.0675,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clarification-05",
+      "turn_index": 3,
+      "at_s": 3.61,
+      "trigger_event_id": "T1:running@3.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the lamppost",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the lamppost.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the lamppost.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.097,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clarification-05",
+      "turn_index": 4,
+      "at_s": 11.0,
+      "trigger_event_id": "T1:completed@11.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the lamppost"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the lamppost. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the lamppost. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0014,
+      "check_ms": 0.12,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-clarification-05",
+      "turn_index": 6,
+      "at_s": 14.01,
+      "trigger_event_id": "",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the lamppost"
+            }
+          },
+          {
+            "act": "capability_refusal",
+            "slots": {
+              "keys": [
+                "vision"
+              ]
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the lamppost. I have no camera, so I can't look for things. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the lamppost. I have no camera, so I can't look for things. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 19
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0023,
+      "check_ms": 0.2393,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-cancelled-01",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the door",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the door.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the door.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.0948,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-cancelled-01",
+      "turn_index": 3,
+      "at_s": 7.31,
+      "trigger_event_id": "T1:cancelled@7.3",
+      "acts": {
+        "acts": [
+          {
+            "act": "cancelled",
+            "slots": {
+              "goal": "the door"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I've stopped, so the door is off the list. What would you like next?",
+      "candidate": "",
+      "spoken": "I've stopped, so the door is off the list. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "cancelled"
+        ],
+        "words": 14
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0019,
+      "check_ms": 0.1681,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-cancelled-01",
+      "turn_index": 5,
+      "at_s": 10.01,
+      "trigger_event_id": "",
+      "acts": {
+        "acts": [
+          {
+            "act": "cancelled",
+            "slots": {
+              "goal": "the door"
+            }
+          },
+          {
+            "act": "capability_refusal",
+            "slots": {
+              "keys": [
+                "position_report"
+              ]
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I've stopped, so the door is off the list. I don't have a position to report. What would you like next?",
+      "candidate": "",
+      "spoken": "I've stopped, so the door is off the list. I don't have a position to report. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "cancelled"
+        ],
+        "words": 21
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0028,
+      "check_ms": 0.2425,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-cancelled-02",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the door",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the door.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the door.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.0905,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-cancelled-02",
+      "turn_index": 3,
+      "at_s": 7.31,
+      "trigger_event_id": "T1:cancelled@7.3",
+      "acts": {
+        "acts": [
+          {
+            "act": "cancelled",
+            "slots": {
+              "goal": "the door"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I've stopped, so the door is off the list. What would you like next?",
+      "candidate": "",
+      "spoken": "I've stopped, so the door is off the list. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "cancelled"
+        ],
+        "words": 14
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0014,
+      "check_ms": 0.1731,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-cancelled-02",
+      "turn_index": 5,
+      "at_s": 10.01,
+      "trigger_event_id": "",
+      "acts": {
+        "acts": [
+          {
+            "act": "cancelled",
+            "slots": {
+              "goal": "the door"
+            }
+          },
+          {
+            "act": "capability_refusal",
+            "slots": {
+              "keys": [
+                "position_report"
+              ]
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I've stopped, so the door is off the list. I don't have a position to report. What would you like next?",
+      "candidate": "",
+      "spoken": "I've stopped, so the door is off the list. I don't have a position to report. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "cancelled"
+        ],
+        "words": 21
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0024,
+      "check_ms": 0.2332,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-cancelled-03",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the sidewalk",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the sidewalk.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the sidewalk.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0012,
+      "check_ms": 0.0917,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-cancelled-03",
+      "turn_index": 3,
+      "at_s": 7.31,
+      "trigger_event_id": "T1:cancelled@7.3",
+      "acts": {
+        "acts": [
+          {
+            "act": "cancelled",
+            "slots": {
+              "goal": "the sidewalk"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I've stopped, so the sidewalk is off the list. What would you like next?",
+      "candidate": "",
+      "spoken": "I've stopped, so the sidewalk is off the list. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "cancelled"
+        ],
+        "words": 14
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0014,
+      "check_ms": 0.1639,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-cancelled-03",
+      "turn_index": 5,
+      "at_s": 10.01,
+      "trigger_event_id": "",
+      "acts": {
+        "acts": [
+          {
+            "act": "cancelled",
+            "slots": {
+              "goal": "the sidewalk"
+            }
+          },
+          {
+            "act": "capability_refusal",
+            "slots": {
+              "keys": [
+                "position_report"
+              ]
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I've stopped, so the sidewalk is off the list. I don't have a position to report. What would you like next?",
+      "candidate": "",
+      "spoken": "I've stopped, so the sidewalk is off the list. I don't have a position to report. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "cancelled"
+        ],
+        "words": 21
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0022,
+      "check_ms": 0.2318,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-cancelled-04",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the door",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the door.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the door.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.1111,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-cancelled-04",
+      "turn_index": 3,
+      "at_s": 7.31,
+      "trigger_event_id": "T1:cancelled@7.3",
+      "acts": {
+        "acts": [
+          {
+            "act": "cancelled",
+            "slots": {
+              "goal": "the door"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I've stopped, so the door is off the list. What would you like next?",
+      "candidate": "",
+      "spoken": "I've stopped, so the door is off the list. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "cancelled"
+        ],
+        "words": 14
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0014,
+      "check_ms": 0.1669,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-cancelled-04",
+      "turn_index": 5,
+      "at_s": 10.01,
+      "trigger_event_id": "",
+      "acts": {
+        "acts": [
+          {
+            "act": "cancelled",
+            "slots": {
+              "goal": "the door"
+            }
+          },
+          {
+            "act": "capability_refusal",
+            "slots": {
+              "keys": [
+                "position_report"
+              ]
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I've stopped, so the door is off the list. I don't have a position to report. What would you like next?",
+      "candidate": "",
+      "spoken": "I've stopped, so the door is off the list. I don't have a position to report. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "cancelled"
+        ],
+        "words": 21
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0022,
+      "check_ms": 0.2304,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-cancelled-05",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the lamppost",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the lamppost.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the lamppost.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.0913,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-cancelled-05",
+      "turn_index": 3,
+      "at_s": 7.31,
+      "trigger_event_id": "T1:cancelled@7.3",
+      "acts": {
+        "acts": [
+          {
+            "act": "cancelled",
+            "slots": {
+              "goal": "the lamppost"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I've stopped, so the lamppost is off the list. What would you like next?",
+      "candidate": "",
+      "spoken": "I've stopped, so the lamppost is off the list. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "cancelled"
+        ],
+        "words": 14
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.1628,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-cancelled-05",
+      "turn_index": 5,
+      "at_s": 10.01,
+      "trigger_event_id": "",
+      "acts": {
+        "acts": [
+          {
+            "act": "cancelled",
+            "slots": {
+              "goal": "the lamppost"
+            }
+          },
+          {
+            "act": "capability_refusal",
+            "slots": {
+              "keys": [
+                "position_report"
+              ]
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I've stopped, so the lamppost is off the list. I don't have a position to report. What would you like next?",
+      "candidate": "",
+      "spoken": "I've stopped, so the lamppost is off the list. I don't have a position to report. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "cancelled"
+        ],
+        "words": 21
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0022,
+      "check_ms": 0.2556,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-keys-01",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the door",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the door.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the door.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0044,
+      "check_ms": 0.0896,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-keys-01",
+      "turn_index": 2,
+      "at_s": 8.0,
+      "trigger_event_id": "T1:completed@8.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the door"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the door. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the door. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0014,
+      "check_ms": 0.1122,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-keys-01",
+      "turn_index": 4,
+      "at_s": 11.01,
+      "trigger_event_id": "",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the door"
+            }
+          },
+          {
+            "act": "capability_refusal",
+            "slots": {
+              "keys": [
+                "vision"
+              ]
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the door. I have no camera, so I can't look for things. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the door. I have no camera, so I can't look for things. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 19
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0022,
+      "check_ms": 0.2103,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-keys-01",
+      "turn_index": 6,
+      "at_s": 14.61,
+      "trigger_event_id": "T2:running@14.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the bench",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the bench.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the bench.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0012,
+      "check_ms": 0.0959,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-keys-01",
+      "turn_index": 7,
+      "at_s": 21.0,
+      "trigger_event_id": "T2:completed@21.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the bench"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the bench. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the bench. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.1136,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-keys-02",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the door",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the door.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the door.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0012,
+      "check_ms": 0.0877,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-keys-02",
+      "turn_index": 2,
+      "at_s": 8.0,
+      "trigger_event_id": "T1:completed@8.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the door"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the door. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the door. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.1295,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-keys-02",
+      "turn_index": 4,
+      "at_s": 11.01,
+      "trigger_event_id": "",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the door"
+            }
+          },
+          {
+            "act": "capability_refusal",
+            "slots": {
+              "keys": [
+                "vision"
+              ]
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the door. I have no camera, so I can't look for things. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the door. I have no camera, so I can't look for things. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 19
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.002,
+      "check_ms": 0.208,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-keys-02",
+      "turn_index": 6,
+      "at_s": 14.61,
+      "trigger_event_id": "T2:running@14.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the sofa",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the sofa.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the sofa.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0011,
+      "check_ms": 0.0972,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-keys-02",
+      "turn_index": 7,
+      "at_s": 21.0,
+      "trigger_event_id": "T2:completed@21.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the sofa"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the sofa. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the sofa. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.1162,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-keys-03",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the sidewalk",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the sidewalk.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the sidewalk.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0012,
+      "check_ms": 0.0935,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-keys-03",
+      "turn_index": 2,
+      "at_s": 8.0,
+      "trigger_event_id": "T1:completed@8.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the sidewalk"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the sidewalk. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the sidewalk. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.1141,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-keys-03",
+      "turn_index": 4,
+      "at_s": 11.01,
+      "trigger_event_id": "",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the sidewalk"
+            }
+          },
+          {
+            "act": "capability_refusal",
+            "slots": {
+              "keys": [
+                "vision"
+              ]
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the sidewalk. I have no camera, so I can't look for things. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the sidewalk. I have no camera, so I can't look for things. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 19
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0021,
+      "check_ms": 0.2406,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-keys-03",
+      "turn_index": 6,
+      "at_s": 14.61,
+      "trigger_event_id": "T2:running@14.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the bench",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the bench.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the bench.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0012,
+      "check_ms": 0.0933,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-keys-03",
+      "turn_index": 7,
+      "at_s": 21.0,
+      "trigger_event_id": "T2:completed@21.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the bench"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the bench. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the bench. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0014,
+      "check_ms": 0.1137,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-keys-04",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the door",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the door.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the door.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0012,
+      "check_ms": 0.0894,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-keys-04",
+      "turn_index": 2,
+      "at_s": 8.0,
+      "trigger_event_id": "T1:completed@8.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the door"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the door. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the door. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.1086,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-keys-04",
+      "turn_index": 4,
+      "at_s": 11.01,
+      "trigger_event_id": "",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the door"
+            }
+          },
+          {
+            "act": "capability_refusal",
+            "slots": {
+              "keys": [
+                "vision"
+              ]
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the door. I have no camera, so I can't look for things. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the door. I have no camera, so I can't look for things. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 19
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.002,
+      "check_ms": 0.2094,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-keys-04",
+      "turn_index": 6,
+      "at_s": 14.61,
+      "trigger_event_id": "T2:running@14.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the tree",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the tree.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the tree.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0011,
+      "check_ms": 0.0904,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-keys-04",
+      "turn_index": 7,
+      "at_s": 21.0,
+      "trigger_event_id": "T2:completed@21.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the tree"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the tree. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the tree. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.1134,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-keys-05",
+      "turn_index": 1,
+      "at_s": 0.61,
+      "trigger_event_id": "T1:running@0.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the lamppost",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the lamppost.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the lamppost.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0012,
+      "check_ms": 0.093,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-keys-05",
+      "turn_index": 2,
+      "at_s": 8.0,
+      "trigger_event_id": "T1:completed@8.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the lamppost"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the lamppost. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the lamppost. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.1124,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-keys-05",
+      "turn_index": 4,
+      "at_s": 11.01,
+      "trigger_event_id": "",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the lamppost"
+            }
+          },
+          {
+            "act": "capability_refusal",
+            "slots": {
+              "keys": [
+                "vision"
+              ]
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the lamppost. I have no camera, so I can't look for things. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the lamppost. I have no camera, so I can't look for things. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 19
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0021,
+      "check_ms": 0.2177,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-keys-05",
+      "turn_index": 6,
+      "at_s": 14.61,
+      "trigger_event_id": "T2:running@14.6",
+      "acts": {
+        "acts": [
+          {
+            "act": "ack",
+            "slots": {
+              "goal": "the sofa",
+              "queued": false
+            }
+          }
+        ],
+        "closing": ""
+      },
+      "template": "Okay, I'll head to the sofa.",
+      "candidate": "",
+      "spoken": "Okay, I'll head to the sofa.",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "motion_present",
+          "acceptance"
+        ],
+        "words": 6
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0012,
+      "check_ms": 0.0899,
+      "ttft_ms": null,
+      "total_ms": null
+    },
+    {
+      "scenario_id": "door-sofa-keys-keys-05",
+      "turn_index": 7,
+      "at_s": 21.0,
+      "trigger_event_id": "T2:completed@21.0",
+      "acts": {
+        "acts": [
+          {
+            "act": "completed",
+            "slots": {
+              "goal": "the sofa"
+            }
+          }
+        ],
+        "closing": "What would you like next?"
+      },
+      "template": "I'm at the sofa. What would you like next?",
+      "candidate": "",
+      "spoken": "I'm at the sofa. What would you like next?",
+      "template_check": {
+        "ok": true,
+        "reasons": [],
+        "claims": [
+          "arrival"
+        ],
+        "words": 9
+      },
+      "candidate_check": null,
+      "fell_back": false,
+      "render_ms": 0.0013,
+      "check_ms": 0.114,
+      "ttft_ms": null,
+      "total_ms": null
+    }
+  ]
+}

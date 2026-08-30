@@ -1,0 +1,16 @@
+╭─ Value error ────────────────────────────────────────────────────────────────╮
+│ Error parsing --gpu-ids: no type matching {None}|[INT,...]|{all} could be    │
+│ instantiated from ['0'].                                                     │
+│                                                                              │
+│ Got errors:                                                                  │
+│ - <class 'NoneType'>: ['0'] does not match choices ('None',)                 │
+│ - list[int]: Value 0 (type <class 'int'>) does not match expected type       │
+│ list[int]                                                                    │
+│ - typing.Literal['all']: ['0'] does not match choices ('all',)               │
+│ ──────────────────────────────────────────────────────────────────────────── │
+│ Argument helptext:                                                           │
+│     --gpu-ids {None}|[INT,...]|{all}                                         │
+│     (default: '[0]')                                                         │
+│ ──────────────────────────────────────────────────────────────────────────── │
+│ For full helptext, see scripts/train.py Unitree-Go2-Flat --help              │
+╰──────────────────────────────────────────────────────────────────────────────╯

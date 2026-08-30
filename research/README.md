@@ -68,3 +68,5 @@ VERDICT.md is a claim, not a finding.
   adaptive-locomotion and terrain-planning eval designs, and a 30/60/90-day
   simulator path; physical motion remains `NO-GO`: see `20260828/README.md`.
 - `20260828/LIVING_BEHAVIOR_MODEL_REPORT.md` — trainable full-duplex behavior model wave (BM-1/FL-1/HS-1/DS-1, verified literature review, SIM_TRAINING_PLAN); see `20260828/README.md`.
+- `20260829/FLUIDITY_REPORT.md` — nav + conversational fluidity wave (Model A/B: NAV-INT-1, MA-1, MB-1, LIT-1, CONV-1; verified literature; Sol's parallel assessment in the same folder).
+- `20260829/VERDICT_RESEARCH_QUESTION.md` — parcel-0e's verdict on the owner's Model A / Model B fluidity question (wave 1 + wave 2 evidence, Sol's parallel assessment, and the NAV-GEN-1 / MB-2 probes: `20260829/nav-gen-attribution-1/`, `20260829/model-b-contract-2/`). Physical motion NO-GO.

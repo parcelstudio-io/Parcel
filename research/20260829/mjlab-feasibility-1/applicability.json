@@ -1,0 +1,103 @@
+{
+  "captured_at_utc": "2026-08-29T22:56:49.774754+00:00",
+  "experiment": "MJLAB-1",
+  "h4_assessment": "Useful as a pinned lower-layer locomotion research substrate; insufficient for Model A/Model B promotion, companion navigation, conversation, or physical safety.",
+  "hypothesis": "MJF-H4",
+  "important_distinctions": [
+    "terrain_scan is a simulator ray-cast height grid, not a modeled Mid-360 data path",
+    "the retained PPO policy is a three-iteration smoke artifact, not a locomotion policy",
+    "the upstream deploy controller was inspected, not compiled or run",
+    "direct deployment must not bypass Parcel's commissioned gateway and STOP authority"
+  ],
+  "lower_layer_hooks_pass": true,
+  "not_present_in_tested_task": [
+    "Parcel camera or Mid-360 LiDAR observations",
+    "audio, speech, or full-duplex conversational input/output",
+    "dynamic pedestrian, sidewalk, crosswalk, elevator, stair, or social-comfort scenarios",
+    "Model A proposal/lease contract or Model B execution-receipt narration",
+    "interruptible task ledger, global planning, semantic object grounding, or memory",
+    "Starlink latency/loss and acoustic/network fault injection",
+    "Go2 EDU+ AGX Orin payload mass/inertia/thermal/power model",
+    "independent safety supervisor or Parcel's sole-writer motion authority"
+  ],
+  "observed": {
+    "aarch64_onnxruntime_branch_present": true,
+    "flat_sensors": [
+      {
+        "name": "feet_ground_contact",
+        "type": "ContactSensorCfg"
+      },
+      {
+        "name": "nonfoot_ground_touch",
+        "type": "ContactSensorCfg"
+      }
+    ],
+    "flat_terrain_type": "plane",
+    "go2_controller_loads_onnx": true,
+    "go2_deployment_controller_present": true,
+    "go2_named_leg_joint_count": 12,
+    "go2_named_leg_joints": [
+      "FL_hip_joint",
+      "FL_thigh_joint",
+      "FL_calf_joint",
+      "FR_hip_joint",
+      "FR_thigh_joint",
+      "FR_calf_joint",
+      "RL_hip_joint",
+      "RL_thigh_joint",
+      "RL_calf_joint",
+      "RR_hip_joint",
+      "RR_thigh_joint",
+      "RR_calf_joint"
+    ],
+    "onnx_export_hook_present": true,
+    "randomization_events": [
+      "base_com",
+      "encoder_bias",
+      "foot_friction",
+      "push_robot",
+      "reset_base",
+      "reset_robot_joints"
+    ],
+    "rough_sensors": [
+      {
+        "name": "terrain_scan",
+        "type": "RayCastSensorCfg"
+      },
+      {
+        "name": "feet_ground_contact",
+        "type": "ContactSensorCfg"
+      },
+      {
+        "name": "nonfoot_ground_touch",
+        "type": "ContactSensorCfg"
+      }
+    ],
+    "rough_terrain_generator_present": true,
+    "rough_terrain_type": "generator",
+    "separate_simulation_deployment_recommended": true,
+    "upstream_train_play_sim2real_workflow_documented": true,
+    "velocity_command_terms": [
+      "twist"
+    ]
+  },
+  "schema_version": 1,
+  "source": {
+    "commit": "1425b15f73bd4095f0df53709d7c389c3eb9e790",
+    "inspected_sha256": {
+      "README.md": "77cdf64b75446b710f29e360936ad744b1260b7c7d4d9389cdb73d7adc61016b",
+      "deploy/robots/go2/CMakeLists.txt": "3266f84177ec8bcb90faedf8e84314db2b8a917079de31d99887b63a4248a9b3",
+      "deploy/robots/go2/main.cpp": "621b6dcfac43d7dfa12b6c350cf47ed1af4d23624d091ebbb7399449d74e7f9e",
+      "deploy/robots/go2/src/State_RLBase.cpp": "f45980cd3da6f0c8be0c02f0206b6a9ee0ff8426e07b902de40f54962536a9ce",
+      "src/assets/robots/unitree_go2/xmls/go2.xml": "077fc7f70ce2ddcfdab814aa0800efa2c974db6c98594b2f7663f779509fb912",
+      "src/tasks/velocity/config/go2/env_cfgs.py": "98defb863edccf071070074c31cb77790f83a40276e0589cf2982137c44cd293",
+      "src/tasks/velocity/rl/runner.py": "1a12eb152cb307b57e024814a3a3f9026458759bab6cf43a5cfcccc0b9a0e0cf"
+    },
+    "path": "/home/jaewoo-jang/.cache/parcel-0e/unitree_rl_mjlab-20260829",
+    "probe_sha256": "3187493061c63ba4c77daca61921071ea9cfac9933d7df3c4048c4c02563ef7c",
+    "tracked_diff_empty": true
+  },
+  "strict_h4_gate_supported": false,
+  "strict_h4_reason": "DESIGN.md conditions usefulness on H1-H3. Clean-install H1 failed, so the strict all-gates chain remains false even though remediated H2/H3 and the hooks pass.",
+  "useful_for_lower_layer_locomotion_research_in_pinned_environment": true
+}

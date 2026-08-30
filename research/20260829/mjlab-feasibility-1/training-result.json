@@ -1,0 +1,198 @@
+{
+  "all_native_checkpoints": [
+    {
+      "bytes": 4741375,
+      "path": "/home/jaewoo-jang/.cache/parcel-0e/unitree_rl_mjlab-20260829/logs/rsl_rl/go2_velocity/2026-08-29_18-51-35_mjlab1-h3-pinned/model_0.pt",
+      "sha256": "577496a98d702fef0a24f1b15462d8a65019737caecc400357ae8f0a80662e4f"
+    },
+    {
+      "bytes": 4741375,
+      "path": "/home/jaewoo-jang/.cache/parcel-0e/unitree_rl_mjlab-20260829/logs/rsl_rl/go2_velocity/2026-08-29_18-51-35_mjlab1-h3-pinned/model_1.pt",
+      "sha256": "edc95992f8b48a1b1b3b564088bb0c0d3907d833f429909ad9527e4a62dcc308"
+    },
+    {
+      "bytes": 4741375,
+      "path": "/home/jaewoo-jang/.cache/parcel-0e/unitree_rl_mjlab-20260829/logs/rsl_rl/go2_velocity/2026-08-29_18-51-35_mjlab1-h3-pinned/model_2.pt",
+      "sha256": "c94bba8935f26b18018d9eed7a1d92a36dc75830eb1a1a38b74bf00662d1060a"
+    }
+  ],
+  "captured_at_utc": "2026-08-29T22:53:45.340202+00:00",
+  "checkpoint": {
+    "checkpoint_iteration_index": 2,
+    "original": {
+      "bytes": 4741375,
+      "path": "/home/jaewoo-jang/.cache/parcel-0e/unitree_rl_mjlab-20260829/logs/rsl_rl/go2_velocity/2026-08-29_18-51-35_mjlab1-h3-pinned/model_2.pt",
+      "sha256": "c94bba8935f26b18018d9eed7a1d92a36dc75830eb1a1a38b74bf00662d1060a"
+    },
+    "top_level_keys": [
+      "actor_state_dict",
+      "critic_state_dict",
+      "infos",
+      "iter",
+      "optimizer_state_dict"
+    ]
+  },
+  "command": [
+    "scripts/train.py",
+    "Unitree-Go2-Flat",
+    "--env.scene.num-envs=64",
+    "--agent.max-iterations=3",
+    "--agent.save-interval=1",
+    "--agent.seed=42",
+    "--agent.run-name=mjlab1-h3-pinned"
+  ],
+  "configuration": {
+    "max_iterations": 3,
+    "num_envs": 64,
+    "num_steps_per_env": 24,
+    "save_interval": 1,
+    "seed": 42
+  },
+  "expected_environment_steps": 4608,
+  "experiment": "MJLAB-1",
+  "gates": {
+    "checkpoint_interval_pass": true,
+    "configuration_files_pass": true,
+    "iterations_pass": true,
+    "native_checkpoint_pass": true,
+    "num_envs_pass": true,
+    "retained_hashes_pass": true,
+    "rollout_steps_pass": true,
+    "seed_pass": true,
+    "total_steps_pass": true,
+    "upstream_command_exit_pass": true,
+    "upstream_tracked_source_unchanged": true
+  },
+  "h3_supported": true,
+  "hypothesis": "MJF-H3",
+  "interpretation": "Three iterations demonstrate only that rollout, optimization, logging, native checkpointing, and ONNX export execute. They do not demonstrate reward improvement or a usable locomotion policy.",
+  "observed_iteration_indices": [
+    0,
+    1,
+    2
+  ],
+  "observed_total_steps_by_iteration": [
+    1536,
+    3072,
+    4608
+  ],
+  "operational_environment": {
+    "CUDA_VISIBLE_DEVICES": "0",
+    "MUJOCO_GL": "egl",
+    "WANDB_MODE": "offline"
+  },
+  "packages": {
+    "mjlab": "1.2.0",
+    "mujoco": "3.5.0",
+    "mujoco-warp": "3.5.0",
+    "rsl-rl-lib": "5.0.1",
+    "scipy": "1.17.1",
+    "torch": "2.13.0",
+    "unitree_rl_mjlab": "0.0.1",
+    "wandb": "0.22.3",
+    "warp-lang": "1.12.0"
+  },
+  "resource_usage": {
+    "elapsed_wall_seconds": 13.2,
+    "exit_status": 0,
+    "maximum_resident_set_gib": 3.0089645385742188,
+    "maximum_resident_set_kib": 3155128,
+    "raw_fields": {
+      "Average resident set size (kbytes)": "0",
+      "Average shared text size (kbytes)": "0",
+      "Average stack size (kbytes)": "0",
+      "Average total size (kbytes)": "0",
+      "Average unshared data size (kbytes)": "0",
+      "Command being timed": "\"/home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/bin/python scripts/train.py Unitree-Go2-Flat --env.scene.num-envs=64 --agent.max-iterations=3 --agent.save-interval=1 --agent.seed=42 --agent.run-name=mjlab1-h3-pinned\"",
+      "Elapsed (wall clock) time (h:mm:ss or m:ss)": "0:13.20",
+      "Exit status": "0",
+      "File system inputs": "8",
+      "File system outputs": "49632",
+      "Involuntary context switches": "413",
+      "Major (requiring I/O) page faults": "0",
+      "Maximum resident set size (kbytes)": "3155128",
+      "Minor (reclaiming a frame) page faults": "570202",
+      "Page size (bytes)": "4096",
+      "Percent of CPU this job got": "203%",
+      "Signals delivered": "0",
+      "Socket messages received": "0",
+      "Socket messages sent": "0",
+      "Swaps": "0",
+      "System time (seconds)": "1.91",
+      "User time (seconds)": "24.93",
+      "Voluntary context switches": "5456"
+    }
+  },
+  "retained_artifacts": {
+    "agent.yaml": {
+      "hash_match": true,
+      "original": {
+        "bytes": 1037,
+        "path": "/home/jaewoo-jang/.cache/parcel-0e/unitree_rl_mjlab-20260829/logs/rsl_rl/go2_velocity/2026-08-29_18-51-35_mjlab1-h3-pinned/params/agent.yaml",
+        "sha256": "f2e90fb2dc48b95688668bfa314430051310805736e99fbe1fa640d8b7461573"
+      },
+      "retained": {
+        "bytes": 1037,
+        "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260829/mjlab-feasibility-1/artifacts/agent.yaml",
+        "sha256": "f2e90fb2dc48b95688668bfa314430051310805736e99fbe1fa640d8b7461573"
+      }
+    },
+    "env.yaml": {
+      "hash_match": true,
+      "original": {
+        "bytes": 36461,
+        "path": "/home/jaewoo-jang/.cache/parcel-0e/unitree_rl_mjlab-20260829/logs/rsl_rl/go2_velocity/2026-08-29_18-51-35_mjlab1-h3-pinned/params/env.yaml",
+        "sha256": "82111db0b1a46868396801436ca52c0f449dda3b3fd0631fdadd3cf8b0e766b2"
+      },
+      "retained": {
+        "bytes": 36461,
+        "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260829/mjlab-feasibility-1/artifacts/env.yaml",
+        "sha256": "82111db0b1a46868396801436ca52c0f449dda3b3fd0631fdadd3cf8b0e766b2"
+      }
+    },
+    "model_2.pt": {
+      "hash_match": true,
+      "original": {
+        "bytes": 4741375,
+        "path": "/home/jaewoo-jang/.cache/parcel-0e/unitree_rl_mjlab-20260829/logs/rsl_rl/go2_velocity/2026-08-29_18-51-35_mjlab1-h3-pinned/model_2.pt",
+        "sha256": "c94bba8935f26b18018d9eed7a1d92a36dc75830eb1a1a38b74bf00662d1060a"
+      },
+      "retained": {
+        "bytes": 4741375,
+        "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260829/mjlab-feasibility-1/artifacts/model_2.pt",
+        "sha256": "c94bba8935f26b18018d9eed7a1d92a36dc75830eb1a1a38b74bf00662d1060a"
+      }
+    },
+    "policy.onnx": {
+      "hash_match": true,
+      "original": {
+        "bytes": 763857,
+        "path": "/home/jaewoo-jang/.cache/parcel-0e/unitree_rl_mjlab-20260829/logs/rsl_rl/go2_velocity/2026-08-29_18-51-35_mjlab1-h3-pinned/policy.onnx",
+        "sha256": "672c9118480fbd9900f57849e69e5a2d7978a9044d7aac044a9a1b9b8e1e9791"
+      },
+      "retained": {
+        "bytes": 763857,
+        "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260829/mjlab-feasibility-1/artifacts/policy.onnx",
+        "sha256": "672c9118480fbd9900f57849e69e5a2d7978a9044d7aac044a9a1b9b8e1e9791"
+      }
+    }
+  },
+  "schema_version": 1,
+  "source": {
+    "collector_sha256": "0a256a96ad4fb3df856ec24b396c19acee9a09508037904a1a5337803d44839e",
+    "commit": "1425b15f73bd4095f0df53709d7c389c3eb9e790",
+    "path": "/home/jaewoo-jang/.cache/parcel-0e/unitree_rl_mjlab-20260829",
+    "status_porcelain": "",
+    "tracked_diff_empty": true
+  },
+  "time_log": {
+    "bytes": 960,
+    "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260829/mjlab-feasibility-1/raw/training-time.txt",
+    "sha256": "f8dc19eb0b193ce71bb44d8924c4f1482695e17ece8780ca0fda583868c8eb69"
+  },
+  "training_log": {
+    "bytes": 18391,
+    "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260829/mjlab-feasibility-1/raw/training.log",
+    "sha256": "876d6603662c2f9ca3fb66435ba7c2fe3910a9b016f89095553b41b038af821a"
+  }
+}

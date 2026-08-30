@@ -1,0 +1,41 @@
+{
+  "captured_at_utc": "2026-08-29T23:01:27.688046+00:00",
+  "check": {
+    "returncode": 0,
+    "stderr_file": "warp-remediation-final-check.stderr.txt",
+    "stdout_file": "warp-remediation-final-check.stdout.txt",
+    "wall_seconds": 1.9522924380144104
+  },
+  "experiment": "MJLAB-1",
+  "interpretation": "This third environment-only pin records another open-ended dependency drift. It does not retroactively support the clean-install gate.",
+  "phase": "warp_api_compatibility_remediation",
+  "remediated_import_supported": true,
+  "remediation": {
+    "argv": [
+      "/home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/bin/python",
+      "-m",
+      "pip",
+      "install",
+      "--only-binary=:all:",
+      "warp-lang==1.12.0"
+    ],
+    "installed_version": "1.12.0",
+    "rationale": "Use mjlab 1.2.0's exact supported lower bound, warp-lang 1.12.0, because its Simulation implementation directly accesses wp.context.",
+    "returncode": 0,
+    "stderr_file": "warp-remediation-final-pip.stderr.txt",
+    "stdout_file": "warp-remediation-final-pip.stdout.txt",
+    "wall_seconds": 0.2545198439620435
+  },
+  "schema_version": 1,
+  "source_commit": "1425b15f73bd4095f0df53709d7c389c3eb9e790",
+  "source_patched": false,
+  "source_status_porcelain": "?? src/__pycache__/\n?? src/assets/__pycache__/\n?? src/assets/robots/__pycache__/\n?? src/assets/robots/unitree_a2/__pycache__/\n?? src/assets/robots/unitree_as2/__pycache__/\n?? src/assets/robots/unitree_g1/__pycache__/\n?? src/assets/robots/unitree_go2/__pycache__/\n?? src/assets/robots/unitree_h1_2/__pycache__/\n?? src/assets/robots/unitree_h2/__pycache__/\n?? src/assets/robots/unitree_r1/__pycache__/\n?? src/tasks/__pycache__/\n?? src/tasks/tracking/__pycache__/\n?? src/tasks/tracking/config/__pycache__/\n?? src/tasks/tracking/config/g1/__pycache__/\n?? src/tasks/tracking/config/g1_23dof/__pycache__/\n?? src/tasks/tracking/mdp/__pycache__/\n?? src/tasks/tracking/rl/__pycache__/\n?? src/tasks/velocity/__pycache__/\n?? src/tasks/velocity/config/__pycache__/\n?? src/tasks/velocity/config/a2/__pycache__/\n?? src/tasks/velocity/config/as2/__pycache__/\n?? src/tasks/velocity/config/g1/__pycache__/\n?? src/tasks/velocity/config/g1_23dof/__pycache__/\n?? src/tasks/velocity/config/go2/__pycache__/\n?? src/tasks/velocity/config/h1_2/__pycache__/\n?? src/tasks/velocity/config/h2/__pycache__/\n?? src/tasks/velocity/config/r1/__pycache__/\n?? src/tasks/velocity/mdp/__pycache__/\n?? src/tasks/velocity/rl/__pycache__/\n",
+  "trigger": {
+    "error": "AttributeError: module 'warp' has no attribute 'context'",
+    "mjlab_requirement": "warp-lang>=1.12.0",
+    "mujoco_warp_requirement": "warp-lang>=1.11.0",
+    "prior_log": "physics-run-1.log",
+    "prior_log_sha256": "f496bb9e74e524cc2c3d3cf1384c87aec92a630aae6441db9bc3e874124965bc",
+    "resolver_selected_warp": "1.16.0"
+  }
+}

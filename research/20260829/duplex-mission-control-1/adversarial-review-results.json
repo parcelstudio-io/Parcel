@@ -1,0 +1,19 @@
+{
+  "all_secure_expectations_met": false,
+  "evidence_class": "desktop_unit_counterexample_no_physics_no_audio_no_hardware_no_motion",
+  "interpretation": "H3_AND_H4_UNVERIFIED",
+  "observations": {
+    "fabricated_terminal_narration_accepted": true,
+    "post_terminal_started_accepted": true,
+    "post_terminal_started_disposition": "accepted_started",
+    "wrong_step_and_attempt_terminal_accepted": true,
+    "wrong_step_and_attempt_terminal_disposition": "accepted_terminal"
+  },
+  "schema": "parcel.dmc1.adversarial_review.v1",
+  "secure_expectations": {
+    "fabricated_terminal_narration_rejected": false,
+    "post_terminal_started_rejected": false,
+    "wrong_step_and_attempt_terminal_rejected": false
+  },
+  "semantic_sha256": "1da64b6b8c7aa6682b87bb0172dc46c98a48f1bfaf765c32ce6be5fbfba7bbbf"
+}

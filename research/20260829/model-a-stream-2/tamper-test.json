@@ -1,0 +1,1 @@
+{"expected":"reject","mutation":"first actuator_applied.vx changed by +0.001; container hash updated only","pass":true,"reason":"row hash mismatch at mutated.jsonl.zst:0","rejected":true}

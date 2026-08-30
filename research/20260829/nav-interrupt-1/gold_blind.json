@@ -1,0 +1,673 @@
+{
+ "version": 1,
+ "author": "Fable (verifier), blind to the classifier, 16:05 08-29",
+ "labels": [
+  "revise",
+  "keep",
+  "queue",
+  "clarify"
+ ],
+ "note": "'revise' = a new navigation goal that replaces the current one (with or without an amend cue); 'queue' = a goal to do after the current one; 'keep' = not a navigation command, or a confirmation/encouragement to continue; 'clarify' = names no groundable place in the demo city or is ambiguous. Place names are demo-city landmarks that pass admission; 'fountain'/'sofa'/'door'/'narnia' are unknown places (ask).",
+ "cases": [
+  {
+   "utterance": "go to the bench, then wait",
+   "gold": "queue",
+   "adversarial": true,
+   "id": "g000"
+  },
+  {
+   "utterance": "go to my spot",
+   "gold": "clarify",
+   "adversarial": true,
+   "id": "g001"
+  },
+  {
+   "utterance": "once you get there, head to the bench",
+   "gold": "queue",
+   "adversarial": false,
+   "id": "g002"
+  },
+  {
+   "utterance": "once you get there, head to the tree",
+   "gold": "queue",
+   "adversarial": false,
+   "id": "g003"
+  },
+  {
+   "utterance": "how far is it",
+   "gold": "keep",
+   "adversarial": false,
+   "id": "g004"
+  },
+  {
+   "utterance": "go to the sidewalk",
+   "gold": "revise",
+   "adversarial": false,
+   "id": "g005"
+  },
+  {
+   "utterance": "go to the bench, not the lamppost",
+   "gold": "revise",
+   "adversarial": true,
+   "id": "g006"
+  },
+  {
+   "utterance": "don't go to the bench, keep going",
+   "gold": "keep",
+   "adversarial": true,
+   "id": "g007"
+  },
+  {
+   "utterance": "after the lamppost, the bench",
+   "gold": "queue",
+   "adversarial": true,
+   "id": "g008"
+  },
+  {
+   "utterance": "go back",
+   "gold": "clarify",
+   "adversarial": true,
+   "id": "g009"
+  },
+  {
+   "utterance": "the bench is nice",
+   "gold": "keep",
+   "adversarial": false,
+   "id": "g010"
+  },
+  {
+   "utterance": "you're doing great",
+   "gold": "keep",
+   "adversarial": false,
+   "id": "g011"
+  },
+  {
+   "utterance": "yes",
+   "gold": "keep",
+   "adversarial": false,
+   "id": "g012"
+  },
+  {
+   "utterance": "and after that come here",
+   "gold": "queue",
+   "adversarial": true,
+   "id": "g013"
+  },
+  {
+   "utterance": "go to the lamppost",
+   "gold": "revise",
+   "adversarial": false,
+   "id": "g014"
+  },
+  {
+   "utterance": "after that, go to the bench",
+   "gold": "queue",
+   "adversarial": false,
+   "id": "g015"
+  },
+  {
+   "utterance": "go to the other one",
+   "gold": "clarify",
+   "adversarial": false,
+   "id": "g016"
+  },
+  {
+   "utterance": "scratch that, sidewalk",
+   "gold": "revise",
+   "adversarial": true,
+   "id": "g017"
+  },
+  {
+   "utterance": "go to the place",
+   "gold": "clarify",
+   "adversarial": true,
+   "id": "g018"
+  },
+  {
+   "utterance": "no, go to the lamppost instead",
+   "gold": "revise",
+   "adversarial": false,
+   "id": "g019"
+  },
+  {
+   "utterance": "go to the far one",
+   "gold": "clarify",
+   "adversarial": false,
+   "id": "g020"
+  },
+  {
+   "utterance": "go on",
+   "gold": "keep",
+   "adversarial": true,
+   "id": "g021"
+  },
+  {
+   "utterance": "no, go to the tree instead",
+   "gold": "revise",
+   "adversarial": false,
+   "id": "g022"
+  },
+  {
+   "utterance": "change that \u2014 the sidewalk",
+   "gold": "revise",
+   "adversarial": false,
+   "id": "g023"
+  },
+  {
+   "utterance": "change that \u2014 the bench",
+   "gold": "revise",
+   "adversarial": false,
+   "id": "g024"
+  },
+  {
+   "utterance": "after that, go to the planter",
+   "gold": "queue",
+   "adversarial": false,
+   "id": "g025"
+  },
+  {
+   "utterance": "what time is it",
+   "gold": "keep",
+   "adversarial": false,
+   "id": "g026"
+  },
+  {
+   "utterance": "when you're done, go to the sidewalk",
+   "gold": "queue",
+   "adversarial": false,
+   "id": "g027"
+  },
+  {
+   "utterance": "hold on, go to the planter",
+   "gold": "revise",
+   "adversarial": true,
+   "id": "g028"
+  },
+  {
+   "utterance": "when you're done, go to the lamppost",
+   "gold": "queue",
+   "adversarial": false,
+   "id": "g029"
+  },
+  {
+   "utterance": "not that one, the bench",
+   "gold": "revise",
+   "adversarial": true,
+   "id": "g030"
+  },
+  {
+   "utterance": "fine, go on",
+   "gold": "keep",
+   "adversarial": false,
+   "id": "g031"
+  },
+  {
+   "utterance": "go there",
+   "gold": "clarify",
+   "adversarial": true,
+   "id": "g032"
+  },
+  {
+   "utterance": "don't stop",
+   "gold": "keep",
+   "adversarial": false,
+   "id": "g033"
+  },
+  {
+   "utterance": "when you're done, go to the tree",
+   "gold": "queue",
+   "adversarial": false,
+   "id": "g034"
+  },
+  {
+   "utterance": "the other lamppost",
+   "gold": "revise",
+   "adversarial": true,
+   "id": "g035"
+  },
+  {
+   "utterance": "go to the crosswalk",
+   "gold": "revise",
+   "adversarial": false,
+   "id": "g036"
+  },
+  {
+   "utterance": "after that, go to the tree",
+   "gold": "queue",
+   "adversarial": false,
+   "id": "g037"
+  },
+  {
+   "utterance": "no wait, the crosswalk",
+   "gold": "revise",
+   "adversarial": true,
+   "id": "g038"
+  },
+  {
+   "utterance": "no, go to the crosswalk instead",
+   "gold": "revise",
+   "adversarial": false,
+   "id": "g039"
+  },
+  {
+   "utterance": "go go go",
+   "gold": "keep",
+   "adversarial": true,
+   "id": "g040"
+  },
+  {
+   "utterance": "go to the corner",
+   "gold": "clarify",
+   "adversarial": true,
+   "id": "g041"
+  },
+  {
+   "utterance": "that bench is broken",
+   "gold": "keep",
+   "adversarial": true,
+   "id": "g042"
+  },
+  {
+   "utterance": "once you get there, head to the lamppost",
+   "gold": "queue",
+   "adversarial": false,
+   "id": "g043"
+  },
+  {
+   "utterance": "head to the kitchen",
+   "gold": "clarify",
+   "adversarial": false,
+   "id": "g044"
+  },
+  {
+   "utterance": "change that \u2014 the lamppost",
+   "gold": "revise",
+   "adversarial": false,
+   "id": "g045"
+  },
+  {
+   "utterance": "keep it up",
+   "gold": "keep",
+   "adversarial": false,
+   "id": "g046"
+  },
+  {
+   "utterance": "once you get there, head to the sidewalk",
+   "gold": "queue",
+   "adversarial": false,
+   "id": "g047"
+  },
+  {
+   "utterance": "then go to the bench",
+   "gold": "queue",
+   "adversarial": false,
+   "id": "g048"
+  },
+  {
+   "utterance": "stay on course",
+   "gold": "keep",
+   "adversarial": false,
+   "id": "g049"
+  },
+  {
+   "utterance": "when you're done, go to the bench",
+   "gold": "queue",
+   "adversarial": false,
+   "id": "g050"
+  },
+  {
+   "utterance": "then go to the tree",
+   "gold": "queue",
+   "adversarial": false,
+   "id": "g051"
+  },
+  {
+   "utterance": "go to the red one",
+   "gold": "clarify",
+   "adversarial": true,
+   "id": "g052"
+  },
+  {
+   "utterance": "finish, then go to the crosswalk",
+   "gold": "queue",
+   "adversarial": true,
+   "id": "g053"
+  },
+  {
+   "utterance": "actually, go to narnia",
+   "gold": "clarify",
+   "adversarial": false,
+   "id": "g054"
+  },
+  {
+   "utterance": "when you're done, go to the crosswalk",
+   "gold": "queue",
+   "adversarial": false,
+   "id": "g055"
+  },
+  {
+   "utterance": "actually, go to the lamppost",
+   "gold": "revise",
+   "adversarial": false,
+   "id": "g056"
+  },
+  {
+   "utterance": "go to the door",
+   "gold": "clarify",
+   "adversarial": false,
+   "id": "g057"
+  },
+  {
+   "utterance": "go to where I was",
+   "gold": "clarify",
+   "adversarial": false,
+   "id": "g058"
+  },
+  {
+   "utterance": "that's the one",
+   "gold": "keep",
+   "adversarial": false,
+   "id": "g059"
+  },
+  {
+   "utterance": "next, the planter",
+   "gold": "queue",
+   "adversarial": true,
+   "id": "g060"
+  },
+  {
+   "utterance": "the lamppost is where we met",
+   "gold": "keep",
+   "adversarial": true,
+   "id": "g061"
+  },
+  {
+   "utterance": "go to the fountain",
+   "gold": "clarify",
+   "adversarial": false,
+   "id": "g062"
+  },
+  {
+   "utterance": "that lamppost looks tall",
+   "gold": "keep",
+   "adversarial": false,
+   "id": "g063"
+  },
+  {
+   "utterance": "stop talking about the tree",
+   "gold": "keep",
+   "adversarial": true,
+   "id": "g064"
+  },
+  {
+   "utterance": "are we there yet",
+   "gold": "keep",
+   "adversarial": false,
+   "id": "g065"
+  },
+  {
+   "utterance": "actually, go to the sidewalk",
+   "gold": "revise",
+   "adversarial": false,
+   "id": "g066"
+  },
+  {
+   "utterance": "go over there",
+   "gold": "clarify",
+   "adversarial": false,
+   "id": "g067"
+  },
+  {
+   "utterance": "after that, go to the crosswalk",
+   "gold": "queue",
+   "adversarial": false,
+   "id": "g068"
+  },
+  {
+   "utterance": "actually, go somewhere else",
+   "gold": "clarify",
+   "adversarial": true,
+   "id": "g069"
+  },
+  {
+   "utterance": "come here when you're done",
+   "gold": "queue",
+   "adversarial": true,
+   "id": "g070"
+  },
+  {
+   "utterance": "do the tree after",
+   "gold": "queue",
+   "adversarial": true,
+   "id": "g071"
+  },
+  {
+   "utterance": "good dog",
+   "gold": "keep",
+   "adversarial": false,
+   "id": "g072"
+  },
+  {
+   "utterance": "tell me a joke",
+   "gold": "keep",
+   "adversarial": false,
+   "id": "g073"
+  },
+  {
+   "utterance": "I went to the sidewalk yesterday",
+   "gold": "keep",
+   "adversarial": true,
+   "id": "g074"
+  },
+  {
+   "utterance": "later, go to the bench",
+   "gold": "queue",
+   "adversarial": true,
+   "id": "g075"
+  },
+  {
+   "utterance": "never mind, continue",
+   "gold": "keep",
+   "adversarial": false,
+   "id": "g076"
+  },
+  {
+   "utterance": "when you're done, go to the planter",
+   "gold": "queue",
+   "adversarial": false,
+   "id": "g077"
+  },
+  {
+   "utterance": "keep going",
+   "gold": "keep",
+   "adversarial": false,
+   "id": "g078"
+  },
+  {
+   "utterance": "go back to the sofa and check if I left my keys",
+   "gold": "clarify",
+   "adversarial": false,
+   "id": "g079"
+  },
+  {
+   "utterance": "then go to the sidewalk",
+   "gold": "queue",
+   "adversarial": false,
+   "id": "g080"
+  },
+  {
+   "utterance": "nice weather today",
+   "gold": "keep",
+   "adversarial": false,
+   "id": "g081"
+  },
+  {
+   "utterance": "actually, go to the bench",
+   "gold": "revise",
+   "adversarial": false,
+   "id": "g082"
+  },
+  {
+   "utterance": "no, go to the planter instead",
+   "gold": "revise",
+   "adversarial": false,
+   "id": "g083"
+  },
+  {
+   "utterance": "go to it",
+   "gold": "clarify",
+   "adversarial": true,
+   "id": "g084"
+  },
+  {
+   "utterance": "go to the one by the thing",
+   "gold": "clarify",
+   "adversarial": true,
+   "id": "g085"
+  },
+  {
+   "utterance": "rather than the tree, the planter",
+   "gold": "revise",
+   "adversarial": true,
+   "id": "g086"
+  },
+  {
+   "utterance": "keep your course to the lamppost",
+   "gold": "keep",
+   "adversarial": true,
+   "id": "g087"
+  },
+  {
+   "utterance": "after that, go to the sidewalk",
+   "gold": "queue",
+   "adversarial": false,
+   "id": "g088"
+  },
+  {
+   "utterance": "go to the thing over there",
+   "gold": "clarify",
+   "adversarial": false,
+   "id": "g089"
+  },
+  {
+   "utterance": "then go to the lamppost",
+   "gold": "queue",
+   "adversarial": false,
+   "id": "g090"
+  },
+  {
+   "utterance": "forget the sidewalk, go to the bench",
+   "gold": "revise",
+   "adversarial": true,
+   "id": "g091"
+  },
+  {
+   "utterance": "go to the bench",
+   "gold": "revise",
+   "adversarial": false,
+   "id": "g092"
+  },
+  {
+   "utterance": "I like the sidewalk",
+   "gold": "keep",
+   "adversarial": false,
+   "id": "g093"
+  },
+  {
+   "utterance": "no, keep going",
+   "gold": "keep",
+   "adversarial": true,
+   "id": "g094"
+  },
+  {
+   "utterance": "after that, go to the lamppost",
+   "gold": "queue",
+   "adversarial": false,
+   "id": "g095"
+  },
+  {
+   "utterance": "go to the bench right now",
+   "gold": "revise",
+   "adversarial": true,
+   "id": "g096"
+  },
+  {
+   "utterance": "head over to that",
+   "gold": "clarify",
+   "adversarial": true,
+   "id": "g097"
+  },
+  {
+   "utterance": "actually, go to the crosswalk",
+   "gold": "revise",
+   "adversarial": false,
+   "id": "g098"
+  },
+  {
+   "utterance": "actually, go to the tree",
+   "gold": "revise",
+   "adversarial": false,
+   "id": "g099"
+  },
+  {
+   "utterance": "no worries, continue",
+   "gold": "keep",
+   "adversarial": true,
+   "id": "g100"
+  },
+  {
+   "utterance": "go to the tree",
+   "gold": "revise",
+   "adversarial": false,
+   "id": "g101"
+  },
+  {
+   "utterance": "no, go to the sidewalk instead",
+   "gold": "revise",
+   "adversarial": false,
+   "id": "g102"
+  },
+  {
+   "utterance": "actually, go to the planter",
+   "gold": "revise",
+   "adversarial": false,
+   "id": "g103"
+  },
+  {
+   "utterance": "no, go to the bench instead",
+   "gold": "revise",
+   "adversarial": false,
+   "id": "g104"
+  },
+  {
+   "utterance": "then the sidewalk, then the tree",
+   "gold": "queue",
+   "adversarial": true,
+   "id": "g105"
+  },
+  {
+   "utterance": "when you reach it, come back",
+   "gold": "queue",
+   "adversarial": true,
+   "id": "g106"
+  },
+  {
+   "utterance": "carry on",
+   "gold": "keep",
+   "adversarial": false,
+   "id": "g107"
+  },
+  {
+   "utterance": "okay",
+   "gold": "keep",
+   "adversarial": false,
+   "id": "g108"
+  },
+  {
+   "utterance": "correction: the tree",
+   "gold": "revise",
+   "adversarial": true,
+   "id": "g109"
+  }
+ ]
+}

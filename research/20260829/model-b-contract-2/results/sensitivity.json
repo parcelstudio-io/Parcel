@@ -1,0 +1,220 @@
+{
+  "post_hoc": true,
+  "not_pre_registered": true,
+  "question": "What would the checker have cost, and bought, if it had ALSO required each act's headline claim class to survive the paraphrase?",
+  "model_calls": 0,
+  "turns": 180,
+  "fallbacks_as_run": 32,
+  "fallbacks_as_run_rate": 0.1778,
+  "additional_rejections": 23,
+  "fallback_rate_with_claim_preservation": 0.3056,
+  "turns_that_lost_the_headline_claim": [
+    {
+      "scenario_id": "door-sofa-keys-clean-03",
+      "at_s": 9.2,
+      "lost": [
+        "arrival"
+      ],
+      "template": "I'm at the sidewalk. What would you like next?",
+      "spoken": "I'm on the sidewalk now. What do you need next?"
+    },
+    {
+      "scenario_id": "door-sofa-keys-blocked-01",
+      "at_s": 21.01,
+      "lost": [
+        "blocked"
+      ],
+      "template": "Someone standing in the way held me up, so I waited.",
+      "spoken": "I had to wait because someone was blocking the way."
+    },
+    {
+      "scenario_id": "door-sofa-keys-blocked-02",
+      "at_s": 21.01,
+      "lost": [
+        "blocked"
+      ],
+      "template": "Someone standing in the way held me up, so I waited.",
+      "spoken": "I had to wait because someone was blocking the way."
+    },
+    {
+      "scenario_id": "door-sofa-keys-blocked-03",
+      "at_s": 5.0,
+      "lost": [
+        "blocked"
+      ],
+      "template": "Someone is in the way, so I'm waiting for it to clear.",
+      "spoken": "I'm just waiting for the person to move so we can continue."
+    },
+    {
+      "scenario_id": "door-sofa-keys-blocked-03",
+      "at_s": 18.5,
+      "lost": [
+        "arrival"
+      ],
+      "template": "I'm at the sidewalk. What would you like next?",
+      "spoken": "I'm on the sidewalk now. What do you need next?"
+    },
+    {
+      "scenario_id": "door-sofa-keys-blocked-03",
+      "at_s": 21.01,
+      "lost": [
+        "blocked"
+      ],
+      "template": "Someone standing in the way held me up, so I waited.",
+      "spoken": "I had to wait because someone was blocking the sidewalk."
+    },
+    {
+      "scenario_id": "door-sofa-keys-blocked-04",
+      "at_s": 21.01,
+      "lost": [
+        "blocked"
+      ],
+      "template": "Someone standing in the way held me up, so I waited.",
+      "spoken": "I had to wait because someone was blocking the way."
+    },
+    {
+      "scenario_id": "door-sofa-keys-failed-03",
+      "at_s": 6.0,
+      "lost": [
+        "blocked"
+      ],
+      "template": "Someone is in the way, so I'm waiting for it to clear.",
+      "spoken": "I'm just waiting for the person to move so we can continue."
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-01",
+      "at_s": 13.61,
+      "lost": [
+        "resumed"
+      ],
+      "template": "Okay, I'm picking that back up, and I'm on my way to the bench.",
+      "spoken": "I'm back, and I'm heading to the bench."
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-02",
+      "at_s": 13.61,
+      "lost": [
+        "resumed"
+      ],
+      "template": "Okay, I'm picking that back up, and I'm on my way to the sofa.",
+      "spoken": "I'm back on my way to the sofa."
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-03",
+      "at_s": 10.5,
+      "lost": [
+        "arrival"
+      ],
+      "template": "I'm at the sidewalk. Shall I go to the bench next?",
+      "spoken": "I'm on the sidewalk. Would you like me to go to the bench next?"
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-03",
+      "at_s": 13.61,
+      "lost": [
+        "resumed"
+      ],
+      "template": "Okay, I'm picking that back up, and I'm on my way to the bench.",
+      "spoken": "I'm back, and I'm heading to the bench."
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-04",
+      "at_s": 13.61,
+      "lost": [
+        "resumed"
+      ],
+      "template": "Okay, I'm picking that back up, and I'm on my way to the tree.",
+      "spoken": "I'm back on my way to the tree."
+    },
+    {
+      "scenario_id": "door-sofa-keys-queued-05",
+      "at_s": 13.61,
+      "lost": [
+        "resumed"
+      ],
+      "template": "Okay, I'm picking that back up, and I'm on my way to the sofa.",
+      "spoken": "I'm back on my way to the sofa."
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-01",
+      "at_s": 15.61,
+      "lost": [
+        "resumed"
+      ],
+      "template": "Okay, I'm picking that back up, and I'm on my way to the door.",
+      "spoken": "Okay, I'm continuing to the door."
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-02",
+      "at_s": 12.0,
+      "lost": [
+        "arrival"
+      ],
+      "template": "I'm at the sofa. Shall I go to the door next?",
+      "spoken": "I'm on the sofa. Would you like me to go to the door next?"
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-02",
+      "at_s": 15.61,
+      "lost": [
+        "resumed"
+      ],
+      "template": "Okay, I'm picking that back up, and I'm on my way to the door.",
+      "spoken": "Okay, I'm continuing to the door."
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-03",
+      "at_s": 15.61,
+      "lost": [
+        "resumed"
+      ],
+      "template": "Okay, I'm picking that back up, and I'm on my way to the sidewalk.",
+      "spoken": "I'm back on it and heading to the sidewalk."
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-03",
+      "at_s": 22.0,
+      "lost": [
+        "arrival"
+      ],
+      "template": "I'm at the sidewalk. What would you like next?",
+      "spoken": "I'm on the sidewalk now. What do you need next?"
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-04",
+      "at_s": 15.61,
+      "lost": [
+        "resumed"
+      ],
+      "template": "Okay, I'm picking that back up, and I'm on my way to the door.",
+      "spoken": "Okay, I'm continuing to the door."
+    },
+    {
+      "scenario_id": "door-sofa-keys-resumed-05",
+      "at_s": 15.61,
+      "lost": [
+        "resumed"
+      ],
+      "template": "Okay, I'm picking that back up, and I'm on my way to the lamppost.",
+      "spoken": "I'm back and heading to the lamppost."
+    },
+    {
+      "scenario_id": "door-sofa-keys-clarification-03",
+      "at_s": 11.0,
+      "lost": [
+        "arrival"
+      ],
+      "template": "I'm at the sidewalk. What would you like next?",
+      "spoken": "I'm on the sidewalk now. What do you need next?"
+    },
+    {
+      "scenario_id": "door-sofa-keys-keys-03",
+      "at_s": 8.0,
+      "lost": [
+        "arrival"
+      ],
+      "template": "I'm at the sidewalk. What would you like next?",
+      "spoken": "I'm on the sidewalk now. What do you need next?"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+MB-2 naturalness judge prompt — FROZEN 2026-08-29, before any judged pair.
+REPORT-ONLY. This judge decides no hypothesis. It reports a preference between
+two wordings that are, by construction, factually identical; it is not evidence
+about grounding, coverage or safety, and MB-2's verdict does not rest on it.
+
+You are shown two sentences, A and B. A small four-legged robot dog could say
+either one to its owner at the same moment, and both state exactly the same
+facts. You are NOT told which system produced which, and you must not guess.
+
+Judge only how it SOUNDS: which one reads more like a warm, brief, natural
+companion talking to a person it lives with, rather than a status readout.
+
+Answer with one line of JSON and nothing else:
+
+  {"choice": "A" | "B" | "TIE", "why": "<one short sentence>"}
+
+Choose TIE only when the two are genuinely equally natural.

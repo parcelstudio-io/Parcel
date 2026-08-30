@@ -1,0 +1,53 @@
+Traceback (most recent call last):
+  File "/home/jaewoo-jang/.cache/parcel-0e/unitree_rl_mjlab-20260829/scripts/list_envs.py", line 7, in <module>
+    import mjlab.tasks  # noqa: F401
+    ^^^^^^^^^^^^^^^^^^
+  File "/home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages/mjlab/tasks/__init__.py", line 5, in <module>
+    import_packages(__name__, _BLACKLIST_PKGS)
+  File "/home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages/mjlab/utils/lab_api/tasks/importer.py", line 40, in import_packages
+    for _ in _walk_packages(
+  File "/home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages/mjlab/utils/lab_api/tasks/importer.py", line 89, in _walk_packages
+    yield from _walk_packages(path, info.name + ".", onerror, blacklist_pkgs)
+  File "/home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages/mjlab/utils/lab_api/tasks/importer.py", line 89, in _walk_packages
+    yield from _walk_packages(path, info.name + ".", onerror, blacklist_pkgs)
+  File "/home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages/mjlab/utils/lab_api/tasks/importer.py", line 77, in _walk_packages
+    __import__(info.name)
+  File "/home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages/mjlab/tasks/manipulation/config/yam/__init__.py", line 1, in <module>
+    from mjlab.tasks.manipulation.rl import ManipulationOnPolicyRunner
+  File "/home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages/mjlab/tasks/manipulation/rl/__init__.py", line 1, in <module>
+    from mjlab.tasks.manipulation.rl.runner import (
+  File "/home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages/mjlab/tasks/manipulation/rl/runner.py", line 5, in <module>
+    from mjlab.rl import RslRlVecEnvWrapper
+  File "/home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages/mjlab/rl/__init__.py", line 5, in <module>
+    from mjlab.rl.runner import MjlabOnPolicyRunner as MjlabOnPolicyRunner
+  File "/home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages/mjlab/rl/runner.py", line 7, in <module>
+    from mjlab.rl.vecenv_wrapper import RslRlVecEnvWrapper
+  File "/home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages/mjlab/rl/vecenv_wrapper.py", line 5, in <module>
+    from mjlab.envs import ManagerBasedRlEnv, ManagerBasedRlEnvCfg
+  File "/home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages/mjlab/envs/__init__.py", line 1, in <module>
+    from mjlab.envs.manager_based_rl_env import ManagerBasedRlEnv as ManagerBasedRlEnv
+  File "/home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages/mjlab/envs/manager_based_rl_env.py", line 12, in <module>
+    from mjlab.envs.mdp.events import reset_scene_to_default
+  File "/home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages/mjlab/envs/mdp/__init__.py", line 1, in <module>
+    from . import dr as dr
+  File "/home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages/mjlab/envs/mdp/dr/__init__.py", line 16, in <module>
+    from .geom import geom_friction as geom_friction
+  File "/home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages/mjlab/envs/mdp/dr/geom.py", line 10, in <module>
+    from mjlab.managers.event_manager import requires_model_fields
+  File "/home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages/mjlab/managers/__init__.py", line 3, in <module>
+    from mjlab.managers.action_manager import ActionManager as ActionManager
+  File "/home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages/mjlab/managers/action_manager.py", line 12, in <module>
+    from mjlab.managers.manager_base import ManagerBase, ManagerTermBase
+  File "/home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages/mjlab/managers/manager_base.py", line 11, in <module>
+    from mjlab.managers.scene_entity_config import SceneEntityCfg
+  File "/home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages/mjlab/managers/scene_entity_config.py", line 7, in <module>
+    from mjlab.scene import Scene
+  File "/home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages/mjlab/scene/__init__.py", line 1, in <module>
+    from mjlab.scene.scene import Scene as Scene
+  File "/home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages/mjlab/scene/scene.py", line 20, in <module>
+    from mjlab.terrains.terrain_entity import TerrainEntity, TerrainEntityCfg
+  File "/home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages/mjlab/terrains/__init__.py", line 1, in <module>
+    from mjlab.terrains.heightfield_terrains import (
+  File "/home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages/mjlab/terrains/heightfield_terrains.py", line 17, in <module>
+    import scipy.interpolate as interpolate
+ModuleNotFoundError: No module named 'scipy'

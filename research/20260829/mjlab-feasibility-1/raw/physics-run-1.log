@@ -1,0 +1,27 @@
+Setting seed: 42
+Warp 1.16.0 initialized:
+   CUDA Toolkit 12.9, Driver 13.2
+   Devices:
+     "cpu"      : "CPU"
+     "cuda:0"   : "NVIDIA RTX 5000 Ada Generation" (31 GiB, sm_89, mempool enabled)
+   Kernel cache:
+     /home/jaewoo-jang/.cache/warp/1.16.0
+Traceback (most recent call last):
+  File "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260829/mjlab-feasibility-1/probe_physics.py", line 292, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260829/mjlab-feasibility-1/probe_physics.py", line 127, in main
+    env = ManagerBasedRlEnv(cfg=cfg, device="cuda:0", render_mode=None)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages/mjlab/envs/manager_based_rl_env.py", line 172, in __init__
+    self.sim = Simulation(
+               ^^^^^^^^^^^
+  File "/home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages/mjlab/sim/sim.py", line 171, in __init__
+    self.use_cuda_graph = self._should_use_cuda_graph()
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages/mjlab/sim/sim.py", line 379, in _should_use_cuda_graph
+    driver_ver = wp.context.runtime.driver_version
+                 ^^^^^^^^^^
+  File "/home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/lib/python3.11/site-packages/warp/__init__.py", line 603, in __getattr__
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+AttributeError: module 'warp' has no attribute 'context'. Did you mean: 'constant'?

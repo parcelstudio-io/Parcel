@@ -1,0 +1,151 @@
+{
+  "schema": "parcel.product-eval-summary.v1",
+  "date": "2026-08-29",
+  "physical_motion_readiness": "NO_GO",
+  "observe_only_mount": "CONDITIONAL_CHECKLIST_ONLY",
+  "navigation": {
+    "nav_instruct": {
+      "episodes": 125,
+      "success_count": 34,
+      "success_rate": 0.272,
+      "spl": 0.2057774523279327,
+      "mean_distance_to_goal_m": 8.19327867142933,
+      "collision_count": 0,
+      "episode_digest": "e7c302ddf19a39646aff77f01832be56b14fae6c7d4bd28e39cd5045c3c8b3f2",
+      "replicate_count": 2,
+      "replicate_aggregates_identical": true
+    },
+    "follow_bench": {
+      "follow_success_count": 7,
+      "follow_episode_count": 9,
+      "navigate_success_count": 2,
+      "navigate_episode_count": 2,
+      "hard_collision_count": 0,
+      "pedestrian_contact_count": 0,
+      "minimum_pedestrian_surface_m": 0.5299999999999998,
+      "replicate_count": 2,
+      "replicate_aggregates_identical": true
+    },
+    "embodied_plan": {
+      "case_count": 5,
+      "supported_case_count": 4,
+      "supported_case_success_count": 4,
+      "unsupported_case_count": 1,
+      "collision_count": 0,
+      "timeout_count": 0,
+      "simulator_step_count": 1051
+    },
+        "nav_interrupt": {
+      "tier_episode_count": 40,
+      "tier_error_count": 0,
+      "admission_count": 24,
+      "interrupted_count": 32,
+      "amended_success_count": 11,
+      "amended_goal_count": 28,
+      "return_success_count": 8,
+      "jointly_reachable_return_count": 9,
+      "blind_accuracy": 0.8273,
+      "blind_queue_accuracy": 0.6667,
+      "blind_clarify_accuracy": 0.8,
+      "authority_disagreement_count": 17,
+      "scored_leg_count": 80,
+            "hypothesis_verdict": "ALL_REFUTED"
+        },
+        "dynamic_social_dsp2": {
+            "episode_count": 580,
+            "episodes_per_arm": 145,
+            "contact_episodes_by_arm": {
+                "S0": 57,
+                "S1": 37,
+                "S2": 25,
+                "S3": 25
+            },
+            "candidate_contacts_actor_into_stationary": true,
+            "s2_false_block_seconds": 805.6,
+            "s3_false_block_seconds": 966.5,
+            "s3_false_block_increase_fraction": 0.1997,
+            "hypothesis_verdict": "H1_H4_REFUTED",
+            "physical_safety_evidence": false
+        }
+  },
+  "conversation": {
+    "brain_v1": {
+      "case_count": 15,
+      "passed_case_count": 15,
+      "expected_fail_closed_case_count": 7,
+      "matched_fail_closed_case_count": 7,
+      "physical_navigation_episode_count": 0
+    },
+    "duplex_v1": {
+      "hard_gate_count": 7,
+      "hard_gate_pass_count": 7,
+      "text_injected_only": true
+    },
+    "acoustic_loop": {
+      "case_count": 25,
+      "replicate_count": 3,
+      "gate_count": 9,
+      "gate_pass_count": 5,
+      "gate_fail_count": 4,
+      "gate_vector_stable": true,
+      "case_verdict_deterministic": false,
+      "physical_audio_evaluated": false
+    },
+    "historical_realtime_corpus": {
+      "thread_count": 25,
+      "turn_count": 174,
+      "machine_hard_failure_count": 0,
+      "machine_review_flag_count": 66,
+      "semantic_thread_pass": 6,
+      "semantic_thread_mixed": 8,
+      "semantic_thread_fail": 11,
+      "review_blinded": false,
+      "review_calibrated": false,
+      "current_model_evaluated": false
+    },
+        "model_b_stage": {
+            "hosted_q_scenarios_complete": 120,
+            "hosted_q_scenarios_planned": 120,
+            "hosted_d_scenarios_complete": 2,
+            "hosted_d_scenarios_planned": 120,
+            "hosted_q_robot_turn_count": 164,
+            "hosted_q_grounding_rate_range": [0.612, 0.7274],
+            "hosted_q_coverage_rate_range": [0.2283, 0.2883],
+            "hosted_q_new_goal_acknowledgment": [99, 225],
+            "hosted_q_completion_range": [11, 27, 165],
+            "hosted_q_resume_offer_range": [10, 11, 30],
+            "hosted_q_keys_constraint": [1, 25],
+            "hosted_q_machine_action_flags": 45,
+            "hosted_q_machine_flagged_turns": 39,
+            "hosted_exact_latency_turn_count": 5,
+            "hosted_q_ttft_p50_ms": 1271,
+            "hosted_q_ttft_p95_ms": 1990,
+            "hosted_q_total_p50_ms": 3337,
+            "hosted_q_total_p95_ms": 3967,
+            "hosted_q_absolute_gate_verdict": "ALL_REFUTED",
+            "hosted_wave_increment_usd": 1.32843624,
+            "shared_wave_ledger_after_usd": 2.20803504,
+            "blind_adjudication_complete": false,
+            "matched_hosted_direct_arm_complete": false
+    }
+  },
+  "authority": {
+    "duplex_transaction_v2_cases_per_run": 8448,
+    "replicate_count": 2,
+    "seam_conformance": "PASS",
+    "dmc2_end_to_end_composition": "NOT_EVALUABLE_RED",
+    "dmc4_accepted_mutations_per_run": 1824,
+    "dmc4_corruption_cases": 256,
+    "dmc4_source_transaction": "DMC4_COMPOSED_PASS",
+    "normal_runtime_journal_consumer_composed": true,
+    "runtime_journal_consumer_scope": "PROCESS_LOCAL_DISARMED",
+    "runtime_journal_consumer_focused_test_count": 26,
+    "persistent_restart_cursor_composed": false,
+    "separate_child_resume_lineage_composed": false,
+    "live_speech_epoch_provider_audio_composed": false,
+    "lit1_false_terminal_arrival_claim_count": 5,
+    "lit1_audited_trace_count": 5,
+    "lit1_grounding_verdict": "REFUTED_GROUNDING"
+  },
+  "overall": "Typed product seams, the DMC-4 source transaction, and its process-local disarmed runtime observer are credible, but generalized navigation, dynamic-social safety, acoustic behavior, hosted wording quality, and live session/provider/audio narration composition are below the physical promotion bar."
+}

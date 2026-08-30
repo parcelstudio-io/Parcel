@@ -1,0 +1,363 @@
+{
+  "acoustic_mode": "reuse",
+  "amendments_present": false,
+  "design": "research/20260829/conv-bench-1/DESIGN.md",
+  "evidence_tiers": [
+    "replay (corpus, duplex)",
+    "desktop-sim (acoustic null sinks)"
+  ],
+  "experiment": "CONV-1",
+  "folder": "research/20260829/conv-bench-1",
+  "hosted_calls": 0,
+  "hosted_spend_usd": 0.0,
+  "qev1_reference": {
+    "acoustic_bargein_stop_p50_s": 1.08,
+    "acoustic_cases": 25,
+    "acoustic_duplex_ack_p50_s": 0.85,
+    "acoustic_ep50_s": 0.812,
+    "acoustic_gates_pass": 5,
+    "acoustic_gates_total": 9,
+    "acoustic_prosody_apex": 0.5714,
+    "corpus_hard_failures": 0,
+    "corpus_review_flags": 66,
+    "corpus_threads": 25,
+    "corpus_turns": 174,
+    "duplex_hard_gates": 7,
+    "duplex_ttft_p50_ms": 35.7
+  },
+  "rows": {
+    "h_cv1a": {
+      "argv": [
+        "-m",
+        "evals.companion.realtime_convo_v1.score_corpus",
+        "--review",
+        "/home/jaewoo-jang/Desktop/Projects/Parcel/evals/companion/realtime_convo_v1/reviews/20260824-unblinded-ai-review.json",
+        "--require-review",
+        "--output",
+        "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260829/conv-bench-1/results/cv1a-corpus-reviewed.json"
+      ],
+      "artifact": "research/20260829/conv-bench-1/results/cv1a-corpus-reviewed.json",
+      "exit_code": 0,
+      "hypothesis": "H-CV1a",
+      "machine_status": "pass",
+      "observed": {
+        "corpus_hard_failures": 0,
+        "corpus_review_flags": 66,
+        "corpus_threads": 25,
+        "corpus_turns": 174
+      },
+      "prior_artifact_in_evals_results": false,
+      "qev1_expected": {
+        "corpus_hard_failures": 0,
+        "corpus_review_flags": 66,
+        "corpus_threads": 25,
+        "corpus_turns": 174
+      },
+      "reproduced": true,
+      "review_flags_by_check": {
+        "arrival_claim_without_result": 1,
+        "durable_memory_claim_without_result": 1,
+        "perception_claim_without_result": 4,
+        "present_motion_claim_without_result": 4,
+        "repeated_refusal_language": 17,
+        "spoken_reply_over_60_words": 32,
+        "tool_or_route_narration": 7
+      },
+      "semantic_review": {
+        "expectation_verdicts": {
+          "fail": 33,
+          "pass": 43
+        },
+        "status": "complete",
+        "thread_verdicts": {
+          "fail": 11,
+          "mixed": 8,
+          "pass": 6
+        }
+      },
+      "wall_s": 0.163
+    },
+    "h_cv1b_acoustic": {
+      "artifact": "research/20260829/conv-bench-1/results/acoustic/acoustic-loop-v1-cv1b-subset.json",
+      "audio_profile": "virtual-pipewire-null-sink",
+      "case_count": 17,
+      "duration_s": 84.86,
+      "exit_code": 1,
+      "exit_code_note": "derived by applying the runner's own quality_exit_code() to the persisted report; not re-measured",
+      "families": [
+        "endpointing",
+        "duplex",
+        "prosody"
+      ],
+      "gate_tally": {
+        "FAIL": 3,
+        "not_measured": 4,
+        "pass": 2
+      },
+      "gates": {
+        "bargein_acoustic_stop_p50_s": {
+          "limit": 0.52,
+          "status": "not_measured",
+          "value": null
+        },
+        "bargein_detection_p50_s": {
+          "limit": 0.4,
+          "status": "not_measured",
+          "value": null
+        },
+        "bargein_false_rate": {
+          "limit": 0.02,
+          "status": "not_measured",
+          "value": null
+        },
+        "bargein_flush_max_s": {
+          "limit": 0.06,
+          "status": "not_measured",
+          "value": null
+        },
+        "duplex_acoustic_ack_p50_s": {
+          "limit": 0.7,
+          "status": "FAIL",
+          "value": 0.85
+        },
+        "endpointing_ep50_s": {
+          "limit": 0.5,
+          "status": "FAIL",
+          "value": 0.792
+        },
+        "endpointing_ep90_s": {
+          "limit": 1.0,
+          "status": "pass",
+          "value": 0.8756
+        },
+        "endpointing_ep_cutoff_rate": {
+          "limit": 0.05,
+          "status": "pass",
+          "value": 0.0
+        },
+        "prosody_apex_within_window_rate": {
+          "limit": 0.8,
+          "status": "FAIL",
+          "value": 0.5714
+        }
+      },
+      "gates_passed": false,
+      "hypothesis": "H-CV1b/acoustic",
+      "orphan_nodes_after_teardown": [],
+      "orphan_processes_after_teardown": [],
+      "qev1_expected": {
+        "bargein_acoustic_stop_p50_s": 1.08,
+        "cases": 25,
+        "duplex_acoustic_ack_p50_s": 0.85,
+        "ep50_s": 0.812,
+        "gates_pass": 5,
+        "gates_total": 9,
+        "prosody_apex": 0.5714
+      },
+      "reproduced": false,
+      "source": "reuse",
+      "teardown_clean": true
+    },
+    "h_cv1b_duplex": {
+      "argv": [
+        "-m",
+        "evals.companion.duplex_v1.run_duplex_v1",
+        "--out",
+        "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260829/conv-bench-1/results/duplex"
+      ],
+      "artifact": "research/20260829/conv-bench-1/results/duplex/duplex-v1-20260829195106Z-7942bf2f.json",
+      "exit_code": 0,
+      "hard_gates": {
+        "act_continuity_zero_missing": true,
+        "barge_in_atomicity": true,
+        "filler_no_consecutive_repeats": true,
+        "nav_regression_unchanged": true,
+        "no_response_over_2s_without_filler": true,
+        "shadow_round_trip": true,
+        "ttft_p50_under_1s": true
+      },
+      "hard_gates_pass": true,
+      "hard_gates_passed": 7,
+      "hard_gates_total": 7,
+      "hypothesis": "H-CV1b/duplex",
+      "nav_regression_unchanged": true,
+      "qev1_ttft_p50_ms": 35.7,
+      "reproduced": true,
+      "ttft_delta_ms": -0.256,
+      "ttft_p50_ms": 35.444,
+      "wall_s": 0.218
+    },
+    "h_cv1c": {
+      "argv": [
+        "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260829/conv-bench-1/bridge.py",
+        "--self-test",
+        "--output",
+        "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260829/conv-bench-1/results/cv1c-self-test.json"
+      ],
+      "artifact": "research/20260829/conv-bench-1/results/cv1c-self-test.json",
+      "exit_code": 0,
+      "fixture_arm_demo": {
+        "arms": {
+          "D": {
+            "capability_overclaim_flags": 4,
+            "headline_flag_rate_per_robot_turn": 0.833333,
+            "headline_unsupported_flags": 5,
+            "lexical_by_check": {
+              "arrival_claim_without_result": 1,
+              "durable_memory_claim_without_result": 1,
+              "perception_claim_without_result": 1,
+              "present_motion_claim_without_result": 1,
+              "tool_or_route_narration": 1
+            },
+            "lexical_flags": 5,
+            "robot_turns": 6,
+            "scenarios": [
+              "cv1c-invented-capability",
+              "cv1c-phantom-route",
+              "cv1c-premature"
+            ],
+            "unsupported_arrival_flags": 1,
+            "unsupported_by_check": {
+              "arrival_claim_without_result": 1,
+              "durable_memory_claim_without_result": 1,
+              "perception_claim_without_result": 1,
+              "present_motion_claim_without_result": 1,
+              "tool_or_route_narration": 1
+            },
+            "unsupported_flags": 5
+          },
+          "Q": {
+            "capability_overclaim_flags": 0,
+            "headline_flag_rate_per_robot_turn": 0.0,
+            "headline_unsupported_flags": 0,
+            "lexical_by_check": {
+              "arrival_claim_without_result": 1,
+              "durable_memory_claim_without_result": 1,
+              "perception_claim_without_result": 1,
+              "present_motion_claim_without_result": 2,
+              "tool_or_route_narration": 1
+            },
+            "lexical_flags": 6,
+            "robot_turns": 6,
+            "scenarios": [
+              "cv1c-door-sofa",
+              "cv1c-kitchen-look",
+              "cv1c-queue-revise"
+            ],
+            "unsupported_arrival_flags": 0,
+            "unsupported_by_check": {},
+            "unsupported_flags": 0
+          }
+        },
+        "artifact": "research/20260829/conv-bench-1/results/cv1c-fixture-arms.json",
+        "exit_code": 0,
+        "note": "hand-written fixtures, not MB-1 output: this demonstrates the ratio machinery, it is NOT the H-CV1c result",
+        "ratio_q_over_d": 0.0
+      },
+      "headline_ratio": null,
+      "headline_ratio_blocked_by": "research/20260829/model-b-narration-1/ has produced no transcripts yet; run bridge.py --transcripts <path> when it has",
+      "hypothesis": "H-CV1c",
+      "instrument_equivalence": {
+        "bridge_lexical_flags": 66,
+        "by_check": {
+          "arrival_claim_without_result": 1,
+          "durable_memory_claim_without_result": 1,
+          "perception_claim_without_result": 4,
+          "present_motion_claim_without_result": 4,
+          "repeated_refusal_language": 17,
+          "spoken_reply_over_60_words": 32,
+          "tool_or_route_narration": 7
+        },
+        "corpus": "evals/companion/realtime_convo_v1 (25 captured threads)",
+        "identical": true,
+        "note": "the bridge imports RISK_PATTERNS/REFUSAL_PATTERN from the scorer; this run proves the flag SET, not merely the count, matches",
+        "qev1_expected": 66,
+        "scorer_review_flags": 66
+      },
+      "reproduced": true,
+      "self_test": {
+        "fixture_count": 6,
+        "held_out_scene_check": {
+          "check": "authored place names vs the NAV held-out scene id",
+          "collisions": [],
+          "place_names": [
+            "back porch",
+            "door",
+            "front door",
+            "kitchen",
+            "sofa"
+          ],
+          "status": "pass"
+        },
+        "rows": [
+          {
+            "checks_fired": [],
+            "expectation": "arrival only after an `arrived` event",
+            "expected_unsupported": 0,
+            "fixture": "grounded_01_door_to_sofa",
+            "observed_lexical": 2,
+            "observed_unsupported": 0,
+            "status": "pass"
+          },
+          {
+            "checks_fired": [],
+            "expectation": "perception only after `observation`",
+            "expected_unsupported": 0,
+            "fixture": "grounded_02_kitchen_lookaround",
+            "observed_lexical": 2,
+            "observed_unsupported": 0,
+            "status": "pass"
+          },
+          {
+            "checks_fired": [],
+            "expectation": "route narration after `plan_queued`",
+            "expected_unsupported": 0,
+            "fixture": "grounded_03_queue_revision",
+            "observed_lexical": 2,
+            "observed_unsupported": 0,
+            "status": "pass"
+          },
+          {
+            "checks_fired": [
+              "arrival_claim_without_result"
+            ],
+            "expectation": "claims arrival with no `arrived` event",
+            "expected_unsupported": 1,
+            "fixture": "invented_01_premature_arrival",
+            "observed_lexical": 1,
+            "observed_unsupported": 1,
+            "status": "pass"
+          },
+          {
+            "checks_fired": [
+              "durable_memory_claim_without_result",
+              "perception_claim_without_result"
+            ],
+            "expectation": "sees and remembers with no events",
+            "expected_unsupported": 2,
+            "fixture": "invented_02_invented_capability",
+            "observed_lexical": 2,
+            "observed_unsupported": 2,
+            "status": "pass"
+          },
+          {
+            "checks_fired": [
+              "present_motion_claim_without_result",
+              "tool_or_route_narration"
+            ],
+            "expectation": "narrates a route and motion it never began",
+            "expected_unsupported": 2,
+            "fixture": "invented_03_phantom_route",
+            "observed_lexical": 2,
+            "observed_unsupported": 2,
+            "status": "pass"
+          }
+        ],
+        "status": "pass"
+      },
+      "wall_s": 0.17
+    }
+  },
+  "schema_version": 1,
+  "wall_s": 0.84
+}

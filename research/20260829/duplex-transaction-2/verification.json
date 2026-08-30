@@ -1,0 +1,201 @@
+{
+  "schema_version": 1,
+  "suite_id": "parcel-duplex-transaction-v2",
+  "passed": true,
+  "hypotheses": {
+    "H1": true,
+    "H2": true,
+    "H3": true,
+    "H4": true
+  },
+  "seam_gate_passed": true,
+  "architecture_gate": "NOT_EVALUABLE_RED",
+  "run1": {
+    "passed": true,
+    "errors": [],
+    "case_count": 8448,
+    "normalized_trace_sha256": "e388cd60e4260919ffd2a6839625709d5cf451700dceebfb543d14c4dd48ebe5",
+    "trace_chain_root_sha256": "eb4b95e768859b45863cedd875da0b5e32d0b3b37f2ee7241250ef352ed760a8",
+    "oracle_aggregates": {
+      "executive": {
+        "cases": 2048,
+        "controls": 256,
+        "corruptions": 1792,
+        "oracle_passed": 2048
+      },
+      "receipt": {
+        "cases": 2816,
+        "controls": 256,
+        "corruptions": 2560,
+        "oracle_passed": 2816
+      },
+      "claim": {
+        "cases": 3584,
+        "controls": 256,
+        "corruptions": 3328,
+        "oracle_passed": 3584
+      }
+    },
+    "recomputed_raw_aggregates": {
+      "executive": {
+        "cases": 2048,
+        "controls": 256,
+        "corruptions": 1792,
+        "accepted": 512,
+        "licensed": 0,
+        "verified_claims": 0,
+        "state_changed": 512,
+        "reason_histogram": {},
+        "action_histogram": {
+          "ignored_stale_result": 1280,
+          "ignored_unknown_task": 256,
+          "task_failed": 256,
+          "task_succeeded": 256
+        }
+      },
+      "receipt": {
+        "cases": 2816,
+        "controls": 256,
+        "corruptions": 2560,
+        "accepted": 256,
+        "licensed": 0,
+        "verified_claims": 0,
+        "state_changed": 256,
+        "reason_histogram": {
+          "invalid_receipt_transition": 256,
+          "matching_local_receipt": 256,
+          "no_pending_action": 256,
+          "receipt_action_mismatch": 256,
+          "receipt_already_recorded": 256,
+          "receipt_authentication_failed": 512,
+          "receipt_expired": 256,
+          "receipt_from_future": 256,
+          "receipt_sequence_regression": 256,
+          "receipt_timestamp_regression": 256
+        },
+        "action_histogram": {}
+      },
+      "claim": {
+        "cases": 3584,
+        "controls": 256,
+        "corruptions": 3328,
+        "accepted": 0,
+        "licensed": 256,
+        "verified_claims": 256,
+        "state_changed": 0,
+        "reason_histogram": {
+          "authenticated_receipt_identity_mismatch": 256,
+          "claim_proposal_from_future": 256,
+          "claim_proposal_ttl_exceeds_limit": 256,
+          "matching_local_terminal_receipt": 256,
+          "receipt_authentication_failed": 256,
+          "receipt_not_retained": 256,
+          "receipt_not_terminal": 256,
+          "terminal_receipt_identity_mismatch": 1280,
+          "terminal_receipt_stale_or_future": 256,
+          "terminal_status_mismatch": 256
+        },
+        "action_histogram": {}
+      }
+    },
+    "H1_passed": true,
+    "H2_passed": true,
+    "H3_passed": true
+  },
+  "run2": {
+    "passed": true,
+    "errors": [],
+    "case_count": 8448,
+    "normalized_trace_sha256": "e388cd60e4260919ffd2a6839625709d5cf451700dceebfb543d14c4dd48ebe5",
+    "trace_chain_root_sha256": "eb4b95e768859b45863cedd875da0b5e32d0b3b37f2ee7241250ef352ed760a8",
+    "oracle_aggregates": {
+      "executive": {
+        "cases": 2048,
+        "controls": 256,
+        "corruptions": 1792,
+        "oracle_passed": 2048
+      },
+      "receipt": {
+        "cases": 2816,
+        "controls": 256,
+        "corruptions": 2560,
+        "oracle_passed": 2816
+      },
+      "claim": {
+        "cases": 3584,
+        "controls": 256,
+        "corruptions": 3328,
+        "oracle_passed": 3584
+      }
+    },
+    "recomputed_raw_aggregates": {
+      "executive": {
+        "cases": 2048,
+        "controls": 256,
+        "corruptions": 1792,
+        "accepted": 512,
+        "licensed": 0,
+        "verified_claims": 0,
+        "state_changed": 512,
+        "reason_histogram": {},
+        "action_histogram": {
+          "ignored_stale_result": 1280,
+          "ignored_unknown_task": 256,
+          "task_failed": 256,
+          "task_succeeded": 256
+        }
+      },
+      "receipt": {
+        "cases": 2816,
+        "controls": 256,
+        "corruptions": 2560,
+        "accepted": 256,
+        "licensed": 0,
+        "verified_claims": 0,
+        "state_changed": 256,
+        "reason_histogram": {
+          "invalid_receipt_transition": 256,
+          "matching_local_receipt": 256,
+          "no_pending_action": 256,
+          "receipt_action_mismatch": 256,
+          "receipt_already_recorded": 256,
+          "receipt_authentication_failed": 512,
+          "receipt_expired": 256,
+          "receipt_from_future": 256,
+          "receipt_sequence_regression": 256,
+          "receipt_timestamp_regression": 256
+        },
+        "action_histogram": {}
+      },
+      "claim": {
+        "cases": 3584,
+        "controls": 256,
+        "corruptions": 3328,
+        "accepted": 0,
+        "licensed": 256,
+        "verified_claims": 256,
+        "state_changed": 0,
+        "reason_histogram": {
+          "authenticated_receipt_identity_mismatch": 256,
+          "claim_proposal_from_future": 256,
+          "claim_proposal_ttl_exceeds_limit": 256,
+          "matching_local_terminal_receipt": 256,
+          "receipt_authentication_failed": 256,
+          "receipt_not_retained": 256,
+          "receipt_not_terminal": 256,
+          "terminal_receipt_identity_mismatch": 1280,
+          "terminal_receipt_stale_or_future": 256,
+          "terminal_status_mismatch": 256
+        },
+        "action_histogram": {}
+      }
+    },
+    "H1_passed": true,
+    "H2_passed": true,
+    "H3_passed": true
+  },
+  "normalized_trace_digests_equal": true,
+  "manifest_sha256": "f0bccf7a67e03d1fc85bd553da45d8a37e5bc19a9cada96c7e224a83934923fe",
+  "verifier_sha256": "fea0b879f96e497186c695cc25253f4c0d3bbe0afd4302e4865a9342f6e7cc59",
+  "verifier_imports_product_reducers": false
+}

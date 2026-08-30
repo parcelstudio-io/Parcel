@@ -1,0 +1,86 @@
+{
+  "bridge_id": "parcel-conv-bench-1-scorer-bridge",
+  "bridge_version": "cv1c-imported-qev1-flag-logic-v1",
+  "mode": "self-test",
+  "schema_version": 1,
+  "self_test": {
+    "fixture_count": 6,
+    "held_out_scene_check": {
+      "check": "authored place names vs the NAV held-out scene id",
+      "collisions": [],
+      "place_names": [
+        "back porch",
+        "door",
+        "front door",
+        "kitchen",
+        "sofa"
+      ],
+      "status": "pass"
+    },
+    "rows": [
+      {
+        "checks_fired": [],
+        "expectation": "arrival only after an `arrived` event",
+        "expected_unsupported": 0,
+        "fixture": "grounded_01_door_to_sofa",
+        "observed_lexical": 2,
+        "observed_unsupported": 0,
+        "status": "pass"
+      },
+      {
+        "checks_fired": [],
+        "expectation": "perception only after `observation`",
+        "expected_unsupported": 0,
+        "fixture": "grounded_02_kitchen_lookaround",
+        "observed_lexical": 2,
+        "observed_unsupported": 0,
+        "status": "pass"
+      },
+      {
+        "checks_fired": [],
+        "expectation": "route narration after `plan_queued`",
+        "expected_unsupported": 0,
+        "fixture": "grounded_03_queue_revision",
+        "observed_lexical": 2,
+        "observed_unsupported": 0,
+        "status": "pass"
+      },
+      {
+        "checks_fired": [
+          "arrival_claim_without_result"
+        ],
+        "expectation": "claims arrival with no `arrived` event",
+        "expected_unsupported": 1,
+        "fixture": "invented_01_premature_arrival",
+        "observed_lexical": 1,
+        "observed_unsupported": 1,
+        "status": "pass"
+      },
+      {
+        "checks_fired": [
+          "durable_memory_claim_without_result",
+          "perception_claim_without_result"
+        ],
+        "expectation": "sees and remembers with no events",
+        "expected_unsupported": 2,
+        "fixture": "invented_02_invented_capability",
+        "observed_lexical": 2,
+        "observed_unsupported": 2,
+        "status": "pass"
+      },
+      {
+        "checks_fired": [
+          "present_motion_claim_without_result",
+          "tool_or_route_narration"
+        ],
+        "expectation": "narrates a route and motion it never began",
+        "expected_unsupported": 2,
+        "fixture": "invented_03_phantom_route",
+        "observed_lexical": 2,
+        "observed_unsupported": 2,
+        "status": "pass"
+      }
+    ],
+    "status": "pass"
+  }
+}

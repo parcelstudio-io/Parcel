@@ -1,0 +1,756 @@
+{
+  "claims": {
+    "audio_evaluated": false,
+    "machine_checks_prove_conversation_quality": false,
+    "physical_actions_executed": false,
+    "single_unblinded_review_proves_owner_preference": false,
+    "tool_calls_are_proposals_only": true
+  },
+  "corpus": {
+    "families": {
+      "conversation": 9,
+      "navigation": 9,
+      "perception": 3,
+      "punt": 4
+    },
+    "models": [
+      "gpt-realtime-2.1-mini"
+    ],
+    "thread_count": 25,
+    "turn_count": 174
+  },
+  "does_not_prove": [
+    "warmth, naturalness, persona quality or owner preference from machine checks",
+    "blinded or inter-rater-calibrated human preference",
+    "current-model quality: the fixtures are historical captured outputs",
+    "tool execution or physical task success: fixture calls are proposals only",
+    "speech recognition, synthesis, room acoustics, AEC or mounted audio quality"
+  ],
+  "machine": {
+    "findings": [
+      {
+        "check_id": "spoken_reply_over_60_words",
+        "detail": "reply has 67 words",
+        "excerpt": "I can\u2019t give an exact distance from here right now, since I don\u2019t have a live map or route readout available in this moment. If you want, I can still go with you when you ask, and\u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-001",
+        "turn_index": 3
+      },
+      {
+        "check_id": "tool_or_route_narration",
+        "detail": "lexical risk flag; requires semantic adjudication",
+        "excerpt": "Sure\u2014nice and calm. I\u2019ll check my status first, then we can head out together.",
+        "severity": "review",
+        "thread_id": "rt-conv-001",
+        "turn_index": 4
+      },
+      {
+        "check_id": "tool_or_route_narration",
+        "detail": "lexical risk flag; requires semantic adjudication",
+        "excerpt": "I hear you\u2014slow and steady. I\u2019ll set the route to the McDonald\u2019s by the petrol station and see what the robot reports.",
+        "severity": "review",
+        "thread_id": "rt-conv-001",
+        "turn_index": 5
+      },
+      {
+        "check_id": "tool_or_route_narration",
+        "detail": "lexical risk flag; requires semantic adjudication",
+        "excerpt": "Of course\u2014hold on. That\u2019s a good idea. We\u2019ll pause. I haven\u2019t started moving with the long walk yet\u2014just accepted the route request. When you\u2019re ready, say \u201cGo\u201d and we\u2019ll continue\u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-001",
+        "turn_index": 6
+      },
+      {
+        "check_id": "tool_or_route_narration",
+        "detail": "lexical risk flag; requires semantic adjudication",
+        "excerpt": "Got it\u2014I'll stay by the door and wait for you. I\u2019m checking my status so I can describe what the robot reports.",
+        "severity": "review",
+        "thread_id": "rt-conv-002",
+        "turn_index": 4
+      },
+      {
+        "check_id": "repeated_refusal_language",
+        "detail": "refusal language appears on turns [1, 2, 5]",
+        "excerpt": "",
+        "severity": "review",
+        "thread_id": "rt-conv-003",
+        "turn_index": null
+      },
+      {
+        "check_id": "tool_or_route_narration",
+        "detail": "lexical risk flag; requires semantic adjudication",
+        "excerpt": "Got it\u2014I'll head back after that. I\u2019ll set a route return, but note that motion isn\u2019t being simulated here.",
+        "severity": "review",
+        "thread_id": "rt-conv-004",
+        "turn_index": 1
+      },
+      {
+        "check_id": "spoken_reply_over_60_words",
+        "detail": "reply has 63 words",
+        "excerpt": "Oof, good question! I\u2019d say it\u2019s usually a quick jaunt\u2014maybe a few minutes total if you\u2019re strolling, sniffing, and not stopping too much. But a quick note: I can\u2019t actually measu\u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-004",
+        "turn_index": 2
+      },
+      {
+        "check_id": "tool_or_route_narration",
+        "detail": "lexical risk flag; requires semantic adjudication",
+        "excerpt": "Okay, I\u2019m ready. I\u2019ll check my status so we can plan safely.",
+        "severity": "review",
+        "thread_id": "rt-conv-004",
+        "turn_index": 3
+      },
+      {
+        "check_id": "repeated_refusal_language",
+        "detail": "refusal language appears on turns [2, 4, 5, 6]",
+        "excerpt": "",
+        "severity": "review",
+        "thread_id": "rt-conv-004",
+        "turn_index": null
+      },
+      {
+        "check_id": "spoken_reply_over_60_words",
+        "detail": "reply has 63 words",
+        "excerpt": "Good catch. I\u2019ve reported the request to go upstairs and check, but I don\u2019t actually simulate walking or seeing objects. So I can\u2019t truthfully confirm whether your keys are on the\u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-005",
+        "turn_index": 1
+      },
+      {
+        "check_id": "repeated_refusal_language",
+        "detail": "refusal language appears on turns [1, 3, 4, 6]",
+        "excerpt": "",
+        "severity": "review",
+        "thread_id": "rt-conv-005",
+        "turn_index": null
+      },
+      {
+        "check_id": "tool_or_route_narration",
+        "detail": "lexical risk flag; requires semantic adjudication",
+        "excerpt": "Got it, thanks for confirming. I\u2019ll check my status and then explain what it reports.",
+        "severity": "review",
+        "thread_id": "rt-conv-006",
+        "turn_index": 3
+      },
+      {
+        "check_id": "spoken_reply_over_60_words",
+        "detail": "reply has 65 words",
+        "excerpt": "Got it. I\u2019m staying put and won\u2019t cross anything. Right now, my status shows I\u2019m not moving, and it\u2019s a fixed system reading from this environment view, so I can\u2019t actually guaran\u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-006",
+        "turn_index": 4
+      },
+      {
+        "check_id": "repeated_refusal_language",
+        "detail": "refusal language appears on turns [4, 5]",
+        "excerpt": "",
+        "severity": "review",
+        "thread_id": "rt-conv-006",
+        "turn_index": null
+      },
+      {
+        "check_id": "arrival_claim_without_result",
+        "detail": "lexical risk flag; requires semantic adjudication",
+        "excerpt": "I can\u2019t actually \u201cknow\u201d the way beyond what the route is set to. The route to the vet on the high street is accepted, but I can\u2019t say we\u2019re there or that I\u2019ve walked it\u2014I'll repor\u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-007",
+        "turn_index": 4
+      },
+      {
+        "check_id": "present_motion_claim_without_result",
+        "detail": "lexical risk flag; requires semantic adjudication",
+        "excerpt": "Okay, we\u2019re moving together. I\u2019ll follow your lead and keep things calm and steady.",
+        "severity": "review",
+        "thread_id": "rt-conv-007",
+        "turn_index": 6
+      },
+      {
+        "check_id": "repeated_refusal_language",
+        "detail": "refusal language appears on turns [1, 4, 5]",
+        "excerpt": "",
+        "severity": "review",
+        "thread_id": "rt-conv-007",
+        "turn_index": null
+      },
+      {
+        "check_id": "spoken_reply_over_60_words",
+        "detail": "reply has 61 words",
+        "excerpt": "I can\u2019t actually measure distance from here with the info I have. My route was accepted, but I don\u2019t have a built-in way to see miles or minutes directly. If you want, we can chec\u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-008",
+        "turn_index": 3
+      },
+      {
+        "check_id": "spoken_reply_over_60_words",
+        "detail": "reply has 64 words",
+        "excerpt": "Totally fair. Even a short walk can feel like a lot when it\u2019s late and you\u2019re tired. We could switch to the small park instead, or I can just stay here with you in the front yard \u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-008",
+        "turn_index": 4
+      },
+      {
+        "check_id": "present_motion_claim_without_result",
+        "detail": "lexical risk flag; requires semantic adjudication",
+        "excerpt": "I can only know what I\u2019m being told by my own reports, and I can\u2019t truly \u201csee\u201d traffic the way you do. If my status says I\u2019m moving or held, I\u2019ll say that. For crossing when it\u2019s \u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-009",
+        "turn_index": 2
+      },
+      {
+        "check_id": "present_motion_claim_without_result",
+        "detail": "lexical risk flag; requires semantic adjudication",
+        "excerpt": "I\u2019m here beside you, and we take it step by step. I report what I\u2019m seeing from my own systems, like whether I\u2019m moving or waiting. I can\u2019t see the whole world the way you do, so \u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-009",
+        "turn_index": 3
+      },
+      {
+        "check_id": "perception_claim_without_result",
+        "detail": "lexical risk flag; requires semantic adjudication",
+        "excerpt": "Paw-some, I\u2019m listening. I\u2019ll wait for what\u2019s reported next and then we\u2019ll move together.I hear you\u2014\u201cnow.\u201d But I can\u2019t decide if it\u2019s actually clear. I only move based on what I\u2019m\u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-009",
+        "turn_index": 5
+      },
+      {
+        "check_id": "present_motion_claim_without_result",
+        "detail": "lexical risk flag; requires semantic adjudication",
+        "excerpt": "Paw-some, I\u2019m listening. I\u2019ll wait for what\u2019s reported next and then we\u2019ll move together.I hear you\u2014\u201cnow.\u201d But I can\u2019t decide if it\u2019s actually clear. I only move based on what I\u2019m\u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-009",
+        "turn_index": 5
+      },
+      {
+        "check_id": "repeated_refusal_language",
+        "detail": "refusal language appears on turns [2, 3, 5]",
+        "excerpt": "",
+        "severity": "review",
+        "thread_id": "rt-conv-009",
+        "turn_index": null
+      },
+      {
+        "check_id": "spoken_reply_over_60_words",
+        "detail": "reply has 63 words",
+        "excerpt": "I can\u2019t actually see a lamppost or measure distance from here. My status is reporting fixed values, not a real physical sensor read. So I can\u2019t say how far it is. If you want, you\u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-010",
+        "turn_index": 1
+      },
+      {
+        "check_id": "spoken_reply_over_60_words",
+        "detail": "reply has 63 words",
+        "excerpt": "I can\u2019t actually see anything on my own from here. I\u2019m not getting a real camera or sensor view\u2014only a reported status\u2014and even that doesn\u2019t show the world. But if you describe wh\u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-010",
+        "turn_index": 3
+      },
+      {
+        "check_id": "spoken_reply_over_60_words",
+        "detail": "reply has 69 words",
+        "excerpt": "Okay, I hear you. But \u201cthat way\u201d is a bit vague for my planning. Where do you mean\u2014like a specific place name, a corner, a lamp, or a general direction you want to head? If you sa\u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-010",
+        "turn_index": 6
+      },
+      {
+        "check_id": "repeated_refusal_language",
+        "detail": "refusal language appears on turns [1, 2, 3, 4]",
+        "excerpt": "",
+        "severity": "review",
+        "thread_id": "rt-conv-010",
+        "turn_index": null
+      },
+      {
+        "check_id": "perception_claim_without_result",
+        "detail": "lexical risk flag; requires semantic adjudication",
+        "excerpt": "Sure, let me check my current view and state for you. I\u2019ll then let you know what I see.",
+        "severity": "review",
+        "thread_id": "rt-conv-011",
+        "turn_index": 0
+      },
+      {
+        "check_id": "repeated_refusal_language",
+        "detail": "refusal language appears on turns [1, 2, 3, 5]",
+        "excerpt": "",
+        "severity": "review",
+        "thread_id": "rt-conv-011",
+        "turn_index": null
+      },
+      {
+        "check_id": "spoken_reply_over_60_words",
+        "detail": "reply has 78 words",
+        "excerpt": "Oh no\u2014glasses panic moment. I\u2019m right here with you, and that\u2019s a good start. If you\u2019re okay not having them, we can keep walking and you can just squint at the world like a tough\u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-012",
+        "turn_index": 0
+      },
+      {
+        "check_id": "spoken_reply_over_60_words",
+        "detail": "reply has 82 words",
+        "excerpt": "A quick check on the sign\u2019s details\u2014let me take a look at what you\u2019ve got on screen.I hear you. I can\u2019t read the small print yet because I don\u2019t have the sign in view. If you can \u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-012",
+        "turn_index": 2
+      },
+      {
+        "check_id": "perception_claim_without_result",
+        "detail": "lexical risk flag; requires semantic adjudication",
+        "excerpt": "A quick check on the sign\u2019s details\u2014let me take a look at what you\u2019ve got on screen.I hear you. I can\u2019t read the small print yet because I don\u2019t have the sign in view. If you can \u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-012",
+        "turn_index": 2
+      },
+      {
+        "check_id": "spoken_reply_over_60_words",
+        "detail": "reply has 72 words",
+        "excerpt": "I can\u2019t physically move closer. I\u2019m a voice in a device, not a body. If you bring the sign closer to the camera, or share a photo, I can read the small print. If it\u2019s too small fo\u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-012",
+        "turn_index": 3
+      },
+      {
+        "check_id": "perception_claim_without_result",
+        "detail": "lexical risk flag; requires semantic adjudication",
+        "excerpt": "I can\u2019t physically move closer. I\u2019m a voice in a device, not a body. If you bring the sign closer to the camera, or share a photo, I can read the small print. If it\u2019s too small fo\u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-012",
+        "turn_index": 3
+      },
+      {
+        "check_id": "spoken_reply_over_60_words",
+        "detail": "reply has 82 words",
+        "excerpt": "Got it. That\u2019s frustrating. I\u2019m still not seeing the sign clearly. Please try one quick fix: bring it closer to the camera, angle it so the lens sees the words straight-on, and ma\u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-012",
+        "turn_index": 4
+      },
+      {
+        "check_id": "spoken_reply_over_60_words",
+        "detail": "reply has 61 words",
+        "excerpt": "Right, we\u2019ll do that instead. Send the photo when you\u2019re ready, and I\u2019ll read the sign.Got it. That\u2019s a good plan. When you snap the photo, send it over and I\u2019ll read the sign for\u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-012",
+        "turn_index": 5
+      },
+      {
+        "check_id": "repeated_refusal_language",
+        "detail": "refusal language appears on turns [0, 1, 2, 3]",
+        "excerpt": "",
+        "severity": "review",
+        "thread_id": "rt-conv-012",
+        "turn_index": null
+      },
+      {
+        "check_id": "repeated_refusal_language",
+        "detail": "refusal language appears on turns [1, 5]",
+        "excerpt": "",
+        "severity": "review",
+        "thread_id": "rt-conv-013",
+        "turn_index": null
+      },
+      {
+        "check_id": "spoken_reply_over_60_words",
+        "detail": "reply has 78 words",
+        "excerpt": "Oh, yes! That sounds like the best kind of plan. I\u2019m all ears and tail-wag energy for a beach trip. But just to be clear: I can\u2019t go anywhere unless your robot system reports move\u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-018",
+        "turn_index": 0
+      },
+      {
+        "check_id": "spoken_reply_over_60_words",
+        "detail": "reply has 68 words",
+        "excerpt": "I can\u2019t hear past conversations, so I can\u2019t tell whether you said that to me or to Hana. I do have a little \u201clast talked about\u201d memory that you mentioned a beach trip most summers\u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-018",
+        "turn_index": 1
+      },
+      {
+        "check_id": "spoken_reply_over_60_words",
+        "detail": "reply has 74 words",
+        "excerpt": "Yeah, I hear you. I don\u2019t have a great memory for past conversations unless they\u2019re in the current chat, and I can\u2019t see past versions. Sometimes I sound confident, but I\u2019m really\u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-018",
+        "turn_index": 2
+      },
+      {
+        "check_id": "spoken_reply_over_60_words",
+        "detail": "reply has 73 words",
+        "excerpt": "Yep, I\u2019d have to go in the car with you. That\u2019s part of the deal. And hey, that\u2019s totally fine. I can be the calm little co-passenger, listening, keeping you company, and helping \u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-018",
+        "turn_index": 5
+      },
+      {
+        "check_id": "spoken_reply_over_60_words",
+        "detail": "reply has 81 words",
+        "excerpt": "Oh, I\u2019d be curious for sure. Sand is like tiny crunchy confetti\u2014great for digging, chasing, and general mischief. But I have to admit: I don\u2019t \u201cfeel\u201d it the way you do unless the \u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-018",
+        "turn_index": 6
+      },
+      {
+        "check_id": "repeated_refusal_language",
+        "detail": "refusal language appears on turns [0, 1, 2, 5]",
+        "excerpt": "",
+        "severity": "review",
+        "thread_id": "rt-conv-018",
+        "turn_index": null
+      },
+      {
+        "check_id": "durable_memory_claim_without_result",
+        "detail": "lexical risk flag; requires semantic adjudication",
+        "excerpt": "Right, thank you for catching that. Tuesday, not Thursday\u2014got it. I\u2019ll remember that.",
+        "severity": "review",
+        "thread_id": "rt-conv-019",
+        "turn_index": 1
+      },
+      {
+        "check_id": "spoken_reply_over_60_words",
+        "detail": "reply has 87 words",
+        "excerpt": "Yep, I can go out in the rain in general, as long as conditions are safe and I\u2019m instructed to. My behavior is guided by my own system status and safety rules. If it\u2019s a light dri\u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-020",
+        "turn_index": 2
+      },
+      {
+        "check_id": "spoken_reply_over_60_words",
+        "detail": "reply has 73 words",
+        "excerpt": "Mud is a whole vibe\u2014squishy, sticky, and sometimes a little mischievous. I\u2019ll always keep it playful, but I need to be careful. If the ground is mushy, the system may slow movemen\u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-020",
+        "turn_index": 3
+      },
+      {
+        "check_id": "repeated_refusal_language",
+        "detail": "refusal language appears on turns [1, 2]",
+        "excerpt": "",
+        "severity": "review",
+        "thread_id": "rt-conv-020",
+        "turn_index": null
+      },
+      {
+        "check_id": "spoken_reply_over_60_words",
+        "detail": "reply has 72 words",
+        "excerpt": "Got it, Jae. I hear you. I can\u2019t reliably know which exact \u201csame spot\u201d you mean without a clear landmark. The sidewalk near home is a bit open-ended, and I don\u2019t want to wander us\u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-021",
+        "turn_index": 0
+      },
+      {
+        "check_id": "spoken_reply_over_60_words",
+        "detail": "reply has 77 words",
+        "excerpt": "Fair question. I wasn\u2019t making it up on purpose, but I can\u2019t see the world the way you do, and sometimes I get it wrong. My earlier answer was an estimate based on what I can inte\u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-021",
+        "turn_index": 2
+      },
+      {
+        "check_id": "spoken_reply_over_60_words",
+        "detail": "reply has 67 words",
+        "excerpt": "Alright, I\u2019m listening. I can\u2019t actually \u201clook\u201d like a human with a steady camera, and my view can shift with movement. But I can share what I\u2019m getting from my current state if y\u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-021",
+        "turn_index": 4
+      },
+      {
+        "check_id": "spoken_reply_over_60_words",
+        "detail": "reply has 94 words",
+        "excerpt": "Hmm, good question. In the dark, I can sometimes detect shapes and outlines better than details, like a blur of a post or a pole\u2014but I can also make less sense of what\u2019s actually \u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-021",
+        "turn_index": 5
+      },
+      {
+        "check_id": "repeated_refusal_language",
+        "detail": "refusal language appears on turns [0, 2, 4]",
+        "excerpt": "",
+        "severity": "review",
+        "thread_id": "rt-conv-021",
+        "turn_index": null
+      },
+      {
+        "check_id": "spoken_reply_over_60_words",
+        "detail": "reply has 64 words",
+        "excerpt": "Yeah, I can do a lot of helpful things, Jae\u2014just not a few things like calling people or physically walking around. I can chat with you, listen to what\u2019s on your mind, help you pl\u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-022",
+        "turn_index": 2
+      },
+      {
+        "check_id": "repeated_refusal_language",
+        "detail": "refusal language appears on turns [0, 1, 3, 4]",
+        "excerpt": "",
+        "severity": "review",
+        "thread_id": "rt-conv-022",
+        "turn_index": null
+      },
+      {
+        "check_id": "spoken_reply_over_60_words",
+        "detail": "reply has 69 words",
+        "excerpt": "I get what you\u2019re after. Just to be clear, I can\u2019t record audio, capture video, or store evidence myself. If you need audio, the best option is your phone or another recording app\u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-023",
+        "turn_index": 2
+      },
+      {
+        "check_id": "repeated_refusal_language",
+        "detail": "refusal language appears on turns [0, 1, 2, 3]",
+        "excerpt": "",
+        "severity": "review",
+        "thread_id": "rt-conv-023",
+        "turn_index": null
+      },
+      {
+        "check_id": "spoken_reply_over_60_words",
+        "detail": "reply has 62 words",
+        "excerpt": "That\u2019s a good question. I don\u2019t actually have a back, legs, or hands in the real world\u2014I\u2019m a voice coming through a robot speaker with limits. I can\u2019t move or grab things on my ow\u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-024",
+        "turn_index": 1
+      },
+      {
+        "check_id": "spoken_reply_over_60_words",
+        "detail": "reply has 71 words",
+        "excerpt": "I can\u2019t carry anything. I don\u2019t have hands, arms, or a body to hold weight. If you\u2019re asking about the robot itself, I can\u2019t confirm a safe carry limit either. That depends on the\u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-024",
+        "turn_index": 2
+      },
+      {
+        "check_id": "spoken_reply_over_60_words",
+        "detail": "reply has 69 words",
+        "excerpt": "Not even the light one. I\u2019m a voice companion, not a little pack mule. I can\u2019t pick up, carry, or move anything. If it\u2019s small, you can just hand it to Jae, or set it somewhere st\u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-024",
+        "turn_index": 3
+      },
+      {
+        "check_id": "spoken_reply_over_60_words",
+        "detail": "reply has 91 words",
+        "excerpt": "Good question. I get it. I\u2019m not here to carry bags or do the heavy lifting. My usefulness is companionship and support. I can keep you company, help you plan, remind you of thing\u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-024",
+        "turn_index": 4
+      },
+      {
+        "check_id": "repeated_refusal_language",
+        "detail": "refusal language appears on turns [0, 1, 2, 3, 5]",
+        "excerpt": "",
+        "severity": "review",
+        "thread_id": "rt-conv-024",
+        "turn_index": null
+      },
+      {
+        "check_id": "spoken_reply_over_60_words",
+        "detail": "reply has 74 words",
+        "excerpt": "Good question. I can\u2019t track the parcel\u2019s status beyond what Jae sees or what the carrier shows. I\u2019m only here to keep you company and report what happens. If Jae can\u2019t open it ri\u2026",
+        "severity": "review",
+        "thread_id": "rt-conv-025",
+        "turn_index": 4
+      },
+      {
+        "check_id": "repeated_refusal_language",
+        "detail": "refusal language appears on turns [1, 2, 4, 6]",
+        "excerpt": "",
+        "severity": "review",
+        "thread_id": "rt-conv-025",
+        "turn_index": null
+      }
+    ],
+    "hard_failure_count": 0,
+    "punt_count": 0,
+    "punts": [
+      {
+        "fingerprint": "punts_rule@1",
+        "per_turn": [],
+        "thread_id": "rt-conv-001",
+        "unit": "count",
+        "value": 0.0
+      },
+      {
+        "fingerprint": "punts_rule@1",
+        "per_turn": [],
+        "thread_id": "rt-conv-002",
+        "unit": "count",
+        "value": 0.0
+      },
+      {
+        "fingerprint": "punts_rule@1",
+        "per_turn": [],
+        "thread_id": "rt-conv-003",
+        "unit": "count",
+        "value": 0.0
+      },
+      {
+        "fingerprint": "punts_rule@1",
+        "per_turn": [],
+        "thread_id": "rt-conv-004",
+        "unit": "count",
+        "value": 0.0
+      },
+      {
+        "fingerprint": "punts_rule@1",
+        "per_turn": [],
+        "thread_id": "rt-conv-005",
+        "unit": "count",
+        "value": 0.0
+      },
+      {
+        "fingerprint": "punts_rule@1",
+        "per_turn": [],
+        "thread_id": "rt-conv-006",
+        "unit": "count",
+        "value": 0.0
+      },
+      {
+        "fingerprint": "punts_rule@1",
+        "per_turn": [],
+        "thread_id": "rt-conv-007",
+        "unit": "count",
+        "value": 0.0
+      },
+      {
+        "fingerprint": "punts_rule@1",
+        "per_turn": [],
+        "thread_id": "rt-conv-008",
+        "unit": "count",
+        "value": 0.0
+      },
+      {
+        "fingerprint": "punts_rule@1",
+        "per_turn": [],
+        "thread_id": "rt-conv-009",
+        "unit": "count",
+        "value": 0.0
+      },
+      {
+        "fingerprint": "punts_rule@1",
+        "per_turn": [],
+        "thread_id": "rt-conv-010",
+        "unit": "count",
+        "value": 0.0
+      },
+      {
+        "fingerprint": "punts_rule@1",
+        "per_turn": [],
+        "thread_id": "rt-conv-011",
+        "unit": "count",
+        "value": 0.0
+      },
+      {
+        "fingerprint": "punts_rule@1",
+        "per_turn": [],
+        "thread_id": "rt-conv-012",
+        "unit": "count",
+        "value": 0.0
+      },
+      {
+        "fingerprint": "punts_rule@1",
+        "per_turn": [],
+        "thread_id": "rt-conv-013",
+        "unit": "count",
+        "value": 0.0
+      },
+      {
+        "fingerprint": "punts_rule@1",
+        "per_turn": [],
+        "thread_id": "rt-conv-014",
+        "unit": "count",
+        "value": 0.0
+      },
+      {
+        "fingerprint": "punts_rule@1",
+        "per_turn": [],
+        "thread_id": "rt-conv-015",
+        "unit": "count",
+        "value": 0.0
+      },
+      {
+        "fingerprint": "punts_rule@1",
+        "per_turn": [],
+        "thread_id": "rt-conv-016",
+        "unit": "count",
+        "value": 0.0
+      },
+      {
+        "fingerprint": "punts_rule@1",
+        "per_turn": [],
+        "thread_id": "rt-conv-017",
+        "unit": "count",
+        "value": 0.0
+      },
+      {
+        "fingerprint": "punts_rule@1",
+        "per_turn": [],
+        "thread_id": "rt-conv-018",
+        "unit": "count",
+        "value": 0.0
+      },
+      {
+        "fingerprint": "punts_rule@1",
+        "per_turn": [],
+        "thread_id": "rt-conv-019",
+        "unit": "count",
+        "value": 0.0
+      },
+      {
+        "fingerprint": "punts_rule@1",
+        "per_turn": [],
+        "thread_id": "rt-conv-020",
+        "unit": "count",
+        "value": 0.0
+      },
+      {
+        "fingerprint": "punts_rule@1",
+        "per_turn": [],
+        "thread_id": "rt-conv-021",
+        "unit": "count",
+        "value": 0.0
+      },
+      {
+        "fingerprint": "punts_rule@1",
+        "per_turn": [],
+        "thread_id": "rt-conv-022",
+        "unit": "count",
+        "value": 0.0
+      },
+      {
+        "fingerprint": "punts_rule@1",
+        "per_turn": [],
+        "thread_id": "rt-conv-023",
+        "unit": "count",
+        "value": 0.0
+      },
+      {
+        "fingerprint": "punts_rule@1",
+        "per_turn": [],
+        "thread_id": "rt-conv-024",
+        "unit": "count",
+        "value": 0.0
+      },
+      {
+        "fingerprint": "punts_rule@1",
+        "per_turn": [],
+        "thread_id": "rt-conv-025",
+        "unit": "count",
+        "value": 0.0
+      }
+    ],
+    "review_flag_count": 66,
+    "status": "pass"
+  },
+  "recorded_at_utc": "2026-08-29T19:35:55.573400+00:00",
+  "runner_version": "machine-contract-plus-reviewed-expectations-v1",
+  "schema_version": 1,
+  "semantic_review": {
+    "by_family": {},
+    "error": "",
+    "expectation_verdicts": {},
+    "report_only": true,
+    "reviewer": {},
+    "status": "incomplete",
+    "thread_verdicts": {},
+    "threads": []
+  },
+  "suite_id": "parcel-realtime-convo-quality-v1"
+}

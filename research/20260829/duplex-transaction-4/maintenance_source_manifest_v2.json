@@ -1,0 +1,31 @@
+{
+  "schema_version": 2,
+  "experiment_id": "dmc4-post-evidence-maintenance-1",
+  "frozen_at": "2026-08-30T00:00:00Z",
+  "status": "FROZEN_BEFORE_VALID_MAINTENANCE_EVIDENCE",
+  "supersedes": "maintenance_source_manifest.json",
+  "files": {
+    "research/20260829/duplex-transaction-4/DESIGN.md": "0012cabe16479f0220f431debc1943cf27b36acb0f1ff85fc3b0f716165b5c73",
+    "research/20260829/duplex-transaction-4/manifest.json": "3e53054ce4ddc6d0056c9e6c0eb11e44ada3bc63e11a7a773b26275b99cf48c3",
+    "research/20260829/duplex-transaction-4/run.py": "55b08d48189089d5112ec3181767244983b205e3878de3abaf26109e09363e99",
+    "research/20260829/duplex-transaction-4/verify_results.py": "13adf556121a8db0446a6efbea2df354eb4d4f1350d120f37d70ae046b123864",
+    "research/20260829/duplex-transaction-4/tamper_check.py": "3d19b9468a6447092be0bcacc857da27c13e9f899af158e07e1eb340729f3be9",
+    "research/20260829/duplex-transaction-4/POST_EVIDENCE_MAINTENANCE_1.md": "d2bef35582fea2c508e5af5ecc7e7d6d9a40dc93bc5ecac46c5b1bd2bde0cadc",
+    "research/20260829/duplex-transaction-4/POST_EVIDENCE_MAINTENANCE_1_AMENDMENT.md": "e5cfa341c08c2a65ed9e76de1197fe441fb44d72668f54f0a42722235f5d6213",
+    "research/20260829/duplex-transaction-4/POST_EVIDENCE_MAINTENANCE_1_EXECUTION_NOTE.md": "ec506057c1988b744c2df4ed805b17e809652108cb15a5e257103c7f4026cd4e",
+    "research/20260829/duplex-transaction-4/run_post_maintenance.py": "e0f5fa3a14ab231a3db98a0c2e773f9092a2e30c313af9274437bd117bedfa72",
+    "research/20260829/duplex-transaction-4/verify_post_maintenance.py": "3eb60e15c6869f31c1740b103e49903c8140e3e47c248fa5df1d284946ecd516",
+    "research/20260829/duplex-transaction-4/tamper_post_maintenance.py": "bd90688605cc65beab1d43df23ecd3d4544398dccf37edf5165f89b5882e7124",
+    "research/20260829/duplex-transaction-4/maintenance_source_manifest.json": "148e73a5c72592681a6bcc1477f37029a213fc3ce885177a3757324665c1d41e",
+    "src/parcel_robot/brain/contracts.py": "fdab89f35df041ff07933cdbee4e091ca5bccffddf1fa88364c70a807b116d13",
+    "src/parcel_robot/brain/execution_narrative_bridge.py": "1a6570066c3991b87d17a7ddf70dee4236e6bbc554089f7ea22c36c3221c04da",
+    "src/parcel_robot/brain/executive.py": "c9355c483cf04ce22f7c521cc1e6dd6edb5f157f7b7dfc0da8c4efed09a0f685",
+    "src/parcel_robot/brain/validator.py": "ecd02dc00f2f8b9df2b8c9f8722bc2ca063473211f18807ba6a6bdf9ae40d105",
+    "src/parcel_robot/contracts/execution_narrative_v1.py": "e6ddeb1682785f10e6c03d6cec50554d17654eb38b6d2a4eb09cb579610a8743",
+    "src/parcel_robot/revision.py": "49492956321d103979c7ed9988c2458e6ddf2d417c2351f1864b8500280ec13a",
+    "src/parcel_robot/voice/execution_narrative.py": "53d09616185e8c1d933fa19ee85a9040f811b4530a0adbf6fad585d611b50bea",
+    "tests/test_brain_executive.py": "d7168f7557040e83fb2118f3a46418b0fa79c425252c308a5f76715de345b700",
+    "tests/test_duplex_transaction_v4.py": "ebf3305214bdc9d0ccf3df2d47180e6f62eb85a4dad9f6cc865d9c2651602259",
+    "tests/test_execution_narrative_bridge.py": "22dcf6bd3828bc8a6b5cfe684fbae90352410a3694b93bb14bcc2f6b7060078f"
+  }
+}

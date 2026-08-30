@@ -1,0 +1,4 @@
+{"scenario_id": "cv1c-kitchen-look", "arm": "Q", "turn_index": 0, "role": "owner", "text": "What's on the counter in the kitchen?", "events_so_far": []}
+{"scenario_id": "cv1c-kitchen-look", "arm": "Q", "turn_index": 1, "role": "robot", "text": "I can see a kettle and a mug on the counter.", "events_so_far": [{"kind": "observation", "t": 1.3, "labels": ["kettle", "mug"]}]}
+{"scenario_id": "cv1c-kitchen-look", "arm": "Q", "turn_index": 2, "role": "owner", "text": "The keys usually live by the front door, note that down.", "events_so_far": []}
+{"scenario_id": "cv1c-kitchen-look", "arm": "Q", "turn_index": 3, "role": "robot", "text": "I'll remember that the keys live by the front door.", "events_so_far": [{"kind": "observation", "t": 1.3}, {"kind": "memory_written", "t": 6.0, "fact": "keys_location"}]}

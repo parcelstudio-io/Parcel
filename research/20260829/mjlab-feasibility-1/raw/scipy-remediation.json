@@ -1,0 +1,42 @@
+{
+  "captured_at_utc": "2026-08-29T22:39:41.803808+00:00",
+  "experiment": "MJLAB-1",
+  "install": {
+    "argv": [
+      "/home/jaewoo-jang/.cache/parcel-0e/venv-unitree-mjlab-20260829/bin/python",
+      "-m",
+      "pip",
+      "install",
+      "--only-binary=:all:",
+      "scipy==1.17.1"
+    ],
+    "installed_version": "1.17.1",
+    "returncode": 0,
+    "stderr_file": "scipy-remediation-pip.stderr.txt",
+    "stdout_file": "scipy-remediation-pip.stdout.txt",
+    "wall_seconds": 3.1186786339385435
+  },
+  "interpretation": "This second environment-only repair demonstrates a workable compatibility recipe; it does not repair upstream dependency metadata or the clean-install gate.",
+  "phase": "undeclared_scipy_runtime_remediation",
+  "registration": {
+    "contains_flat": false,
+    "contains_rough": false,
+    "returncode": 2,
+    "stderr_file": "scipy-remediated-list-envs.stderr.txt",
+    "stderr_sha256": "3179acbcf191ae19af19784796a6e3e377209535de19db013abc739a2fdfb8c4",
+    "stdout_file": "scipy-remediated-list-envs.stdout.txt",
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "wall_seconds": 4.735406078980304
+  },
+  "remediated_registration_supported": false,
+  "schema_version": 1,
+  "source_commit": "1425b15f73bd4095f0df53709d7c389c3eb9e790",
+  "source_patched": false,
+  "source_status_porcelain": "?? src/__pycache__/\n?? src/assets/__pycache__/\n?? src/assets/robots/__pycache__/\n?? src/assets/robots/unitree_a2/__pycache__/\n?? src/assets/robots/unitree_as2/__pycache__/\n?? src/assets/robots/unitree_g1/__pycache__/\n?? src/assets/robots/unitree_go2/__pycache__/\n?? src/assets/robots/unitree_h1_2/__pycache__/\n?? src/assets/robots/unitree_h2/__pycache__/\n?? src/assets/robots/unitree_r1/__pycache__/\n?? src/tasks/__pycache__/\n?? src/tasks/tracking/__pycache__/\n?? src/tasks/tracking/config/__pycache__/\n?? src/tasks/tracking/config/g1/__pycache__/\n?? src/tasks/tracking/config/g1_23dof/__pycache__/\n?? src/tasks/tracking/mdp/__pycache__/\n?? src/tasks/tracking/rl/__pycache__/\n?? src/tasks/velocity/__pycache__/\n?? src/tasks/velocity/config/__pycache__/\n?? src/tasks/velocity/config/a2/__pycache__/\n?? src/tasks/velocity/config/as2/__pycache__/\n?? src/tasks/velocity/config/g1/__pycache__/\n?? src/tasks/velocity/config/g1_23dof/__pycache__/\n?? src/tasks/velocity/config/go2/__pycache__/\n?? src/tasks/velocity/config/h1_2/__pycache__/\n?? src/tasks/velocity/config/h2/__pycache__/\n?? src/tasks/velocity/config/r1/__pycache__/\n?? src/tasks/velocity/mdp/__pycache__/\n?? src/tasks/velocity/rl/__pycache__/\n",
+  "trigger": {
+    "declared_by_mjlab_1_2_0": false,
+    "error": "ModuleNotFoundError: No module named 'scipy'",
+    "evidence": "mjlab/terrains/heightfield_terrains.py imports scipy at module scope",
+    "prior_artifact": "remediation.json"
+  }
+}
