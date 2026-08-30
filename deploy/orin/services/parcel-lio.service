@@ -28,14 +28,14 @@ Type=notify
 NotifyAccess=main
 User=parcel-lio
 Group=parcel-lio
-Environment=PARCEL_ARMED=0
-Environment=PARCEL_ROLE=lio
+# Optional commissioned calibration/provider settings may live here. Fixed
+# disarm and role are assigned after the file by ExecStart's /usr/bin/env.
 EnvironmentFile=-/etc/parcel/lio.env
 ExecStartPre=/usr/bin/test -x /opt/parcel/bin/parcel-lio
 # A restart is a NEW process epoch. Every consumer must see the epoch change
 # and refuse to join pre-restart geometry to post-restart pose
 # (parcel_robot/contracts/evidence_header.py::mixed_epoch_sources).
-ExecStart=/opt/parcel/bin/parcel-lio --disarmed --publish-epoch
+ExecStart=/usr/bin/env PARCEL_ARMED=0 PARCEL_ROLE=lio /opt/parcel/bin/parcel-lio --disarmed --publish-epoch
 Restart=on-failure
 RestartSec=2
 WatchdogSec=5

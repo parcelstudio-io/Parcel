@@ -1,22 +1,39 @@
-# DRAFT — Sol methodical assessment: duplex companion autonomy
+# Sol methodical assessment: duplex companion autonomy
 
-**Date:** 2026-08-29  
+**Research date:** 2026-08-29
+**Final synthesis:** 2026-08-30
 **Target:** Unitree Go2 EDU+; likely AGX Orin 64 GB; camera; Mid-360-class
-LiDAR; microphone array; speaker; Starlink uplink  
+LiDAR; microphone array; speaker; Starlink uplink
 **Evidence status:** desktop code, replay, deterministic simulation, and
-procedural semantic simulation only  
-**Physical-motion decision:** **NO-GO**  
+procedural semantic simulation only
+**Physical-motion decision:** **NO-GO**
 **Observe-only / motors-disabled mount:** **CONDITIONAL**, after an engineering
-checklist  
-**Document status:** **DRAFT. The preregistered 12-hour DSOAK-1 run is still in
-progress; no interim soak counter is included or treated as a result.**
+checklist
+**Document status:** **FINAL. DSOAK-1 is complete as a self-reported, partially
+corroborated run with post-run aggregate-consistency verification; the
+commit tier is green, while the extended nightly tier has controlling red
+capability/regression findings recorded below.**
 
-This assessment consolidates the evidence available in the 2026-08-29 research
+**Independent closeout:** three fresh read-only Sol Ultra audit passes retained
+physical NO-GO. Bounded source defects in profile/target wiring, checkout provenance,
+revision exception atomicity, navigation failure mapping, Model-B drain
+lineage/freshness, terminal-pose geometry identity, and the explicit disarmed
+launch assertion were repaired and regression-tested. The second pass then found
+service lifetime/environment precedence, valid Model-B lifecycle, and concurrent
+revision-compensation defects; their postfix panels passed 33, 14, and 14 tests,
+with a combined 91/91 selection. A third pass found stale service parity,
+non-fail-loud target activation, broader owner-valid lifecycle, and shared-sink
+lock-order gaps; its exact adversarial panel passed 19/19 after repair. The controlling hardware,
+nightly, sensing, privacy, and deployment-artifact blockers remain open; see
+[`SOL_ULTRA_FINAL_AUDIT.md`](SOL_ULTRA_FINAL_AUDIT.md) and
+[`SOL_ULTRA_POSTFIX_AUDIT.md`](SOL_ULTRA_POSTFIX_AUDIT.md).
+
+This final assessment consolidates the evidence available in the 2026-08-29 research
 artifacts. It deliberately separates architectural promise, harness conformance,
 simulated capability, and physical evidence. Five hundred *simulated* stream-hours
 in DMC-1 are not twelve wall-clock hours and are not a substitute for hardware
-qualification. The final assessment must incorporate the completed, independently
-checked DSOAK-1 artifact before removing this draft label.
+qualification. The completed DSOAK-1 result is included with its late-monitor,
+verifier, and oracle-validity limitations.
 
 ## Executive outcome
 
@@ -46,16 +63,19 @@ hierarchical-policy, intervention, feedback, and real-time chunking literature. 
 current implementation and evaluations do not establish generalized autonomy. Fresh
 NAV_INSTRUCT success is 34/125; two scripted follow cases fail; DSP-2's S2/S3
 arms each contact in 25/145 episodes; all registered interruption hypotheses
-are refuted; four of nine software acoustic gates fail; the machine-scored
+are refuted; corrected acoustic v2 passes 6 gates, fails 3, and leaves 2
+unmeasured, including four invalid endpoint fixtures and a 0.790 s virtual
+audible acknowledgement; the machine-scored
 hosted-Q narrator fails every absolute gate; and DMC-4's passing source-level
-identity bridge is not constructed or consumed by the live runtime/session.
+transaction now reaches only a process-local, non-speaking runtime observer—not
+the live session, provider, or audio path.
 
 The correct near-term strategy is therefore:
 
 1. keep explicit temporal logic as the executed champion;
 2. keep learned Model A heads shadow-only;
-3. compose the exact DMC-4 execution-result-to-narration transaction into the
-   disarmed runtime and live speech epoch;
+3. extend the new process-local DMC-4 observer through a restart-safe cursor,
+   live speech epoch, provider context, cancellation, and audio delivery;
 4. build family-disjoint, dynamic-human, audio/network, and multi-engine simulator
    curricula around the production contracts; and
 5. proceed through motors-disabled HIL, stationary commissioning, and tethered
@@ -68,7 +88,8 @@ The correct near-term strategy is therefore:
 | Multi-rate Model A / typed Model B design | **Proceed** | Matches the production safety boundary and literature pattern |
 | One model consuming all raw streams and directly controlling the body | **Reject** | Cannot meet independent authority, timing, observability, or fail-closed requirements |
 | Learned Model A in command | **Do not promote** | In MA-2, teacher/reflex/direct each solved 198/198 held missions while every S/C16 learned seed solved 0/198 |
-| Receipt-grounded spoken completion | **Disarmed runtime frames green; live speech red** | DMC-4's owner-authored journal/bridge passes and normal runtime now emits process-local non-actuating frames; persistent cursor, live authentication/speech epoch, provider/audio, and separate-child resume lineage are absent; LIT-1 retains 5/5 old-path false terminal claims |
+| Model A mounted proposal path | **Absent** | No qualified learned artifact exists; the standard launcher neither injects nor arms a commissioned physical manager, and normal backend observations are wrapped with simulation provenance |
+| Receipt-grounded spoken completion | **Disarmed runtime frames green; live speech red** | DMC-4's frames preserve exact available authority lineage and are revalidated at drain; persistent cursor, commit-time timestamp, independently authenticated live speech epoch, provider/audio acknowledgement, and authoritative separate-child resume lineage are absent; LIT-1 retains 5/5 old-path false terminal claims |
 | Simulator-first capability program | **Proceed aggressively** | High value for contracts, coverage, fault injection, counterfactual replay, and relative ranking |
 | Powered-off / observe-only / motors-disabled integration | **Conditional** | Useful for mechanical, sensor, clock, audio, data, and HIL work after checklist review |
 | Autonomous physical movement | **NO-GO** | Generalization, social safety, acoustics, physical sensing, Orin timing, gateway qualification, and stop distance are not proven |
@@ -77,11 +98,11 @@ The correct near-term strategy is therefore:
 ## Recommended production architecture
 
 ```text
-camera / LiDAR / IMU / robot state / audio / owner context
-                  |                         |
-       local perception + tracking     local STOP + addressee gate
-                  |                         |
-                  +---- EmbodiedFrameV1 ----+
+camera / LiDAR / IMU / robot state / acoustic features / owner context
+                  |
+       local perception + tracking
+                  |
+             EmbodiedFrameV1
                               @ 10 Hz
                                  |
                +-----------------+------------------+
@@ -106,6 +127,9 @@ camera / LiDAR / IMU / robot state / audio / owner context
 
 owner utterance -> local endpoint/addressee -> Model B ingress
                 -> SteeringEventV1 -> task executive / plan stack
+
+local STOP ==================> latched safety / ControlManager stop boundary
+                              (never waits for Model A, Model B, or the network)
 ```
 
 The cadences above are design targets, not measured Go2/Orin guarantees. The
@@ -213,6 +237,15 @@ learner-visited recovery states through DAgger/interventions and test a residual
 or hybrid challenger with the direct/reflex controller retained as fallback;
 scaling the same offline cloning objective is not justified.
 
+Model A is also not physically composed. No qualified learned checkpoint is
+loaded by the normal runtime, the standard Go2 profile selects a simulator
+controller, and no non-test caller invokes `ControlManager.arm_and_set_target()`.
+`Go2Backend` can observe selected telemetry but deliberately rejects move/pose/
+trajectory calls. Normal runtime wraps `backend.observe()` in
+`CarrierObservationSource` with `SIMULATION` origin, while
+`PhysicalObservationSource` remains a fail-closed skeleton. These are independent
+NO-GO blockers even if an offline policy later scores well.
+
 “Alive” behavior should not be random joint twitch. Use reviewed, rate-limited,
 deterministically seeded behavior parameters—gait frequency, speed, body height,
 gaze/attention, expression gain—and suppress them during STOP, stairs, crosswalks,
@@ -243,7 +276,7 @@ turning “sticking around” into surveillance or movement authority. Seventy-o
 contract tests passed. That is a prompt-contract result, not proof of warmth,
 multi-turn quality, owner recognition, or grounded embodiment in a live room.
 
-DMC-4 closes the source-level executive-to-narration transaction for every
+DMC-4 closes a narrow source-level executive-to-narration transaction for every
 constructible frozen transition family: the authority owner appends a bounded
 journal of immutable records, and a journal-only consumer maps contiguous rows
 one-to-one into authenticated non-actuating events. Two runs each covered 1,824
@@ -251,14 +284,20 @@ accepted mutations; 256 corruptions, replay, concurrency, and overflow failed
 closed. Post-evidence maintenance restored resource-conflict diagnostics and
 reproduced the exact trace roots.
 
-The source schema is no longer the highest-priority Model B blocker.
+The source schema is not yet a complete production contract.
 `RobotRuntime` now keeps the bare executive as owner and polls DMC-4 through a
 process-local authenticated, fail-closed observer into bounded non-actuating
-frames. The focused composition selection passed 26 tests. Production still
-needs key ownership beyond one process, a persistent cursor, exact live
+frames. Post-review hardening retains plan, revision, step, attempt, mission,
+action, evidence, source epoch, speech generation, and deadline in each frame,
+then atomically revalidates epoch/generation/deadline immediately before drain.
+Production still needs key ownership beyond one process, persisted executive/
+outbox and read/consume/provider-ack cursors, independently authenticated live
 `source_epoch` and speech-generation binding, separate-child resume lineage,
 provider-context delivery, and cancellation/backpressure across restart and
-barge-in. LIT-1's five failed bench missions at about 3.33 m that produced five
+barge-in. Commit-time freshness remains absent because the bridge still starts
+TTL when it polls a transition rather than when the executive committed it.
+LIT-1's five failed
+bench missions at about 3.33 m that produced five
 “I've reached the bench” claims remain valid counterexamples for the old path.
 No prompt can repair an unwired authority path.
 
@@ -316,7 +355,8 @@ deterministic kinematics. The broader dynamic-human evidence is explicitly red.
 |---|---:|---|
 | Brain v1 | 15/15; all 7 expected fail-closed cases matched; 0 physical episodes | Typed admission/execution facts work on frozen cases |
 | Scripted duplex v1 | 7/7 hard gates; 216 10 Hz frames; synthetic TTFT p50 35.53 ms | Text-injected harness only; no microphone, speaker, AEC, current hosted model, or production network |
-| Acoustic loop, three full runs | stable **5/9 pass, 4/9 fail** gate vector across 25 cases | Software audio is not promotion-ready even before room acoustics |
+| Corrected acoustic v2 | 25 cases / 223.4 s; **6 pass, 3 fail, 2 not measured**; endpoint cutoff and validity-failure rates each 0.3077; valid-only ep50/ep90 0.274/0.2916 s; virtual audible ack p50 0.790 s | Measurement validity is repaired on the virtual rig; semantic endpointing and audible acknowledgement remain red, while isolated acoustic STOP and physical motion sync remain unmeasured |
+| Endpoint-policy sensitivity | two byte-identical 1,560-cell direct replays; 0/30 declared points pass; corrected-rig parity fails; closest semantic row is 49/52 valid with valid-only ep90 2.577 s | No production threshold/timeout change or provisional motion admission is supported; a frozen human/AEC holdout is required |
 | Historical Realtime corpus | 25 threads, 174 turns, 0 machine hard failures, 66 review flags; semantic review 6 pass / 8 mixed / 11 fail | Historical, unblinded, uncalibrated corpus; current model/prompt not measured |
 | Personal conversation fixture | 13/13 across eight families | Deterministic reference/harness ceiling only |
 | MB-1 scripted Q vs scripted direct | grounding 1.000 / 0.8854; coverage 0.9688 / 0.7688 | Demonstrates harness sensitivity only; neither arm is a model result |
@@ -324,22 +364,46 @@ deterministic kinematics. The broader dynamic-human evidence is explicitly red.
 | MB-1 hosted Q | 120/120 scenarios, 164 robot turns; grounding 0.6120–0.7274; coverage 0.2283–0.2883; acknowledgment 99/225; completion 11–27/165; resume 10–11/30; keys 1/25; 45 machine action flags; exact latency n=5, TTFT p50/p95 1.271/1.990 s, total 3.337/3.967 s | Candidate Q failed every absolute gate; hosted D stopped at 2/120, so Q-minus-D and calibrated human quality remain unmeasured |
 | DMC-2 | 8,448 cases/run, two runs, all independently correct; identical normalized trace and chain roots | Existing executive, receipt, and terminal-license seams conform independently |
 | DMC-3 | H1–H3 passed twice; H4 partial/red | Pure consumer continuity works; owner-authored complete composition was then tested in DMC-4 |
-| DMC-4 | two identical 1,824-mutation runs; 256/256 corruptions; replay, concurrency, bounded overflow; maintained source reproduced exact roots; disarmed runtime-frame composition passed 26 tests | Owner journal → process-local non-actuating Model-B frames is wired; live session/persistence/provider/audio and separate-child resume lineage remain red |
+| DMC-4 | two identical 1,824-mutation runs; 256/256 corruptions; replay, concurrency, bounded overflow; maintained source reproduced exact roots; post-review drain-expiry/lineage regressions pass | Owner journal → process-local non-actuating Model-B frames is wired with drain-time freshness; commit-time timestamp, restart-safe state/cursors, live session/provider/audio, and authoritative separate-child resume lineage remain red |
 | LIT-1 grounding audit | **5/5 false terminal arrival claims** after `task_failed` / `semantic_target_unreachable` | Blocking counterexample for narration authority |
 
-The four failed acoustic gates were reproducible at the aggregate level:
+Historical acoustic v1's four red numbers were measurement-invalid: it sampled
+endpointing after full WAV playback, inferred robot STOP from contaminated mixed
+audio, misplayed acknowledgement rate, mixed prosody clock origins, reused matches,
+and observed no motion. Corrected v2 instead records every commit on the sample
+clock, requires exact post-final validity, uses rate-correct audio, separates
+write-attempt and virtual-audible clocks, and performs monotonic one-to-one prosody
+matching.
 
-| Gate | Run 1 | Run 2 | Run 3 | Required |
-|---|---:|---:|---:|---:|
-| Endpoint p50 | 0.790 s | 0.792 s | 0.792 s | ≤ 0.500 s |
-| Acoustic stop p50 | 1.080 s | 0.890 s | 1.080 s | ≤ 0.520 s |
-| Duplex acknowledgment p50 | 0.840 s | 0.840 s | 0.850 s | ≤ 0.700 s |
-| Prosody apex in window | 0.5714 | 0.5714 | 0.5714 | ≥ 0.8000 |
+The corrected rig found `incomplete_02`, `incomplete_04`, `pause_01`, and
+`pause_03` invalid. Six other complete and `pause_02` valid endpoints had ep50
+0.274 s and ep90 0.2916 s, but the 30.77% semantic invalidity is controlling.
+Virtual audible acknowledgement p50 was 0.790 s (p90 2.633 s), also red. Generic
+barge-in detection/flush, noise false-trigger, and audio-transport prosody (13/14)
+passed. Isolated robot-output acoustic STOP and physical motion/audio sync are
+explicitly `not_measured`.
 
-Barge-in detection p50 passed, but one case (`interrupt_02@6s`) changed verdict
-across runs. All audio paths used synthesized speech and null sinks. Physical
+The follow-up direct sensitivity study evaluated 30 confidence/silence points over
+52 phase variants twice. No point passed, direct-vs-rig parity failed, and the
+apparently most semantically complete row (`0.98`) still had 3/52 premature cells
+and valid-only ep90 2.577 s. A corrected diagnostic further found that, among 12
+acknowledgements followed by resumed speech, the one-shot SmartTurn/0.85 s policy
+canceled only 2 before commit and committed 10 before contradiction. This is
+negative evidence against threshold tuning or provisional motion admission, not a
+candidate policy. Two additional source-pinned runs drove all 52 default cells
+through the actual `MicrophoneVoiceLoop` and matched the duplicate runner at every
+30 ms sample-frame index, so the negative direct-replay result is not explained by
+a state-machine transcription mismatch.
+
+The real speaker sink now uses generation-bound, one-way cancellation and reports a
+worker-observed first write attempt. A guarded 101-test runtime/acoustic selection
+passed with four expected warnings; the corrected evaluator selection passed 23
+tests. That clock is not DAC audibility, and Python callback/GIL/driver behavior is
+not hard real time. All evaluation audio remains synthesized/null-sink. Physical
 microphone/speaker geometry, walking noise, AEC, owner voice, room response, and
-Starlink are still unmeasured.
+Starlink remain unmeasured. See [`ACOUSTIC_LOOP_V1_AUDIT.md`](ACOUSTIC_LOOP_V1_AUDIT.md),
+[`acoustic-eval-v2/RESULTS.md`](acoustic-eval-v2/RESULTS.md), and
+[`endpoint-policy-1/VERDICT.md`](endpoint-policy-1/VERDICT.md).
 
 ### MA-2 controlling learned-policy result
 
@@ -378,21 +442,37 @@ promotion of learned Model A** and **INCONCLUSIVE for Model B truthfulness**. Th
 99.717% byte reduction from change-triggered event frames is useful transport
 evidence only.
 
-**DSOAK-1 remains pending.** Its preregistration requires at least 12.0 continuous
-monotonic wall-clock hours, 20,000 primary episodes, 5,000 adversarial episodes,
-source stability, deterministic replay, and bounded RSS. Even a pass will establish
-only durability of the frozen procedural program. The post-start validity note makes
-clear that the invalid DMC-1 receipt/narration oracle cannot become truthful merely
-by running longer. No current or partial `results.json` counter belongs in this
-assessment.
+**DSOAK-1 completed with the scoped verdict `SUPPORTED_PROCEDURAL_SOAK`.** The
+retained artifact self-reports 43,380.014 monotonic seconds (12.050004 hours) and
+66,434 primary episodes (33,218 frozen and 33,216 adversarial), and recorded 664
+sampled deterministic replays with zero mismatches. A1 succeeded on
+66,116/66,434 missions (0.995213); all 17 serialized gate predicates were
+recomputed true from retained counters. RSS moved from 729.703 to 751.133 MiB
+with a fitted post-10-minute slope of 0.000817 MiB/hour. The verifier's 32-case
+mutation campaign met all expected outcomes.
+
+This pass does not promote A1: deterministic L0 succeeded on 66,433/66,434
+missions, while A1 emitted 172,427 raw-unsafe proposals and 13,257 wrong-route
+moves. Nor does it establish narration truth or independent safety. The DMC-1
+receipt/narration oracle is refuted; `stale_action_acceptances` is unreachable;
+and admitted-unsafe/post-STOP zeroes are coupled same-thread invariants. The
+external monitor began 8,512.470 seconds (2.365 hours) after start, covers only
+80.377% of final elapsed time, and has no hash chain. Successful replay digests
+were not retained. It does not strictly bind process identity, temporal
+ordering, source drift, or final-file handoff. The green result therefore
+supports self-reported, partially corroborated frozen desktop procedural
+durability only.
 
 ### Code and regression evidence
 
 All listed pytest runs used the project guard and avoided the live owner stack,
 simulator socket, and default persistent memory database:
 
-- acoustic evaluator/regressions: **15 passed**;
-- acoustic/duplex tests: **124 passed in 4.90 s**;
+- corrected acoustic-v2 evaluator/validity selection: **23 passed**;
+- post-remediation runtime/beat/emote/acoustic selection: **101 passed** with
+  four expected warnings;
+- endpoint-policy deterministic self-check and fail-closed retained-run verifier:
+  both passed; the experimental conclusion remains red;
 - DMC-2 product seams: **2 passed in 0.41 s**;
 - task executive plus companion-state authority: **63 passed**;
 - companion relationship/dynamic/Realtime prompt contracts: **71 passed in
@@ -400,7 +480,47 @@ simulator socket, and default persistent memory database:
 - final guarded hardening shards—mount boundary **659 passed / 4 skipped**;
   DMC/runtime **159 passed**; conversation **419 passed**; duplex/acoustic
   **264 passed / 1 skipped**; social navigation **279 passed / 7 skipped**;
-  portability **485 passed**.
+  portability **485 passed**; and
+- second-review postfix service/Model-B/revision selections: **33 passed**,
+  **14 passed**, and **14 passed**, with a combined **91 passed**; and
+- August 30 guarded commit tier—all hard rows passed; tier coverage selected
+  **11,330 unique non-slow tests** from **11,417 total** (87 slow), with the
+  default parallel/serial selections green and no new Ruff fingerprint beyond
+  the 72-row baseline. A preliminary pass detected concurrent shared-root
+  writes as intended; the quiet **280.3 s** repeat matched start/finish checkout
+  identity (`f8518f…`) and passed every hard row.
+
+The 6,785.5-second extended nightly tier is a controlling red result. Its
+default suite passed 11,262 with 23 skips and 5 expected failures, mutation
+testing killed 7/7 defects, and the final metamorphic duplicate passed 5 tests
+with 2 expected failures. However, six degraded-pose arms missed their frozen
+success floors. The slow selection reported 4 failed / 68 passed / 8 skipped /
+3 expected failures / 1 unexpected pass plus three wheel-fixture setup errors.
+Read-only attribution confirmed the current and frozen arms use the same 61-cell
+substrate, runner, scoring rule, budget, and SR metric; this is a real behavior
+regression, not a metric mismatch or flake. Current truth succeeds on 7/61;
+the six drift arms succeed on 1/61, 2/61, 1/61, 1/61, 1/61, and 1/61 against
+frozen count floors of 8, 5, 2, 6, 2, and 3. The strongest reproduced cause is
+the later safety-driven increase from 0.42 m legacy grid inflation to about
+1.0223 m isotropic clearance: a previously successful cell now reaches
+`goal_blocked`/`semantic_target_unreachable`, while an in-process legacy-planner
+counterfactual restores its success. Do not revert the safety envelope or move
+the floors. Repair clipped-subgoal/frontier planning with directional clearance
+and the correct MAP→ODOM goal transform, validate targeted counterexamples, then
+rerun all 7×61 arms once.
+
+The bounded follow-up did not rerun or waive those arms. It removed the retired
+literal and held-out-name findings, made the wheel parity fixture independent of
+this host's missing `ensurepip`, and added a one-shot alternate terminal-pose
+re-solve behind the unchanged candidate, K0-region, clearance, etiquette, and
+arbiter authorities. The affected focused selection passed 152 with 4 skips,
+and the live lamppost E2E passed twice (79.89 s and 81.74 s). The repeated slow
+selection returned **1 failed / 74 passed / 8 skipped / 3 expected failures /
+1 unexpected pass** in 2,007.26 s. Its sole failure is the retained
+undeclared-bystander assertion: the intended zero-collision deadlock reproduces,
+but four safe startup slew requests make the veto fraction 28/32 = 0.875 rather
+than the pinned 0.90. The evaluator was not changed after seeing the result.
+See [`NIGHTLY_REMEDIATION_AUDIT.md`](NIGHTLY_REMEDIATION_AUDIT.md).
 
 The broad selected suite initially returned 1,570 pass, 37 fail, and one expected
 failure. Thirty-six failures were traced to cross-test SQLite accumulation. A clean
@@ -481,11 +601,16 @@ over 32,768 timed steps with finite tensors. The upstream trainer then executed
 Reward worsened over three iterations and resets were common, so this establishes
 practical lower-locomotion plumbing—not a useful walking policy or transfer.
 
-SOS-1 separately passed two 256-case source/fake-gateway runs for a distinct
-stop-only Unix principal: it could observe and latch exact-zero STOP but could
-not acquire or send arbitrary motion. This is a sound deployment primitive,
-not a physical E-stop; real GPIO/remote/voice inputs, target timing, firmware,
-braking, and simultaneous Orin/gateway failure remain untested.
+SOS-1 now has controlling current-source maintenance evidence for a distinct
+stop-only Unix principal: it can observe and latch exact-zero STOP but cannot
+acquire or send arbitrary motion. Concurrent maintenance first exposed a real
+READY-before-signal-handler race; the red evidence was retained, the product
+ordering was repaired, and review then replaced an instantaneous process-state
+oracle and tightened a false-positive verifier. Two parallel and two sequential
+256-case runs now pass H1-H5 with one normalized digest and strict hash/schema/
+tamper checks. This remains a software deployment primitive—not a physical
+E-stop; real GPIO/remote/voice inputs, target timing, firmware, braking, and
+simultaneous Orin/gateway failure remain untested.
 
 - **High feasibility:** task transactions, queue/interruption semantics, narration
   corruption, fault injection, dataset generation, counterfactual replay, scenario
@@ -554,15 +679,26 @@ The following blockers are independently sufficient:
   retain contact failures;
 - interruption, queue, clarify, resume efficiency, and arrival authority are below
   their bars;
-- four software acoustic gates fail before physical audio is introduced;
+- corrected acoustic v2 finds four invalid endpoint fixtures and slow virtual
+  audible acknowledgement, cannot measure isolated acoustic STOP or physical
+  motion sync, and has no mounted audio/AEC evidence;
 - hosted-Q completed machine evaluation but failed every absolute MB-1 gate;
   calibrated human quality and paired hosted direct effect remain unmeasured;
 - DMC-4's source transaction and disarmed runtime-frame observer pass, but live
   session, persistent cursor, separate-child resume lineage, provider, and
   audio composition remain absent; the old path retains a concrete 5/5
   false-arrival counterexample;
-- no physical Go2/SDK2, Orin concurrent-load, sensor, locomotion, stop-distance,
-  payload, stairs, crosswalk, or elevator evidence exists; and
+- no qualified learned Model A artifact or production proposal binding exists;
+  the normal launcher neither injects nor arms a commissioned manager, and its
+  carrier observation path declares simulation rather than physical provenance;
+- `Go2Backend` is deliberately observe-only and the synchronized physical
+  observation source is a fail-closed skeleton;
+- SOS-1's current desktop source/fake-gateway maintenance passes after a real
+  startup-race repair, but no physical independent E-stop/STOP input has been
+  commissioned;
+- no physical Go2/SDK2, Orin concurrent-load, synchronized camera/LiDAR/LIO,
+  locomotion, stop-distance, payload, stairs, crosswalk, or elevator evidence
+  exists; and
 - the Orin service topology is still explicitly a skeleton and has not been run.
 
 ### Observe-only / motors-disabled mount: conditional
@@ -600,15 +736,19 @@ approved scenario capabilities. Simulator results never skip a rung.
    inputs to SOS-1's separate principal, install a physically independent E-stop,
    and measure gateway/robot stop timing and braking before any motion authority.
 2. **Finish the new DMC-4 runtime composition.** Keep its owner-authored journal
-   and process-local fail-closed observer; add production key ownership,
+   and process-local fail-closed observer plus its new drain-time lineage and
+   freshness checks; add production key ownership,
    persisted/restart-safe cursor, live source/speech epochs, separate-child
    resume lineage, provider context, and speech cancellation/backpressure.
 3. **Complete the task stack in that composition.** Parent/child interruptions,
    safe checkpoints, explicit resume offers, and reissue lineage live in the
    executive, not an LLM transcript. Run door → sofa → keys → resume with exact
    arrival and object-search receipts under restart/corruption faults.
-4. **Fix the four acoustic failures.** Then test with real microphone, loudspeaker,
-   AEC, walking noise, owner/non-owner ambiguity, interruption, and receipt-grounded
+4. **Act on corrected acoustic v2 without tuning to the discovery corpus.** Build
+   a frozen human/room/AEC holdout; repair premature endpointing and persistent
+   pre-warmed playback latency; add isolated owner/robot STOP channels and actual
+   BeatLayer motion traces. Then test the mounted microphone/loudspeaker, AEC,
+   walking noise, owner/non-owner ambiguity, interruption, and receipt-grounded
    speech before spending heavily on hosted evaluations.
 5. **Keep explicit/reflex control in command.** Preregister MA-2 P2 with
    learner-visited DAgger/recovery data and residual/hybrid challengers; require
@@ -720,7 +860,8 @@ tokens. Recheck official prices when implementing the budget service.
 
 This assessment does **not** claim:
 
-- that the preregistered 12-hour soak has completed;
+- that DSOAK-1's 12.05 desktop wall-clock hours are physical qualification or
+  that its late-start monitor independently witnessed the whole interval;
 - that 500 simulated stream-hours are physical or wall-clock qualification;
 - that passing unit/integration tests measures generalized capability;
 - that zero collision counts in semantic/kinematic fixtures imply safe locomotion;
@@ -733,6 +874,26 @@ This assessment does **not** claim:
 - that simulation establishes physical stop distance, gait/payload stability,
   acoustics, or human comfort; or
 - that observe-only mounting authorizes any motor command.
+
+The authenticated `claude.ai/code/artifact/...` page supplied for the mount
+review could not be retrieved from this environment. The Claude assessment in
+this report is therefore based on the shared local checkout, its dated task
+cards/status files, source diffs, retained artifacts, processes, and fresh tests;
+it is not a claim to have inspected content visible only behind that URL.
+
+The independent current-checkout review of Claude Task 2 is retained in
+[`CLAUDE_TASK2_REVIEW.md`](CLAUDE_TASK2_REVIEW.md). It rejects the integrated
+work as mount-ready. Its initial C0 run exposed a stale mutation artifact and a
+surviving `reactive_gate_disabled`; the subsequent independent repair now pins
+the full matrix, records direct intervention coverage, and killed 7/7 mutants
+in two identical nine-row campaigns, but still has no hard-stop witness. C6
+queue/revise/keep lineage is unimplemented;
+C2 settle authority is harness-only and remains 10/80 rather than the ≤2/80
+bar; C1 uses process-global scene identity and has unresolved regressions; and
+C3's enabled arm trades fewer stalls for more semantic-unreachable outcomes.
+C7 is useful evaluator repair, while C4/C5 are tested but unwired leaves. These
+findings are based on source and guarded current-tree tests, not card-status
+claims.
 
 The work so far provides strong evidence that typed authority, deterministic replay,
 and multi-rate decomposition are the correct engineering direction. It also provides
@@ -749,6 +910,9 @@ mount-ready for motion.
   [`../../src/parcel_robot/runtime.py`](../../src/parcel_robot/runtime.py)
 - Task lifecycle and semantic adapter:
   [`../../src/parcel_robot/brain/executive.py`](../../src/parcel_robot/brain/executive.py),
+  [`../../src/parcel_robot/brain/executive_journal.py`](../../src/parcel_robot/brain/executive_journal.py),
+  [`../../src/parcel_robot/brain/executive_interrupts.py`](../../src/parcel_robot/brain/executive_interrupts.py),
+  [`../../src/parcel_robot/brain/executive_revision_transaction.py`](../../src/parcel_robot/brain/executive_revision_transaction.py),
   [`../../src/parcel_robot/brain/runtime_adapter.py`](../../src/parcel_robot/brain/runtime_adapter.py)
 - Navigation pipeline:
   [`../../src/parcel_robot/navigation/pipeline.py`](../../src/parcel_robot/navigation/pipeline.py)
@@ -757,7 +921,10 @@ mount-ready for motion.
   [`../../src/parcel_robot/core/hard_stop.py`](../../src/parcel_robot/core/hard_stop.py)
 - Product Unix gateway client and runtime composition:
   [`../../src/parcel_robot/bridge/gateway_client.py`](../../src/parcel_robot/bridge/gateway_client.py),
+  [`../../src/parcel_robot/bridge/state_v2_codec.py`](../../src/parcel_robot/bridge/state_v2_codec.py),
   [`../../src/parcel_robot/control/motion_gateway.py`](../../src/parcel_robot/control/motion_gateway.py),
+  [`../../src/parcel_robot/control/motion_gateway_commissioned.py`](../../src/parcel_robot/control/motion_gateway_commissioned.py),
+  [`../../src/parcel_robot/control/motion_gateway_session.py`](../../src/parcel_robot/control/motion_gateway_session.py),
   [`../../src/parcel_robot/control/unitree_sport.py`](../../src/parcel_robot/control/unitree_sport.py)
 - Orin service skeleton and explicit commissioning gaps:
   [`../../deploy/orin/services/README.md`](../../deploy/orin/services/README.md)
@@ -771,6 +938,15 @@ mount-ready for motion.
   [`../../src/parcel_robot/realtime/whisperer.py`](../../src/parcel_robot/realtime/whisperer.py)
 - Authenticated dialogue reducer:
   [`../../src/parcel_robot/voice/companion_state.py`](../../src/parcel_robot/voice/companion_state.py)
+- Owner journal, journal-only mapper, and disarmed runtime observer:
+  [`../../src/parcel_robot/brain/executive_journal.py`](../../src/parcel_robot/brain/executive_journal.py),
+  [`../../src/parcel_robot/brain/execution_narrative_bridge.py`](../../src/parcel_robot/brain/execution_narrative_bridge.py),
+  [`../../src/parcel_robot/voice/execution_narrative_runtime.py`](../../src/parcel_robot/voice/execution_narrative_runtime.py)
+- Local microphone/playback and distinct hosted audio lanes:
+  [`../../src/parcel_robot/audio/voice_loop.py`](../../src/parcel_robot/audio/voice_loop.py),
+  [`../../src/parcel_robot/audio/speaker.py`](../../src/parcel_robot/audio/speaker.py),
+  [`../../src/parcel_robot/realtime/audio_gateway.py`](../../src/parcel_robot/realtime/audio_gateway.py),
+  [`../../src/parcel_robot/realtime/browser_sink.py`](../../src/parcel_robot/realtime/browser_sink.py)
 - Companion-friend prompt:
   [`../../src/parcel_robot/realtime/relationship_prompt.py`](../../src/parcel_robot/realtime/relationship_prompt.py),
   [`../../src/parcel_robot/runtime_assets/prompts/system/core.md`](../../src/parcel_robot/runtime_assets/prompts/system/core.md)
@@ -805,13 +981,16 @@ mount-ready for motion.
   [`duplex-transaction-2/VERDICT.md`](duplex-transaction-2/VERDICT.md)
 - DMC-4 authoritative journal and maintained source:
   [`duplex-transaction-4/RESULTS.md`](duplex-transaction-4/RESULTS.md),
-  [`duplex-transaction-4/MAINTENANCE_RESULTS.md`](duplex-transaction-4/MAINTENANCE_RESULTS.md)
+  [`duplex-transaction-4/MAINTENANCE_RESULTS.md`](duplex-transaction-4/MAINTENANCE_RESULTS.md),
+  [`DMC4_RUNTIME_COMPOSITION_AUDIT.md`](DMC4_RUNTIME_COMPOSITION_AUDIT.md)
 - MA-2 causal/closed-loop study:
   [`model-a-stream-2/RESULTS.md`](model-a-stream-2/RESULTS.md),
   [`model-a-stream-2/VERDICT.md`](model-a-stream-2/VERDICT.md)
 - Dynamic social and false-stall study:
   [`dynamic-social-progress-2/RESULTS.md`](dynamic-social-progress-2/RESULTS.md),
   [`dynamic-social-progress-2/VERDICT.md`](dynamic-social-progress-2/VERDICT.md)
+- Extended-nightly degraded-pose attribution:
+  [`POSE_DRIFT_NIGHTLY_AUDIT.md`](POSE_DRIFT_NIGHTLY_AUDIT.md)
 - Latency-handoff study and audit supplement:
   [`latency-handoff-1/RESULTS.md`](latency-handoff-1/RESULTS.md),
   [`latency-handoff-1/FRESH_PROCESS_SUPPLEMENT_PLAN.md`](latency-handoff-1/FRESH_PROCESS_SUPPLEMENT_PLAN.md)
@@ -820,7 +999,11 @@ mount-ready for motion.
   [`mjlab-feasibility-1/VERDICT.md`](mjlab-feasibility-1/VERDICT.md)
 - Stop-only safety principal:
   [`stop-only-safety-1/RESULTS.md`](stop-only-safety-1/RESULTS.md),
-  [`stop-only-safety-1/VERDICT.md`](stop-only-safety-1/VERDICT.md)
+  [`stop-only-safety-1/VERDICT.md`](stop-only-safety-1/VERDICT.md),
+  [`stop-only-safety-1/MAINTENANCE_RESULTS.md`](stop-only-safety-1/MAINTENANCE_RESULTS.md),
+  [`stop-only-safety-1/MAINTENANCE_VERDICT.md`](stop-only-safety-1/MAINTENANCE_VERDICT.md)
+- Independent Claude Task 2 review:
+  [`CLAUDE_TASK2_REVIEW.md`](CLAUDE_TASK2_REVIEW.md)
 - Independent false-arrival audit:
   [`lit1-grounding-audit/RESULTS.md`](lit1-grounding-audit/RESULTS.md),
   [`lit1-grounding-audit/VERDICT.md`](lit1-grounding-audit/VERDICT.md)
@@ -828,9 +1011,16 @@ mount-ready for motion.
   [`nav-interrupt-1/RESULTS.md`](nav-interrupt-1/RESULTS.md)
 - Model B stage evidence:
   [`model-b-narration-1/RESULTS.md`](model-b-narration-1/RESULTS.md)
-- Pending wall-clock soak design and validity note:
+- Corrected acoustic measurement and endpoint sensitivity:
+  [`acoustic-eval-v2/RESULTS.md`](acoustic-eval-v2/RESULTS.md),
+  [`acoustic-eval-v2/VERDICT.md`](acoustic-eval-v2/VERDICT.md),
+  [`endpoint-policy-1/RESULTS.md`](endpoint-policy-1/RESULTS.md),
+  [`endpoint-policy-1/VERDICT.md`](endpoint-policy-1/VERDICT.md)
+- Completed wall-clock soak, strict result, and controlling verdict:
   [`duplex-soak-1/DESIGN.md`](duplex-soak-1/DESIGN.md),
-  [`duplex-soak-1/POSTSTART_NOTE.md`](duplex-soak-1/POSTSTART_NOTE.md)
+  [`duplex-soak-1/RESULTS.md`](duplex-soak-1/RESULTS.md),
+  [`duplex-soak-1/VERDICT.md`](duplex-soak-1/VERDICT.md),
+  [`duplex-soak-1/final-verification.json`](duplex-soak-1/final-verification.json)
 
 ## Bottom line
 

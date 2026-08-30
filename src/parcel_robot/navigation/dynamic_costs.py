@@ -8,6 +8,12 @@ from dataclasses import dataclass
 
 import numpy as np
 
+# One dynamic-agent body radius for observation producers and the cost
+# primitive they feed. It describes a tracked pedestrian, not the robot
+# footprint; keeping it here prevents simulator/runtime payloads from growing
+# independent copies of the primitive's own default.
+DEFAULT_DYNAMIC_AGENT_RADIUS_M = 0.35
+
 
 @dataclass(frozen=True)
 class AgentTrack:
@@ -15,7 +21,7 @@ class AgentTrack:
     y: float
     vx: float
     vy: float
-    radius_m: float = 0.35
+    radius_m: float = DEFAULT_DYNAMIC_AGENT_RADIUS_M
 
 
 def _validated_tracks(tracks: Sequence[AgentTrack]) -> tuple[AgentTrack, ...]:

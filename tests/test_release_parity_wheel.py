@@ -50,7 +50,10 @@ def wheel() -> Path:
     outdir.mkdir(parents=True)
     proc = subprocess.run(
         [sys.executable, "-m", "pip", "wheel", ".", "--no-deps", "-w", str(outdir)],
-        capture_output=True, text=True, cwd=str(REPO), check=False,
+        capture_output=True,
+        text=True,
+        cwd=str(REPO),
+        check=False,
     )
     if proc.returncode != 0:
         pytest.fail(f"wheel build failed (build backend missing?):\n{proc.stderr[-2000:]}")
@@ -62,11 +65,34 @@ def wheel() -> Path:
 @pytest.fixture(scope="module")
 def installed_venv(wheel: Path, tmp_path_factory: pytest.TempPathFactory) -> Path:
     venv = tmp_path_factory.mktemp("n27-venv") / "v"
-    subprocess.run([sys.executable, "-m", "venv", str(venv)], check=True)
+    # Debian-family Python packages can omit ``ensurepip`` unless the matching
+    # pythonX.Y-venv OS package is installed.  The interpreter can still create
+    # an isolated environment; use the already-running test environment's pip
+    # to install *into* it so this wheel check does not depend on that optional
+    # stdlib bundle being present.
+    created = subprocess.run(
+        [sys.executable, "-m", "venv", "--without-pip", str(venv)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if created.returncode != 0:
+        pytest.fail(f"isolated venv creation failed:\n{created.stderr[-2000:]}")
     python = venv / "bin" / "python"
     proc = subprocess.run(
-        [str(python), "-m", "pip", "install", "--quiet", str(wheel)],
-        capture_output=True, text=True, check=False,
+        [
+            sys.executable,
+            "-m",
+            "pip",
+            "--python",
+            str(python),
+            "install",
+            "--quiet",
+            str(wheel),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
     )
     if proc.returncode != 0:
         pytest.fail(f"wheel install failed:\n{proc.stderr[-2000:]}")
@@ -76,8 +102,12 @@ def installed_venv(wheel: Path, tmp_path_factory: pytest.TempPathFactory) -> Pat
 def _run_in(python: Path, code: str, cwd: Path) -> subprocess.CompletedProcess[str]:
     env = {"PATH": "/usr/bin:/bin", "HOME": str(cwd)}  # PARCEL_ROOT deliberately unset
     return subprocess.run(
-        [str(python), "-c", code], capture_output=True, text=True,
-        cwd=str(cwd), env=env, check=False,
+        [str(python), "-c", code],
+        capture_output=True,
+        text=True,
+        cwd=str(cwd),
+        env=env,
+        check=False,
     )
 
 
@@ -147,8 +177,11 @@ def test_wheel_effective_config_equals_the_source_checkout(
     wheel_config = json.loads(wheel_side.stdout)
 
     source_side = subprocess.run(
-        [sys.executable, str(PROBE)], capture_output=True, text=True,
-        cwd=str(REPO), check=True,
+        [sys.executable, str(PROBE)],
+        capture_output=True,
+        text=True,
+        cwd=str(REPO),
+        check=True,
     )
     source_config = json.loads(source_side.stdout)
 

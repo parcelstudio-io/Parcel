@@ -175,7 +175,7 @@ tails unfinished. Treat it as diagnostic/in-flight evidence. See the dated
 | Semantic goal resolution | Typed simulator tracks, bounded search, safe approach, and terminal verification; default semantic source remains the metadata oracle | The visible OWLv2/online-map challenger is uncommitted and unadmitted; physical open-vocabulary perception is absent |
 | Owner-relative motion | Direct/behind follow, bounded step/orbit, lead-point prediction, and three-stage owner reacquisition | Depends on fresh, enrolled camera owner tracks; no identity re-identification stack; search degrades to coverage-only ranking without calibrated LiDAR |
 | Dynamic-agent handling | Per-tick constant-velocity A* cost field plus two outgoing TTC/proximity checks | Bounded prediction only: no uncertainty model, interaction model, ORCA negotiation, or hardware safety certification |
-| Locomotion | `ControlManager` plus simulator adapter by default; Unitree Sport adapter available behind commissioning gates | Unitree path is untested on a physical dog from this workstation |
+| Locomotion | `ControlManager` plus simulator adapter by default; an explicit commissioned Unix client reaches the separate sole-writer gateway | Gateway/client path is desktop-tested only and has not run on the physical dog/Orin |
 | Product navigation evaluation | `evals/companion_nav/`, `evals/companion/embodied_plan_v1/`, and headless city behavior tests | Kinematic simulation, metadata-derived semantics, and currently unsupported `FollowFormation` in the embodied-plan harness |
 
 Learned visual navigators (CityWalker, NaVILA, NoMaD, ViNT) remain research

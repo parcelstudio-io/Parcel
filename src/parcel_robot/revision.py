@@ -43,14 +43,22 @@ class RevisionSink(Protocol):
 
     def commit_revision(self, *, task_id: str, plan_revision: int) -> None: ...
 
+    def revision_transaction_acquire(self) -> None: ...
+
+    def revision_transaction_release(self) -> None: ...
+
+    def revision_transaction_snapshot(self) -> object: ...
+
+    def revision_transaction_restore(self, state: object) -> None: ...
+
 
 class CommittedRevisions:
     """Monotonic, per-task ledger of the committed plan_revision (fail-closed).
 
     The single source of the "older than committed == stale" rule shared by the
-    proposer buffer and the goal arbiter. Not internally locked: the proposer
-    bus / goal arbiter run single-threaded behind the navigator, and the
-    executive touches sinks only under its own lock.
+    proposer buffer and the goal arbiter. The owning sink supplies the lock so
+    one executive transaction can hold *all* registered sinks across commit or
+    compensation; a private lock here would not provide cross-sink isolation.
     """
 
     __slots__ = ("_committed",)
@@ -84,3 +92,8 @@ class CommittedRevisions:
 
     def snapshot(self) -> dict[str, int]:
         return dict(self._committed)
+
+    def restore(self, snapshot: dict[str, int]) -> None:
+        """Restore an owner-locked transaction snapshot."""
+
+        self._committed = {str(key): int(value) for key, value in snapshot.items()}

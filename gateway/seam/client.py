@@ -19,6 +19,7 @@ from parcel_robot.bridge.gateway_client import (
     MotionGatewayClientV1,
     MotionGatewayError,
     MotionStateV1,
+    MotionStateV2,
     StopResultV1,
 )
 
@@ -35,5 +36,6 @@ __all__ = [
     "MotionGatewayClientV1",
     "MotionGatewayError",
     "MotionStateV1",
+    "MotionStateV2",
     "StopResultV1",
 ]

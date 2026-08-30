@@ -194,6 +194,13 @@ def _panel_fields(*, no_false_arrival: bool, false_arrivals: int = 0) -> dict:
             "no_authority_disagreement": True,
             "no_false_arrival": no_false_arrival,
             "path_length_plausible": True,
+            "reactive_gate_exercised": True,
+        },
+        "reactive_gate_coverage": {
+            "calls": 1,
+            "requested_nonzero": 1,
+            "changed_nonzero": 1,
+            "translation_zeroed": 0,
         },
     }
 
@@ -203,7 +210,11 @@ def _panel_artifact(tmp: Path, fields: dict) -> Path:
     path.write_text(
         json.dumps(
             {
-                "clean_run": {"collisions": fields["collisions"], "authority": fields["authority"]},
+                "clean_run": {
+                    "collisions": fields["collisions"],
+                    "authority": fields["authority"],
+                    "reactive_gate_coverage": fields["reactive_gate_coverage"],
+                },
                 "clean_checks": fields["clean_checks"],
             }
         ),

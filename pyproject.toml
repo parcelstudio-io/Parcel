@@ -186,6 +186,7 @@ parcel-sim = "parcel_robot.sim:main"
 parcel-control = "parcel_robot.control_panel:main"
 parcel-panel = "parcel_robot.web_panel:main"
 parcel-unitree-control = "parcel_robot.unitree_control:main"
+parcel-safety = "parcel_robot.safety_supervisor:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

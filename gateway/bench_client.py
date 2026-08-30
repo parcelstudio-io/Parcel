@@ -32,7 +32,9 @@ from parcel_robot.bridge.protocol import (
     GatewayHelloV1,
     GatewayMessage,
     GatewayStateQueryV1,
+    GatewayStateQueryV2,
     GatewayStateV1,
+    GatewayStateV2,
     GatewayStopV1,
     decode_gateway_message,
     encode_gateway_message,
@@ -162,6 +164,12 @@ class BenchGatewayClientV1:
         response = self.request(GatewayStateQueryV1(sequence=sequence))
         if not isinstance(response, GatewayStateV1):
             raise TypeError(f"expected GatewayStateV1, received {response.kind}")
+        return response
+
+    def state_v2(self, *, sequence: int) -> GatewayStateV2:
+        response = self.request(GatewayStateQueryV2(sequence=sequence))
+        if not isinstance(response, GatewayStateV2):
+            raise TypeError(f"expected GatewayStateV2, received {response.kind}")
         return response
 
     def close(self) -> None:

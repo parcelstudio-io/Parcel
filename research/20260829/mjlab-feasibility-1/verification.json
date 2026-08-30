@@ -186,6 +186,6 @@
   "schema_version": 1,
   "strict_all_preregistered_gates_supported": false,
   "tamper_self_test_pass": true,
-  "verified_at_utc": "2026-08-29T23:04:50.974238+00:00",
+  "verified_at_utc": "2026-08-30T03:23:24.749517+00:00",
   "verifier_pass": true
 }

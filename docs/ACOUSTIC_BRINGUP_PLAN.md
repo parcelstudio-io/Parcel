@@ -1,13 +1,16 @@
 # Acoustic bring-up plan
 
-> **Current reconciliation, 2026-08-22.** This page preserves a 2026-08-07
-> virtual-rig experiment and its runbook; its “now” column is historical evidence,
-> not current host state. The XVF3800 currently enumerates over USB and Piper's
-> artifacts are present, but plain `sounddevice` still cannot open the native
-> PortAudio path, PipeWire exposed no usable product source/sink in the recheck,
-> and no physical stream, AEC, DoA or through-air gate is commissioned. Consult
-> the [engineering handbook](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md) for
-> current readiness.
+> **Current reconciliation, 2026-08-29.** This page preserves a 2026-08-07
+> experiment and runbook; its baseline numbers and “now” column are historical,
+> not current capability evidence. A later independent audit invalidated the old
+> endpoint/STOP/ack/prosody interpretations. The corrected 25-case virtual rerun
+> is red: 6 pass, 3 fail, 2 `not_measured`, with 4/13 endpoint-validity failures
+> and no isolated robot-output STOP or physical motion-sync measurement. See the
+> [retained v2 results](../research/20260829/acoustic-eval-v2/RESULTS.md). A
+> user-space PortAudio path and virtual null nodes work on this host, and the
+> XVF3800 enumerates over USB, but no mounted stream, AEC, DoA, through-air STOP,
+> human turn-taking, or actuator-sync gate is commissioned. The historical
+> sections below must not be used for mount readiness.
 
 **Status 2026-08-07.** Parcel's audio stack can now be assembled, exercised and
 *measured* on this machine without root. What it cannot do is make a sound in

@@ -204,8 +204,14 @@ class GatewayLivenessNotifierV1:
         if not self.probe_once():
             self._missed += 1
             return False
+        delivered = self._notifier.ready(status)
+        # With no supervisor this return value represents local readiness for
+        # desktop benches. Under Type=notify, a failed datagram is not an
+        # announcement; leave readiness false so the caller can retry.
+        if self._notifier.supervised and not delivered:
+            self._missed += 1
+            return False
         self._ready = True
-        self._notifier.ready(status)
         return True
 
     def start(self) -> None:

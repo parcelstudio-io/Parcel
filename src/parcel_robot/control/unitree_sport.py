@@ -7,6 +7,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+from parcel_robot.bridge.unitree_writer_lock import UnitreeWriterLockV1
 from parcel_robot.models import VelocityCommand
 
 from .models import ControllerCapabilities, RobotMotionState, TimedVelocitySetpoint
@@ -86,6 +87,7 @@ class UnitreeSportStateSource:
         velocity_frame: str = "odom",
         lateral_sign: int = 1,
         yaw_sign: int = 1,
+        session_epoch: str = "",
         clock=time.monotonic,
     ) -> None:
         if not topic.strip():
@@ -99,6 +101,9 @@ class UnitreeSportStateSource:
         self.velocity_frame = velocity_frame
         self.lateral_sign = _axis_sign(lateral_sign, "lateral_sign")
         self.yaw_sign = _axis_sign(yaw_sign, "yaw_sign")
+        if not isinstance(session_epoch, str) or len(session_epoch) > 80:
+            raise ValueError("Unitree session_epoch must be a short string")
+        self.session_epoch = session_epoch
         self._clock = clock
         self._lock = threading.Lock()
         self._latest: RobotMotionState | None = None
@@ -148,6 +153,7 @@ class UnitreeSportStateSource:
 
     def _on_message(self, message: Any) -> None:
         received_at = float(self._clock())
+        source_time_s = _source_time_seconds(getattr(message, "stamp", None))
         position = _float_tuple(message.position, 3, "position")
         odom_velocity = _float_tuple(message.velocity, 3, "velocity")
         imu = message.imu_state
@@ -183,6 +189,8 @@ class UnitreeSportStateSource:
                 error_code=int(message.error_code),
                 source="unitree_sport",
                 foot_forces=foot_forces,
+                source_time_s=source_time_s,
+                session_epoch=self.session_epoch,
             )
             self._latest = state
 
@@ -219,6 +227,7 @@ class UnitreeSportController:
         yaw_sign: int = 1,
         allowed_modes: tuple[int, ...],
         client_factory: Callable[..., Any] | None = None,
+        writer_authority: UnitreeWriterLockV1 | None = None,
         clock=time.monotonic,
         sleeper=time.sleep,
     ) -> None:
@@ -243,6 +252,7 @@ class UnitreeSportController:
         if any(mode < 0 or mode > 255 for mode in self.allowed_modes):
             raise ValueError("Unitree allowed_modes must contain byte-sized integers")
         self._client_factory = client_factory
+        self._writer_authority = writer_authority
         self._clock = clock
         self._sleeper = sleeper
         self._io_lock = threading.Lock()
@@ -262,6 +272,13 @@ class UnitreeSportController:
             raise RuntimeError("Unitree Sport controller is closed")
         if self._active:
             return
+        if self._client_factory is None and (
+            not isinstance(self._writer_authority, UnitreeWriterLockV1)
+            or not self._writer_authority.held
+        ):
+            raise RuntimeError(
+                "real Unitree Sport activation requires the held device-wide writer lock"
+            )
         self.channel.initialize()
         factory = self._client_factory
         if factory is None:
@@ -381,6 +398,40 @@ def _float_tuple(value: Any, length: int, field: str) -> tuple[float, ...]:
     if len(result) != length or any(not math.isfinite(item) for item in result):
         raise ValueError(f"Unitree {field} must contain {length} finite values")
     return result
+
+
+def _source_time_seconds(stamp: Any) -> float | None:
+    """Preserve a Unitree ``TimeSpec`` without confusing it with host receipt time.
+
+    ``SportModeState.stamp`` is a device-clock reading.  It remains in its own
+    clock domain as ``RobotMotionState.source_time_s``; ``received_at`` continues
+    to be the host monotonic timestamp used by the control watchdog.  An absent
+    stamp is represented explicitly by ``None``.  A present but malformed stamp
+    rejects the message so it cannot replace the last known-good state.
+    """
+
+    if stamp is None:
+        return None
+    missing = object()
+    seconds = getattr(stamp, "sec", missing)
+    nanoseconds = getattr(stamp, "nanosec", missing)
+    if nanoseconds is missing:
+        nanoseconds = getattr(stamp, "nsec", missing)
+    if seconds is missing or nanoseconds is missing:
+        raise ValueError("Unitree SportModeState stamp must contain sec and nanosec")
+    if (
+        isinstance(seconds, bool)
+        or not isinstance(seconds, int)
+        or isinstance(nanoseconds, bool)
+        or not isinstance(nanoseconds, int)
+    ):
+        raise TypeError("Unitree SportModeState stamp fields must be integers")
+    if not 0 <= nanoseconds < 1_000_000_000:
+        raise ValueError("Unitree SportModeState stamp nanosec must be in [0, 1000000000)")
+    source_time_s = float(seconds) + float(nanoseconds) / 1_000_000_000.0
+    if not math.isfinite(source_time_s):
+        raise ValueError("Unitree SportModeState stamp must be finite")
+    return source_time_s
 
 
 def _axis_sign(value: int, field: str) -> int:

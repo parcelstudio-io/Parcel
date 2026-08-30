@@ -18,7 +18,59 @@ from .contracts import (
     ResourceLease,
     SuccessCondition,
 )
+from .executive_interrupts import handle_interrupt as _handle_interrupt
+from .executive_journal import (
+    ExecutiveJournalReadV1 as _ExecutiveJournalReadV1,
+)
+from .executive_journal import (
+    ExecutiveJournalStatusV1 as _ExecutiveJournalStatusV1,
+)
+from .executive_journal import (
+    ExecutiveTransitionV1 as _ExecutiveTransitionV1,
+)
+from .executive_journal import (
+    new_transition_journal as _new_transition_journal,
+)
+from .executive_journal import (
+    read_transition_journal as _read_transition_journal_impl,
+)
+from .executive_journal import (
+    transition_journal_status as _transition_journal_status_impl,
+)
+from .executive_reporting import (
+    handle_dispatch_failed as _handle_dispatch_failed,
+)
+from .executive_reporting import (
+    handle_report as _handle_report,
+)
+from .executive_reporting import (
+    normalized as _normalized_impl,
+)
+from .executive_reporting import (
+    result_satisfies_success as _result_satisfies_success_impl,
+)
+from .executive_revision_transaction import (
+    ReplacementTransaction as _ReplacementTransaction,
+)
+from .executive_revision_transaction import (
+    activate_replacement as _activate_replacement_impl,
+)
+from .executive_revision_transaction import (
+    append_transition as _append_transition_transactional,
+)
+from .executive_revision_transaction import (
+    report_with_rollback as _report_with_rollback,
+)
+from .executive_revision_transaction import (
+    validate_revision_sink as _validate_revision_sink,
+)
 from .validator import ValidatedPlan, ValidatedStep
+
+ExecutiveJournalReadV1 = _ExecutiveJournalReadV1
+ExecutiveJournalStatusV1 = _ExecutiveJournalStatusV1
+ExecutiveTransitionV1 = _ExecutiveTransitionV1
+_normalized = _normalized_impl
+_result_satisfies_success = _result_satisfies_success_impl
 
 TERMINAL_TASK_STATES = frozenset({"succeeded", "failed", "cancelled"})
 # Suspended is a status, never an outcome — must not replan/abandon.
@@ -125,6 +177,19 @@ class ResourceLocks:
                 for resource, owner in sorted(self._owners.items())
             )
 
+    def _checkpoint_owners(self) -> tuple[tuple[str, _ResourceOwner], ...]:
+        """Snapshot executive-owned leases for an in-process transaction."""
+
+        with self._lock:
+            return tuple(self._owners.items())
+
+    def _restore_owners(
+        self,
+        checkpoint: tuple[tuple[str, _ResourceOwner], ...],
+    ) -> None:
+        with self._lock:
+            self._owners = dict(checkpoint)
+
 
 @dataclass(frozen=True, slots=True)
 class DispatchRequest:
@@ -224,15 +289,24 @@ class TaskExecutive:
         resources: ResourceLocks | None = None,
         *,
         max_records: int = 256,
+        transition_capacity: int = 4096,
         revision_sinks: Sequence[RevisionSink] | None = None,
     ):
         if isinstance(max_records, bool) or not 1 <= max_records <= 10_000:
             raise ValueError("max_records must be an integer between 1 and 10000")
+        if (
+            isinstance(transition_capacity, bool)
+            or not isinstance(transition_capacity, int)
+            or not 1 <= transition_capacity <= 65_536
+        ):
+            raise ValueError("transition_capacity must be an integer between 1 and 65536")
         self.resources = resources or ResourceLocks()
         self.max_records = max_records
         self._tasks: dict[str, _TaskRecord] = {}
         self._sequence = 0
         self._lock = threading.RLock()
+        self._executive_journal = _new_transition_journal(transition_capacity)
+        self._replacement_transaction: _ReplacementTransaction | None = None
         # P0-C proposal-buffer flush: sinks (ProposerBus / GoalArbiter) are told
         # the committed plan_revision whenever a replacement activates, so a
         # correction atomically invalidates stale learned-goal proposals. Empty
@@ -241,36 +315,36 @@ class TaskExecutive:
         for sink in revision_sinks or ():
             self.register_revision_sink(sink)
 
+    @property
+    def authorizes_actuation(self) -> bool:
+        return False
+
+    transition_journal_status = _transition_journal_status_impl
+    read_transition_journal = _read_transition_journal_impl
+    _append_transition = _append_transition_transactional
+    _activate_replacement = _activate_replacement_impl
+
     def register_revision_sink(self, sink: RevisionSink) -> None:
         """Bind a proposer buffer to this executive's committed revision.
 
         On every replacement activation the executive calls
         ``sink.commit_revision(task_id=..., plan_revision=...)`` so the buffer
         drops/rejects proposals authored under a superseded revision. Idempotent
-        by object identity; a sink missing ``commit_revision`` is rejected loudly
-        rather than silently failing to flush.
+        by object identity. Sinks must provide paired acquire/release and
+        snapshot/restore hooks so navigation cannot observe a half-commit or
+        lose a concurrent publish during compensation; opaque sinks are rejected.
         """
 
         if not callable(getattr(sink, "commit_revision", None)):
             raise TypeError("revision sink must expose a callable commit_revision")
         with self._lock:
-            if all(existing is not sink for existing in self._revision_sinks):
-                self._revision_sinks.append(sink)
-
-    def _notify_revision_committed(self, record: _TaskRecord) -> None:
-        """Flush every registered proposer buffer to ``record``'s revision.
-
-        Called under ``self._lock`` from :meth:`_activate_replacement`, so the
-        buffer flush is atomic with the executive's revision bump -- there is no
-        window where an old-revision proposal survives the correction.
-        """
-
-        if not self._revision_sinks:
-            return
-        task_id = record.task_id
-        plan_revision = record.plan_revision
-        for sink in self._revision_sinks:
-            sink.commit_revision(task_id=task_id, plan_revision=plan_revision)
+            if any(existing is sink for existing in self._revision_sinks):
+                return
+            # A revision commit is a local transaction, not a best-effort event
+            # fan-out. Refuse sinks whose state cannot be isolated and restored
+            # if a later sink or the executive journal raises.
+            _validate_revision_sink(sink)
+            self._revision_sinks.append(sink)
 
     def submit(
         self,
@@ -283,6 +357,7 @@ class TaskExecutive:
         plan = validated.plan
         with self._lock:
             existing = self._tasks.get(plan.task_id)
+            prior_state = existing.state if existing is not None else "absent"
             if existing is not None and existing.state not in TERMINAL_TASK_STATES:
                 return ExecutiveSubmission(
                     False,
@@ -302,10 +377,23 @@ class TaskExecutive:
                     "executive capacity contains only non-terminal tasks",
                 )
             self._sequence += 1
-            self._tasks[plan.task_id] = _TaskRecord(
+            record = _TaskRecord(
                 validated=validated,
                 task_class=task_class,
                 sequence=self._sequence,
+            )
+            self._tasks[plan.task_id] = record
+            step = record.current_step
+            if step is None:  # PlanIR validation requires at least one step.
+                raise RuntimeError("validated plan unexpectedly contains no executable step")
+            self._append_transition(
+                record,
+                step,
+                attempt=record.attempt,
+                family="submission",
+                prior_state=prior_state,
+                disposition="task_queued",
+                detail_code="validated_task_queued",
             )
             return ExecutiveSubmission(
                 True,
@@ -332,6 +420,9 @@ class TaskExecutive:
                     "replacement revision must increase",
                 )
             step = record.current_step
+            if step is None:
+                raise RuntimeError("active replacement target has no current step")
+            prior_state = record.state
             interruptibility = step.effective_interruptibility if step is not None else "immediate"
             if record.state in {"running", "waiting_checkpoint"} and (
                 not record.at_checkpoint or interruptibility == "never"
@@ -350,6 +441,15 @@ class TaskExecutive:
                     record.state = "waiting_checkpoint"
                     record.last_detail = "replacement_waiting_for_checkpoint"
                     reason = "replacement deferred to the next task checkpoint"
+                self._append_transition(
+                    record,
+                    step,
+                    attempt=record.attempt,
+                    family="replacement",
+                    prior_state=prior_state,
+                    disposition="replacement_deferred",
+                    detail_code=record.last_detail[:120],
+                )
                 return ExecutiveSubmission(
                     True,
                     "defer",
@@ -358,12 +458,54 @@ class TaskExecutive:
                     reason,
                 )
             self._activate_replacement(record, validated)
+            replacement_step = record.current_step
+            if replacement_step is None:
+                raise RuntimeError("activated replacement has no executable step")
+            self._append_transition(
+                record,
+                replacement_step,
+                attempt=record.attempt,
+                family="replacement",
+                prior_state=prior_state,
+                disposition="replacement_activated",
+                detail_code="replacement_activated",
+            )
             return ExecutiveSubmission(
                 True,
                 "queued",
                 plan.task_id,
                 plan.plan_revision,
                 "replacement activated",
+            )
+
+    def _expire_timed_out_steps(self, timestamp: float) -> None:
+        """Apply timeout transitions while the caller holds ``self._lock``."""
+
+        for record in self._ordered_records():
+            if record.state not in {"running", "waiting_checkpoint"}:
+                continue
+            step = record.current_step
+            if (
+                step is None
+                or record.step_started_at is None
+                or timestamp - record.step_started_at < step.step.timeout_s
+            ):
+                continue
+            prior_state = record.state
+            prior_attempt = record.attempt
+            self.resources.release(record.task_id, step.step.step_id)
+            self._fail_or_retry(record, "step_timeout")
+            disposition = (
+                "step_timeout_retry" if record.state == "recovering" else "step_timeout_failed"
+            )
+            self._append_transition(
+                record,
+                step,
+                attempt=prior_attempt,
+                family="tick",
+                prior_state=prior_state,
+                disposition=disposition,
+                detail_code="step_timeout",
             )
 
     def tick(
@@ -378,17 +520,7 @@ class TaskExecutive:
         if not math.isfinite(timestamp):
             raise ValueError("executive time must be finite")
         with self._lock:
-            for record in self._ordered_records():
-                if record.state in {"running", "waiting_checkpoint"}:
-                    step = record.current_step
-                    if (
-                        step is not None
-                        and record.step_started_at is not None
-                        and timestamp - record.step_started_at >= step.step.timeout_s
-                    ):
-                        self.resources.release(record.task_id, step.step.step_id)
-                        self._fail_or_retry(record, "step_timeout")
-
+            self._expire_timed_out_steps(timestamp)
             for record in self._ordered_records():
                 # suspended is a status (not an outcome): skip like running so
                 # tick does not re-dispatch until resume_task re-queues it.
@@ -400,13 +532,28 @@ class TaskExecutive:
                     continue
                 step = record.current_step
                 if step is None:
-                    record.state = "succeeded"
-                    record.at_checkpoint = True
-                    record.last_detail = "all_steps_completed"
-                    continue
+                    # PlanIR requires at least one step and report() makes the
+                    # final accepted success terminal in the same call.  This
+                    # arm is a defensive invariant, not a constructible public
+                    # transition in the validated state machine.
+                    raise RuntimeError(
+                        "non-terminal task has no executable step; empty tick completion "
+                        "is not constructible"
+                    )
                 if not _preconditions_satisfied(step, record.validated, snapshot):
+                    prior_state = record.state
                     record.state = "waiting_precondition"
                     record.last_detail = "preconditions_not_satisfied"
+                    if prior_state != record.state:
+                        self._append_transition(
+                            record,
+                            step,
+                            attempt=record.attempt,
+                            family="tick",
+                            prior_state=prior_state,
+                            disposition="waiting_precondition",
+                            detail_code="preconditions_not_satisfied",
+                        )
                     continue
                 acquired, conflicts = self.resources.acquire(
                     record.task_id,
@@ -414,17 +561,38 @@ class TaskExecutive:
                     step.effective_resources,
                 )
                 if not acquired:
+                    prior_state = record.state
                     record.state = "waiting_resource"
                     record.conflicts = conflicts
                     record.last_detail = "resources_unavailable"
+                    if prior_state != record.state:
+                        self._append_transition(
+                            record,
+                            step,
+                            attempt=record.attempt,
+                            family="tick",
+                            prior_state=prior_state,
+                            disposition="waiting_resource",
+                            detail_code="resources_unavailable",
+                        )
                     continue
                 recovery = record.pending_recovery
+                prior_state = record.state
                 record.pending_recovery = None
                 record.conflicts = ()
                 record.state = "running"
                 record.at_checkpoint = False
                 record.step_started_at = timestamp
                 record.last_detail = "dispatched"
+                self._append_transition(
+                    record,
+                    step,
+                    attempt=record.attempt,
+                    family="tick",
+                    prior_state=prior_state,
+                    disposition="step_dispatched",
+                    detail_code="dispatch_returned",
+                )
                 return (self._dispatch_request(record, step, recovery),)
         return ()
 
@@ -453,89 +621,12 @@ class TaskExecutive:
         """Consume typed feedback; stale plan revisions are ignored."""
 
         with self._lock:
-            record = self._tasks.get(result.task_id)
-            if record is None:
-                return ReportDisposition(False, "ignored_unknown_task", result.task_id, "idle")
-            step = record.current_step
-            if (
-                step is None
-                or result.plan_revision != record.plan_revision
-                or result.step_id != step.step.step_id
-                or result.attempt != record.attempt
-                or record.state not in {"running", "waiting_checkpoint"}
-            ):
-                return ReportDisposition(
-                    False, "ignored_stale_result", result.task_id, record.state
-                )
-
-            if result.status == "in_progress":
-                record.at_checkpoint = result.checkpoint
-                record.last_detail = result.detail_code
-                if (
-                    result.checkpoint
-                    and record.pending_replacement is not None
-                    and step.effective_interruptibility != "never"
-                ):
-                    replacement = record.pending_replacement
-                    self._activate_replacement(record, replacement)
-                    return ReportDisposition(
-                        True, "replacement_activated_at_checkpoint", result.task_id, record.state
-                    )
-                if result.checkpoint and record.pending_interrupt is not None:
-                    self._cancel(record, record.pending_interrupt.reason)
-                    return ReportDisposition(
-                        True, "cancelled_at_checkpoint", result.task_id, record.state
-                    )
-                return ReportDisposition(True, "progress_recorded", result.task_id, record.state)
-
-            self.resources.release(record.task_id, step.step.step_id)
-            record.step_started_at = None
-            record.at_checkpoint = True
-            record.last_detail = result.detail_code
-            if record.pending_replacement is not None:
-                replacement = record.pending_replacement
-                self._activate_replacement(record, replacement)
-                return ReportDisposition(
-                    True,
-                    "replacement_activated_after_step",
-                    result.task_id,
-                    record.state,
-                )
-            if record.pending_interrupt is not None:
-                self._cancel(record, record.pending_interrupt.reason)
-                return ReportDisposition(
-                    True,
-                    "cancelled_after_step",
-                    result.task_id,
-                    record.state,
-                )
-            if result.status == "succeeded" and not _result_satisfies_success(result, step):
-                self._fail_or_retry(record, "success_condition_not_verified")
-                action = "retry_scheduled" if record.state == "recovering" else "task_failed"
-                return ReportDisposition(True, action, result.task_id, record.state)
-            if result.status == "succeeded":
-                record.step_index += 1
-                record.attempt = 1
-                if record.step_index >= len(record.validated.steps):
-                    record.state = "succeeded"
-                    return ReportDisposition(True, "task_succeeded", result.task_id, record.state)
-                record.state = "queued"
-                return ReportDisposition(True, "step_succeeded", result.task_id, record.state)
-            if result.status == "cancelled":
-                self._cancel(record, result.detail_code)
-                return ReportDisposition(True, "task_cancelled", result.task_id, record.state)
-            # ``feedback_code`` on a failed result is the constant ``"failed"``
-            # (``runtime_adapter._failed_result``), so recording it as the
-            # detail wrote the state down twice and threw the adapter's
-            # attribution away. ``detail_code`` is where the verifier put the
-            # reason — ``blocked_by_person_unanswered``,
-            # ``semantic_target_unreachable``, ``navigation_no_progress`` — and
-            # ``last_detail`` is the only attribution field the task snapshot
-            # carries. The cancellation arm one line above already prefers
-            # ``detail_code``; this makes the failure arm agree.
-            self._fail_or_retry(record, result.detail_code or result.feedback_code)
-            action = "retry_scheduled" if record.state == "recovering" else "task_failed"
-            return ReportDisposition(True, action, result.task_id, record.state)
+            return _report_with_rollback(
+                self,
+                result,
+                _handle_report,
+                ReportDisposition,
+            )
 
     def dispatch_failed(
         self,
@@ -545,95 +636,22 @@ class TaskExecutive:
         """Release every resource if an adapter raises before typed feedback."""
 
         with self._lock:
-            record = self._tasks.get(request.task_id)
-            if (
-                record is None
-                or record.plan_revision != request.plan_revision
-                or record.attempt != request.attempt
-                or record.current_step is None
-                or record.current_step.step.step_id != request.step_id
-            ):
-                return ReportDisposition(False, "ignored_stale_dispatch", request.task_id, "idle")
-            self.resources.release(request.task_id, request.step_id)
-            record.step_started_at = None
-            record.at_checkpoint = True
-            self._fail_or_retry(record, f"dispatch_failed:{detail[:80]}")
-            action = "retry_scheduled" if record.state == "recovering" else "task_failed"
-            return ReportDisposition(True, action, request.task_id, record.state)
+            return _handle_dispatch_failed(self, request, detail, ReportDisposition)
 
     def request_interrupt(self, request: InterruptRequest) -> InterruptDecision:
         """Apply system priority; model-requested timing is never authoritative."""
 
         with self._lock:
-            records = [
-                record
-                for record in self._ordered_records()
-                if record.state not in TERMINAL_TASK_STATES
-                and (request.target_task_id is None or record.task_id == request.target_task_id)
-            ]
-            if not records:
-                return InterruptDecision("nothing_to_interrupt", (), request.reason)
-            if request.source in {
-                "emergency",
-                "manual",
-                "system_recovery",
-                "explicit_stop",
-            }:
-                affected = tuple(record.task_id for record in records)
-                for record in records:
-                    self._cancel(record, request.reason)
-                return InterruptDecision("cancel_now", affected, request.reason)
-            if request.source == "voice":
-                policy = _voice_interrupt_action(request.reason)
-                if policy in GOAL_AMEND_FORBIDDEN_ACTIONS and _is_goal_amend_reason(
-                    request.reason
-                ):
-                    # Structural, not table-dependent: no edit to the policy
-                    # above can make an amendment destroy its own goal.
-                    return InterruptDecision(GOAL_AMEND_REFUSED_ACTION, (), request.reason)
-                if policy == "overlap":
-                    return InterruptDecision("overlap", (), request.reason)
-                if policy == "suspend":
-                    affected = tuple(record.task_id for record in records)
-                    for record in records:
-                        self._suspend(record, request.reason)
-                    return InterruptDecision("suspend", affected, request.reason)
-                if policy == "cancel_now":
-                    affected = tuple(record.task_id for record in records)
-                    for record in records:
-                        self._cancel(record, request.reason)
-                    return InterruptDecision("cancel_now", affected, request.reason)
-                return InterruptDecision("overlap", (), request.reason)
-            if request.source in {"social", "explicit_gesture"}:
-                return InterruptDecision(
-                    "defer_when_idle", tuple(record.task_id for record in records), request.reason
-                )
-
-            affected: list[str] = []
-            deferred_until_idle = False
-            for record in records:
-                step = record.current_step
-                if (
-                    step is not None
-                    and step.effective_interruptibility == "never"
-                    and record.state in {"running", "waiting_checkpoint"}
-                ):
-                    deferred_until_idle = True
-                    continue
-                if record.state not in {"running", "waiting_checkpoint"} or record.at_checkpoint:
-                    self._cancel(record, request.reason)
-                else:
-                    record.pending_interrupt = request
-                    record.state = "waiting_checkpoint"
-                    record.last_detail = "interrupt_waiting_for_checkpoint"
-                affected.append(record.task_id)
-            if deferred_until_idle and not affected:
-                return InterruptDecision(
-                    "defer_when_idle",
-                    tuple(record.task_id for record in records),
-                    request.reason,
-                )
-            return InterruptDecision("defer_to_checkpoint", tuple(affected), request.reason)
+            return _handle_interrupt(
+                self,
+                request,
+                InterruptDecision,
+                terminal_states=TERMINAL_TASK_STATES,
+                voice_policy_resolver=_voice_interrupt_action,
+                goal_amend_predicate=_is_goal_amend_reason,
+                goal_amend_forbidden_actions=GOAL_AMEND_FORBIDDEN_ACTIONS,
+                goal_amend_refused_action=GOAL_AMEND_REFUSED_ACTION,
+            )
 
     def cancel_all(self, reason: str) -> InterruptDecision:
         return self.request_interrupt(
@@ -744,13 +762,25 @@ class TaskExecutive:
             if record is None:
                 return ReportDisposition(False, "ignored_unknown_task", task_id, "idle")
             if record.state != "suspended":
-                return ReportDisposition(
-                    False, "ignored_not_suspended", task_id, record.state
-                )
+                return ReportDisposition(False, "ignored_not_suspended", task_id, record.state)
+            step = record.current_step
+            if step is None:
+                return ReportDisposition(False, "ignored_no_current_step", task_id, record.state)
+            prior_state = record.state
+            prior_attempt = record.attempt
             record.state = "queued"
             record.at_checkpoint = True
             record.step_started_at = None
             record.last_detail = f"resumed:{reason[:140]}"
+            self._append_transition(
+                record,
+                step,
+                attempt=prior_attempt,
+                family="explicit_lifecycle",
+                prior_state=prior_state,
+                disposition="task_resumed",
+                detail_code=f"task_resumed:{reason}"[:120],
+            )
             return ReportDisposition(True, "task_resumed", task_id, record.state)
 
     def resume_task_running(
@@ -794,6 +824,8 @@ class TaskExecutive:
                     ReportDisposition(False, "ignored_no_current_step", task_id, record.state),
                     None,
                 )
+            prior_state = record.state
+            prior_attempt = record.attempt
             acquired, conflicts = self.resources.acquire(
                 record.task_id,
                 step.step.step_id,
@@ -812,6 +844,15 @@ class TaskExecutive:
             record.at_checkpoint = False
             record.step_started_at = timestamp
             record.last_detail = f"resumed_running:{reason[:120]}"
+            self._append_transition(
+                record,
+                step,
+                attempt=prior_attempt,
+                family="explicit_lifecycle",
+                prior_state=prior_state,
+                disposition="task_resumed_running",
+                detail_code=f"task_resumed_running:{reason}"[:120],
+            )
             return (
                 ReportDisposition(True, "task_resumed_running", task_id, record.state),
                 self._dispatch_request(record, step, None),
@@ -823,34 +864,24 @@ class TaskExecutive:
             if record is None:
                 return ReportDisposition(False, "ignored_unknown_task", task_id, "idle")
             if record.state in TERMINAL_TASK_STATES:
-                return ReportDisposition(
-                    False, "ignored_terminal_task", task_id, record.state
-                )
+                return ReportDisposition(False, "ignored_terminal_task", task_id, record.state)
+            step = record.current_step
+            if step is None:
+                return ReportDisposition(False, "ignored_no_current_step", task_id, record.state)
+            prior_state = record.state
+            prior_attempt = record.attempt
             self._suspend(record, reason)
+            if record.state != prior_state:
+                self._append_transition(
+                    record,
+                    step,
+                    attempt=prior_attempt,
+                    family="explicit_lifecycle",
+                    prior_state=prior_state,
+                    disposition="task_suspended",
+                    detail_code=f"task_suspended:{reason}"[:120],
+                )
             return ReportDisposition(True, "task_suspended", task_id, record.state)
-
-    def _activate_replacement(
-        self,
-        record: _TaskRecord,
-        replacement: ValidatedPlan,
-    ) -> None:
-        self.resources.release(record.task_id)
-        record.validated = replacement
-        record.state = "queued"
-        record.step_index = 0
-        record.attempt = 1
-        record.step_started_at = None
-        record.at_checkpoint = True
-        record.pending_interrupt = None
-        record.pending_replacement = None
-        record.pending_recovery = None
-        record.conflicts = ()
-        record.last_detail = "replacement_activated"
-        # The new plan is now the committed steering plan for this channel:
-        # flush stale proposer buffers in the same locked transaction so a
-        # superseded-revision proposal can never win arbitration after this.
-        self._notify_revision_committed(record)
-
 
 def _preconditions_satisfied(
     step: ValidatedStep,
@@ -899,25 +930,6 @@ def _preconditions_satisfied(
         and item.confidence >= 0.6
         for item in snapshot.entities
     )
-
-
-def _result_satisfies_success(result: ExecutionResult, step: ValidatedStep) -> bool:
-    expected = step.step.success
-    for fact in result.verified_facts:
-        if fact.fact != expected.fact:
-            continue
-        if expected.target is not None and (
-            fact.target is None or _normalized(fact.target) != _normalized(expected.target)
-        ):
-            continue
-        if expected.confidence_min is not None and fact.confidence < expected.confidence_min:
-            continue
-        return True
-    return False
-
-
-def _normalized(value: str) -> str:
-    return "".join(character for character in value.lower() if character.isalnum())
 
 
 def _is_goal_amend_reason(reason: str) -> bool:

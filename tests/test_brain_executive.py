@@ -405,3 +405,34 @@ def test_suspend_tick_does_not_redispatch() -> None:
     assert len(again) == 1
     assert again[0].task_id == request.task_id
     assert again[0].skill == "Hold"
+
+
+def test_resume_running_retains_resource_conflict_without_transition() -> None:
+    resources = ResourceLocks()
+    executive = TaskExecutive(resources)
+    executive.submit(_validated(_hold_plan("parked")))
+    request = executive.tick(_snapshot(), now=10.0)[0]
+    assert executive.suspend_task(request.task_id, reason="owner interruption").accepted
+    assert resources.acquire("blocking-task", "blocking-step", ("base",))[0]
+    before = executive.transition_journal_status().latest_sequence
+
+    disposition, redispatch = executive.resume_task_running(
+        request.task_id,
+        reason="resume after child",
+        now=11.0,
+    )
+
+    assert disposition.accepted is False
+    assert disposition.action == "ignored_resources_unavailable"
+    assert disposition.state == "suspended"
+    assert redispatch is None
+    assert executive.transition_journal_status().latest_sequence == before
+    task = executive.snapshot()["tasks"][0]
+    assert task["state"] == "suspended"
+    assert task["resource_conflicts"] == [
+        {
+            "resource": "base",
+            "owner_task_id": "blocking-task",
+            "owner_step_id": "blocking-step",
+        }
+    ]

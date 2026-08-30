@@ -378,26 +378,24 @@ def _commissioned_config() -> dict:
     ],
 )
 def test_normal_factory_still_refuses_each_uncommissioned_flag(key, value, message) -> None:
-    """The four normal gates behave exactly as before this card."""
+    """The retired in-process writer refuses before interpreting old flags."""
 
     config = _commissioned_config()
     config["unitree_sport"][key] = value
-    with pytest.raises(ValueError, match=message):
+    del message
+    with pytest.raises(RuntimeError, match="direct unitree_sport control is retired"):
         build_unitree_sport_control_manager(config, SafetyLimits())
 
 
-def test_normal_factory_still_builds_when_every_flag_is_commissioned() -> None:
-    """Control for the four refusals above: the gates discriminate."""
-
-    manager = build_unitree_sport_control_manager(_commissioned_config(), SafetyLimits())
-    assert manager.controller.name == "unitree_sport"
-    assert manager.controller.allowed_modes == frozenset({3})
+def test_normal_factory_is_retired_even_when_old_flags_are_commissioned() -> None:
+    with pytest.raises(RuntimeError, match="motion_gateway_commissioned"):
+        build_unitree_sport_control_manager(_commissioned_config(), SafetyLimits())
 
 
 def test_commissioning_builds_while_every_normal_flag_is_false(tmp_path) -> None:
     """GATE 1. The defect: commissioning could not bootstrap. Now it can."""
 
-    with pytest.raises(ValueError, match="enable_lease must be true"):
+    with pytest.raises(RuntimeError, match="direct unitree_sport control is retired"):
         build_unitree_sport_control_manager(_UNCOMMISSIONED, SafetyLimits())
 
     session = build_unitree_sport_commissioning_session(
@@ -1213,9 +1211,10 @@ def test_reviewed_record_enables_exactly_the_four_normal_flags() -> None:
     assert sport["state_velocity_frame"] == "odom"
     assert sport["commissioning_record_digest"] == record.content_digest()
     assert sport["interface"] == "test0"
-    # The output is exactly what the untouched normal gate demands.
-    manager = build_unitree_sport_control_manager(config, SafetyLimits())
-    assert manager.controller.allowed_modes == frozenset({3})
+    # The record remains commissioning evidence, but the old in-process
+    # runtime writer stays retired; production consumes gateway configuration.
+    with pytest.raises(RuntimeError, match="motion_gateway_commissioned"):
+        build_unitree_sport_control_manager(config, SafetyLimits())
 
 
 def test_commissioned_control_config_does_not_mutate_its_input() -> None:
@@ -1415,7 +1414,9 @@ def test_commissioning_builders_are_not_in_the_controller_registry() -> None:
     values = set(_CONTROLLER_FACTORIES.values())
     assert build_unitree_sport_commissioning_session not in values
     assert build_unitree_sport_observer not in values
-    assert build_unitree_sport_control_manager in values
+    assert build_unitree_sport_control_manager not in values
+    assert "unitree_sport" not in registered
+    assert "motion_gateway_commissioned" in registered
 
 
 def test_the_observer_has_no_controller_at_all() -> None:
@@ -1592,7 +1593,8 @@ def test_full_session_produces_a_record_that_enables_configuration(tmp_path) -> 
     )
     assert reviewed.authorizes_configuration()
     config = commissioned_control_config(_UNCOMMISSIONED, reviewed)
-    manager = build_unitree_sport_control_manager(config, SafetyLimits())
-    assert manager.controller.allowed_modes == frozenset({3})
-    assert manager.controller.lateral_sign == 1
-    assert manager.controller.yaw_sign == 1
+    assert config["unitree_sport"]["allowed_modes"] == [3]
+    assert config["unitree_sport"]["lateral_sign"] == 1
+    assert config["unitree_sport"]["yaw_sign"] == 1
+    with pytest.raises(RuntimeError, match="motion_gateway_commissioned"):
+        build_unitree_sport_control_manager(config, SafetyLimits())

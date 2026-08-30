@@ -1,0 +1,18 @@
+{
+  "schema": "parcel-acoustic-eval-v2-verification-1",
+  "report": "research/20260829/acoustic-eval-v2/results.json",
+  "report_sha256": "40ac53e3ce5ba277c677cdf381f936c81e5455e43a0dae16a61656f8732244c2",
+  "result_schema": "evals/companion/acoustic_loop_v1/result.schema.json",
+  "draft_2020_12_schema_valid": true,
+  "case_count_matches": true,
+  "case_count": 25,
+  "teardown_clean": true,
+  "expected_quality_red": true,
+  "gates_passed": false,
+  "gate_status_counts": {
+    "pass": 6,
+    "FAIL": 3,
+    "not_measured": 2
+  },
+  "owned_node_or_process_orphans_observed_after_run": false
+}

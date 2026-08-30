@@ -328,7 +328,17 @@ def _normalize(value: object) -> object:
     """Replace per-instance ids and clocks; keep every other value verbatim."""
 
     volatile_suffixes = ("_id", "_at", "_at_s", "_ts", "timestamp", "_seconds", "_uptime_s")
-    volatile_names = {"started_at", "closed_at", "session", "uptime_s", "elapsed_s"}
+    volatile_names = {
+        "started_at",
+        "closed_at",
+        "session",
+        "uptime_s",
+        "elapsed_s",
+        # The disarmed execution-narrative lane generates a fresh anti-replay
+        # nonce for every runtime instance. It is independent of camera config
+        # by construction and therefore belongs beside per-instance ids here.
+        "source_epoch",
+    }
     if isinstance(value, dict):
         out: dict[str, object] = {}
         for key, item in value.items():

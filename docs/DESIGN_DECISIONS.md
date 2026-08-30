@@ -26,7 +26,9 @@ camera/LiDAR observations → semantic grounding → grid/behavior controller
                                                         ↓
                                 leased body velocity → ControlManager
                                                         ↓
-                              simulator or Unitree Sport controller
+                       simulator adapter or typed Unix gateway client
+                                                        ↓ physical only
+                                    parcel-gateway → Unitree Sport
 
 conversation/prosody ──→ subordinate expression channel (never locomotion authority)
 
@@ -60,9 +62,11 @@ waypoints in research, but do not replace this safety boundary.
 
 **Decision:** `RobotRuntime` arbitrates semantic activities and short-lived
 motion intents; [`ControlManager`](../src/parcel_robot/control/manager.py) is
-the sole body-velocity writer on the product runtime path and supervises leases, state freshness, limits,
-faults, stop confirmation, and E-stop; Unitree's Sport service initially owns
-the high-rate balance/foot-placement loop. A future custom controller must
+the sole application-side body-velocity owner and supervises leases, state
+freshness, limits, faults, stop confirmation, and E-stop. On the physical path,
+the separate `parcel-gateway` process is the sole vendor SDK writer; Unitree's
+Sport service initially owns the high-rate balance/foot-placement loop. A
+future custom controller must
 implement the same HAL contracts in
 [`control/base.py`](../src/parcel_robot/control/base.py).
 

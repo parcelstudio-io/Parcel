@@ -280,6 +280,40 @@ def test_scan_angles_are_rotated_by_world_heading() -> None:
     assert grid.cell_state((1.55, 0.05)) is not CellState.OCCUPIED
 
 
+def test_same_safe_cell_outside_metric_tolerance_emits_motion_not_arrival() -> None:
+    planner = RollingGridPlanner(_config(goal_tolerance_m=0.10))
+    pose = Pose2D(0.001, 0.001, 0.0)
+    goal = (0.099, 0.099)
+    planner.update(pose, _scan((math.inf,), maximum=3.0))
+
+    plan = planner.plan(pose, goal)
+
+    assert math.dist(pose.xy, goal) > planner.config.goal_tolerance_m
+    assert planner.grid.world_to_local_cell(pose.xy) == planner.grid.world_to_local_cell(goal)
+    assert plan.status == "planned"
+    assert plan.reaches_goal_region is True
+    assert plan.waypoints_world == (pose.xy, goal)
+    assert plan.path_length_m == pytest.approx(math.dist(pose.xy, goal))
+    assert plan.note == "same_safe_cell_exact_metric_goal"
+
+
+def test_start_cell_candidate_outside_metric_tolerance_is_not_false_arrival() -> None:
+    planner = RollingGridPlanner(_config(goal_tolerance_m=0.10))
+    pose = Pose2D(0.001, 0.05, 0.0)
+    goal = (0.199, 0.05)
+    planner.update(pose, _scan((math.inf,), maximum=3.0))
+
+    plan = planner.plan(pose, goal)
+
+    assert math.dist(pose.xy, goal) > planner.config.goal_tolerance_m
+    assert planner.grid.world_to_local_cell(pose.xy) != planner.grid.world_to_local_cell(goal)
+    assert plan.status == "planned"
+    assert plan.reaches_goal_region is True
+    assert plan.waypoints_world[0] == pose.xy
+    assert plan.waypoints_world[-1] == goal
+    assert plan.path_length_m > 0.0
+
+
 def test_later_free_evidence_clears_a_moving_obstacle_return() -> None:
     grid = RollingOccupancyGrid(_config(grid_size_cells=81, lidar_range_cap_m=3.0))
     pose = Pose2D(0.05, 0.05, 0.0)

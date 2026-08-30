@@ -3,7 +3,8 @@
 **Implementation and commissioning note — 2026-08-09.** Parcel now includes a
 small, tested simulator body-language palette. The custom joint trajectories
 are **not commissioned for physical Go2 hardware**. The physical runtime still
-rejects direct pose/trajectory actuation while Unitree Sport owns locomotion.
+rejects pose/trajectory actuation; the sole-writer gateway currently exposes
+only commissioned base velocity and stop, not a physical whole-body action API.
 
 ## Design decision
 
@@ -31,7 +32,8 @@ schema, confidence, cooldown, TTL, activity/safety admission
                |
                v
 sim trajectory today
-Unitree-controller-owned action after physical commissioning
+gateway-owned, allowlisted whole-body action only after implementation and
+physical commissioning
 ```
 
 ## Starter palette

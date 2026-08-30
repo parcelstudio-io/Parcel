@@ -18,7 +18,17 @@ from evals.companion.acoustic_loop_v1.rig import (
     _Recorder,
     _temporary_binary_file,
 )
-from evals.companion.acoustic_loop_v1.run_acoustic_loop_v1 import quality_exit_code
+from evals.companion.acoustic_loop_v1.run_acoustic_loop_v1 import (
+    ANALYSIS_FRAME,
+    ISOLATED_ROBOT_CHANNEL_BASIS,
+    MIXED_STOP_UNMEASURED_REASON,
+    assess_endpoint_commits,
+    evaluate_gates,
+    monotonic_one_to_one_matches,
+    quality_exit_code,
+    robot_only_envelope,
+    summarize,
+)
 
 
 class _FakeProcess:
@@ -83,6 +93,245 @@ def test_red_or_invalid_acoustic_report_exits_nonzero() -> None:
     assert quality_exit_code({"gates_passed": False, "teardown_clean": True}) == 1
     assert quality_exit_code({"gates_passed": True, "teardown_clean": False}) == 1
     assert quality_exit_code({}) == 1
+
+
+def test_endpoint_commit_assessment_requires_one_post_final_commit() -> None:
+    valid = assess_endpoint_commits(
+        kind="complete",
+        commit_sample_clocks_s=[4.3],
+        final_speech_end_s=4.0,
+        incomplete_hold_s=2.5,
+    )
+
+    assert valid["endpoint_measurement_valid"] is True
+    assert valid["post_final_commit_sample_clocks_s"] == [4.3]
+    assert valid["ep_s"] == pytest.approx(0.3)
+
+    missing = assess_endpoint_commits(
+        kind="complete",
+        commit_sample_clocks_s=[],
+        final_speech_end_s=4.0,
+        incomplete_hold_s=2.5,
+    )
+
+    assert missing["endpoint_measurement_valid"] is False
+    assert missing["endpoint_invalid_reasons"] == [
+        "expected_exactly_one_post_final_commit"
+    ]
+
+
+def test_endpoint_commit_assessment_exposes_premature_and_multiple_commits() -> None:
+    assessed = assess_endpoint_commits(
+        kind="pause_heavy",
+        commit_sample_clocks_s=[1.9, 4.25],
+        final_speech_end_s=4.0,
+        incomplete_hold_s=2.5,
+    )
+
+    assert assessed["commit_count"] == 2
+    assert assessed["premature_commit"] is True
+    assert assessed["multiple_commits"] is True
+    assert assessed["premature_commit_sample_clocks_s"] == [1.9]
+    assert assessed["post_final_commit_sample_clocks_s"] == [4.25]
+    assert assessed["endpoint_measurement_valid"] is False
+    assert assessed["ep_s"] is None
+
+
+def test_endpoint_commit_assessment_flags_incomplete_early() -> None:
+    early = assess_endpoint_commits(
+        kind="incomplete",
+        commit_sample_clocks_s=[4.3],
+        final_speech_end_s=4.0,
+        incomplete_hold_s=2.5,
+    )
+    held = assess_endpoint_commits(
+        kind="incomplete",
+        commit_sample_clocks_s=[6.5],
+        final_speech_end_s=4.0,
+        incomplete_hold_s=2.5,
+    )
+
+    assert early["incomplete_early"] is True
+    assert early["endpoint_measurement_valid"] is False
+    assert "incomplete_early_commit" in early["endpoint_invalid_reasons"]
+    assert held["incomplete_early"] is False
+    assert held["endpoint_measurement_valid"] is True
+
+
+def test_monotonic_accent_matching_is_one_to_one_and_ignores_extras() -> None:
+    identity = [round(index * 0.2, 3) for index in range(14)]
+    assert monotonic_one_to_one_matches(
+        identity,
+        identity,
+        window_s=0.15,
+    ) == list(zip(identity, identity))
+
+    single_observation = monotonic_one_to_one_matches(
+        [0.0, 0.1],
+        [0.09],
+        window_s=0.15,
+    )
+    extras = monotonic_one_to_one_matches(
+        [0.0, 1.0],
+        [0.0, 0.02, 1.0],
+        window_s=0.15,
+    )
+
+    assert single_observation == [(0.1, 0.09)]
+    assert extras == [(0.0, 0.0), (1.0, 1.0)]
+
+
+def test_mixed_minus_owner_stop_diagnostic_cannot_feed_gate() -> None:
+    metrics = summarize(
+        [
+            {
+                "name": "interrupt@2s",
+                "family": "bargein",
+                "kind": "speech_interrupt",
+                "detected": True,
+                "detection_s": 0.1,
+                "flush_s": 0.02,
+                # Even a plausible value is inadmissible without the isolated
+                # basis marker.
+                "acoustic_stop_s": 0.1,
+                "acoustic_stop_measurement_basis": "mixed_minus_owner_power",
+                "acoustic_stop_unmeasured_reason": MIXED_STOP_UNMEASURED_REASON,
+                "diagnostic_mixed_minus_owner_stop_s": 0.1,
+            }
+        ]
+    )
+    gates = evaluate_gates(metrics)
+
+    assert metrics["bargein"]["diagnostic_mixed_minus_owner_stop_p50_s"] == 0.1
+    assert metrics["bargein"]["acoustic_stop_p50_s"] is None
+    assert gates["bargein_acoustic_stop_p50_s"]["status"] == "not_measured"
+    assert gates["bargein_acoustic_stop_p50_s"]["reason"] == (
+        MIXED_STOP_UNMEASURED_REASON
+    )
+
+
+def test_acoustic_stop_gate_accepts_only_complete_isolated_channel_cases() -> None:
+    cases = [
+        {
+            "name": f"interrupt@{index}s",
+            "family": "bargein",
+            "kind": "speech_interrupt",
+            "detected": True,
+            "detection_s": 0.1,
+            "flush_s": 0.02,
+            "acoustic_stop_s": stop_s,
+            "acoustic_stop_measurement_basis": ISOLATED_ROBOT_CHANNEL_BASIS,
+        }
+        for index, stop_s in enumerate((0.2, 0.4), start=1)
+    ]
+
+    metrics = summarize(cases)
+    gates = evaluate_gates(metrics)
+
+    assert metrics["bargein"]["acoustic_stop_status"] == "measured"
+    assert metrics["bargein"]["acoustic_stop_p50_s"] == pytest.approx(0.3)
+    assert gates["bargein_acoustic_stop_p50_s"]["status"] == "pass"
+
+
+def test_ack_gate_uses_virtual_audible_clock_not_enqueue_or_write_attempt() -> None:
+    stages_only = summarize(
+        [
+            {
+                "name": "query",
+                "family": "duplex",
+                "enqueue_attempted": True,
+                "enqueue_attempt_ack_s": 0.1,
+                "output_write_attempt_ack_s": 0.2,
+            }
+        ]
+    )
+    measured = summarize(
+        [
+            {
+                "name": "query",
+                "family": "duplex",
+                "enqueue_attempted": True,
+                "enqueue_attempt_ack_s": 0.1,
+                "output_write_attempt_ack_s": 0.2,
+                "virtual_audible_ack_s": 0.8,
+            }
+        ]
+    )
+
+    assert stages_only["duplex"]["enqueue_attempt_ack_p50_s"] == 0.1
+    assert stages_only["duplex"]["output_write_attempt_ack_p50_s"] == 0.2
+    assert stages_only["duplex"]["virtual_audible_ack_p50_s"] is None
+    assert (
+        evaluate_gates(stages_only)["duplex_virtual_audible_ack_p50_s"]["status"]
+        == "not_measured"
+    )
+    assert measured["duplex"]["virtual_audible_ack_p50_s"] == 0.8
+    assert (
+        evaluate_gates(measured)["duplex_virtual_audible_ack_p50_s"]["status"]
+        == "FAIL"
+    )
+
+
+def test_prosody_transport_and_physical_motion_are_separate_metrics() -> None:
+    metrics = summarize(
+        [
+            {
+                "name": "expressive",
+                "family": "prosody",
+                "transport_within_window_rate": 1.0,
+                "median_transport_lag_s": 0.0,
+                "transport_abs_lag_p95_s": 0.0,
+                "transport_clock_origin": "first audible sample in each audio track",
+                "transport_matching": "monotonic_one_to_one",
+                "physical_motion_status": "not_measured",
+                "physical_motion_sync_s": None,
+                "physical_motion_unmeasured_reason": "no actuator observation",
+            }
+        ]
+    )
+    gates = evaluate_gates(metrics)
+
+    assert metrics["prosody"]["audio_transport"]["within_window_rate"] == 1.0
+    assert metrics["prosody"]["physical_motion"]["status"] == "not_measured"
+    assert gates["prosody_audio_transport_accent_match_rate"]["status"] == "pass"
+    assert gates["prosody_physical_motion_sync"] == {
+        "value": None,
+        "status": "not_measured",
+        "reason": "no actuator observation",
+    }
+
+
+def test_robot_only_envelope_handles_owner_audio_before_capture() -> None:
+    """Negative alignment lags retain only the overlapping owner frames."""
+
+    owner = np.concatenate(
+        [
+            np.full(ANALYSIS_FRAME, 1000, dtype=np.int16),
+            np.full(ANALYSIS_FRAME, 2000, dtype=np.int16),
+            np.full(ANALYSIS_FRAME, 3000, dtype=np.int16),
+        ]
+    )
+    mixed = np.concatenate(
+        [
+            np.full(ANALYSIS_FRAME, 2000, dtype=np.int16),
+            np.full(ANALYSIS_FRAME, 3000, dtype=np.int16),
+        ]
+    )
+
+    residual = robot_only_envelope(mixed, owner, needle_lag_s=-0.01)
+
+    assert residual.shape == (2,)
+    assert np.allclose(residual, 0.0)
+
+
+def test_robot_only_envelope_handles_owner_audio_ending_before_capture() -> None:
+    owner = np.full(ANALYSIS_FRAME, 1000, dtype=np.int16)
+    mixed = np.full(ANALYSIS_FRAME * 2, 500, dtype=np.int16)
+
+    residual = robot_only_envelope(mixed, owner, needle_lag_s=-0.05)
+
+    assert residual.shape == (2,)
+    assert np.allclose(residual, 500.0)
 
 
 def test_rig_close_terminates_and_reaps_tracked_capture_process() -> None:

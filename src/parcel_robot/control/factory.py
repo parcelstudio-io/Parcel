@@ -6,10 +6,15 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+from uuid import uuid4
 
+from parcel_robot.bridge.protocol import GatewayHashesV1
+from parcel_robot.bridge.unitree_writer_lock import UnitreeWriterLockV1
+from parcel_robot.evidence_origin import EvidenceOrigin
 from parcel_robot.safety import SafetyLimits
 
 from .adapters import BackendVelocityController
+from .base import CommissionedStateSource
 from .manager import ControlManager
 from .models import ControlLimits, ControlTiming
 from .state import BufferedRobotStateSource
@@ -87,78 +92,19 @@ def build_unitree_sport_control_manager(
     config: dict[str, Any],
     safety_limits: SafetyLimits,
 ) -> ControlManager:
-    """Build a hardware manager without importing Unitree SDK until start().
+    """Refuse the retired in-process physical writer composition.
 
-    The Unitree module is imported lazily inside this function so that
-    ``import parcel_robot.control`` never references vendor code.
+    Autonomous Unitree motion has one supported path: the separately
+    supervised gateway plus ``motion_gateway_commissioned``. Keeping this
+    symbol as a hard refusal gives old configurations and imports a clear
+    migration error without leaving a callable SDK bypass.
     """
 
-    from .unitree_sport import (
-        UnitreeChannelContext,
-        UnitreeSportController,
-        UnitreeSportStateSource,
+    del config, safety_limits
+    raise RuntimeError(
+        "direct unitree_sport control is retired; use motion_gateway_commissioned "
+        "through the parcel-gateway sole-writer process"
     )
-
-    timing = _timing(config)
-    sport = config.get("unitree_sport") or {}
-    if not isinstance(sport, dict):
-        raise TypeError("control.unitree_sport must be a mapping")
-    domain_id = int(sport.get("domain_id", 0))
-    interface = str(sport.get("interface", "enp3s0"))
-    channel = UnitreeChannelContext(domain_id, interface)
-    lateral_sign = int(sport.get("lateral_sign", 1))
-    yaw_sign = int(sport.get("yaw_sign", 1))
-    if sport.get("enable_lease") is not True:
-        raise ValueError("control.unitree_sport.enable_lease must be true for physical control")
-    if sport.get("axes_commissioned") is not True:
-        raise ValueError(
-            "control.unitree_sport.axes_commissioned must be true after sign verification"
-        )
-    if sport.get("state_frame_commissioned") is not True:
-        raise ValueError(
-            "control.unitree_sport.state_frame_commissioned must be true after frame verification"
-        )
-    state_source = UnitreeSportStateSource(
-        channel,
-        topic=str(sport.get("state_topic", "rt/sportmodestate")),
-        velocity_frame=str(sport.get("state_velocity_frame", "odom")),
-        lateral_sign=lateral_sign,
-        yaw_sign=yaw_sign,
-    )
-    raw_allowed_modes = sport.get("allowed_modes", [])
-    if not isinstance(raw_allowed_modes, list):
-        raise TypeError("control.unitree_sport.allowed_modes must be a list")
-    if not raw_allowed_modes:
-        raise ValueError("control.unitree_sport.allowed_modes must be explicitly commissioned")
-    if any(isinstance(mode, bool) or not isinstance(mode, int) for mode in raw_allowed_modes):
-        raise TypeError("control.unitree_sport.allowed_modes must contain integers")
-    rpc_timeout_s = float(sport.get("rpc_timeout_s", 0.2))
-    if rpc_timeout_s > min(timing.stop_retry_s, timing.stop_timeout_s):
-        raise ValueError("Unitree rpc_timeout_s cannot exceed the stop retry/confirmation deadline")
-    lease_acquire_timeout_s = float(sport.get("lease_acquire_timeout_s", 2.0))
-    if lease_acquire_timeout_s > timing.io_quiesce_timeout_s:
-        raise ValueError(
-            "Unitree lease_acquire_timeout_s cannot exceed control.io_quiesce_timeout_s"
-        )
-    controller = UnitreeSportController(
-        channel,
-        rpc_timeout_s=rpc_timeout_s,
-        refresh_s=float(sport.get("command_refresh_s", 0.1)),
-        enable_lease=True,
-        lease_acquire_timeout_s=lease_acquire_timeout_s,
-        lateral_sign=lateral_sign,
-        yaw_sign=yaw_sign,
-        allowed_modes=tuple(raw_allowed_modes),
-    )
-    return ControlManager(
-        controller,
-        state_source,
-        limits=_limits(config, safety_limits),
-        timing=timing,
-    )
-
-
-register_controller_factory("unitree_sport", build_unitree_sport_control_manager)
 
 
 def build_motion_gateway_disarmed_control_manager(
@@ -221,20 +167,160 @@ register_controller_factory(
 )
 
 
+@dataclass(frozen=True, slots=True)
+class _CommissionedGatewaySettings:
+    socket_path: str
+    writer_id: str
+    commissioning_record_id: str
+    expected_hashes: GatewayHashesV1
+    timeout_s: float
+    local_ttl_ms: int
+    timing: ControlTiming
+
+
+def _commissioned_gateway_settings(config: dict[str, Any]) -> _CommissionedGatewaySettings:
+    gateway = config.get("motion_gateway")
+    if not isinstance(gateway, dict):
+        raise TypeError("control.motion_gateway must be a mapping")
+    allowed = {
+        "mode",
+        "socket_path",
+        "writer_id",
+        "timeout_s",
+        "local_ttl_ms",
+        "session_epoch",
+        "expected_hashes",
+    }
+    unknown = sorted(set(gateway) - allowed)
+    if unknown:
+        raise ValueError(f"unknown control.motion_gateway keys: {', '.join(unknown)}")
+    if gateway.get("mode") != "commissioned":
+        raise ValueError("control.motion_gateway.mode must be exactly 'commissioned'")
+    socket_path = gateway.get("socket_path")
+    if not isinstance(socket_path, str) or not socket_path.strip():
+        raise ValueError("control.motion_gateway.socket_path must be a non-empty string")
+    writer_id = gateway.get("writer_id", "parcel-runtime")
+    if not isinstance(writer_id, str):
+        raise TypeError("control.motion_gateway.writer_id must be a string")
+    record_id = gateway.get("session_epoch")
+    if not isinstance(record_id, str) or not record_id.strip():
+        raise ValueError(
+            "control.motion_gateway.session_epoch must be an explicit non-empty "
+            "commissioning record ID"
+        )
+    record_id = record_id.strip()
+    if len(record_id) > 80:
+        raise ValueError("control.motion_gateway.session_epoch cannot exceed 80 characters")
+    expected_hashes = _commissioned_gateway_hashes(gateway.get("expected_hashes"))
+    raw_timeout_s = gateway.get("timeout_s", 2.0)
+    if isinstance(raw_timeout_s, bool) or not isinstance(raw_timeout_s, (int, float)):
+        raise TypeError("control.motion_gateway.timeout_s must be numeric")
+    raw_local_ttl_ms = gateway.get("local_ttl_ms", 350)
+    if isinstance(raw_local_ttl_ms, bool) or not isinstance(raw_local_ttl_ms, int):
+        raise TypeError("control.motion_gateway.local_ttl_ms must be an integer")
+    timing = _timing(config)
+    timeout_s = float(raw_timeout_s)
+    if timeout_s > timing.io_quiesce_timeout_s:
+        raise ValueError(
+            "control.motion_gateway.timeout_s cannot exceed control.io_quiesce_timeout_s"
+        )
+    return _CommissionedGatewaySettings(
+        socket_path.strip(),
+        writer_id,
+        record_id,
+        expected_hashes,
+        timeout_s,
+        raw_local_ttl_ms,
+        timing,
+    )
+
+
+def _commissioned_gateway_hashes(value: object) -> GatewayHashesV1:
+    if not isinstance(value, dict):
+        raise TypeError("control.motion_gateway.expected_hashes must be a mapping")
+    fields = {
+        "config_sha256",
+        "capability_sha256",
+        "calibration_sha256",
+        "firmware_sha256",
+    }
+    if set(value) != fields:
+        raise ValueError(
+            "control.motion_gateway.expected_hashes must contain exactly "
+            + ", ".join(sorted(fields))
+        )
+    expected_hashes = GatewayHashesV1(**{name: value[name] for name in fields})
+    bench_hashes = GatewayHashesV1(
+        config_sha256="a" * 64,
+        capability_sha256="b" * 64,
+        calibration_sha256="c" * 64,
+        firmware_sha256="d" * 64,
+    )
+    if expected_hashes == bench_hashes:
+        raise ValueError(
+            "control.motion_gateway.expected_hashes refuses the fixed BENCH_HASHES identity"
+        )
+    return expected_hashes
+
+
+def build_motion_gateway_commissioned_control_manager(
+    config: dict[str, Any],
+    safety_limits: SafetyLimits,
+) -> ControlManager:
+    """Build the explicit-arm, commissioned Unix-gateway composition.
+
+    Registration gives an operator a deliberate construction seam; it does not
+    alter the normal runtime's simulator selection or inject this manager into
+    ``RobotRuntime``.  Physical provenance requires both an explicit nonempty
+    commissioning record ID and independently configured compatibility hashes.
+    A distinct producer-session epoch is minted for every manager construction.
+    Connecting and starting remain passive; authority exists only after the
+    returned controller's explicit ``arm()`` transaction succeeds.
+    """
+
+    from .motion_gateway import build_commissioned_gateway_pair
+
+    settings = _commissioned_gateway_settings(config)
+    producer_session_epoch = f"motion-gateway-{uuid4().hex}"
+    controller, raw_state_source = build_commissioned_gateway_pair(
+        settings.socket_path,
+        writer_id=settings.writer_id,
+        session_epoch=producer_session_epoch,
+        expected_hashes=settings.expected_hashes,
+        commissioning_record_id=settings.commissioning_record_id,
+        timeout_s=settings.timeout_s,
+        state_timeout_s=settings.timing.state_timeout_s,
+        local_ttl_ms=settings.local_ttl_ms,
+    )
+    state_source = CommissionedStateSource(
+        raw_state_source,
+        origin=EvidenceOrigin.PHYSICAL,
+        session_epoch=producer_session_epoch,
+    )
+    return ControlManager(
+        controller,
+        state_source,
+        limits=_limits(config, safety_limits),
+        timing=settings.timing,
+    )
+
+
+register_controller_factory(
+    "motion_gateway_commissioned",
+    build_motion_gateway_commissioned_control_manager,
+)
+
+
 # ---------------------------------------------------------------------------
 # Commissioning-only path (card W0-B).
 #
-# The four gates above — enable_lease, axes_commissioned, state_frame_
-# commissioned, allowed_modes — are exactly the facts a commissioning run
-# exists to establish, so the normal builder cannot bootstrap them: it demands
-# the conclusion as a precondition. The two builders below are the *measurement*
-# path and they are deliberately NOT registered in the controller registry, so
-# ``create_control_manager`` can never return one and no configuration string
-# can reach them. They return commissioning objects, never a bare
-# ``ControlManager``, so there is nothing here for ``RobotRuntime`` to accept.
-#
-# Nothing above this line changes. The normal gates keep refusing exactly what
-# they refused before; ``tests/test_w0b_commissioning.py`` pins all four.
+# The retired in-process runtime builder above always refuses. The two builders
+# below are the supervised *measurement* path and are deliberately NOT
+# registered in the controller registry, so ``create_control_manager`` cannot
+# return one and no runtime configuration string can reach them. The armed
+# builder produces a commissioning object, never a bare ``ControlManager``;
+# real SDK activation additionally requires the same fixed writer authority as
+# the gateway.
 # ---------------------------------------------------------------------------
 
 
@@ -290,6 +376,7 @@ def build_unitree_sport_commissioning_session(
     journal_path: Path | str,
     session_id: str | None = None,
     seams: UnitreeCommissioningSeams | None = None,
+    writer_authority: UnitreeWriterLockV1 | None = None,
 ) -> Any:
     """Build the armed, one-axis commissioning session (card W0-B).
 
@@ -383,6 +470,7 @@ def build_unitree_sport_commissioning_session(
         yaw_sign=1,
         allowed_modes=tuple(arming.observed_modes),
         client_factory=seams.client_factory,
+        writer_authority=writer_authority,
     )
     manager = ControlManager(
         controller,

@@ -1,10 +1,10 @@
 # Closed-loop locomotion and Unitree Sport
 
-Implementation snapshot: 2026-08-04, with a safety-ordering correction audited
-on 2026-08-09. Parcel has one **body-velocity actuator owner**:
-`ControlManager`. Voice, navigation, owner search, follow, spatial
-behavior, and manual control may propose motion, but only the manager's selected
-`LocomotionController` can deliver a body-velocity command.
+Implementation snapshot: 2026-08-29. Parcel has one **runtime body-velocity
+owner**, `ControlManager`, and one **device-wide vendor writer**, the isolated
+`parcel-gateway` process. Voice, navigation, owner search, follow, spatial
+behavior, and manual control may propose motion; none may construct an SDK
+client or bypass the manager/gateway transaction.
 
 Targeted correction (2026-08-22): the P0 post-shaper final-stop boundary has
 landed in committed code, and the speed envelope below has been rechecked. The
@@ -49,8 +49,11 @@ voice / navigation / search / follow / spatial / manual
         LocomotionController
             /          \
            v            v
-  Unitree Sport      future custom
-  Move/StopMove      low-level loop
+ simulator adapter   Unix gateway client
+                            |
+                            v
+                  parcel-gateway sole writer
+                  Unitree Sport Move/StopMove
 ```
 
 This fixes the previous split path in which a voice request could call
@@ -82,7 +85,8 @@ boundaries:
 | Runtime proximity and TTC gates | Directional person/owner/obstacle slowdown or translation stop, plus constant-velocity dynamic-track braking, using fresh camera/LiDAR observations | Vendor state, balance, RPC delivery, or socially optimal prediction |
 | `SCurveVelocityShaper` | Per-axis acceleration/jerk limits at the final SE(2) hand-off; optional calm profile | Collision authority; the current calm signal is derived from the robot's synthesized speech rather than owner affect |
 | `FinalStopDecision` | Non-relaxable post-shaper dispatch class: exact hard stop, translation-zero proximity stop, or validated nominal stop | Physical braking, balance, contact, or independent hardware E-stop behavior |
-| `ControlManager` | Exclusive velocity writer, body limits, feedback freshness, controller faults/tilt, lease expiry, stop/E-stop lifecycle | Environmental collision perception or route planning |
+| `ControlManager` | Exclusive runtime velocity owner, body limits, feedback freshness, controller faults/tilt, lease expiry, stop/E-stop lifecycle | Environmental collision perception, route planning, or direct vendor access |
+| `parcel-gateway` | Device-wide SDK writer lock, boot epoch, writer identity, command sequence/TTL, stop dominance, vendor I/O and evidence | Tasks, language, navigation goals, or permission to re-arm on restart |
 | Unitree Sport | Fast balance, gait, foot placement, and motor control for the requested body velocity | Semantic goals and external obstacle avoidance |
 
 The arbiter's current priority order is navigation (30), search (35), follow
@@ -108,6 +112,10 @@ Parcel navigation loop (~10 Hz)
                          v
 Parcel ControlManager (50 Hz physical/external-manager default)
   feedback freshness, target lease, faults, stop watchdog
+                         |
+                         v
+parcel-gateway (separate process; sole SDK writer)
+  boot epoch, sequence/TTL, local limits, stop dominance
                          |
                          v
 Unitree onboard Sport controller
@@ -159,7 +167,7 @@ refuses to construct the physical controller until
 | One leased `base_link` velocity contract | Simulator, Unitree, and a future vendor/custom controller share the same upper stack | A lowest-common-denominator SE(2) command cannot expose terrain-aware footsteps or whole-body maneuvers |
 | Two smoothers around the environmental gate, then a final stop disposition | Behavior commands change legibly, the hand-off bounds jerk, and shaping cannot relax a hard/proximity stop | Cascaded filters still add lag; command-space stop correctness does not measure the physical Sport response, braking distance, or balance transient |
 | Feedback-confirm every physical stop | Prevents a transport acknowledgment from being mistaken for a stationary robot | Adds latency and rejects new motion if timestamps, sequence numbers, frame calibration, or feedback delivery are wrong |
-| Lazy vendor imports and registered factories | Normal simulation/test imports remain independent of Unitree SDK and a second vendor needs no generic-code edit | Process-global DDS and Unitree's non-releasable Python lease still require a dedicated physical driver process |
+| Dedicated gateway plus fixed device lock | Product/runtime imports remain independent of Unitree SDK; autonomous and commissioning writers cannot coexist | The SDK lease is process-lifetime, so replacement requires process exit and commissioning must stop the gateway first |
 | Fail-closed commissioning flags | Wrong mode/frame/axis assumptions cannot silently move hardware | Physical construction is intentionally impossible with the repository defaults until a human completes commissioning |
 
 ## Replaceable controller contract
@@ -215,7 +223,10 @@ source and estimator. Never publish Unitree `LowCmd` while Sport mode is active.
 
 ## Configuration
 
-The default browser/simulator stack uses the simulator controller adapter:
+The default browser/simulator stack uses the simulator controller adapter. The
+`unitree_sport` block shown beside it is retained only as input to the
+supervised `parcel-unitree-control` commissioning workflow; selecting or
+completing it cannot restore the retired in-process runtime writer:
 
 ```yaml
 control:
@@ -296,27 +307,33 @@ robot/firmware convention to Parcel's `base_link` convention. Set
 `axes_commissioned: true` only after all three axes have been checked.
 
 `allowed_modes` is intentionally empty until the exact robot firmware's Sport
-mode table has been verified. An empty list prevents the physical manager from
-being built; when populated, every other mode fails before `Move` is sent.
+mode table has been verified. An empty list prevents armed commissioning from
+proceeding; a reviewed record may populate it for the gateway's box-day
+environment. It never enables direct runtime SDK construction.
 
-The SDK lease is mandatory in the physical builder and activation waits for a
-nonzero lease ID. Every `Move` checks that the lease is still nonzero before it
-crosses the I/O lock. This prevents silently running without the requested
-Unitree ownership mechanism. Treat the lease as command ownership, not as a
-proven crash-stop guarantee: verify loss-of-process behavior on the exact
-firmware and retain an independent physical E-stop.
+The SDK lease is mandatory in both the vendor gateway and the armed
+commissioning writer, and activation waits for a nonzero lease ID. Every
+`Move` checks that the lease is still nonzero before it crosses vendor I/O.
+This prevents silently running without the requested Unitree ownership
+mechanism. Treat the lease as command ownership, not as a proven crash-stop
+guarantee: verify loss-of-process behavior on the exact firmware and retain an
+independent physical E-stop.
 
 The official Python lease implementation starts a renewal thread but exposes no
 public release/close operation. Parcel consequently treats a real SDK lease as
-process-lifetime and permits only one real activation in an OS process. Run the
-physical driver in a dedicated process and terminate that process when replacing
-Sport with a custom controller. The commissioning CLI already has that process
-lifetime; a production runtime still needs a typed IPC/ROS 2 boundary to a
-dedicated driver process.
+process-lifetime and permits only one real activation in an OS process. The
+fixed `/run/parcel-gateway/unitree-writer.lock` additionally excludes a second
+SDK writer across processes. Autonomous control uses the typed Unix gateway
+boundary; the old registered `unitree_sport` runtime factory is retired and
+always refuses. Armed commissioning is a mutually exclusive maintenance mode:
+stop `parcel-gateway.service`, run the CLI as the same `parcel-gateway` UID, and
+let the commissioning process exit before restarting the service.
 
 The older `motion.backend: sport|rl` section remains a compatibility facade for
 skill and voice intent selection. It no longer initializes DDS or sends
-physical commands. Hardware delivery belongs only to `ControlManager`.
+physical commands. `ControlManager` owns application-side motion delivery. On
+a physical composition it reaches only `motion_gateway_commissioned` and the
+gateway socket; `parcel-gateway` alone owns vendor delivery and the SDK handle.
 
 ## Forward-preferred motion and lateral velocity
 
@@ -349,45 +366,57 @@ as forward motion.
 | Runtime S-curve actuator shaping | Implemented after the collision gates; the shipped config keeps the optional nominal-stop ramp off | The calm profile follows prosody measured from Parcel's own TTS audio; physical response/lag remains unverified |
 | Post-shaper final stop disposition | Implemented immediately before `set_target`: hard stops are exact all-axis zero/reset, proximity stops are exact-zero translation, and opt-in nominal ramps are monotone and re-gated | Verified in the software dispatch pipeline; no physical braking-distance, stop-latency, or balance result |
 | Vendor-neutral lifecycle and portability | Implemented; mock second-vendor adapter covers arming, motion, watchdog, stop, and E-stop | No second physical robot |
-| Unitree Sport DDS/RPC/state adapter | Implemented and tested with injected SDK doubles | Not run against a physical Go2 from this workstation |
+| Commissioned runtime -> Unix gateway client | Implemented with explicit arm, compatibility hashes, physical-origin state and restart-disarmed behavior | Desktop/fake and injected protocol evidence; no deployed Orin launcher |
+| Gateway Unitree Sport DDS/RPC/state adapter | Implemented behind the sole-writer process and tested with injected SDK doubles | Not run against a physical Go2 from this workstation |
+| Device-wide writer exclusion | Fixed persistent lock is required before real SDK construction by either gateway or commissioning; the old in-process runtime factory always refuses | Kernel/software evidence only; Unitree lease/crash behavior remains unmeasured |
 | Frame, axis, and allowed-mode gates | Implemented and defaulted closed | Values remain uncommissioned in `configs/robot.yaml` |
 | Physical camera/LiDAR runtime backend | Contract documented | Not implemented |
 | Physical poses/trajectories | Rejected by runtime after a stop | No whole-body controller/handoff implemented |
 | Custom low-level gait/balance controller | Interface sketch only | No `LowCmd` controller, estimator, or policy integrated |
 | Independent hardware E-stop / robot-side watchdog | Required production hardware | Outside this repository today |
 
-## Safe commissioning command
+## Commissioning workflow — maintenance mode, not autonomous runtime
 
-Install Unitree's official `unitree_sdk2_python` and CycloneDDS in a supported
-environment. Confirm the dedicated Ethernet interface in `configs/robot.yaml`.
+Install Unitree's official `unitree_sdk2_python` and CycloneDDS in the dedicated
+gateway environment and confirm the robot NIC. Commissioning is a four-stage
+evidence workflow: read-only `observe`, explicitly armed `run`, second-person
+`review`, then print-only `apply`. It does not require already-commissioned
+mode/frame/axis flags; it exists to measure them.
 
-Before invoking the tool, populate `allowed_modes` from the mode table verified
-for the connected robot and firmware. Commission the velocity frame and axis
-signs, then set `state_frame_commissioned` and `axes_commissioned` to `true`.
-The CLI refuses to initialize or move hardware without those gates and an
-explicit `--arm` acknowledgement, allows only one axis at a time, caps
-linear/yaw speed at `0.10 m/s` and `0.25 rad/s`, limits each run to two seconds,
-waits for fresh Sport feedback, refreshes a short command lease, and always
-calls `StopMove` during shutdown:
+The read-only phase claims no lease and constructs no controller. Use the CLI
+help and the signed box-day runbook for exact parameters:
 
 ```bash
-.parcel/bin/python -m parcel_robot.unitree_control \
-  --config configs/robot.yaml \
-  --vx 0.05 \
-  --duration 1.0 \
-  --arm
+python3 -m parcel_robot.unitree_control observe --help
+python3 -m parcel_robot.unitree_control run --help
+python3 -m parcel_robot.unitree_control review --help
+python3 -m parcel_robot.unitree_control apply --help
 ```
 
-Before running it:
+The armed `run` phase is mutually exclusive with autonomous gateway service:
 
-1. Place the robot on a support stand or in a fenced commissioning area.
-2. Keep a trained operator at the physical E-stop.
-3. Ensure the Unitree app/remote and Parcel are not competing for motion.
-4. Begin with a very small forward command.
-5. Separately commission lateral and yaw signs.
+1. Stop `parcel-runtime.service` and `parcel-gateway.service`; verify neither
+   process holds the fixed writer lock.
+2. Run the armed command as the dedicated **`parcel-gateway` UID**, not as the
+   ordinary operator or `parcel-runtime`. The persistent `0600` lock inode is
+   owned by that UID and permissions must not be widened.
+3. Keep the robot on its support rig in a fenced area, with a second person at
+   an independent physical E-stop, and supply every CLI acknowledgement.
+4. Use only modes actually captured by `observe`, one named axis at a time.
+   Linear speed is restricted to 0.02–0.05 m/s; yaw is derived from the same
+   tangential-speed band; a step lasts at most one configured stop budget
+   (normally 1.0 s).
+5. Let the commissioning process exit after it records and confirms stop. The
+   SDK lease and writer lock are process-lifetime after activation; do not
+   restart the gateway until that process has exited.
+6. A different person reviews the record. `apply` only prints configuration
+   authorized by an accepted, complete record; a human transfers the reviewed
+   values into the gateway's box-day environment.
 
-This tool is for the locomotion boundary only. It does not provide camera/LiDAR
-navigation, owner following, or an independent hardware E-stop.
+Writer contention refuses before configuration, DDS channel, or SDK controller
+construction. This tool is for supervised locomotion measurement only. It does
+not provide camera/LiDAR navigation, owner following, an independent hardware
+E-stop, or evidence that autonomous physical motion is ready.
 
 ## Stop and failure behavior
 
@@ -444,31 +473,39 @@ independent of Parcel, Python, DDS, the network, and the onboard computer.
 ## Integrating with the full runtime
 
 The simulator runtime constructs a `BackendVelocityController` automatically.
-A physical runtime supplies the Unitree manager explicitly alongside a
-camera/LiDAR perception backend:
+Physical production must not do that with an SDK-backed controller. The former
+`build_unitree_sport_control_manager` entry is deliberately unregistered and
+always raises; it is a migration refusal, not a recipe.
 
-```python
-from parcel_robot.config import ConfigStore
-from parcel_robot.control.factory import build_unitree_sport_control_manager
-from parcel_robot.runtime import RobotRuntime
+The target five-service composition is:
 
-store = ConfigStore("configs/robot.yaml")
-manager = build_unitree_sport_control_manager(
-    store.section("control"),
-    store.safety_limits(),
-)
+```text
+parcel-runtime (task/navigation + commissioned ControlManager)
+        |
+        | MotionGatewayClientV1 over SOCK_SEQPACKET
+        v
+parcel-gateway (sole vendor writer + fixed writer lock)
+        |
+        v
+Unitree SDK2 / DDS / Sport
 
-runtime = RobotRuntime(
-    "configs/robot.yaml",
-    physical_camera_lidar_backend,
-    control_manager=manager,
-)
+parcel-safety  independent STOP and observation-health authority
+parcel-lio     localization evidence
+parcel-audio   capture, AEC/VAD, local STOP and playback
 ```
 
-This direct integration requires the full runtime process to terminate when the
-Sport driver is closed, because the SDK lease cannot be released in-process.
-For production, preserve the same `ControlManager`/controller contract across a
-separate driver-process IPC boundary.
+The registered `motion_gateway_commissioned` factory builds the runtime-side
+controller/state pair. It requires an explicit commissioning-record ID, exact
+configuration/capability/calibration/firmware compatibility hashes, and a
+separately injected physical runtime composition. It connects only to the Unix
+socket; it owns no vendor import, DDS credential, or SDK handle. The gateway
+alone constructs the Unitree port after taking the device-wide lock.
+
+There is intentionally no copy-paste physical runtime launch here. The Orin
+service files are still skeletons: `parcel-runtime`, `parcel-safety`,
+`parcel-lio`, and `parcel-audio` executables and the synchronized physical
+observation composition do not yet exist. A valid contract factory is not a
+commissioned deployment.
 
 Physical pose and joint-trajectory calls are rejected by this runtime until
 they are implemented as controller-owned whole-body actions with a confirmed
@@ -481,27 +518,36 @@ tracking, obstacle perception, localization, or the navigation world model.
 
 ## Remaining production work
 
-This implementation is a functional Python supervisory loop around Unitree's
-closed-loop Sport controller, but it has not been run against a physical robot
-from this workstation. Before unsupervised operation, add:
+The gateway and commissioned client are a functional, fail-closed software
+boundary around Unitree Sport, tested with fake and injected SDK bindings. They
+have not run against a physical robot or on the target Orin. Before any
+motion-enabled deployment:
 
-- A native C++ (or equivalently bounded native) control/safety driver process
-  with the same typed contract; the conversation, planning, and product logic
-  do not need a whole-codebase rewrite.
-- A process-independent command watchdog on the robot side.
-- Hardware E-stop and safe arming circuitry/procedures.
-- Verified firmware-specific mode and stop-settling checks.
-- Physical camera/LiDAR perception and localization.
-- Fault-injection, hardware-in-the-loop, load, and soak testing.
-- Typed ROS 2 messages/actions instead of JSON `std_msgs/String` topics.
+- implement and package the missing runtime, LIO, and audio service executables
+  while preserving the five-service ownership table; install and qualify the
+  source-level gateway and stop-only `parcel-safety` entry points on the Orin;
+- connect reviewed local/remote stop inputs to `parcel-safety`, and provide a
+  physical E-stop that does not depend on Parcel, Python, DDS, the network, the
+  sole-writer gateway, or the Orin;
+- bind commissioning evidence to the observed robot/firmware identity or
+  authenticate the DDS peer, rather than trusting local launch hashes alone;
+- assemble synchronized physical camera/LiDAR/body/localization evidence with
+  calibrated frames, clocks, health, covariance, and missing/stale behavior;
+- verify firmware-specific mode, lease, state, stop-settling, low-SOC, fault,
+  restart, and link-loss behavior;
+- run motors-disabled HIL, then stationary and tethered low-speed qualification
+  with measured control timing, stop latency/distance, payload, power, thermal,
+  and sensor load; and
+- replace or independently backstop any Python/SDK operation whose measured
+  target deadline cannot be bounded.
 
 Keeping Python above this boundary is a deliberate productionization choice:
 language, semantic planning, UI, and orchestration benefit from Python's model
-ecosystem and do not run a hard real-time motor loop. Moving the bounded
-hardware writer/watchdog first reduces crash-stop and scheduling risk without
-duplicating the well-tested semantic stack. A future custom low-level balance
-controller is a separate project and must move estimator/joint/torque work into
-that native real-time process before Sport mode is disabled.
+ecosystem and do not run a hard real-time motor loop. The isolated gateway keeps
+those workloads out of the vendor process, but it is not an independent
+hardware crash-stop layer. A future custom low-level balance controller is a
+separate project and must move estimator/joint/torque work into a native
+real-time process before Sport mode is disabled.
 
 ## Official references
 

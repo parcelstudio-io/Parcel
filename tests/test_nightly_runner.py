@@ -272,3 +272,19 @@ def test_the_dirty_path_list_keeps_whole_paths() -> None:
                     known = True
                     break
         assert known, f"{relpath!r} is not a path git knows — the porcelain column offset is wrong"
+
+
+def test_the_dirty_path_decoder_preserves_spaces_and_both_rename_paths() -> None:
+    payload = (
+        b" M docs/a path.md\0"
+        b"R  research/new report.md\0"
+        b"research/old report.md\0"
+        b"?? scratch/new file.json\0"
+    )
+
+    assert runner._dirty_paths_from_porcelain_z(payload) == [
+        "docs/a path.md",
+        "research/new report.md",
+        "research/old report.md",
+        "scratch/new file.json",
+    ]

@@ -24,14 +24,17 @@ stop distance.
 | P2 learning/generalization is scaffolding | **Correct and still open** | Learned policy, affordance, and skill-outcome components remain proposal-only/offline. This is the intended safety boundary until blind-family evidence earns a shadow deployment. |
 | P2 discretized grid false arrival | **Fixed in deterministic planner** | A one-cell path no longer overrides the exact metric arrival check. The broader navigation benchmark still has false-arrival failures and remains far below promotion readiness. |
 
-The stop-only software principal was independently exercised in SOS-1 with two
-normalized-identical runs. In each run, 256 stop-UID lease attempts and 256
-stop-UID positive commands were refused; 256 runtime lease/refresh operations
-were accepted; and 256 safety stops latched, invalidated the lease, sent exact
-zero, and reached the fake stationary witness. Signal lifecycle and gateway
-watchdog-loss cases also passed. The verifier and tamper checks passed. See
-[`../stop-only-safety-1/RESULTS.md`](../stop-only-safety-1/RESULTS.md) and
-[`../stop-only-safety-1/VERDICT.md`](../stop-only-safety-1/VERDICT.md).
+The stop-only software principal was independently exercised in SOS-1.
+Subsequent concurrent maintenance exposed and preserved a real
+READY-before-signal-handler race plus verifier/oracle defects. After repair,
+two parallel and two sequential current-source runs each refused 256 stop-UID
+lease attempts and 256 positive commands, admitted 256 runtime lease/refresh
+operations, and confirmed 256 safety latches with lease invalidation, exact
+zero, and the fake stationary witness. The strengthened verifier and tamper
+checks pass. See
+[`../stop-only-safety-1/MAINTENANCE_RESULTS.md`](../stop-only-safety-1/MAINTENANCE_RESULTS.md)
+and
+[`../stop-only-safety-1/MAINTENANCE_VERDICT.md`](../stop-only-safety-1/MAINTENANCE_VERDICT.md).
 
 These remediations narrow software risk but do not change the deployment rung.
 The permissible next step remains checklist-reviewed observe-only or

@@ -862,25 +862,15 @@ class RollingGridPlanner:
         """
 
         goal = _finite_point(goal_world, "goal_world")
-        if goal_tolerance_m is None:
-            tolerance_m = self.config.goal_tolerance_m
-        else:
-            if not math.isfinite(goal_tolerance_m) or goal_tolerance_m <= 0.0:
-                raise ValueError("goal_tolerance_m override must be positive and finite")
-            tolerance_m = max(self.config.resolution_m, float(goal_tolerance_m))
+        tolerance_m = self._goal_tolerance(goal_tolerance_m)
         if not self.grid.initialized:
             raise RuntimeError("planner needs at least one LiDAR update before planning")
         if math.dist(pose.xy, goal) <= tolerance_m:
-            return RoutePlan(
-                status="at_goal",
-                waypoints_world=(pose.xy,),
-                requested_goal_world=goal,
-                planning_target_world=goal,
-                reaches_goal_region=True,
-                expanded_nodes=0,
-                path_length_m=0.0,
-                unknown_cells_on_grid_path=0,
-                map_generation=self.grid.generation,
+            return self._at_goal_plan(
+                pose,
+                goal,
+                planning_target=goal,
+                expanded=0,
                 note="inside_goal_tolerance",
             )
 
@@ -899,6 +889,139 @@ class RollingGridPlanner:
                 note="no_traversable_cell_in_goal_region",
             )
 
+        # Metric arrival above is authoritative. A cell-center approximation
+        # may still include ``start`` even when the robot is outside that
+        # radius; treating the one-cell A* result as arrival manufactures task
+        # completion from discretization. If the exact goal shares this safe
+        # cell, emit a real sub-cell motion segment. Otherwise remove the false
+        # terminal candidate and let A* reach another member of the region.
+        if start in goal_cells:
+            exact_goal_cell = self.grid.world_to_local_cell(goal)
+            if goal_is_inside and exact_goal_cell == start:
+                return self._same_cell_goal_plan(pose, goal, expanded=0)
+            goal_cells.remove(start)
+            if not goal_cells:
+                return self._failed_plan(
+                    "no_path",
+                    goal,
+                    target_world,
+                    note="start_cell_not_metric_arrival_and_no_other_goal_cell",
+                )
+
+        (
+            raw_path,
+            expanded,
+            used_window_frontier,
+            used_observed_frontier,
+            used_detour_frontier,
+        ) = self._search_grid_path(start, goal_cells, goal)
+        if not raw_path:
+            return self._failed_plan(
+                "no_path",
+                goal,
+                target_world,
+                expanded_nodes=expanded,
+                note="astar_exhausted_or_expansion_limit",
+            )
+        if len(raw_path) == 1:
+            # ``start`` was removed above whenever metric arrival failed, so a
+            # one-cell non-arrival path is an internal contract violation.
+            return self._failed_plan(
+                "no_path",
+                goal,
+                target_world,
+                expanded_nodes=expanded,
+                note="one_cell_path_without_metric_arrival",
+            )
+
+        raw_path, expanded, used_observed_frontier = self._resolve_frontier_path(
+            start,
+            goal,
+            raw_path,
+            expanded,
+            used_observed_frontier,
+        )
+        used_frontier = used_window_frontier or used_observed_frontier
+        if len(raw_path) < 2:
+            return self._failed_plan(
+                "no_path",
+                goal,
+                target_world,
+                expanded_nodes=expanded,
+                note="no_observed_safe_egress_to_frontier",
+            )
+        return self._build_route_plan(
+            pose=pose,
+            goal=goal,
+            target_world=target_world,
+            tolerance_m=tolerance_m,
+            goal_is_inside=goal_is_inside,
+            raw_path=raw_path,
+            expanded=expanded,
+            used_frontier=used_frontier,
+            used_window_frontier=used_window_frontier,
+            used_observed_frontier=used_observed_frontier,
+            used_detour_frontier=used_detour_frontier,
+        )
+
+    def _goal_tolerance(self, override_m: float | None) -> float:
+        if override_m is None:
+            return self.config.goal_tolerance_m
+        if not math.isfinite(override_m) or override_m <= 0.0:
+            raise ValueError("goal_tolerance_m override must be positive and finite")
+        return max(self.config.resolution_m, float(override_m))
+
+    def _at_goal_plan(
+        self,
+        pose: Pose2D,
+        goal: WorldPoint,
+        *,
+        planning_target: WorldPoint,
+        expanded: int,
+        note: str,
+    ) -> RoutePlan:
+        return RoutePlan(
+            status="at_goal",
+            waypoints_world=(pose.xy,),
+            requested_goal_world=goal,
+            planning_target_world=planning_target,
+            reaches_goal_region=True,
+            expanded_nodes=expanded,
+            path_length_m=0.0,
+            unknown_cells_on_grid_path=0,
+            map_generation=self.grid.generation,
+            note=note,
+        )
+
+    def _same_cell_goal_plan(
+        self,
+        pose: Pose2D,
+        goal: WorldPoint,
+        *,
+        expanded: int,
+    ) -> RoutePlan:
+        """Represent safe sub-cell progress without claiming metric arrival."""
+
+        route = (pose.xy, goal)
+        return RoutePlan(
+            status="planned",
+            waypoints_world=route,
+            requested_goal_world=goal,
+            planning_target_world=goal,
+            reaches_goal_region=True,
+            expanded_nodes=expanded,
+            path_length_m=math.dist(*route),
+            unknown_cells_on_grid_path=0,
+            map_generation=self.grid.generation,
+            note="same_safe_cell_exact_metric_goal",
+        )
+
+    def _search_grid_path(
+        self,
+        start: GridCell,
+        goal_cells: set[GridCell],
+        goal: WorldPoint,
+    ) -> tuple[tuple[GridCell, ...], int, bool, bool, bool]:
         used_observed_frontier = False
         if self.config.frontier_search_mode == "observed_first":
             raw_path, expanded, selected_kind = self._observed_goal_or_frontier_path(
@@ -922,58 +1045,56 @@ class RollingGridPlanner:
             raw_path, expanded, used_window_frontier = self._astar(
                 start,
                 goal_cells,
-                fallback_goal_world=(goal if self.config.reachable_frontier_fallback else None),
+                fallback_goal_world=(
+                    goal if self.config.reachable_frontier_fallback else None
+                ),
             )
             used_detour_frontier = False
-        if not raw_path:
-            return self._failed_plan(
-                "no_path",
-                goal,
-                target_world,
-                expanded_nodes=expanded,
-                note="astar_exhausted_or_expansion_limit",
-            )
-        if len(raw_path) == 1 and raw_path[0] in goal_cells:
-            # The start cell itself satisfies the goal region: this is arrival,
-            # not an unreachable goal. Reporting it as no_path deadlocked the
-            # navigator in a permanent recovery scan one cell from the target.
-            return RoutePlan(
-                status="at_goal",
-                waypoints_world=(pose.xy,),
-                requested_goal_world=goal,
-                planning_target_world=target_world,
-                reaches_goal_region=True,
-                expanded_nodes=expanded,
-                path_length_m=0.0,
-                unknown_cells_on_grid_path=0,
-                map_generation=self.grid.generation,
-                note="start_cell_inside_goal_region",
-            )
+        return (
+            raw_path,
+            expanded,
+            used_window_frontier,
+            used_observed_frontier,
+            used_detour_frontier,
+        )
 
-        clipped_to_observed_frontier = False
+    def _resolve_frontier_path(
+        self,
+        start: GridCell,
+        goal: WorldPoint,
+        raw_path: tuple[GridCell, ...],
+        expanded: int,
+        used_observed_frontier: bool,
+    ) -> tuple[tuple[GridCell, ...], int, bool]:
+        clipped = False
         if self.config.frontier_search_mode == "post_astar":
-            raw_path, clipped_to_observed_frontier = self._clip_to_observed_frontier(raw_path)
-        if clipped_to_observed_frontier:
-            # The goal-directed unknown-admitting path may enter unknown space
-            # on its first diagonal even when another observed route reaches a
-            # useful sensor frontier. Search the whole connected known-free
-            # component instead of treating that one hypothesis as binding.
+            raw_path, clipped = self._clip_to_observed_frontier(raw_path)
+        if clipped:
+            # Search the entire connected known-free component when the first
+            # unknown-admitting hypothesis cannot reach an observed frontier.
             raw_path, frontier_expanded = self._observed_frontier_path(
                 start=start,
                 goal_world=goal,
             )
             expanded += frontier_expanded
             used_observed_frontier = True
-        used_frontier = used_window_frontier or used_observed_frontier
-        if len(raw_path) < 2:
-            return self._failed_plan(
-                "no_path",
-                goal,
-                target_world,
-                expanded_nodes=expanded,
-                note="no_observed_safe_egress_to_frontier",
-            )
+        return raw_path, expanded, used_observed_frontier
 
+    def _build_route_plan(
+        self,
+        *,
+        pose: Pose2D,
+        goal: WorldPoint,
+        target_world: WorldPoint,
+        tolerance_m: float,
+        goal_is_inside: bool,
+        raw_path: tuple[GridCell, ...],
+        expanded: int,
+        used_frontier: bool,
+        used_window_frontier: bool,
+        used_observed_frontier: bool,
+        used_detour_frontier: bool,
+    ) -> RoutePlan:
         # The generic collinearity pass is geometry-only and may collapse a
         # diagonal staircase across unobserved side cells. For an observed
         # frontier route, retain the cellwise path until the known-free LOS

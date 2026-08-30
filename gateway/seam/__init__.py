@@ -24,7 +24,8 @@ pins ``gateway/*.py`` — the *top level* — to exactly the twelve modules card
 delivered, and that suite is required to stay byte-unchanged and green.  A new
 top-level module would re-pin an accepted A1 invariant.  The pin's intent is
 not evaded: ``tests/test_motion_seam.py`` re-applies every one of its rules
-**recursively** over ``gateway/**/*.py`` (expected module set, no vendor SDK,
+**recursively** over ``gateway/**/*.py`` (expected module set, no eager/direct
+vendor SDK import,
 the gateway-side client shim reaches exactly
 ``parcel_robot.bridge.gateway_client``, no
 product runtime/control/backends, CPython 3.10 clean), so this subpackage is
@@ -32,8 +33,9 @@ held to a stricter version of the same contract rather than a weaker one.
 
 **What is deployable here.** ``vendor_io``, the client compatibility shim,
 ``notify`` and ``cli`` all ship in the vendor venv. ``cli`` is the one module
-in this subpackage that
-may name the bench vendor, and it does so exactly the way ``gateway/process.py``
-does: by refusing to start at all unless a sport backend was named, and by
-importing ``parcel_robot.bridge.fake_sport`` lazily and only for ``fake``.
+in this subpackage that may name the bench vendor, and it imports
+``parcel_robot.bridge.fake_sport`` lazily and only for ``fake``.  ``vendor``
+resolves a fully explicit Unitree profile, then delegates to the lazy SDK2
+SportPort in :mod:`gateway.ports`; missing commissioning data, NIC or SDK is a
+fatal launch error rather than an implicit backend choice.
 """

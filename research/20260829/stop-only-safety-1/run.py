@@ -242,6 +242,14 @@ def _wait_message(listener: socket.socket, prefix: str, deadline_s: float = 3.0)
     return False
 
 
+def _drain_messages(listener: socket.socket) -> None:
+    while True:
+        try:
+            listener.recv(4096)
+        except TimeoutError:
+            return
+
+
 def _start_service(
     socket_path: Path,
     notify_path: Path,
@@ -304,15 +312,49 @@ def _lifecycle_signal(signal_number: int, *, keep_running: bool) -> dict[str, ob
         try:
             ready = _wait_message(listener, "READY=1")
             fresh_start_no_stop = core.stop_sequence == baseline_stops and not core.latched
+            _drain_messages(listener)
             process.send_signal(signal_number)
-            deadline = time.monotonic() + 3.0
-            while time.monotonic() < deadline and not core.latched:
-                time.sleep(0.01)
+
+            post_signal_watchdog = False
+            liveness_dwell_completed = False
+            exited_within_timeout = False
+            if keep_running:
+                latch_deadline = time.monotonic() + 3.0
+                while time.monotonic() < latch_deadline and not core.latched:
+                    if process.poll() is not None:
+                        break
+                    time.sleep(0.01)
+                # Discard any watchdog datagram that could have raced the
+                # latch observation; only a subsequent pulse earns credit.
+                _drain_messages(listener)
+                dwell_deadline = time.monotonic() + 0.25
+                remained_running = process.poll() is None
+                while remained_running and time.monotonic() < dwell_deadline:
+                    try:
+                        message = listener.recv(4096).decode("utf-8")
+                    except TimeoutError:
+                        message = ""
+                    post_signal_watchdog |= message.startswith("WATCHDOG=1")
+                    remained_running = process.poll() is None
+                liveness_dwell_completed = (
+                    remained_running and time.monotonic() >= dwell_deadline
+                )
+                if remained_running:
+                    process.send_signal(signal.SIGTERM)
+                try:
+                    return_code = process.wait(timeout=3.0)
+                    exited_within_timeout = True
+                except subprocess.TimeoutExpired:
+                    return_code = process.returncode
+            else:
+                try:
+                    return_code = process.wait(timeout=3.0)
+                    exited_within_timeout = True
+                except subprocess.TimeoutExpired:
+                    return_code = process.returncode
+                remained_running = not exited_within_timeout
+
             latched = core.latched
-            remained_running = process.poll() is None
-            if keep_running and remained_running:
-                process.send_signal(signal.SIGTERM)
-            return_code = process.wait(timeout=3.0)
             state = core.state()
             return {
                 "ready": ready,
@@ -328,6 +370,9 @@ def _lifecycle_signal(signal_number: int, *, keep_running: bool) -> dict[str, ob
                 "lease_invalidated": not state.lease_active,
                 "kept_running_after_signal": remained_running,
                 "expected_keep_running": keep_running,
+                "post_signal_watchdog": post_signal_watchdog,
+                "liveness_dwell_completed": liveness_dwell_completed,
+                "exited_within_timeout": exited_within_timeout,
                 "return_code_zero": return_code == 0,
             }
         finally:
@@ -477,6 +522,10 @@ def main() -> int:
         for item in signal_gates
     ) and all(
         (
+            lifecycle["sigusr1"]["post_signal_watchdog"],
+            lifecycle["sigusr1"]["liveness_dwell_completed"],
+            lifecycle["sigterm"]["exited_within_timeout"],
+            lifecycle["sigint"]["exited_within_timeout"],
             lifecycle["gateway_failure"]["ready"],
             lifecycle["gateway_failure"]["watchdog_before_failure"],
             not lifecycle["gateway_failure"]["watchdog_after_failure"],

@@ -1,29 +1,31 @@
 # Parcel robot dog
 
 A safety-gated, simulation-first autonomy stack for a conversational Unitree
-companion dog. The working simulator target is a **Go2** in MuJoCo with manual
-motion, persistent navigation and owner-follow implementations, collision
-braking, hosted and local reasoning lanes, and a browser control deck. The
-current normal builder does not yet provision the new capability manifest, so
-automatic embodied and navigation actions fail closed. Engine-neutral backend
-and ROS boundaries keep the same intent layer usable for richer simulators and
-a later physical dog.
+Go2 companion. Parcel combines hosted and local conversation, typed task and
+receipt contracts, semantic navigation and Follow, deterministic motion safety,
+MuJoCo/headless simulators, and an isolated Unitree gateway. The target platform
+is a Go2 EDU+ with an AGX Orin, camera, Mid-360-class LiDAR, microphone array,
+speaker, and an optional Starlink uplink.
 
-Use the dated status section below for the current working-tree verdict. The
-[engineering executive summary](docs/ROBOT_ENGINEERING_EXECUTIVE_SUMMARY.md)
-provides the broader decision, hardware-readiness judgment, tradeoffs, and next
-gates, but its recorded gate snapshot predates the latest audit. For the shortest
-as-built call-path view, use the
-[production-shaped runtime code map](docs/PRODUCTION_RUNTIME_CODE_MAP.md). The concise
-[robotics code design](docs/ROBOTICS_CODE_DESIGN.md) explains package/process
-boundaries, the feedback and authority model, failure behavior, and accepted
-tradeoffs. Continue into the
-[engineering handbook](docs/CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md) for
-long-form architecture and robotics theory; its older status passages are historical.
-The [documentation index](docs/README.md)
-routes to specialist designs and evidence, while [crucial design decisions](docs/DESIGN_DECISIONS.md)
-records advantages, limitations, and revisit criteria. New learners can use the
-[physics and robotics curricula](edu/INTRO.md) alongside the handbook.
+The production design is deliberately multi-rate. A trainable **Model A** may
+propose short-horizon motion, attention, expression, and replans; a **Model B**
+may propose owner-qualified task steering and turn accepted execution facts into
+narration context. Neither model owns task truth, STOP, collision clearance,
+actuator authority, or completion. The deterministic executive, safety chain,
+control manager, and sole-writer gateway retain those responsibilities.
+
+Start with the [one-page production runtime code map](docs/PRODUCTION_RUNTIME_CODE_MAP.md),
+then read the [August 29 research index](research/20260829/README.md),
+[final methodical assessment](research/20260829/SOL_METHODICAL_ASSESSMENT.md),
+[duplex production architecture](research/20260829/DUPLEX_PRODUCTION_ARCHITECTURE.md),
+[training/data plan](research/20260829/TRAINING_AND_DATA_PLAN.md), and the
+[independent post-fix Ultra audit](research/20260829/SOL_ULTRA_POSTFIX_AUDIT.md). The
+[robotics code design](docs/ROBOTICS_CODE_DESIGN.md) and
+[engineering handbook](docs/CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md) give
+longer-lived rationale; dated readiness passages in older documents are
+historical. The [documentation index](docs/README.md) routes to specialist
+designs and evidence. The actionable next sprint is
+[`MOUNT-GATE-1`](scrum/20260830/task_2/README.md).
 
 > Current host note: this machine is Ubuntu 26.04 with Python 3.14 and does not
 > currently have ROS 2 installed. Unitree documents Ubuntu 22.04 + ROS 2 Humble
@@ -31,74 +33,89 @@ records advantages, limitations, and revisit criteria. New learners can use the
 > is fully set up for application development and MuJoCo, but native Unitree
 > ROS 2 must be built in a supported Humble environment (host, VM, or container).
 
-## Current implementation and readiness — 2026-08-26
+## Current implementation and readiness — 2026-08-30
 
-Parcel is a simulation-first companion-autonomy stack. The latest social-progress
-instrumentation is accepted for simulator shadow collection; autonomous physical
-motion and conversation release remain **NO-GO**. A mechanically secured,
-zero-motion Stage 0 capture is only conditional and has not been run.
+**Autonomous physical motion is NO-GO.** A powered-off or motors-disabled,
+observe-only integration is conditional on a reviewed mechanical, electrical,
+thermal, independent E-stop, time-sync, and data-capture checklist. No result in
+this repository authorizes sidewalk, crosswalk, elevator, stair, crowd, or
+unattended operation.
 
-| Surface | Implemented now | Current admission ceiling |
+| Surface | Implemented now | Evidence ceiling / missing production seam |
 | --- | --- | --- |
-| Conversation | The `si-companion-v5` and local prompts make Parcel an ongoing companion friend by default, preserve consent and owner space, and quote history/owner/sensor context as untrusted data. Strict dialogue, embodiment, action-admission, receipt, and terminal-claim contracts also exist. | Prompt freeze/digest/package parity is verified, but the contracts are not yet one fully wired live multi-turn executive. The normal builder currently lacks the manifest composition needed to admit embodied actions. Fresh personal-conversation evidence is 3/13 turns with 2/8 families passing, so conversation release is **NO-GO**. |
-| Capability truth | `CapabilityManifestV1` binds declared actions to a deployment, exact asset/schema digests, adapters, and authenticated process-local commissioning evidence. | It is a software trust boundary, not proof that a trajectory or physical capability has been commissioned. |
-| Navigation | `grid_v1` remains the command-producing planner implementation, with Follow, point navigation, semantic grounding, collision/person gates, and selected `NavigationSnapshotV2` consumers. | The current normal builder leaves automatic Navigate, Follow, and roam disarmed because it does not inject a capability manifest. Fresh NAV_INSTRUCT is 25/125 with one false arrival. The isolated H2b completion latch missed its frozen gate at 113/120 alias recoveries versus 114/120, remains default-off, and is not in `navigation.pipeline`. |
-| Social progress | Only the prototype overlay enables a bounded observer for stall cause, track visibility, full swept-corridor evidence, venue proposals, and requested/final/achieved motion. It samples the requested winner before dispatch and records the final and achieved outcome after the unchanged final gate. | Shadow telemetry/proposals only: all four candidate-policy hypotheses were refuted, and it cannot resume or move the dog, shrink a person envelope, authorize a crosswalk, or enter an elevator. Base and physical profiles are inert. |
-| Motion boundary | The normal runtime can compose through the Unix gateway to fake Sport using the permanently disarmed `motion_gateway_disarmed` adapter. Stops cross the socket and reconnect remains disarmed. | There is no acquire/velocity-command surface on this route. Native SDK2/DDS motion, an AGX run, synchronized physical feedback, and measured stopping evidence are absent. |
-| Research and learning | A default-off summary-only research spool and immutable split, mining, evaluation, review, and rollback contracts are implemented. | No production crypto/KMS, cloud or Starlink uploader, trainer, deployer, hot swap, automatic self-promotion, or control authority exists. |
+| Companion conversation | Hosted Realtime and explicit local speech lanes, barge-in mechanics, budget ledgers, capability-aware prompts, and an ongoing-companion-friend default. Typed dialogue, action, receipt, and terminal-claim reducers fail closed. The real speaker sink now uses generation-bound cancellation and a worker-reported first-write-attempt clock. | Corrected acoustic evaluator v2 passes 6 gates, fails 3, and marks 2 not measured: 4/13 endpoint fixtures commit prematurely or multiply, virtual audible acknowledgement is too slow (p50 0.790 s), isolated acoustic STOP is unavailable, and physical motion/audio sync is unavailable. A two-run 1,560-cell endpoint sensitivity study found 0/30 declared settings pass and failed rig parity, so it supports no threshold change. Its 13/14 prosody result is audio transport only. Historical Realtime review is 6 pass / 8 mixed / 11 fail; MB-1 hosted Q failed every absolute gate and its matched direct/human effects remain unmeasured. No mounted AEC/audio exists. |
+| Task and narration authority | `TaskExecutive` binds dispatch/results to task, revision, step, and attempt. Revision replacement takes every registered proposal-sink lock in one process-wide order across commit, owner-journal append, or compensation, so concurrent publication/arbitration cannot observe a failed half-commit. Recovery navigation failures no longer fabricate success. DMC-4's authenticated Model-B frames retain exact plan/step/attempt/mission/action/evidence/epoch/generation/deadline lineage, and queued frames are revalidated atomically at drain. Owner-valid next-step, retry, repeated-wait, resume, suspend/cancel, and deferred-replacement histories no longer false-latch narration. | This is thread isolation inside one process, not crash consistency or a distributed transaction. No frame reaches Realtime or audio. Events are still timestamped when polled rather than when committed. Restart-safe executive/outbox/provider-ack state, a live authenticated speech generation, backpressure, and authoritative separate-child resume lineage remain unwired. LIT-1 retains five valid false-“reached” counterexamples for the old path. |
+| Model A / Model B | Proposal-only generalized-motion, affordance-planning, skill-outcome, duplex-frame, and narration research scaffolds exist. Learned components have no actuator or completion authority. DSOAK-1 self-reports 12.050004 wall-clock hours and 66,434 procedural episodes; a post-run aggregate checker recomputed all 17 frozen gate predicates true and the artifact records zero mismatches in 664 sampled replays. | Model A is not integrated into production and no qualified learned artifact exists. In MA-2, teacher/reflex/direct each solved 198/198 held missions while every learned S/C16 seed solved 0/198. In DSOAK-1 deterministic L0 remained stronger than learned A1 (66,433 vs 66,116 successes); the unsigned monitor began 2.365 h late, strict temporal/process provenance is absent, and the narration oracle is independently refuted, so this is partially corroborated durability—not truth, safety, or model-promotion—evidence. The normal launcher does not inject or arm a commissioned physical `ControlManager`; `Go2Backend` is observe-only, and the runtime snapshot adapter stamps its carrier as simulation. MB-1 hosted Q is also refuted. |
+| Navigation and instruction following | `grid_v1`, semantic grounding, search/recovery, Follow, task interruption primitives, collision/person gates, and stamped navigation observations exist. Exact-metric arrival now prevents a same-cell discretization-only success. A repaired mutation panel pins a full-matrix digest and killed 7/7 defects in two identical nine-row campaigns. | Fresh NAV_INSTRUCT is 34/125 (SR 0.272, SPL 0.2058) with seven false arrivals. Follow is 7/9 in an oracle/scripted bench. NAV-INT-1 refuted all registered interruption hypotheses. The mutation panel observed 162 slowing interventions but zero hard stops. Generalized navigation is red. |
+| Dynamic people and false stalls | Prototype-only observation records blocker cause, track visibility, explicit swept-corridor evidence, and requested/final/achieved motion. LHO-1's scalar scheduler supports a predicted-latency committed safe prefix plus revisable tail: waiting fell 91.93% versus blocking with zero stale dispatch in its authored test; its additive distinct-process supplement passed. | The social policy remains shadow/proposal-only. In DSP-2, S2 and S3 each contacted in 25/145 episodes and all four hypotheses were refuted. LHO-1 has no learned policy, 2-D perception, quadruped dynamics, or physical braking evidence. There is no commissioned sidewalk, crosswalk, or elevator policy. |
+| Motion and Unitree boundary | `ControlManager` owns leased velocity, stale-state/fault/tilt stops, stop confirmation, and an atomic arm-plus-first-target API. A commissioned Unix adapter and boot-disarmed TTL/sequence/epoch-governed sole-writer gateway are constructible; gateway launch now requires `--disarmed`. The Orin skeleton selects `go2_edu_plus`; runtime binds to gateway/safety, while target-stop deliberately leaves the separate stop-only safety principal alive. Fixed launch invariants override optional environment files. | Target-active is orchestration, not readiness. No non-test production caller invokes the arm-plus-first-target API, and the standard launcher has no commissioned physical composition. Runtime/LIO/audio executables, a pinned aarch64 install, and an Orin/systemd run are absent. No real STOP-input wiring, physically independent E-stop, synchronized physical camera/LiDAR/localization product, contiguous LiDAR coverage/CRC proof, stopping-distance measurement, or target thermal/timing evidence exists. |
+| Research and learning | Default-off spooling, immutable split/evaluation records, proposal-only promotion, and reproducible dated experiments exist. Simulation is high-value for contracts, fault injection, social coverage, and relative ranking. | No production KMS/object store/consent service, trainer, signed deployment service, hot swap, or autonomous self-promotion exists. Simulator output cannot establish physical mechanics, acoustics, calibration, or human-safe stopping. |
 
-The as-built authority model keeps language and learned systems upstream of
-deterministic admission and final safety:
+The authoritative design keeps every learned or language output upstream of
+deterministic task and motion authority:
 
 ```text
-committed owner turn + stamped world evidence
-                    |
-                    v
-       typed semantic/action proposal
-                    |
- capability + identity + consent + body-state admission
-                    |
-       planner / executive / behavior loops
-                    |
-         priority + TTL arbitration
-                    |
-          final reactive safety
-                    |
-             ControlManager
-              /          \
-     MuJoCo backend       Unix gateway -> fake Sport (disarmed test rung)
-   (manual/debug paths)               -> native SDK2/DDS -> Go2 (target only)
+sensors + final owner-qualified transcript
+                  |
+          typed task steering
+                  v
+          TaskExecutive / task stack
+                  |
+       Model A short-lease proposal
+                  v
+ deterministic planner/tracker -> arbiter -> final safety -> ControlManager
+                                                            |
+                                   Unix gateway (sole SDK writer) -> Go2
+                  ^                                         |
+                  | accepted execution result / observation |
+                  +------ authenticated receipt ------------+
+                                     |
+                       Model B narration context
+                                     v
+                         hosted Realtime wording
+
+local STOP ==================> latched safety / ControlManager stop boundary
+                              (cloud- and language-model-independent)
 ```
 
-Feedback returns through the stamped observation path. Research, evaluation,
-and learning are a separate side plane: they may record evidence or propose a
-candidate, but they have no path to command or activate it. In the current
-normal application composition, automatic embodied/navigation requests stop at
-capability admission; manual simulator controls and the separately scoped pose
-gallery remain available.
+That is the target production transaction, not a claim that every arrow is
+wired. In particular, learned Model A is shadow-only. DMC-4 proves a source-level
+executive-journal → authenticated-event → narration bridge for constructible
+transitions. The normal runtime now drains that journal into bounded,
+process-local, non-speaking Model-B frames; live speech-session, provider,
+audio, persistence, commit-time timestamp, and child-resume lineage binding
+remain absent. Frames now preserve and recheck their complete available
+lineage and deadline at drain, but that is not provider or playback evidence.
+The [production runtime code
+map](docs/PRODUCTION_RUNTIME_CODE_MAP.md) labels each implemented and missing
+seam.
 
-Scoped implementation evidence remains green: the P0 contract suite passes 187
-tests, the independently reviewed social-progress tranche covered 555 focused
-and regression tests, and its current focused suite passes 105 tests. Its social
-replay reproduces all 475 frozen research rows byte-for-byte with digest
-`932167875fd16bbd67256f60ef8b555b074bfb23fb2eb4b3695aa5051578c1ad`.
-Current whole-working-tree verification (2026-08-26 23:05 ET) is **RED**. The
-tier audit collected 10,954 total tests (10,871 commit and 83 nightly); the
-commit main phase reported 10,684 passed, 147 failed, 22 skipped, and 5 xfailed,
-while its serial source-sensitive phase passed 12 with 1 skipped. Two
-hard gates are red: the default suite and two new Ruff import-order violations.
-Parcel services were active during the run, but 22 representative answer-beat
-and yield-policy failures reproduced in isolation, so this is not just
-parallel-test contention. Treat the current checkout as non-releaseable until
-the regressions are repaired and the guarded commit tier is rerun.
-
-For design scope and historical artifacts, see the [current research synthesis](research/20260826/FINAL_REPORT.md),
-[P0 implementation report](research/20260826/IMPLEMENTATION_REPORT.md),
-[mount-readiness ladder](research/20260826/MOUNT_READINESS.md),
-[social-progress implementation](research/20260826/dynamic-social-progress/IMPLEMENTATION.md),
-and [robotics code design](docs/ROBOTICS_CODE_DESIGN.md). Their earlier
-`FINAL_VERIFICATION_PENDING` or gate snapshots are historical; the current-tree
-status above governs this checkout.
+The latest completed product evidence is reproducible but below promotion:
+NAV_INSTRUCT repeated exactly at 34/125 and Follow repeated at 7/9. The
+historical null-sink acoustic score repeated at 5/9, but corrected acoustic v2
+supersedes that interpretation: 6 gates pass, 3 fail, and 2 are explicitly not
+measured; semantic endpoint validity and virtual audible acknowledgement remain
+red. The follow-up endpoint sweep found no passing declared setting and cannot
+nominate production because its corrected-rig parity gate is red. After the
+final August 29 hardening, six guarded desktop/injected shards passed: mount
+boundary 659 with 4 skips, DMC/runtime 159, conversation 419, duplex/acoustic
+264 with 1 skip, social navigation 279 with 7 skips, and portability 485. The
+August 30 repository-wide commit gate passed all hard rows and selected 11,330
+unique non-slow tests. The extended nightly gate remained red: six degraded-pose
+arms missed frozen success floors. Bounded remediation cleared the literal,
+held-out-scene, wheel-install, and lamppost findings; the slow-marker rerun is
+1 failed / 74 passed / 8 skipped / 3 expected failures / 1 unexpected pass,
+with only the unchanged 0.875-vs-0.90 person-cell assertion red. This is a
+release-readiness finding, not authority to weaken floors. Read-only attribution
+reproduced a real planner regression: the commissioned ~1.022 m isotropic
+inflation can return `goal_blocked` where the older 0.42 m planner succeeded;
+the fix is directional safe-frontier planning, not reverting the safety
+envelope. Do not infer
+capability promotion from the green commit tier or soak. See
+[product evaluation results](research/20260829/product-evals/RESULTS.md),
+[nightly remediation audit](research/20260829/NIGHTLY_REMEDIATION_AUDIT.md),
+[mount-readiness review](research/20260829/mount-readiness-code-review/REVIEW.md),
+and the [August 29 research index](research/20260829/README.md).
 
 ## Quick start
 
@@ -207,8 +224,9 @@ concise as-built package and authority map is the
 [robotics code design](docs/ROBOTICS_CODE_DESIGN.md); and detailed target designs,
 robotics theory, tradeoffs and gates are in the long-form
 [engineering handbook](docs/CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md). Its
-baseline status passages are dated; this README's dated status and the newest
-August 26 implementation records govern current capability claims.
+baseline status passages are dated; this README and the
+[August 29 evidence index](research/20260829/README.md) govern current capability
+claims.
 The [2026 redesign assessment](docs/REDESIGN_2026_ASSESSMENT.md) remains dated
 historical rationale; its former seven-layer status page has been retired because
 the code and quality baseline have materially changed.
@@ -227,16 +245,19 @@ and the companion-navigation integration eval lives in `evals/companion_nav/`.
 - whisper.cpp recognition plus Piper and cancellable Fish S2 adapters (the
   Sesame CSM adapter is legacy and has no production caller).
 - YAML-defined poses and Wi-Fi/network-card profiles.
-- A single-writer, feedback-supervised locomotion manager with simulator and
-  controller interfaces. The normal Unix-gateway composition is permanently
-  disarmed; the direct **Unitree Sport** path is commissioning-only.
+- A feedback-supervised locomotion manager with simulator, disarmed-gateway,
+  and explicitly commissioned gateway controllers. The isolated gateway is the
+  intended future sole autonomous Unitree SDK writer; the standard application
+  does not commission that physical path. The standalone one-axis
+  commissioning workflow shares its device-wide writer lock.
 - A Python extension interface for custom sensors, behaviors, or hardware.
 - ROS topics for transcript input, pose/walk requests, and spoken replies.
 - MuJoCo owner/obstacle telemetry and a browser panel for driving and text voice.
 - An immutable, provenance-bearing `NavigationSnapshotV2` observation contract;
   the simulator source is wired while the synchronized physical source remains
   a fail-closed skeleton.
-- Central priority arbitration, command TTLs, proximity braking, and latched E-stop.
+- Central priority arbitration, command TTLs, proximity braking, and a latched
+  software emergency-stop state. This is not a physically independent E-stop.
 - Persistent owner-follow and point-navigation behavior loops; they remain
   unavailable in the normal application composition until its capability
   manifest is wired.
@@ -290,9 +311,12 @@ copy-paste armed command here:
 ```
 
 This is a bounded standalone commissioning path, not the normal autonomous
-composition. `RobotRuntime` still consumes simulator observations, and the
-standard Unitree builder does not yet assemble synchronized physical-origin
-pose, scan, people, and controller evidence. Follow the handbook's physical
+composition. Armed `run` is a mutually exclusive maintenance operation: stop
+both runtime and gateway, invoke it as the same dedicated `parcel-gateway` UID
+that owns the fixed writer lock, and do not restart the gateway until the
+commissioning process exits. The normal `RobotRuntime` still lacks a
+commissioned synchronized physical-origin pose, scan, people, and controller
+observation product. Follow the handbook's physical
 composition and capability-admission sequence before interpreting the adapter
 as an end-to-end robot runtime.
 
@@ -338,13 +362,15 @@ source .parcel/bin/activate
 source scripts/env-audio.sh
 python -c "import mujoco; print(mujoco.__version__)"
 python -c "import sounddevice as sd; print(sd.get_portaudio_version())"
-.parcel/bin/python -m ruff check .
 scripts/ci_gate.sh commit --json
 ```
 
-The current checkout is expected to return nonzero for the regressions recorded
-in the readiness section above. A release claim requires this exact tier to be
-green again; a focused subsystem pass does not substitute for it.
+The commit gate owns a fingerprinted Ruff ratchet: 72 grandfathered findings,
+72 current findings, and zero new findings at the August 30 run. A raw
+`.parcel/bin/python -m ruff check .` therefore still returns nonzero; it is a
+diagnostic, not the controlling ratchet. The commit tier is green, while the
+nightly capability/regression tier is red as recorded above. Neither result is
+a physical-release claim.
 
 To bootstrap the declared project extras in a compatible environment (not to
 reproduce the audited environment byte-for-byte):
@@ -381,23 +407,19 @@ Doc index: [docs/README.md](docs/README.md).
 
 The frozen live semantic-planning gate and its append-only run history are in
 [planner quality v2](evals/companion/planner_quality_v2/README.md) and its
-[result ledger](evals/companion/planner_quality_v2/results/README.md). The
-historical CPU and full-CUDA baselines both passed 5/5 selected semantic cases;
-the GPU run reduced median usable-plan latency to 5.657 seconds but executed
-zero physical episodes. A fresh 2026-08-26 run of the currently admitted planner
-reproduced only 3/5 for both full PlanIR and PlanSketch, so 5/5 is not the current
-readiness baseline. The separate headless embodied PlanIR gate passed 4/4
-supported deterministic cases while explicitly leaving moving-owner follow
-unsupported. None is a conversation or official benchmark score.
-The historical frozen conversation calibration records Gemma at 6/10 machine
-cases and 9/10 structured-safety checks. The fresh personal multi-turn run is
-3/13 turns with 2/8 families passing, and the companion remains a conversation
-release NO-GO; human review is still absent. A fully
-GPU-admitted Ministral 3 8B Instruct challenger started much faster but
-regressed to 5/10 conversation cases and 3/5 PlanIR, so it remains
-deployment-disabled. Exact current artifacts and their limitations are in
-[`research/20260826/system-readiness/RESULTS.md`](research/20260826/system-readiness/RESULTS.md)
-and the companion eval ledgers.
+[result ledger](evals/companion/planner_quality_v2/results/README.md). Those
+small historical planner runs are retained for regression provenance, not as
+the readiness baseline. The current August 29 instruction matrix is 34/125
+(SR 0.272, SPL 0.2058) with seven false arrivals; the headless embodied PlanIR
+smoke passes 4/4 supported deterministic cases while moving-owner
+`FollowFormation` remains unsupported. The historical Realtime corpus review is
+6 pass / 8 mixed / 11 fail across 25 threads. The null-sink acoustic suite
+scores five of nine, but its later audit shows the four red v1 values do not
+validly measure their named capabilities and that pause cutoffs are hidden.
+No row is a physical or human-acceptance score.
+Use the [current product results](research/20260829/product-evals/RESULTS.md)
+for exact provenance and limitations; older system-readiness records remain
+historical.
 Product companion scenarios: `evals/companion_nav/`. Offline BARN/Habitat
 proxies: [evals/external/README.md](evals/external/README.md).
 
@@ -680,7 +702,11 @@ modules:
 The browser runtime accepts partial and final text at `/api/voice/text`; partials
 can interrupt output but never execute actions. The application also has a
 direct `MicrophoneVoiceLoop` → STT → committed text path and an interruptible
-`SpeakerSink`, so external ROS audio nodes are optional rather than required.
+local `SpeakerSink`, so external ROS audio nodes are optional rather than
+required for that legacy/local lane. Hosted Realtime instead spans
+`realtime/lane.py`, `realtime/audio_gateway.py`, and
+`realtime/browser_sink.py`; it is not currently bound to the local
+`SpeakerSink`.
 Keeping audio providers behind text/PCM contracts prevents their failures from
 becoming motor authority. A ROS deployment may still isolate microphone/STT and
 reply/TTS in separate nodes.
@@ -700,8 +726,9 @@ The implemented adapters are:
   current sentence wrapper does not expose Fish's native audio chunk stream
 - `SentenceChunkedSynthesizer`: any blocking TTS becomes a cancellable stream
 - `DuplexVoiceSession`: partial/final text, stale-turn suppression, and barge-in
-- `MicrophoneVoiceLoop` / `SpeakerSink` (`audio/voice_loop.py`): VAD-segmented
-  capture, acoustic barge-in behind an echo guard, interruptible playback
+- `MicrophoneVoiceLoop` (`audio/voice_loop.py`) / `SpeakerSink`
+  (`audio/speaker.py`): VAD-segmented capture, acoustic barge-in behind an echo
+  guard, interruptible playback
 - `SileroVad` / `TurnEndpointer` (`audio/endpointing.py`): selected semantic
   endpointing with loud energy fallback; ONNX Runtime and the Silero/Smart Turn
   weights are present

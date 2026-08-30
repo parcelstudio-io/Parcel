@@ -83,11 +83,14 @@ from parcel_robot.bridge.protocol import (
     GatewayAckDispositionV1,
     GatewayAckV1,
     GatewayAcquireV1,
+    GatewayBodyKindV1,
     GatewayCommandV1,
     GatewayHelloV1,
     GatewayPhaseV1,
     GatewayStateQueryV1,
+    GatewayStateQueryV2,
     GatewayStateV1,
+    GatewayStateV2,
     GatewayStopReportV1,
     GatewayStopV1,
 )
@@ -155,12 +158,15 @@ class GatewayCoreV1:
         policy: CredentialPolicyV1,
         limits: GovernorLimitsV1 | None = None,
         boot_epoch: str | None = None,
+        body_kind: GatewayBodyKindV1 = GatewayBodyKindV1.UNKNOWN,
         clock: Callable[[], float] = time.monotonic,
         sleep: Callable[[float], None] = time.sleep,
         audit: BoundedAuditRingV1 | None = None,
         write_observer: Callable[[VendorWriteOutcomeV1], None] | None = None,
         watchdog_observer: Callable[[float], None] | None = None,
     ) -> None:
+        if not isinstance(body_kind, GatewayBodyKindV1):
+            raise TypeError("body_kind must be a GatewayBodyKindV1")
         self._sport = sport
         self._policy = policy
         self._limits = limits or default_limits()
@@ -172,6 +178,7 @@ class GatewayCoreV1:
         self._write_observer = write_observer
         self._watchdog_observer = watchdog_observer
         self.boot_epoch = boot_epoch or uuid.uuid4().hex
+        self.body_kind = body_kind
         self._lock = threading.RLock()
         # Restart-DISARMED is a construction-time fact, not a later assignment.
         self.phase = GatewayPhaseV1.DISARMED
@@ -211,6 +218,7 @@ class GatewayCoreV1:
             catalog_version=self._catalog.version,
             catalog_digest=self._catalog.digest(),
             max_local_ttl_ms=self._limits.max_local_ttl_ms,
+            body_kind=self.body_kind.value,
         )
         # A gateway that has just restarted does not know what the previous
         # instance left the vendor doing.  Its first act is an exact-zero
@@ -302,19 +310,31 @@ class GatewayCoreV1:
             self._watchdog.start()
 
     def close(self) -> None:
+        first_error: BaseException | None = None
         with self._lock:
             if self._closed:
                 return
-            if self.phase is GatewayPhaseV1.ARMED:
-                self._stop_locked("gateway_shutdown", latch=False)
-            self._closed = True
+            try:
+                if self.phase is GatewayPhaseV1.ARMED:
+                    self._stop_locked("gateway_shutdown", latch=False)
+            except BaseException as error:  # noqa: BLE001 - cleanup must continue
+                first_error = error
+            finally:
+                self._closed = True
         self._watch_stop.set()
         watchdog = self._watchdog
         if watchdog is not None:
-            watchdog.join(timeout=1.0)
-        self._writer.close()
-        self._vendor_io.close()
-        self._sport.close()
+            try:
+                watchdog.join(timeout=1.0)
+            except BaseException as error:  # noqa: BLE001 - cleanup must continue
+                first_error = first_error or error
+        for close in (self._writer.close, self._vendor_io.close, self._sport.close):
+            try:
+                close()
+            except BaseException as error:  # noqa: BLE001 - every layer gets one close
+                first_error = first_error or error
+        if first_error is not None:
+            raise first_error
 
     def _watch(self) -> None:
         previous = self._clock()
@@ -357,15 +377,11 @@ class GatewayCoreV1:
                 return self._ack_locked(request, accepted=False, reason=reason)
             if not self._sport.acquire_writer(request.writer_id):
                 self._stop_locked("sport_writer_conflict", latch=True)
-                return self._ack_locked(
-                    request, accepted=False, reason="sport_writer_conflict"
-                )
+                return self._ack_locked(request, accepted=False, reason="sport_writer_conflict")
             sample = self._safe_sample()
             if sample is None:
                 self._stop_locked("sport_state_unreadable", latch=True)
-                return self._ack_locked(
-                    request, accepted=False, reason="sport_state_unreadable"
-                )
+                return self._ack_locked(request, accepted=False, reason="sport_state_unreadable")
             now = self._clock()
             self.phase = GatewayPhaseV1.ARMED
             self._lease = _LeaseV1(
@@ -406,9 +422,7 @@ class GatewayCoreV1:
             sample = self._safe_sample()
             if sample is None:
                 self._stop_locked("sport_state_unreadable", latch=True)
-                return self._ack_locked(
-                    request, accepted=False, reason="sport_state_unreadable"
-                )
+                return self._ack_locked(request, accepted=False, reason="sport_state_unreadable")
             now = self._clock()
             feedback = self._feedback_locked(sample)
             evidence = AuthorityEvidenceV1(
@@ -417,9 +431,7 @@ class GatewayCoreV1:
                 lease_active=feedback.lease_active,
                 state_fresh=feedback.fresh,
                 state_sequence_ok=feedback.sequence_ok,
-                ttl_remaining_s=(
-                    -1.0 if self._deadline is None else self._deadline - now
-                ),
+                ttl_remaining_s=(-1.0 if self._deadline is None else self._deadline - now),
                 vendor_writer_healthy=(
                     self._writer.in_flight_age_s(now) <= self._limits.vendor_write_stall_s
                 ),
@@ -508,15 +520,13 @@ class GatewayCoreV1:
             sample = self._safe_sample()
             if sample is None:
                 self._stop_locked("sport_state_unreadable", latch=True)
-                sample = SportSampleV1(
-                    sequence=max(1, self._last_state_sequence),
-                    received_at_monotonic_s=self._clock(),
-                    vx_mps=0.0,
-                    vy_mps=0.0,
-                    vyaw_rad_s=0.0,
-                    lease_active=False,
-                )
-            age_ms = max(0.0, (self._clock() - sample.received_at_monotonic_s) * 1000.0)
+                sample = self._invalid_observation_sample_locked("sport_state_unreadable")
+            now = self._clock()
+            if sample.received_at_monotonic_s > now:
+                self._stop_locked("state_from_future", latch=True)
+                sample = self._invalid_observation_sample_locked("state_from_future")
+                now = self._clock()
+            age_ms = (now - sample.received_at_monotonic_s) * 1000.0
             lease = self._lease
             return GatewayStateV1(
                 boot_epoch=self.boot_epoch,
@@ -539,6 +549,110 @@ class GatewayCoreV1:
     def state_query(self, request: GatewayStateQueryV1) -> GatewayStateV1:
         del request
         return self.state()
+
+    def state_v2(self) -> GatewayStateV2:
+        """Return additive physical telemetry without changing the frozen V1 wire."""
+
+        with self._lock:
+            self._tick_locked()
+            sample = self._safe_sample()
+            if sample is None:
+                self._stop_locked("sport_state_unreadable", latch=True)
+                sample = self._invalid_observation_sample_locked("sport_state_unreadable")
+            now = self._clock()
+            if sample.received_at_monotonic_s > now:
+                self._stop_locked("state_from_future", latch=True)
+                sample = self._invalid_observation_sample_locked("state_from_future")
+                now = self._clock()
+            low_state = sample.low_state
+            if low_state is not None and low_state.received_at_monotonic_s > now:
+                self._stop_locked("low_state_from_future", latch=True)
+                sample = self._invalid_observation_sample_locked("low_state_from_future")
+                low_state = None
+                now = self._clock()
+            age_ms = (now - sample.received_at_monotonic_s) * 1000.0
+            lease = self._lease
+            low_state_age_ms = (
+                (now - low_state.received_at_monotonic_s) * 1000.0
+                if low_state is not None
+                else None
+            )
+            return GatewayStateV2(
+                boot_epoch=self.boot_epoch,
+                gateway_sequence=self._next_gateway_sequence_locked(),
+                phase=self.phase,
+                state_sequence=max(1, sample.sequence),
+                state_age_ms=age_ms,
+                lease_active=sample.lease_active,
+                writer_id=lease.writer_id if lease is not None else "",
+                vx_mps=sample.vx_mps,
+                vy_mps=sample.vy_mps,
+                vyaw_rad_s=sample.vyaw_rad_s,
+                stationary=sample.max_abs_velocity <= self._limits.exact_zero,
+                last_stop_sequence=self._stop_sequence,
+                last_stop_reason=self._last_stop_reason,
+                body_kind=self.body_kind,
+                telemetry_valid=sample.telemetry_valid,
+                vendor_position_m=sample.vendor_position_m,
+                vendor_rpy_rad=sample.vendor_rpy_rad,
+                mode=sample.mode,
+                error_code=sample.error_code,
+                source_time_s=sample.source_time_s,
+                sport_foot_force_raw=sample.sport_foot_force_raw,
+                feedback_integrity_ok=(
+                    sample.feedback_integrity_ok if sample.telemetry_valid else None
+                ),
+                feedback_integrity_reason=(
+                    sample.feedback_integrity_reason
+                    if sample.telemetry_valid
+                    else "feedback_integrity_unavailable"
+                ),
+                commissioned_soc_ok=sample.commissioned_soc_ok,
+                commissioned_soc_reason=sample.commissioned_soc_reason,
+                low_state_valid=low_state is not None,
+                low_state_sequence=low_state.sequence if low_state is not None else 0,
+                low_state_age_ms=low_state_age_ms,
+                low_state_tick=low_state.tick if low_state is not None else None,
+                battery_soc_percent=(
+                    low_state.battery_soc_percent if low_state is not None else None
+                ),
+                power_v=low_state.power_v if low_state is not None else None,
+                power_a=low_state.power_a if low_state is not None else None,
+                max_motor_temperature_raw=(
+                    low_state.max_motor_temperature_raw if low_state is not None else None
+                ),
+                motor_lost_max_raw=(
+                    low_state.motor_lost_max_raw if low_state is not None else None
+                ),
+                foot_force_est_raw=(
+                    low_state.foot_force_est_raw if low_state is not None else None
+                ),
+                imu_temperature_raw=(
+                    low_state.imu_temperature_raw if low_state is not None else None
+                ),
+                temperature_ntc_raw=(
+                    low_state.temperature_ntc_raw if low_state is not None else None
+                ),
+                bms_status=low_state.bms_status if low_state is not None else None,
+            )
+
+    def state_query_v2(self, request: GatewayStateQueryV2) -> GatewayStateV2:
+        del request
+        return self.state_v2()
+
+    def _invalid_observation_sample_locked(self, reason: str) -> SportSampleV1:
+        """Return neutral, explicitly invalid evidence after a latched read fault."""
+
+        return SportSampleV1(
+            sequence=max(1, self._last_state_sequence),
+            received_at_monotonic_s=self._clock(),
+            vx_mps=0.0,
+            vy_mps=0.0,
+            vyaw_rad_s=0.0,
+            lease_active=False,
+            feedback_integrity_ok=False,
+            feedback_integrity_reason=reason,
+        )
 
     def client_lost(self, connection_id: int) -> GatewayStopReportV1 | None:
         with self._lock:
@@ -611,7 +725,7 @@ class GatewayCoreV1:
     ) -> str:
         if self._latched or self.phase is GatewayPhaseV1.LATCHED:
             return "gateway_latched"
-        if not self._policy.admits_peer(peer):
+        if not self._policy.admits_lease_peer(peer):
             return "peer_not_authorized"
         if request.boot_epoch != self.boot_epoch:
             return "boot_epoch_mismatch"
@@ -640,7 +754,7 @@ class GatewayCoreV1:
         lease = self._lease
         if lease is None:
             return "gateway_disarmed"
-        if not self._policy.admits_peer(peer) or peer != lease.peer:
+        if not self._policy.admits_lease_peer(peer) or peer != lease.peer:
             return "peer_not_authorized"
         if connection_id != lease.connection_id:
             return "writer_connection_mismatch"
@@ -669,6 +783,20 @@ class GatewayCoreV1:
         now = self._clock()
         if not sample.lease_active:
             return _FeedbackVerdictV1(False, False, False, "sport_lease_lost")
+        if not sample.feedback_integrity_ok:
+            return _FeedbackVerdictV1(
+                False,
+                True,
+                True,
+                f"unitree_feedback:{sample.feedback_integrity_reason}"[:160],
+            )
+        if sample.telemetry_valid and sample.commissioned_soc_ok is not True:
+            return _FeedbackVerdictV1(
+                False,
+                True,
+                True,
+                f"unitree_soc:{sample.commissioned_soc_reason}"[:160],
+            )
         if sample.sequence < self._last_state_sequence:
             return _FeedbackVerdictV1(False, False, True, "state_out_of_order")
         if sample.sequence > self._last_state_sequence:
@@ -764,7 +892,13 @@ class GatewayCoreV1:
                 age = now - sample.received_at_monotonic_s
                 fresh = 0.0 <= age < self._limits.state_timeout_s
                 still = sample.max_abs_velocity <= self._limits.exact_zero
-                if rpc_completed and fresh and still and sample.sequence > witnessed_sequence:
+                if (
+                    rpc_completed
+                    and fresh
+                    and still
+                    and sample.feedback_integrity_ok
+                    and sample.sequence > witnessed_sequence
+                ):
                     settled += 1
                     witnessed_sequence = sample.sequence
                     if settled >= self._limits.stop_settled_samples:

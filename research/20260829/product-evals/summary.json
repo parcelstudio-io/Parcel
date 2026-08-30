@@ -1,6 +1,6 @@
 {
-  "schema": "parcel.product-eval-summary.v1",
-  "date": "2026-08-29",
+  "schema": "parcel.product-eval-summary.v2",
+  "date": "2026-08-30",
   "physical_motion_readiness": "NO_GO",
   "observe_only_mount": "CONDITIONAL_CHECKLIST_ONLY",
   "navigation": {
@@ -81,7 +81,7 @@
       "hard_gate_pass_count": 7,
       "text_injected_only": true
     },
-    "acoustic_loop": {
+    "acoustic_loop_v1_historical": {
       "case_count": 25,
       "replicate_count": 3,
       "gate_count": 9,
@@ -89,7 +89,36 @@
       "gate_fail_count": 4,
       "gate_vector_stable": true,
       "case_verdict_deterministic": false,
+      "v1_red_metric_capability_validity": false,
+      "premature_750ms_pause_commit_count": 3,
+      "premature_incomplete_commit_count": 1,
+      "direct_abort_guarded_test_count": 86,
+      "direct_abort_guarded_expected_warning_count": 2,
       "physical_audio_evaluated": false
+    },
+    "acoustic_loop_v2_corrected": {
+      "case_count": 25,
+      "virtual_duration_s": 223.4,
+      "gate_count": 11,
+      "gate_pass_count": 6,
+      "gate_fail_count": 3,
+      "gate_not_measured_count": 2,
+      "endpoint_case_count": 13,
+      "invalid_endpoint_case_count": 4,
+      "semantic_endpoint_validity": 0.3077,
+      "virtual_audible_ack_p50_s": 0.79,
+      "isolated_acoustic_stop_measured": false,
+      "physical_motion_sync_measured": false,
+      "mounted_audio_aec_evaluated": false
+    },
+    "endpoint_policy_sensitivity": {
+      "cell_count_per_run": 1560,
+      "replicate_count": 2,
+      "replicates_byte_identical": true,
+      "declared_setting_count": 30,
+      "passing_setting_count": 0,
+      "corrected_rig_parity_pass": false,
+      "production_setting_nominated": false
     },
     "historical_realtime_corpus": {
       "thread_count": 25,
@@ -140,12 +169,84 @@
     "normal_runtime_journal_consumer_composed": true,
     "runtime_journal_consumer_scope": "PROCESS_LOCAL_DISARMED",
     "runtime_journal_consumer_focused_test_count": 26,
+    "runtime_frame_complete_available_lineage": true,
+    "runtime_frame_drain_freshness_revalidation": true,
+    "runtime_frame_post_review_test_count": 9,
+    "executive_revision_exception_atomic_process_local": true,
+    "executive_revision_thread_isolated": true,
+    "executive_revision_concurrent_sink_visibility_closed": true,
+    "executive_revision_process_wide_sink_lock_order": true,
+    "executive_revision_crash_durable": false,
+    "model_b_valid_next_step_waits_supported": true,
+    "model_b_deferred_replacement_is_not_activation": true,
+    "model_b_resumed_retry_and_repeated_wait_lifecycles_supported": true,
+    "instructnav_failure_can_license_success": false,
+    "transition_commit_timestamp_composed": false,
     "persistent_restart_cursor_composed": false,
     "separate_child_resume_lineage_composed": false,
     "live_speech_epoch_provider_audio_composed": false,
     "lit1_false_terminal_arrival_claim_count": 5,
     "lit1_audited_trace_count": 5,
     "lit1_grounding_verdict": "REFUTED_GROUNDING"
+  },
+  "deployment_skeleton": {
+    "runtime_profile": "go2_edu_plus",
+    "parcel_target_present": true,
+    "target_requires_gateway_safety_runtime": true,
+    "runtime_binds_to_gateway_and_safety": true,
+    "target_stop_leaves_safety_alive": true,
+    "fixed_launch_invariants_override_environment_files": true,
+    "target_active_is_readiness": false,
+    "gateway_disarmed_assertion_required": true,
+    "runtime_lio_audio_executables_present": false,
+    "pinned_aarch64_install_present": false,
+    "orin_systemd_run_complete": false,
+    "physical_observation_source_composed": false,
+    "independent_hardware_estop_composed": false
+  },
+  "durability": {
+    "dsoak_1": {
+      "reported_monotonic_duration_s": 43380.014326820965,
+      "reported_duration_h": 12.05000398,
+      "primary_episode_count": 66434,
+      "sampled_replay_count": 664,
+      "recorded_replay_mismatch_count": 0,
+      "aggregate_gate_predicate_count": 17,
+      "aggregate_gate_predicate_pass_count": 17,
+      "evidence_class": "SELF_REPORTED_PARTIALLY_CORROBORATED_DESKTOP_PROCEDURAL_DURABILITY",
+      "external_monitor_coverage_fraction": 0.803769768,
+      "strict_temporal_process_provenance": false,
+      "oracle_validity": false,
+      "semantic_truth_evaluable": false,
+      "promotion_eligible": false,
+      "physical_readiness_evaluable": false,
+      "controlling_interpretation": "../duplex-soak-1/INTERPRETATION.json"
+    }
+  },
+  "repository_gates": {
+    "final_commit": {
+      "hard_gate_result": "PASS",
+      "collected_test_count": 11417,
+      "non_slow_selected_count": 11330,
+      "slow_selected_count": 87,
+      "ruff_baseline_count": 72,
+      "ruff_current_count": 72,
+      "ruff_new_count": 0,
+      "physical_stopping_envelope": "UNMEASURED",
+      "checkout_unchanged_during_latest_run": true,
+      "checkout_identity_sha256_prefix": "f8518f4283f8",
+      "preliminary_run_checkout_drift": "concurrent shared-root Claude work"
+    },
+    "extended_nightly": {
+      "result": "HARD_RED",
+      "pose_drift_arm_floor_fail_count": 6,
+      "post_remediation_slow_passed": 74,
+      "post_remediation_slow_failed": 1,
+      "post_remediation_slow_skipped": 8,
+      "post_remediation_slow_xfailed": 3,
+      "post_remediation_slow_xpassed": 1,
+      "remaining_failure": "person_veto_fraction_0.875_below_pinned_0.90"
+    }
   },
   "overall": "Typed product seams, the DMC-4 source transaction, and its process-local disarmed runtime observer are credible, but generalized navigation, dynamic-social safety, acoustic behavior, hosted wording quality, and live session/provider/audio narration composition are below the physical promotion bar."
 }

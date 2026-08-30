@@ -23,6 +23,7 @@ from __future__ import annotations
 import ast
 import json
 import os
+import shlex
 import signal
 import socket
 import subprocess
@@ -349,6 +350,20 @@ def _service_directive(name: str) -> list[str]:
     return [line[len(prefix):].strip() for line in _service_lines() if line.startswith(prefix)]
 
 
+def _service_launch() -> tuple[str, list[str], dict[str, str]]:
+    """Return the real executable, its CLI args, and fixed late env values."""
+
+    rows = _service_directive("ExecStart")
+    assert len(rows) == 1, rows
+    tokens = shlex.split(rows[0])
+    executable_index = next(
+        index for index, token in enumerate(tokens) if token.startswith("/opt/parcel/bin/")
+    )
+    assert tokens[0] == "/usr/bin/env"
+    environment = dict(token.split("=", 1) for token in tokens[1:executable_index])
+    return tokens[executable_index], tokens[executable_index + 1 :], environment
+
+
 def _pyproject() -> dict[str, object]:
     """Read ``gateway/pyproject.toml`` without ``tomllib`` (3.11+; the floor is 3.10)."""
 
@@ -377,9 +392,7 @@ def test_the_distribution_publishes_the_console_script_the_unit_starts() -> None
     assert parsed["project"]["requires-python"] == '">=3.10"'
     scripts = parsed["project.scripts"]
     assert scripts[CONSOLE_SCRIPT_NAME] == '"gateway.seam.cli:main"'
-    exec_start = _service_directive("ExecStart")
-    assert len(exec_start) == 1, exec_start
-    executable = exec_start[0].split()[0]
+    executable, _arguments, _environment = _service_launch()
     assert Path(executable).name == CONSOLE_SCRIPT_NAME, executable
     # A skeleton pointing at a nonexistent executable cannot pass: the name the
     # unit tests for and the name the unit starts must be the same file.
@@ -389,19 +402,16 @@ def test_the_distribution_publishes_the_console_script_the_unit_starts() -> None
 def test_the_unit_start_arguments_are_arguments_the_console_script_accepts() -> None:
     """Contract 2: the unit's ExecStart parses against the real CLI parser."""
 
-    arguments = _service_directive("ExecStart")[0].split()[1:]
+    _executable, arguments, _environment = _service_launch()
     namespace = cli_module._parser().parse_args(arguments)
     assert namespace.disarmed is True
     assert arguments == ["--disarmed"], arguments
 
 
 def test_the_unit_environment_is_a_launch_profile_the_console_script_understands() -> None:
-    """Contract 2: the unit's own Environment= lines drive the real resolver."""
+    """Contract 2: late ExecStart assignments drive the real resolver."""
 
-    environ = {}
-    for entry in _service_directive("Environment"):
-        key, _, value = entry.partition("=")
-        environ[key] = value
+    _executable, arguments, environ = _service_launch()
     assert environ["PARCEL_ARMED"] == "0"
     assert environ["PARCEL_ROLE"] == "gateway"
     # The unit names a body. It names the real one, which refuses to start
@@ -409,7 +419,7 @@ def test_the_unit_environment_is_a_launch_profile_the_console_script_understands
     assert environ["PARCEL_GATEWAY_SPORT"] == "vendor"
     environ.update({"STATE_DIRECTORY": "/var/lib/parcel/gateway"})
     environ.update({"LOGS_DIRECTORY": "/var/log/parcel/gateway"})
-    args = cli_module._parser().parse_args(["--disarmed"])
+    args = cli_module._parser().parse_args(arguments)
     with pytest.raises(GatewayLaunchError) as refusal:
         settings_from(args, environ)
     assert "vendor" in str(refusal.value)
@@ -455,6 +465,22 @@ def test_the_console_script_refuses_to_start_armed() -> None:
             {"PARCEL_ARMED": "1", "PARCEL_GATEWAY_SPORT": "fake", "STATE_DIRECTORY": "/tmp"},
         )
     assert "arming is a client transaction" in str(refusal.value)
+
+
+def test_the_console_script_requires_the_explicit_disarmed_assertion() -> None:
+    """Boot-disarmed is both a core invariant and an operator assertion."""
+
+    args = cli_module._parser().parse_args([])
+    with pytest.raises(GatewayLaunchError, match="--disarmed is a required boot assertion"):
+        settings_from(
+            args,
+            {
+                "PARCEL_ARMED": "0",
+                "PARCEL_GATEWAY_SPORT": "fake",
+                "STATE_DIRECTORY": "/tmp",
+                "LOGS_DIRECTORY": "/tmp",
+            },
+        )
 
 
 def test_the_console_script_refuses_an_unknown_regime() -> None:
@@ -707,7 +733,7 @@ CLIENT_PUBLIC_SURFACE = frozenset(
     {
         "connect", "close", "reconnect",
         "acquire", "command", "stop",
-        "state", "last_stop_report",
+        "state", "state_v2", "last_stop_report",
         "identity", "boot_epoch", "writer_id", "armed",
         "authority_deadline_monotonic_s",
     }
@@ -724,6 +750,24 @@ def test_the_client_public_surface_is_exactly_the_bounded_contract() -> None:
         if not name.startswith("_")
     }
     assert public == CLIENT_PUBLIC_SURFACE, public ^ CLIENT_PUBLIC_SURFACE
+
+
+@requires_seqpacket
+def test_v2_state_query_is_observation_only_and_fake_telemetry_is_explicitly_invalid(
+    served: ServedSeam,
+) -> None:
+    with served.client() as client:
+        observed = client.state_v2()
+
+        assert observed.telemetry_valid is False
+        assert observed.low_state_valid is False
+        assert observed.low_state_sequence == 0
+        assert observed.low_state_age_ms is None
+        assert observed.battery_soc_percent is None
+        assert observed.foot_force_est_raw is None
+        assert client.armed is False
+        assert served.core.active_writer is None
+        assert served.vendor_is_exactly_zero()
 
 
 def test_the_client_has_no_raw_packet_or_malformed_message_escape_hatch() -> None:
@@ -1352,7 +1396,8 @@ def test_the_core_no_longer_calls_the_vendor_synchronously_under_its_lock() -> N
     assert "self._vendor_io.stop_move(" in source
     assert "self._vendor_io.sample(" in source
     # The only remaining direct vendor touches are the two that cannot block on
-    # motion I/O: the writer handshake and shutdown.
+    # motion I/O: the writer handshake and shutdown. Shutdown now appears in the
+    # all-layers cleanup loop so a failure in an earlier closer cannot skip it.
     remaining = {
         line.strip()
         for line in source.splitlines()
@@ -1361,7 +1406,7 @@ def test_the_core_no_longer_calls_the_vendor_synchronously_under_its_lock() -> N
     assert remaining == {
         "if not self._sport.acquire_writer(request.writer_id):",
         "self._sport.release_writer(lease.writer_id if lease is not None else None)",
-        "self._sport.close()",
+        "for close in (self._writer.close, self._vendor_io.close, self._sport.close):",
     }, remaining
 
 
@@ -1571,6 +1616,25 @@ def test_ready_is_announced_once_the_probe_answers() -> None:
         assert liveness.announce_ready(status="disarmed") is True
         assert notifier.sent[0].startswith("READY=1")
         assert "STATUS=disarmed" in notifier.sent[0]
+    finally:
+        liveness.stop()
+
+
+def test_supervised_ready_is_not_recorded_when_notify_delivery_fails(
+    short_dir: Path,
+) -> None:
+    recorder = _Recorder()
+    # No datagram listener exists here, so a supervised send fails
+    # deterministically and must not become a sticky readiness claim.
+    notifier = SdNotifierV1(str(short_dir / "missing-notify.sock"))
+    liveness = GatewayLivenessNotifierV1(
+        notifier, recorder.fast, watchdog_period_s=0.02, probe_timeout_s=1.0
+    )
+    try:
+        assert liveness.announce_ready(status="disarmed") is False
+        assert liveness.ready_announced is False
+        assert liveness.missed_probes == 1
+        assert notifier.errors == 1
     finally:
         liveness.stop()
 

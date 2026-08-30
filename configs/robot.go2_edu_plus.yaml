@@ -40,9 +40,11 @@
 #                                       injected control_manager —
 #                                       "configuration alone cannot arm
 #                                       hardware" — and this profile does not
-#                                       try. Autonomous motion waits for the
-#                                       native sole-writer gateway (design
-#                                       §5.5, docs/MOTION.md).
+#                                       try. The sole-writer gateway seam now
+#                                       exists, but autonomous motion still
+#                                       waits for a separately injected,
+#                                       commissioned physical composition
+#                                       (design §5.5, docs/MOTION.md).
 #   control.unitree_sport.axes_commissioned
 #   control.unitree_sport.state_frame_commissioned
 #   control.unitree_sport.lateral_sign / yaw_sign / allowed_modes
@@ -338,7 +340,8 @@ physical_resolution:
     # `simulator` is the ACCURATE answer while Parcel commands no motion on
     # this robot: `RobotRuntime` refuses any other value without an injected
     # control_manager ("configuration alone cannot arm hardware"), and the
-    # writer that would replace it is the native sole-writer gateway that does
-    # not exist yet (docs/MOTION.md, design §5.5). Inheriting it is a decision,
-    # and this is where the decision is recorded.
+    # physical writer path is the implemented sole-writer gateway, but no
+    # commissioned launcher injects that path for this profile yet
+    # (docs/MOTION.md, design §5.5). Inheriting `simulator` is a decision, and
+    # this is where the decision is recorded.
     - control.controller

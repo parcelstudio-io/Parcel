@@ -16,8 +16,9 @@
 # prevent.
 #
 # THE ONE DEPENDENCY IS REAL, NOT A PLACEHOLDER. Deployable gateway modules
-# import the frozen V1 wire contract and the product-owned Unix client through
-# ``parcel_robot.bridge``. Both are pure-stdlib seams that ship inside
+# import the frozen wire contract, product-owned Unix client compatibility
+# export, and shared device-wide Unitree writer lock through
+# ``parcel_robot.bridge``. All are pure-stdlib seams that ship inside
 # ``parcel-robot-dog``; the historical ``gateway.seam.client`` path is only a
 # compatibility re-export. That is why the product is declared here, while the
 # product distribution does not depend on this gateway package. Neither
@@ -34,6 +35,13 @@
 # counterpart in ``tests/test_motion_seam.py`` parse every module in this
 # package with ``feature_version=(3, 10)`` and scan for post-3.10 symbols, and
 # the clean-install proof runs the built artifact on a real CPython 3.10.
+#
+# UNITREE SDK2 IS AN IMAGE INPUT, NOT AN UNCONDITIONAL PYPI DEPENDENCY. The
+# official Python repository is installed into the robot's gateway venv by the
+# image/box-day procedure. ``gateway.ports`` imports it dynamically only for a
+# fully configured ``vendor`` launch, so the same wheel remains installable in
+# the SDK-free desktop proof venv. A selected vendor launch fails closed if
+# those official symbols are absent or incompatible.
 
 [build-system]
 requires = ["setuptools>=77"]
@@ -42,7 +50,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "parcel-gateway"
 version = "0.1.0"
-description = "Parcel motion gateway: sole vendor writer, lease/TTL/stop latch, bounded vendor I/O"
+description = "Parcel motion gateway: autonomous sole vendor writer, shared device lock, TTL/stop latch"
 requires-python = ">=3.10"
 dependencies = [
   # The frozen V1 wire contract (``parcel_robot.bridge.protocol``) lives here.

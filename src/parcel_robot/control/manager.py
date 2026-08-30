@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 import threading
 import time
+from collections.abc import Callable
 
 from parcel_robot.models import VelocityCommand
 
@@ -39,6 +40,14 @@ class ControlManager:
         self.limits = limits or ControlLimits()
         self.timing = timing or ControlTiming()
         self._clock = clock
+        # Controllers with an explicit authority transaction bind it to this
+        # manager at composition time. The opaque token keeps their low-level
+        # arm seam available to isolated adapter/commissioning tests while
+        # refusing a split arm-then-set_target call on a production manager.
+        self._authority_owner_token = object()
+        bind_authority_owner = getattr(controller, "bind_authority_owner", None)
+        if callable(bind_authority_owner):
+            bind_authority_owner(self._authority_owner_token)
         self._lock = threading.RLock()
         self._condition = threading.Condition(self._lock)
         self._tick_lock = threading.Lock()
@@ -70,6 +79,11 @@ class ControlManager:
         self._stop_delivery_generation = 0
         self._controller_activated = False
         self._starting = False
+        # True only while ``arm_and_set_target`` owns the control tick boundary.
+        # Ordinary set_target calls are refused during this window so no second
+        # writer can install a target while the controller's authority-changing
+        # I/O is outside ``_lock``.
+        self._arm_target_in_progress = False
         self._closing = False
         self._close_in_progress = False
         self._tearing_down = False
@@ -136,9 +150,7 @@ class ControlManager:
                     self._call_controller_unlocked(self.controller.emergency_stop)
                     self._last_stop_reason = "emergency_stop_during_start"
                 else:
-                    self._call_controller_unlocked(
-                        lambda: self.controller.stop("manager_start")
-                    )
+                    self._call_controller_unlocked(lambda: self.controller.stop("manager_start"))
                     self._last_stop_reason = "manager_start"
                 if not delivered_emergency and self._emergency_stopped:
                     # E-stop latched while the ordinary startup stop was in
@@ -164,9 +176,7 @@ class ControlManager:
                 self._starting = False
                 self._condition.notify_all()
                 self._lifecycle = (
-                    ControlLifecycle.CLOSING
-                    if self._closing
-                    else ControlLifecycle.DISARMED
+                    ControlLifecycle.CLOSING if self._closing else ControlLifecycle.DISARMED
                 )
                 raise
             self._started_at = self._clock()
@@ -231,13 +241,22 @@ class ControlManager:
                     valid_until=current + lease,
                 )
         with self._lock:
-            if self._starting or self._closing or self._lifecycle in {
-                ControlLifecycle.DISARMED,
-                ControlLifecycle.FAULTED,
-                ControlLifecycle.EMERGENCY_STOPPED,
-                ControlLifecycle.CLOSING,
-                ControlLifecycle.CLOSED,
-            }:
+            if self._arm_target_in_progress:
+                raise ControlNotReadyError(
+                    "controller cannot accept a separate target while atomic arming is in progress"
+                )
+            if (
+                self._starting
+                or self._closing
+                or self._lifecycle
+                in {
+                    ControlLifecycle.DISARMED,
+                    ControlLifecycle.FAULTED,
+                    ControlLifecycle.EMERGENCY_STOPPED,
+                    ControlLifecycle.CLOSING,
+                    ControlLifecycle.CLOSED,
+                }
+            ):
                 raise ControlNotReadyError(
                     f"controller cannot accept motion while {self._lifecycle.value}"
                 )
@@ -279,11 +298,217 @@ class ControlManager:
             self._stop_last_settled_sequence = None
             return target
 
-    def tick(self, *, now: float | None = None) -> None:
-        current = self._clock() if now is None else float(now)
+    def _arm_target_request(
+        self,
+        command: VelocityCommand,
+        *,
+        source: str,
+        ttl: float | None = None,
+    ) -> tuple[float, Callable[[object], object]]:
+        lease = self.timing.command_timeout_s if ttl is None else float(ttl)
+        if not math.isfinite(lease) or lease <= 0.0:
+            raise ValueError("control target TTL must be positive and finite")
+        if not isinstance(source, str):
+            raise TypeError("control source must be a string")
+        if not source or len(source) > 80:
+            raise ValueError("control source must be a short non-empty string")
+        self.limits.validate(command)
+        if _is_zero(command):
+            raise ValueError("atomic arm requires a non-zero motion target")
+
+        acquire = getattr(self.controller, "acquire_motion_authority", None)
+        if not callable(acquire):
+            raise ControlNotReadyError(
+                f"controller {self.controller.name!r} has no explicit authority transaction"
+            )
+        return lease, acquire
+
+    def _prepare_arm_target_locked(self) -> int:
+        if self._arm_target_in_progress:
+            raise ControlNotReadyError("an atomic arm transaction is already in progress")
+        if (
+            self._starting
+            or self._closing
+            or self._lifecycle is not ControlLifecycle.IDLE
+            or self._target is not None
+        ):
+            raise ControlNotReadyError(
+                "controller can arm only while idle, stopped, and without a target"
+            )
+        current = self._clock()
         if not math.isfinite(current):
-            raise ValueError("control tick timestamp must be finite")
+            raise ValueError("control target timestamp must be finite")
+        try:
+            before = self.state_source.latest()
+        except Exception as error:
+            self._fault_locked(f"robot_state_read_failed: {error}")
+            raise ControlNotReadyError(
+                "controller cannot arm because robot feedback failed"
+            ) from error
+        if not self._state_is_fresh(before, current):
+            raise ControlNotReadyError("controller cannot arm without fresh robot feedback")
+        assert before is not None
+        self._last_state = before
+        if before.fault_reason is not FaultReason.NONE:
+            raise ControlNotReadyError("controller cannot arm while robot feedback reports a fault")
+        if (
+            abs(before.roll) > self.limits.max_tilt_rad
+            or abs(before.pitch) > self.limits.max_tilt_rad
+        ):
+            raise ControlNotReadyError("controller cannot arm beyond the tilt limit")
+        if not self._state_is_stopped(before):
+            raise ControlNotReadyError(
+                "controller cannot arm until stationary feedback is observed"
+            )
+        if self._awaiting_stop_confirmation:
+            raise ControlNotReadyError("controller cannot arm until the previous stop is confirmed")
+        return self._stop_epoch
+
+    def _acquire_arm_authority_locked(
+        self,
+        acquire: Callable[[object], object],
+        start_stop_epoch: int,
+    ) -> None:
+        try:
+            self._call_controller_unlocked(lambda: acquire(self._authority_owner_token))
+        except Exception as error:
+            superseded = (
+                start_stop_epoch != self._stop_epoch or self._closing or self._emergency_stopped
+            )
+            if not superseded:
+                self._fault_locked(f"controller_arm_failed: {error}")
+            raise ControlNotReadyError(
+                "controller could not acquire verified motion authority"
+            ) from error
+
+    def _require_arm_not_superseded_locked(self, start_stop_epoch: int) -> None:
+        if (
+            start_stop_epoch != self._stop_epoch
+            or self._closing
+            or self._emergency_stopped
+            or self._lifecycle is not ControlLifecycle.IDLE
+        ):
+            raise ControlNotReadyError("motion authority was superseded while arming")
+
+    def _post_arm_feedback_locked(self, command: VelocityCommand) -> float:
+        issued_at = self._clock()
+        if not math.isfinite(issued_at):
+            self._fault_locked("control_clock_non_finite_after_arm")
+            raise ControlNotReadyError("controller clock became invalid after arming")
+        try:
+            state = self.state_source.latest()
+        except Exception as error:
+            self._fault_locked(f"robot_state_read_failed_after_arm: {error}")
+            raise ControlNotReadyError(
+                "controller cannot move because post-arm feedback failed"
+            ) from error
+        if not self._state_is_fresh(state, issued_at):
+            self._fault_locked("robot_state_stale_after_arm")
+            raise ControlNotReadyError("controller cannot move without fresh post-arm feedback")
+        assert state is not None
+        self._last_state = state
+        if state.fault_reason is not FaultReason.NONE:
+            self._fault_locked(f"robot_fault_after_arm_{state.fault_reason.value}")
+            raise ControlNotReadyError(
+                "controller cannot move because post-arm feedback reports a fault"
+            )
+        if (
+            abs(state.roll) > self.limits.max_tilt_rad
+            or abs(state.pitch) > self.limits.max_tilt_rad
+        ):
+            self._fault_locked("robot_tilt_limit_after_arm")
+            raise ControlNotReadyError("controller cannot move beyond the post-arm tilt limit")
+        try:
+            self._validate_capabilities(command)
+        except Exception as error:
+            self._fault_locked("controller_not_motion_capable_after_arm")
+            raise ControlNotReadyError(
+                "controller did not expose the commissioned motion capability"
+            ) from error
+        return issued_at
+
+    def arm_and_set_target(
+        self,
+        command: VelocityCommand,
+        *,
+        source: str,
+        ttl: float | None = None,
+    ) -> TimedVelocitySetpoint:
+        """Acquire explicit authority and install its first target atomically.
+
+        The tick lock excludes the no-target watchdog while the controller's
+        bounded authority transaction and first target installation complete.
+        Any concurrent stop epoch wins and prevents target installation.
+        """
+
+        lease, acquire = self._arm_target_request(command, source=source, ttl=ttl)
+
+        # Match tick's lock order. Holding this lock is what excludes the
+        # 50 Hz no-target branch while authority exists but the first target is
+        # not installed yet.
+        with self._tick_lock:  # noqa: SIM117 - make the safety lock boundary explicit
+            with self._lock:
+                start_stop_epoch = self._prepare_arm_target_locked()
+                self._arm_target_in_progress = True
+                authority_acquired = False
+                target_installed = False
+                try:
+                    self._acquire_arm_authority_locked(acquire, start_stop_epoch)
+                    authority_acquired = True
+                    self._require_arm_not_superseded_locked(start_stop_epoch)
+                    issued_at = self._post_arm_feedback_locked(command)
+
+                    valid_until = issued_at + lease
+                    if not math.isfinite(valid_until):
+                        self._fault_locked("control_target_deadline_non_finite_after_arm")
+                        raise ControlNotReadyError(
+                            "control target deadline became invalid after arming"
+                        )
+                    self._sequence += 1
+                    target = TimedVelocitySetpoint(
+                        command=command,
+                        source=source,
+                        sequence=self._sequence,
+                        issued_at=issued_at,
+                        valid_until=valid_until,
+                    )
+                    self._target = target
+                    target_installed = True
+                    self._intent_epoch += 1
+                    self._stop_delivered = False
+                    self._awaiting_stop_confirmation = False
+                    self._stop_requested_at = None
+                    self._stop_completed_at = None
+                    self._stop_feedback_sequence = None
+                    self._stop_settled_samples = 0
+                    self._stop_last_settled_sequence = None
+                    return target
+                finally:
+                    if (
+                        authority_acquired
+                        and not target_installed
+                        and start_stop_epoch == self._stop_epoch
+                        and not self._closing
+                        and not self._emergency_stopped
+                        and self._lifecycle is not ControlLifecycle.FAULTED
+                    ):
+                        # Defense in depth for an unexpected exception after a
+                        # successful authority hook. No path may return to the
+                        # control thread with live authority and an empty target.
+                        self._fault_locked("arm_target_transaction_aborted")
+                    self._arm_target_in_progress = False
+                    self._condition.notify_all()
+
+    def tick(self, *, now: float | None = None) -> None:
         with self._tick_lock:
+            # An authority transaction can deliberately hold this boundary
+            # across bounded gateway I/O. Sample the implicit clock only after
+            # that wait; otherwise a queued tick compares newly received state
+            # with a timestamp from before the arm and can falsely report the
+            # state as future-dated/stale.
+            current = self._clock() if now is None else float(now)
+            if not math.isfinite(current):
+                raise ValueError("control tick timestamp must be finite")
             self._tick_once(current)
 
     def _tick_once(self, current: float) -> None:
@@ -581,9 +806,7 @@ class ControlManager:
                 state = self.state_source.latest()
                 current = self._clock()
                 if not self._state_is_fresh(state, current):
-                    raise ControlNotReadyError(
-                        "cannot clear emergency stop without fresh feedback"
-                    )
+                    raise ControlNotReadyError("cannot clear emergency stop without fresh feedback")
                 assert state is not None
                 self._last_state = state
                 if (
@@ -704,8 +927,7 @@ class ControlManager:
                 last_stop_reason=self._last_stop_reason,
                 fault=self._fault,
                 emergency_stopped=self._emergency_stopped,
-                stop_confirmed=self._stop_delivered
-                and not self._awaiting_stop_confirmation,
+                stop_confirmed=self._stop_delivered and not self._awaiting_stop_confirmation,
             )
 
     def close(self) -> None:
@@ -871,11 +1093,7 @@ class ControlManager:
             (control_thread, max(1.0, self.timing.period_s * 5.0)),
             (emergency_thread, max(1.0, self.timing.stop_timeout_s)),
         ):
-            if (
-                thread is None
-                or thread is threading.current_thread()
-                or thread.ident is None
-            ):
+            if thread is None or thread is threading.current_thread() or thread.ident is None:
                 continue
             try:
                 thread.join(timeout=timeout)

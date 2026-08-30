@@ -38,6 +38,7 @@ from parcel_robot.audio.stop_hotword import (
 from parcel_robot.audio.voice_loop import (
     MicrophoneVoiceLoop,
     SpeakerSink,
+    SpeakerWriteAttempt,
     pcm16_wav,
     resolve_audio_device,
 )
@@ -422,6 +423,8 @@ from parcel_robot.voice.agent import EMERGENCY_STOP_PHRASES, VoiceAgent
 from parcel_robot.voice.amendment import AMEND_SUSPEND_REASON, begin_goal_amend
 from parcel_robot.voice.closed_intents import ClosedIntent
 from parcel_robot.voice.dialogue_state import DialogueStateChannel
+from parcel_robot.voice.execution_narrative import ModelBNarrationFrameV1
+from parcel_robot.voice.execution_narrative_runtime import JournalOnlyNarrativeRuntimeV1
 from parcel_robot.voice.executive_caps import CapDirective, PaceCap, resolve_cap
 from parcel_robot.voice.local_plans import (
     SETTLE_POSE_PHRASES,
@@ -2196,6 +2199,11 @@ class RobotRuntime:
         self._navigation_lock = threading.RLock()
         self._command_lock = threading.RLock()
         self._close_lock = threading.Lock()
+        # Serializes the effect boundary shared by audio begin, barge-in, and
+        # the asynchronously delivered first-buffer event.  SpeakerSink's
+        # generation check prevents stale bytes; this lock prevents the same
+        # stale event from arming motion or crediting a newer latency turn.
+        self._audio_effect_lock = threading.RLock()
         self._generation = GenerationTokens()
         # SOCIAL-PROGRESS-1. The digest-pinned shipped/physical config omits
         # this section, which parses to disabled and constructs no observer.
@@ -2254,6 +2262,15 @@ class RobotRuntime:
         self._behavior_generation = 0  # legacy aggregate; prefer _generation
         self._closed = False
         self._close_complete = False
+        # The runtime owns the observation backend's lifecycle just as it owns
+        # the locomotion manager's.  Most simulator backends have no explicit
+        # lifecycle methods, so both calls remain optional; live Go2 does have
+        # them, and observing it before ``start()`` means its DDS subscriber has
+        # never been initialized.  Keep the state here so a restarted worker
+        # cannot start the same transport twice and repeated ``close()`` calls
+        # cannot close it twice.
+        self._backend_active = False
+        self._backend_close_complete = False
         self._stop_event = threading.Event()
         self._thread: threading.Thread | None = None
         self._health_thread: threading.Thread | None = None
@@ -2508,6 +2525,13 @@ class RobotRuntime:
         self.task_executive = TaskExecutive(
             max_records=int(brain_config.get("max_task_records", 256))
         )
+        # DMC-4 production composition, deliberately stopping before speech.
+        # ``task_executive`` remains the exact public owner/API used throughout
+        # this runtime; the observer reads only its authoritative journal. Its
+        # key and epoch are process-local, and its bounded output has no
+        # provider, audio, live-session, gateway, or actuation handle.
+        self.execution_narrative = JournalOnlyNarrativeRuntimeV1(self.task_executive)
+        self._execution_narrative_fault_reported = False
         self.semantic_tasks = SemanticTaskRuntimeAdapter(
             navigate=self._start_brain_navigation,
             follow_formation=self._start_brain_follow_formation,
@@ -2658,6 +2682,12 @@ class RobotRuntime:
             speech_config.get("output_device"), kind="output"
         )
         self._speaker_sink: SpeakerSink | None = None
+        # Initialize attribution before DuplexVoiceSession starts its worker;
+        # an externally submitted turn must never observe a partially built
+        # audio binding during the rest of runtime construction.
+        self._audio_output_turn_id = 0
+        self._audio_playback_generation = -1
+        self._audio_playback_turn_id = 0
         self._microphone_loop: MicrophoneVoiceLoop | None = None
         #: Card A6. Declared here beside the rail it taps so a constructor that
         #: fails before the block below still has an attribute for close() to
@@ -2670,7 +2700,7 @@ class RobotRuntime:
         audio_turn_start = None
         if self.speech_stack.synthesizer is not None:
             self._speaker_sink = SpeakerSink(
-                device=output_index, on_chunk_start=self._audio_chunk_started
+                device=output_index, on_write_attempt=self._audio_write_attempt
             )
             raw_first_clause = speech_config.get("first_clause_chars")
             synthesizer = SentenceChunkedSynthesizer(
@@ -2685,7 +2715,7 @@ class RobotRuntime:
             # have.
             audio_chunk_player = self._enqueue_speech_chunk
             audio_interrupt = self._interrupt_speech_audio
-            audio_turn_start = self._speaker_sink.begin_utterance
+            audio_turn_start = self._begin_audio_utterance
         self.voice_session = DuplexVoiceSession(
             self,
             synthesizer=synthesizer,
@@ -3193,7 +3223,6 @@ class RobotRuntime:
         # audio the sink is currently writing, and the last capture/STT clocks
         # already consumed, so a typed turn can never inherit the previous
         # spoken turn's timings.
-        self._audio_output_turn_id = 0
         self._acoustic_commit_consumed: float | None = None
         self._stt_request_consumed: float | None = None
         self._emit(
@@ -3777,6 +3806,18 @@ class RobotRuntime:
             raise RuntimeError(detail)
         return detail
 
+    def _begin_audio_utterance(self) -> None:
+        """Atomically bind a new sink generation to the voice turn owning it."""
+
+        sink = self._speaker_sink
+        assert sink is not None
+        with self._audio_effect_lock:
+            sink.begin_utterance()
+            self._audio_playback_generation = sink.generation
+            # ``tts_start`` runs immediately before this hook. System speech
+            # deliberately parks ``_audio_output_turn_id`` at zero.
+            self._audio_playback_turn_id = self._audio_output_turn_id
+
     def _enqueue_speech_chunk(self, chunk: bytes) -> None:
         """Analyze one synthesized chunk for beats, then queue it for playback."""
 
@@ -3803,15 +3844,40 @@ class RobotRuntime:
         assert self._speaker_sink is not None
         self._speaker_sink.enqueue(chunk, token)
 
-    def _audio_chunk_started(self, token: object) -> None:
-        """Playback of a chunk began: arm its nods and fire its emotes now."""
+    def _audio_write_attempt(self, event: SpeakerWriteAttempt) -> None:
+        """Accept one generation-tagged sink event at the runtime effect boundary."""
+
+        sink = self._speaker_sink
+        if sink is None or not math.isfinite(event.monotonic_s):
+            return
+        with self._audio_effect_lock:
+            if (
+                event.generation != sink.generation
+                or event.generation != self._audio_playback_generation
+            ):
+                return
+            self._audio_chunk_started(
+                event.token,
+                playback_start_s=event.monotonic_s,
+                turn_id=self._audio_playback_turn_id,
+            )
+
+    def _audio_chunk_started(
+        self,
+        token: object,
+        *,
+        playback_start_s: float | None = None,
+        turn_id: int | None = None,
+    ) -> None:
+        """A first output-buffer write was attempted; anchor reply effects."""
+
+        started_at = time.monotonic() if playback_start_s is None else playback_start_s
 
         # Fourth acoustic-ack clock (N19), taken before the token guard: an
-        # un-analyzable chunk carries no token but is still the moment the
-        # speaker worker started writing audio, which is what the ack budget
-        # is measured against. ``mark`` is first-wins, so later chunks of the
-        # same reply do not move it.
-        self._mark_audio_first_sample()
+        # un-analyzable chunk carries no token but still has an output-buffer
+        # write attempt. ``mark`` is first-wins, so later chunks do not move it.
+        # This is not a device-acceptance, DAC, or audible-presentation clock.
+        self._mark_audio_first_sample(now=started_at, turn_id=turn_id)
         if token is None:
             return
         track, epoch, emotes = token
@@ -3819,7 +3885,7 @@ class RobotRuntime:
             return  # the audio this belonged to was superseded
         if track is not None:
             self.expression.beats.arm(
-                track, playback_start_s=time.monotonic(), epoch=epoch
+                track, playback_start_s=started_at, epoch=epoch
             )
             # Card W6. Vocal arousal is the only affect signal measured from
             # the robot's own behaviour rather than inferred from text, so it
@@ -3833,9 +3899,13 @@ class RobotRuntime:
     def _interrupt_speech_audio(self) -> None:
         """Barge-in: cancel queued audio and every nod scheduled for it."""
 
-        self.expression.supersede_speech()
-        assert self._speaker_sink is not None
-        self._speaker_sink.interrupt()
+        sink = self._speaker_sink
+        assert sink is not None
+        with self._audio_effect_lock:
+            self.expression.supersede_speech()
+            sink.interrupt()
+            self._audio_playback_generation = -1
+            self._audio_playback_turn_id = 0
 
     def _speech_emote(self, name: str, intensity: float) -> None:
         """An inline ``[emote:...]`` tag reached the moment it belongs to.
@@ -4950,6 +5020,28 @@ class RobotRuntime:
                 self.task_executive.report(immediate)
         self.component_metrics.elapsed("ExecutiveTick", started)
 
+    def _step_execution_narrative(self) -> None:
+        """Drain owner-authored facts into disarmed, wording-only frames."""
+
+        self.execution_narrative.poll()
+        status = self.execution_narrative.status()
+        if status.fault_code is not None and not self._execution_narrative_fault_reported:
+            self._execution_narrative_fault_reported = True
+            self._emit(
+                "brain",
+                f"Execution narration disabled: {status.fault_code}",
+                "error",
+            )
+
+    def drain_execution_narrative_frames(
+        self,
+        *,
+        maximum: int | None = None,
+    ) -> tuple[ModelBNarrationFrameV1, ...]:
+        """Expose non-actuating Model-B frames without speaking or publishing."""
+
+        return self.execution_narrative.drain_frames(maximum=maximum)
+
     def _reconcile_semantic_tasks(self, *, stop_reason: str = "task_no_longer_active") -> None:
         executive = self.task_executive.snapshot()
         suspended_ids: set[str] = set()
@@ -5106,6 +5198,17 @@ class RobotRuntime:
             return
         self._stop_event.clear()
         try:
+            # The backend must be ready before any runtime-owned worker can call
+            # ``observe()``.  This is an optional lifecycle seam for legacy
+            # simulator backends and the required DDS subscription boundary for
+            # the live Go2 backend.  Mark it active only after a clean return;
+            # ``close()`` still closes after a raised start because that method
+            # may have acquired a socket/subscriber before failing.
+            if not self._backend_active:
+                start_backend = getattr(self.backend, "start", None)
+                if callable(start_backend):
+                    start_backend()
+                self._backend_active = True
             self.control_manager.start(threaded=not self._synchronous_control_dispatch)
             # Card C-1. Attached BEFORE the control loop exists, and the
             # ordering was chosen from a measurement rather than taste: with
@@ -5331,6 +5434,21 @@ class RobotRuntime:
                 auxiliary_error = error
             if self._speaker_sink is not None:
                 try:
+                    # Invalidate the runtime binding before joining the sink's
+                    # observer thread. Never hold this lock across close(): a
+                    # queued observer may itself be waiting to acquire it.
+                    with self._audio_effect_lock:
+                        self._audio_playback_generation = -1
+                        self._audio_playback_turn_id = 0
+                        # The production SpeakerSink exposes interrupt(), but
+                        # lightweight injected sinks historically only had the
+                        # enqueue/close protocol.  Runtime invalidation above is
+                        # still authoritative for those sinks; avoid turning a
+                        # successful teardown into an AttributeError solely
+                        # because an observer/test sink cannot cancel playback.
+                        interrupt = getattr(self._speaker_sink, "interrupt", None)
+                        if callable(interrupt):
+                            interrupt()
                     self._speaker_sink.close()
                 except BaseException as error:  # noqa: BLE001 - device teardown
                     auxiliary_error = auxiliary_error or error
@@ -5356,6 +5474,16 @@ class RobotRuntime:
             # A bounded manager close can intentionally raise and require a
             # retry; assignment below is deliberately after the call.
             self.control_manager.close()
+            # Close the observation transport only after the control manager is
+            # fully quiescent: the simulator compatibility controller may still
+            # need the backend to deliver its final stop.  A failed backend close
+            # deliberately leaves teardown retryable, matching the manager above.
+            if not self._backend_close_complete:
+                close_backend = getattr(self.backend, "close", None)
+                if callable(close_backend):
+                    close_backend()
+                self._backend_active = False
+                self._backend_close_complete = True
             self._close_complete = True
             if auxiliary_error is not None:
                 raise auxiliary_error
@@ -9428,6 +9556,21 @@ class RobotRuntime:
         """
 
         if not self.realtime_config.audio:
+            # A typed turn opens the same paid hosted session as a microphone
+            # press. Historically the governor was constructed only by the
+            # audio ear path, making submit_realtime_text's budget check a
+            # silent no-op in text mode. Build the shared envelope before
+            # returning the discard-audio sink.
+            try:
+                self._build_hosted_governor()
+            except Exception as error:  # noqa: BLE001 - preserve fail-open boot
+                self.realtime_governor = None
+                self._emit(
+                    "realtime",
+                    f"the hosted-call envelope could not be built ({error}); "
+                    "typed hosted turns are NOT budget-governed this run",
+                    "warning",
+                )
             return DiscardSink()
         try:
             from parcel_robot.realtime.audio_gateway import BrowserAudioGateway
@@ -9545,17 +9688,10 @@ class RobotRuntime:
         try:
             from parcel_robot.realtime.protocol import PCM16_SAMPLE_RATE_HZ
 
-            section = self.store.section("audio")
-            block = section.get("ear") if isinstance(section, dict) else None
-            config = EarGateConfig.from_mapping(block)
-            ledger = self._realtime_spend_ledger
-            governor = HostedCallGovernor(
-                config=config.governor,
-                month_to_date=None if ledger is None else ledger.month_to_date,
-                day_to_date=None if ledger is None else ledger.day_to_date,
-                on_event=lambda message: self._emit("realtime", message, "warning"),
-            )
-            self.realtime_governor = governor
+            config = self._build_hosted_governor()
+            governor = self.realtime_governor
+            if governor is None:  # pragma: no cover - helper either sets or raises
+                raise RuntimeError("hosted-call governor was not constructed")
             self.realtime_ear = EarGate(
                 config=config,
                 verify=self._ear_verifier(identity, config),
@@ -9573,6 +9709,21 @@ class RobotRuntime:
                 "being enforced this run",
                 "warning",
             )
+
+    def _build_hosted_governor(self) -> EarGateConfig:
+        """Build the one spend envelope shared by typed and microphone calls."""
+
+        section = self.store.section("audio")
+        block = section.get("ear") if isinstance(section, dict) else None
+        config = EarGateConfig.from_mapping(block)
+        ledger = self._realtime_spend_ledger
+        self.realtime_governor = HostedCallGovernor(
+            config=config.governor,
+            month_to_date=None if ledger is None else ledger.month_to_date,
+            day_to_date=None if ledger is None else ledger.day_to_date,
+            on_event=lambda message: self._emit("realtime", message, "warning"),
+        )
+        return config
 
     def _ear_verifier(
         self, identity: VoiceIdentityGate | None, config: EarGateConfig
@@ -11481,6 +11632,7 @@ class RobotRuntime:
                 "last_plan": last_brain_plan,
                 "active_invariants": list(self._active_invariants),
                 "battery": self._battery_snapshot().as_dict(),
+                "execution_narrative": self.execution_narrative.status().as_dict(),
                 **brain_tasks,
             },
             "follow": follow,
@@ -11855,6 +12007,10 @@ class RobotRuntime:
 
             self._enforce_perception_invariant(observation)
             self._step_brain()
+            # Outside ``_step_brain`` so direct executive mutations and
+            # brain-disabled configurations are still drained. A narrative
+            # fault cannot suppress the motion dispatch later in this tick.
+            self._step_execution_narrative()
             self._step_dialogue_state(observation)
             self._step_reaction_bridge(observation)
 
@@ -17968,20 +18124,25 @@ class RobotRuntime:
                 self.latency.mark(turn_id, "stt_request_start", now=request_start)
                 self.latency.mark(turn_id, "stt_final", now=final)
 
-    def _mark_audio_first_sample(self) -> None:
-        """Record when the speaker worker actually began writing this reply.
+    def _mark_audio_first_sample(
+        self,
+        *,
+        now: float | None = None,
+        turn_id: int | None = None,
+    ) -> None:
+        """Record the first output-buffer write attempt for this reply.
 
         ``audio_first_playback`` is the enqueue instant; the acoustic rig
-        measured 0.54-0.64 s between that and the first sample leaving the
-        worker, so an ack claim resting on the enqueue stamp alone is not
-        honest. This is the partner clock (still a lower bound on *audible*,
-        which needs PipeWire presentation timestamps).
+        separately observes virtual audible presentation. This callback clock
+        proves only that the sink attempted to populate the first PortAudio
+        buffer; physical audible timing still needs device presentation data.
         """
 
-        turn_id = self._audio_output_turn_id
-        if turn_id <= 0:
+        owner = self._audio_output_turn_id if turn_id is None else turn_id
+        if owner <= 0:
             return
-        self.latency.mark(turn_id, "audio_first_sample", now=time.monotonic())
+        stamp = time.monotonic() if now is None else now
+        self.latency.mark(owner, "audio_first_sample", now=stamp)
 
     def write_latency_ledger_row(
         self,

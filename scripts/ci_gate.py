@@ -66,6 +66,14 @@ and printed a typed ``skip``. ``--json`` carries the same fact as
 ``"incomplete"``. Report-only gates never change the exit code; they are
 printed so a human sees the trend.
 
+Every run also records checkout provenance at start and finish: HEAD, a digest
+of the complete Git index, and a deterministic manifest digest over current
+tracked plus non-ignored untracked bytes. This binds a report from a dirty tree
+to the bytes visible at those two observations. It is not an atomic trace of
+the interval between them, and it does not attest ignored files, toolchains,
+remote inputs, simulator determinism, or hardware; the JSON repeats those
+limitations rather than presenting the digest as execution attestation.
+
 Self-test
 ---------
 ``tests/test_ci_gate.py`` seeds a regression into each hard gate's input (a
@@ -89,6 +97,7 @@ import hashlib
 import json
 import math
 import os
+import stat
 import subprocess
 import sys
 import time
@@ -484,6 +493,230 @@ _ICON = {
 
 def _sha256_file(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+# A gate result without checkout identity is not reproducible when the worktree
+# is dirty: HEAD alone names only the last commit, not the bytes the evaluator
+# imported. This schema binds both the index and Git-visible working bytes.
+CHECKOUT_PROVENANCE_SCHEMA = "parcel.ci-gate-checkout-provenance.v1"
+RUN_PROVENANCE_SCHEMA = "parcel.ci-gate-run-provenance.v1"
+PROVENANCE_LIMITATIONS: tuple[str, ...] = (
+    (
+        "Captured at gate start and report time; it does not prove the checkout was "
+        "unchanged between those observations."
+    ),
+    (
+        "Git-ignored files, .git metadata other than HEAD/index, nested submodule "
+        "contents, xattrs, ownership, and timestamps are outside the manifest."
+    ),
+    (
+        "It does not attest the Python/toolchain environment, hardware, remote "
+        "services, credentials, or nondeterministic inputs."
+    ),
+)
+
+
+def _git_output(root: Path, *args: str) -> bytes:
+    """Return exact Git stdout or raise a bounded provenance error."""
+
+    try:
+        proc = subprocess.run(
+            ["git", *args],
+            cwd=str(root),
+            capture_output=True,
+            check=False,
+            timeout=30,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise RuntimeError(f"git {' '.join(args)} unavailable: {exc}") from exc
+    if proc.returncode != 0:
+        detail = proc.stderr.decode("utf-8", "replace").strip()[:240]
+        raise RuntimeError(f"git {' '.join(args)} failed: {detail or proc.returncode}")
+    return proc.stdout
+
+
+def _nul_paths(payload: bytes) -> tuple[bytes, ...]:
+    """Canonicalize a Git ``-z`` path list without decoding path bytes."""
+
+    return tuple(sorted({item for item in payload.split(b"\0") if item}))
+
+
+def _feed_manifest_field(digest: Any, value: bytes) -> None:
+    """Length-prefix a field so concatenation cannot create hash ambiguity."""
+
+    digest.update(len(value).to_bytes(8, "big"))
+    digest.update(value)
+
+
+def _path_fingerprint(root: Path, relative: bytes) -> tuple[bytes, bytes, bytes, bytes]:
+    """Return type, mode, size, and content identity for one working path."""
+
+    absolute = os.path.join(os.fsencode(root), relative)
+    try:
+        info = os.lstat(absolute)
+    except FileNotFoundError:
+        return b"missing", b"-", b"0", hashlib.sha256(b"").hexdigest().encode()
+    except OSError as exc:
+        marker = f"errno:{exc.errno}".encode("ascii", "replace")
+        return b"unreadable", b"-", b"0", hashlib.sha256(marker).hexdigest().encode()
+
+    mode = f"{stat.S_IMODE(info.st_mode):04o}".encode("ascii")
+    if stat.S_ISREG(info.st_mode):
+        content = hashlib.sha256()
+        try:
+            with open(absolute, "rb") as stream:
+                for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+                    content.update(chunk)
+        except OSError as exc:
+            marker = f"errno:{exc.errno}".encode("ascii", "replace")
+            return b"unreadable", mode, b"0", hashlib.sha256(marker).hexdigest().encode()
+        return b"file", mode, str(info.st_size).encode("ascii"), content.hexdigest().encode()
+    if stat.S_ISLNK(info.st_mode):
+        try:
+            target = os.readlink(absolute)
+            target_bytes = target if isinstance(target, bytes) else os.fsencode(target)
+        except OSError as exc:
+            target_bytes = f"errno:{exc.errno}".encode("ascii", "replace")
+        return (
+            b"symlink",
+            mode,
+            str(len(target_bytes)).encode("ascii"),
+            hashlib.sha256(target_bytes).hexdigest().encode(),
+        )
+    kind = b"directory" if stat.S_ISDIR(info.st_mode) else b"special"
+    return kind, mode, str(info.st_size).encode("ascii"), hashlib.sha256(kind).hexdigest().encode()
+
+
+def _worktree_manifest(
+    root: Path,
+    *,
+    tracked: tuple[bytes, ...],
+    untracked: tuple[bytes, ...],
+) -> tuple[str, dict[str, int]]:
+    """Hash current bytes/missing markers for tracked and non-ignored paths."""
+
+    digest = hashlib.sha256()
+    _feed_manifest_field(digest, CHECKOUT_PROVENANCE_SCHEMA.encode("ascii"))
+    entries = [(b"tracked", path) for path in tracked]
+    entries.extend((b"untracked", path) for path in untracked)
+    counts = {"tracked": len(tracked), "untracked": len(untracked), "missing": 0}
+    for source, relative in sorted(entries, key=lambda row: (row[1], row[0])):
+        kind, mode, size, content_sha = _path_fingerprint(root, relative)
+        counts["missing"] += int(kind == b"missing")
+        for field_value in (source, relative, kind, mode, size, content_sha):
+            _feed_manifest_field(digest, field_value)
+    return digest.hexdigest(), counts
+
+
+def capture_checkout_provenance(root: Path = REPO) -> dict[str, Any]:
+    """Bind HEAD, index, and Git-visible working bytes at one observation.
+
+    The manifest includes every tracked path (with a missing marker for a
+    deletion) and every non-ignored untracked path. Staged contents are bound by
+    the complete index manifest; unstaged and untracked contents are bound by
+    the worktree manifest. The before/after metadata comparison detects common
+    concurrent edits while hashing, but is not an atomic filesystem snapshot.
+    """
+
+    base: dict[str, Any] = {
+        "schema": CHECKOUT_PROVENANCE_SCHEMA,
+        "available": False,
+        "scope": (
+            "HEAD + complete Git index + output-time bytes/missing markers for "
+            "all tracked and non-ignored untracked paths"
+        ),
+        "limitations": list(PROVENANCE_LIMITATIONS),
+    }
+    try:
+        head = _git_output(root, "rev-parse", "--verify", "HEAD").strip().decode("ascii")
+        status_before = _git_output(root, "status", "--porcelain=v2", "-z", "--untracked-files=all")
+        index_before = _git_output(root, "ls-files", "--stage", "-z")
+        tracked_before = _git_output(root, "ls-files", "-z")
+        untracked_before = _git_output(root, "ls-files", "--others", "--exclude-standard", "-z")
+        staged = _nul_paths(_git_output(root, "diff", "--cached", "--name-only", "-z", "--"))
+        unstaged = _nul_paths(_git_output(root, "diff", "--name-only", "-z", "--"))
+        tracked = _nul_paths(tracked_before)
+        untracked = _nul_paths(untracked_before)
+        worktree_sha, counts = _worktree_manifest(root, tracked=tracked, untracked=untracked)
+        status_after = _git_output(root, "status", "--porcelain=v2", "-z", "--untracked-files=all")
+        index_after = _git_output(root, "ls-files", "--stage", "-z")
+        tracked_after = _git_output(root, "ls-files", "-z")
+        untracked_after = _git_output(root, "ls-files", "--others", "--exclude-standard", "-z")
+    except (RuntimeError, UnicodeDecodeError) as exc:
+        base["error"] = str(exc)[:400]
+        return base
+
+    metadata_stable = (
+        status_before == status_after
+        and index_before == index_after
+        and tracked_before == tracked_after
+        and untracked_before == untracked_after
+    )
+    index_sha = hashlib.sha256(index_after).hexdigest()
+    status_sha = hashlib.sha256(status_after).hexdigest()
+    identity = hashlib.sha256()
+    for value in (head, index_sha, worktree_sha, status_sha):
+        _feed_manifest_field(identity, value.encode("ascii"))
+    base.update(
+        {
+            "available": True,
+            "head_sha": head,
+            "dirty": bool(status_after),
+            "metadata_stable_during_capture": metadata_stable,
+            "index_manifest_sha256": index_sha,
+            "worktree_manifest_sha256": worktree_sha,
+            "status_manifest_sha256": status_sha,
+            "checkout_identity_sha256": identity.hexdigest(),
+            "tracked_path_count": counts["tracked"],
+            "staged_path_count": len(staged),
+            "unstaged_path_count": len(unstaged),
+            "untracked_path_count": counts["untracked"],
+            "missing_tracked_path_count": counts["missing"],
+        }
+    )
+    return base
+
+
+def run_provenance(start: dict[str, Any], finish: dict[str, Any]) -> dict[str, Any]:
+    """Pair checkout observations so the report names start and finish bytes."""
+
+    start_identity = start.get("checkout_identity_sha256")
+    finish_identity = finish.get("checkout_identity_sha256")
+    unchanged: bool | None = None
+    if start.get("available") and finish.get("available"):
+        unchanged = bool(start_identity == finish_identity)
+    return {
+        "schema": RUN_PROVENANCE_SCHEMA,
+        "start": start,
+        "finish": finish,
+        "checkout_unchanged_during_run": unchanged,
+        "claim": (
+            "Binds this report to two Git-visible checkout observations; it is "
+            "content identity, not execution, environment, or hardware attestation."
+        ),
+    }
+
+
+def format_run_provenance(provenance: dict[str, Any]) -> str:
+    """Compact text companion to the full machine-readable provenance."""
+
+    start = provenance["start"]
+    finish = provenance["finish"]
+    if not start.get("available") or not finish.get("available"):
+        return "RUN PROVENANCE — unavailable (see --json provenance.start/finish.error)"
+    unchanged = provenance["checkout_unchanged_during_run"]
+    return (
+        "RUN PROVENANCE — "
+        f"HEAD={start['head_sha'][:12]}->{finish['head_sha'][:12]} "
+        f"checkout={start['checkout_identity_sha256'][:12]}"
+        f"->{finish['checkout_identity_sha256'][:12]} "
+        f"unchanged={'yes' if unchanged else 'no'} "
+        f"dirty={'yes' if start['dirty'] else 'no'}"
+        f"->{'yes' if finish['dirty'] else 'no'} "
+        f"staged={finish['staged_path_count']} "
+        f"unstaged={finish['unstaged_path_count']} "
+        f"untracked={finish['untracked_path_count']}"
+    )
 
 
 def _read_jsonl(path: Path) -> list[dict[str, Any]]:
@@ -2376,8 +2609,9 @@ def ruff_version(root: Path = REPO) -> str | None:
     """The version of the ruff this gate is about to run, or ``None``.
 
     Card GATE-0. A ratchet compares today's fingerprints against a recorded set,
-    so it silently means different things under different linters: the same tree
-    yields **7** fingerprints on ruff 0.16.x and roughly **51** on 0.15.x. With
+    so it silently means different things under different linters: the original
+    GATE-0 tree yielded **7** fingerprints on ruff 0.16.x and roughly **51** on
+    0.15.x. With
     ruff range-pinned (``>=0.12,<1``) and the baseline recording no version, the
     commit verdict depended on whichever wheel pip happened to resolve. The
     version is now pinned in the dev extra AND stamped into the baseline, and a
@@ -2462,9 +2696,10 @@ def update_ruff_baseline(*, baseline_path: Path = RUFF_BASELINE) -> int:
             "Pre-existing ruff debt this CI gate ratchets against. New (file, rule) "
             "fingerprints beyond this set redden scripts/ci_gate.py. Burn down toward "
             "an empty list; regenerate with `ci_gate.py --update-ruff-baseline`. "
-            "ruff_version is load-bearing (card GATE-0): the same tree yields 7 "
-            "fingerprints on 0.16.x and ~51 on 0.15.x, so evaluate_ruff refuses to "
-            "compare across versions. Keep it equal to the pyproject dev-extra pin."
+            "ruff_version is load-bearing (card GATE-0): different versions have "
+            "different rule sets, so evaluate_ruff refuses to compare across them. "
+            "Keep it equal to the pyproject dev-extra pin. Before re-pinning, preserve "
+            "source-hash-bound research programs and document any such exact exceptions."
         ),
         "ruff_version": ruff_version(),
         "count": len(current),
@@ -3146,10 +3381,17 @@ def main(argv: list[str] | None = None) -> int:
     if args.update_ruff_baseline:
         return update_ruff_baseline()
 
+    checkout_at_start = capture_checkout_provenance()
     started = time.perf_counter()
     results = run_commit_tier() if args.tier == "commit" else run_nightly_tier()
     elapsed = time.perf_counter() - started
+    checkout_at_finish = capture_checkout_provenance()
+    provenance = run_provenance(checkout_at_start, checkout_at_finish)
 
+    print(format_run_provenance(provenance))
+    # Keep the stable human summary as the final text block.  Several release
+    # consumers deliberately parse its trailing RESULT/elapsed lines; run
+    # provenance is additive context, not a new trailer protocol.
     print(summarize(results, args.tier, elapsed))
     # ---- CARD GATE-1 incomplete exit status (scrum/20260823/task_5) --------
     # `incomplete` is emitted on every run, true and false alike: a key that
@@ -3162,6 +3404,7 @@ def main(argv: list[str] | None = None) -> int:
                 "elapsed_s": elapsed,
                 "gates": [r.as_dict() for r in results],
                 "incomplete": bool(hard_skips(results)),
+                "provenance": provenance,
             },
             indent=2, sort_keys=True,
         ))

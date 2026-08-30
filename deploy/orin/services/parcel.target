@@ -1,0 +1,28 @@
+# Parcel companion stack. SKELETON: do not enable before README.md's box-day
+# prerequisites are met. Every process starts with PARCEL_ARMED=0; reaching
+# this target never grants motion authority.
+
+[Unit]
+Description=Parcel companion robot stack (disarmed)
+Documentation=file:///opt/parcel/doc/PORTABLE_LIVING_DOG_HLD.md
+# This is fail-loud orchestration, not a readiness or arming claim. Gateway,
+# safety, and runtime are required so target activation cannot report success
+# when every authority/core process failed. LIO and audio remain degradable.
+# Stopping a requiring target does not by itself stop required units; the
+# explicit PropagatesStopTo= below owns teardown and excludes safety.
+Requires=parcel-gateway.service parcel-safety.service parcel-runtime.service
+Wants=parcel-lio.service parcel-audio.service
+# Service-local ordering forms gateway -> safety -> LIO/audio -> runtime. The
+# target waits until those start jobs settle. It can still become active with a
+# degradable wanted unit failed and says nothing about process-internal sensor,
+# hardware, or motion readiness; operators must inspect all five units.
+After=parcel-gateway.service parcel-safety.service parcel-lio.service parcel-audio.service parcel-runtime.service
+# An explicit target stop submits stop jobs for positive-motion/runtime and
+# degradable rails. The services' After= graph, not the list order below,
+# governs shutdown ordering. Safety is deliberately excluded: it remains alive,
+# observes gateway absence, and retries STOP until separately stopped by an
+# operator after the independent physical stop state is verified.
+PropagatesStopTo=parcel-runtime.service parcel-audio.service parcel-lio.service parcel-gateway.service
+
+[Install]
+WantedBy=multi-user.target

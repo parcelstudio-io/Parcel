@@ -14,8 +14,9 @@
 # Installing it to /opt/parcel/bin remains a box-day image step, not a commit.
 #
 # TODO before this unit can start anything (each is a card, none is this one):
-#   * the `parcel-gateway` system user, /var/lib/parcel/gateway and
-#     /var/log/parcel/gateway must be created by the image build.
+#   * the `parcel-gateway` and `parcel-runtime` system users/groups,
+#     /var/lib/parcel/gateway and /var/log/parcel/gateway must be created by
+#     the image build.
 #   * credentials: the vendor DDS/SDK credential lives ONLY in this unit's
 #     environment file, mode 0400, owned by parcel-gateway. It is the single
 #     reason this process has its own principal.
@@ -34,43 +35,73 @@ Wants=parcel-nftables.service
 # CycloneDDS. Starting the writer before the boundary is loaded is the one
 # ordering mistake that cannot be undone by stopping the unit afterwards.
 Requires=parcel-nftables.service
+# A crash-looping sole writer must not reacquire its vendor lease indefinitely.
+# systemd reads start-rate limits from [Unit], not [Service].
+StartLimitIntervalSec=300
+StartLimitBurst=5
 
 [Service]
 Type=notify
 NotifyAccess=main
 User=parcel-gateway
 Group=parcel-gateway
+# The socket is chgrp'd to the dedicated motion-IPC group. The gateway must be
+# a member of that group for an unprivileged chown(2); this grants no runtime
+# access to the gateway's vendor credential or state/log directories.
+SupplementaryGroups=parcel-motion
 # Boot is disarmed. Reaching `active` grants no motion authority; arming is an
 # operator transaction the runtime performs against a running gateway.
-Environment=PARCEL_ARMED=0
-Environment=PARCEL_ROLE=gateway
-# PARITY EDIT 2 (card DEPLOYABLE-MOTION-SEAM): the console script has NO
-# default body, deliberately — a gateway that picks its own could serve a
-# simulated one on a real robot and report healthy. This unit therefore names
-# the real one. `--sport vendor` refuses to start today, with a named reason,
-# because no vendor SDK is present in the tree: an honest refusal that
-# Restart=on-failure + StartLimitBurst=5 turns into a reported fault. Nothing
-# here can ever start a fake body on the dog.
-Environment=PARCEL_GATEWAY_SPORT=vendor
+# The console script has NO default body. This unit names the real one, whose
+# optional SDK2 binding still fails closed unless the image supplies the SDK,
+# NIC/domain commissioning, and launch-supplied configuration/artifact
+# compatibility hashes. Those hashes are not observations of robot identity
+# and do not authenticate the unauthenticated DDS transport.
+# Both read-only state streams are required before the gateway reports usable
+# physical feedback. Raw health thresholds remain box-day commissioning data.
+# SDK2 queueing is deliberately disabled. The direct callback only copies a
+# validated latest sample and returns; a nonzero SDK queue can retain stale
+# samples and is rejected by both gateway entrypoints.
+# Box day must put the measured mode/error allowlists, frame/sign mapping,
+# launch compatibility/attestation hashes, SOC-percent meaning/minimum,
+# SportModeState stamp monotonicity, and LowState tick monotonicity
+# acknowledgements in /etc/parcel/gateway.env. None is asserted here:
+# committing an acknowledgement would counterfeit hardware evidence. The
+# hashes attest only that both local processes launched with matching selected
+# artifacts/configuration; they are not bound to the observed robot or DDS
+# peer.
+# Runtime and safety are different UIDs. Share only this socket through the
+# dedicated group; SO_PEERCRED binds positive lease authority to parcel-runtime
+# and gives parcel-safety only observe/unconditional-latched-STOP authority.
+# EnvironmentFile supplies only box-day commissioning evidence, hashes, NIC /
+# domain settings, thresholds, and optional secrets. It overrides Environment=
+# regardless of textual order, so the fixed body/topic/socket/client invariants
+# are assigned after it by /usr/bin/env in ExecStart.
 EnvironmentFile=-/etc/parcel/gateway.env
 ExecStartPre=/usr/bin/test -x /opt/parcel/bin/parcel-gateway
-ExecStart=/opt/parcel/bin/parcel-gateway --disarmed
+ExecStart=/usr/bin/env PARCEL_ARMED=0 PARCEL_ROLE=gateway PARCEL_GATEWAY_SPORT=vendor PARCEL_UNITREE_STATE_TOPIC=rt/sportmodestate PARCEL_UNITREE_LOW_STATE_TOPIC=rt/lowstate PARCEL_UNITREE_SUBSCRIBER_QUEUE_DEPTH=0 PARCEL_GATEWAY_SOCKET=/run/parcel-gateway/gateway.sock PARCEL_GATEWAY_SOCKET_MODE=0660 PARCEL_GATEWAY_CLIENT_USER=parcel-runtime PARCEL_GATEWAY_CLIENT_GROUP=parcel-motion PARCEL_GATEWAY_STOP_CLIENT_USER=parcel-safety /opt/parcel/bin/parcel-gateway --disarmed
+# The port caps its SDK evidence wait at 10 s. A normal worst-budget start then
+# has a 1 s boot-stop witness, a 1.5 s readiness probe and a 0.5 s notify send:
+# 13 s total, with 2 s scheduler margin. An SDK constructor that ignores its
+# own timeout is therefore still killed by the supervisor instead of leaving
+# this Type=notify unit in "activating" indefinitely.
+TimeoutStartSec=15
 # A stop request must reach the vendor stop path even if the main loop is
-# wedged; the gateway installs its own bounded stop on SIGTERM.
+# wedged; the gateway installs its own bounded stop on SIGTERM. The explicit
+# configured shutdown wait budgets sum to 8.1 s with shipped defaults (stop
+# witness, watchdog/writer/vendor lanes, three SDK cleanup calls,
+# liveness/notify and exporter join). Ten seconds leaves 1.9 s for scheduling;
+# a blocked final filesystem flush is still supervisor-bounded rather than a
+# readiness claim.
 KillSignal=SIGTERM
-TimeoutStopSec=5
+TimeoutStopSec=10
 Restart=on-failure
 RestartSec=2
-StartLimitIntervalSec=300
-StartLimitBurst=5
 WatchdogSec=2
-# PARITY EDIT 3 (card DEPLOYABLE-MOTION-SEAM): these two are the console
-# script's socket and audit-log defaults. With no PARCEL_GATEWAY_SOCKET /
-# PARCEL_GATEWAY_AUDIT_LOG in the environment file it uses
-# $STATE_DIRECTORY/gateway.sock and $LOGS_DIRECTORY/audit.jsonl, which are
-# exactly the directories these lines create. A deployment whose clients must
-# find the socket should still set PARCEL_GATEWAY_SOCKET explicitly in
-# /etc/parcel/gateway.env, because $STATE_DIRECTORY exists only inside the unit.
+# /run/parcel-gateway is traversable but not writable by clients; the socket
+# itself is the narrow 0660 parcel-runtime-group capability. Persistent state
+# remains gateway-private and the audit log still defaults under LogsDirectory.
+RuntimeDirectory=parcel-gateway
+RuntimeDirectoryMode=0755
 StateDirectory=parcel/gateway
 LogsDirectory=parcel/gateway
 NoNewPrivileges=true

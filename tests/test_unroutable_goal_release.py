@@ -36,6 +36,7 @@ they share one exit (``_release_unreachable_candidate``):
 
 from __future__ import annotations
 
+import math
 import sys
 from pathlib import Path
 
@@ -123,6 +124,28 @@ def _observation(*candidates: str, position=(0.0, 0.0, 0.0)) -> NavObservation:
                 "settled_yaw_speed_rad_s": 0.12,
             },
         },
+    )
+
+
+def _next_to_lamppost_observation() -> NavObservation:
+    """The near lamppost with its scene-derived 0.06 m footprint."""
+
+    observation = _observation("near")
+    extras = dict(observation.extras)
+    candidates = []
+    for raw in extras["semantic_candidates"]:
+        candidate = dict(raw)
+        candidate["metadata"] = {
+            **candidate["metadata"],
+            "radius_m": 0.06,
+            "arrival_radius_m": 0.06,
+        }
+        candidates.append(candidate)
+    extras["semantic_candidates"] = candidates
+    return NavObservation(
+        position=observation.position,
+        heading_deg=observation.heading_deg,
+        extras=extras,
     )
 
 
@@ -278,6 +301,47 @@ def _blocked_observation(*candidates: str, obstacle_m: float | None = 0.4) -> Na
     )
 
 
+def _terminal_pose_blocked_observation(
+    observation: NavObservation,
+    goal,
+    *,
+    hard_stop_gate: bool,
+) -> NavObservation:
+    """Add a newly observed surface at the committed terminal pose.
+
+    LiDAR ranges are footprint-to-surface while the approach solver projects a
+    world point after adding the Go2 radius.  The first row therefore lands
+    exactly on ``goal`` and forces the existing solver to choose another point
+    in the same K0 region.  The optional closer row supplies the independent
+    obstacle-gate proof that triggers the live lamppost recovery path.
+    """
+
+    extras = dict(observation.extras)
+    rows = list(extras.get("lidar_obstacles") or ())
+    rows.append(
+        {
+            "id": "late-terminal-blocker",
+            "distance_m": math.hypot(goal.x, goal.y) - 0.32,
+            "bearing_rad": math.atan2(goal.y, goal.x),
+        }
+    )
+    if hard_stop_gate:
+        rows.append(
+            {
+                "id": "gate-stop-witness",
+                "distance_m": 0.4,
+                "bearing_rad": -1.0,
+            }
+        )
+    extras["lidar_obstacles"] = rows
+    return NavObservation(
+        position=observation.position,
+        heading_deg=observation.heading_deg,
+        nearest_person_m=observation.nearest_person_m,
+        extras=extras,
+    )
+
+
 def test_a_route_the_obstacle_gate_will_not_execute_is_released():
     nav = _nav()
     mission = nav.start("walk towards the lamppost")
@@ -300,6 +364,132 @@ def test_a_route_the_obstacle_gate_will_not_execute_is_released():
     assert mission.metadata["blocked_route_gate"] == "obstacle_stop"
     assert mission.metadata["replan_count"] == 1
     assert DirectiveNavigator.GATE_BLOCKED_ROUTE_STEPS < nav.progress_timeout_steps
+    nav.close()
+
+
+def test_first_blocked_candidate_advances_the_instance_ladder_before_pose_retry():
+    """Candidate diversity precedes pose diversity in the bounded ladder."""
+
+    nav = _nav()
+    mission = nav.start("sit next to the lamppost")
+    observation = _next_to_lamppost_observation()
+    _commit(nav, observation)
+    nav._navigator = _RouteStatusNavigator()
+
+    for _ in range(DirectiveNavigator.UNROUTABLE_GOAL_STEPS):
+        released = nav.step(observation)
+
+    assert released.note == "semantic_replan_after_unroutable_goal"
+    assert mission.goal is None
+    assert mission.metadata["unreachable_candidates"] == ["lamp-near"]
+    assert mission.metadata["terminal_pose_replan_refusal"] == (
+        "candidate_alternative_not_yet_tried"
+    )
+    assert "terminal_pose_replan_attempts" not in mission.metadata
+    nav.close()
+
+
+def test_gate_blocked_terminal_pose_replans_the_same_candidate_inside_the_same_k0_region():
+    """A blocked pose is not proof that the whole lamppost is unreachable."""
+
+    nav = _nav()
+    mission = nav.start("sit next to the lamppost")
+    clear = _next_to_lamppost_observation()
+    _commit(nav, clear)
+    nav._unreachable_candidates.add("lamp-prior")
+    mission.metadata["unreachable_candidates"] = ["lamp-prior"]
+    old_goal = mission.goal
+    assert old_goal is not None
+    old_region = mission.metadata["arrival_goal_region"]
+    blocked = _terminal_pose_blocked_observation(
+        clear,
+        old_goal,
+        hard_stop_gate=True,
+    )
+    driver = _DrivingNavigator()
+    nav._navigator = driver
+
+    for _ in range(DirectiveNavigator.GATE_BLOCKED_ROUTE_STEPS):
+        command = nav.step(blocked)
+        assert command.vx == 0.0  # the gate remains authoritative throughout
+    assert mission.goal == old_goal
+
+    replanned = nav.step(blocked)
+
+    new_goal = mission.goal
+    assert new_goal is not None
+    assert replanned.note == "semantic_terminal_pose_replanned_after_obstacle_stop"
+    assert mission.metadata["candidate_id"] == "lamp-near"
+    assert new_goal.poi_id == old_goal.poi_id == "lamp-near"
+    assert mission.metadata["arrival_goal_region"] == old_region
+    assert nav._arrival_goal_region().contains(new_goal.x, new_goal.y)
+    assert math.hypot(new_goal.x - old_goal.x, new_goal.y - old_goal.y) >= (
+        DirectiveNavigator.GATE_HOLD_DISPLACEMENT_M
+    )
+    assert mission.metadata["terminal_pose_replan_attempts"] == 1
+    assert mission.metadata["terminal_pose_replan_count"] == 1
+    assert mission.metadata["unreachable_candidates"] == ["lamp-prior"]
+    assert driver.resets == 1
+    nav.close()
+
+
+def test_no_distinct_terminal_pose_preserves_the_fail_closed_release():
+    """One unchanged re-solve cannot defer the existing blacklist path."""
+
+    nav = _nav()
+    mission = nav.start("sit next to the lamppost")
+    observation = _next_to_lamppost_observation()
+    _commit(nav, observation)
+    nav._unreachable_candidates.add("lamp-prior")
+    mission.metadata["unreachable_candidates"] = ["lamp-prior"]
+    old_goal = mission.goal
+    assert old_goal is not None
+    nav._navigator = _RouteStatusNavigator()
+
+    for _ in range(DirectiveNavigator.UNROUTABLE_GOAL_STEPS - 1):
+        nav.step(observation)
+    released = nav.step(observation)
+
+    assert released.note == "semantic_replan_after_unroutable_goal"
+    assert mission.goal is None
+    assert mission.status == "searching"
+    assert mission.metadata["unreachable_candidates"] == ["lamp-near", "lamp-prior"]
+    assert mission.metadata["terminal_pose_replan_attempts"] == 1
+    assert mission.metadata["terminal_pose_replan_refusal"] == "pose_unchanged"
+    assert "terminal_pose_replan_count" not in mission.metadata
+    nav.close()
+
+
+def test_terminal_pose_retry_refuses_changed_candidate_geometry() -> None:
+    """An exact object ID cannot splice refreshed geometry into an old K0 proof."""
+
+    nav = _nav()
+    mission = nav.start("sit next to the lamppost")
+    clear = _next_to_lamppost_observation()
+    _commit(nav, clear)
+    nav._unreachable_candidates.add("lamp-prior")
+    mission.metadata["unreachable_candidates"] = ["lamp-prior"]
+
+    extras = dict(clear.extras)
+    changed_candidates = []
+    for raw in extras["semantic_candidates"]:
+        changed = dict(raw)
+        changed["metadata"] = {**changed["metadata"], "radius_m": 0.20}
+        changed_candidates.append(changed)
+    extras["semantic_candidates"] = changed_candidates
+    changed_observation = NavObservation(
+        position=clear.position,
+        heading_deg=clear.heading_deg,
+        extras=extras,
+    )
+
+    assert (
+        nav._retry_committed_terminal_pose(changed_observation, trigger="test_geometry_drift")
+        is None
+    )
+    assert mission.metadata["terminal_pose_replan_refusal"] == "candidate_geometry_changed"
+    assert mission.metadata["terminal_pose_replan_attempts"] == 1
+    assert "terminal_pose_replan_count" not in mission.metadata
     nav.close()
 
 

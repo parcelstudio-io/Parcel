@@ -1,6 +1,12 @@
-"""Vendor-neutral locomotion control.
+"""Vendor-neutral locomotion control above the sole-writer gateway.
 
-This package intentionally contains no vendor imports at module scope.
-Vendor adapters (Unitree Sport, future robots) live in their own modules and
-are reached exclusively through the controller registry in ``factory``.
+Normal runtime factories expose simulator, disarmed-gateway, and explicitly
+commissioned-gateway managers.  The retired in-process ``unitree_sport``
+builder always refuses and is not registered.  Unitree SDK2 belongs to the
+separate ``parcel-gateway`` process; this package reaches it only through the
+typed Unix client.
+
+The standalone Unitree commissioning builders are deliberately outside the
+runtime registry.  Their armed CLI is mutually exclusive with the gateway and
+must hold the same device-wide writer lock for the life of its SDK process.
 """

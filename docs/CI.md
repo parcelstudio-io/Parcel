@@ -290,11 +290,14 @@ than clearing those blockers by itself.
    latest row can omit microphone, endpointing, and playback-device stages.
    Keep the percentile-pin checks and add a real capture/playback writer before
    treating a green ledger gate as hardware acoustic evidence.
-2. **Ruff debt (7 fingerprints)** remains in `camera_channel` and
-   `detection_adapter`. The gate ratchets against
-   `scripts/ci_ruff_baseline.json` so this inherited debt does not block
-   commits, but it should be burned down to zero; re-pin with
-   `ci_gate.py --update-ruff-baseline` after each cleanup.
+2. **Ruff debt is enumerated, not hidden.** Four fingerprints remain in
+   `camera_channel` and `detection_adapter`; the rest are exact exceptions for
+   dated research programs whose retained manifests or active soak bind their
+   source bytes. The gate ratchets against `scripts/ci_ruff_baseline.json`, so
+   any new `(file, rule)` pair still fails. Burn the four product fingerprints
+   down normally. Remove a research exception only with a new versioned run and
+   independently verified replacement artifact; do not rewrite historical
+   evidence just to make lint green.
 3. **One legacy walk_with_me row lacks a collision field.** The current
    field-bearing row participates in hard-safety and is green, while the older
    stub cannot. Require `hard_collision_total` on every future row and retire

@@ -9,16 +9,15 @@ WHAT THIS MEASURES THAT THE SOFTWARE TIER CANNOT
     difference between "the code decided to speak" and "audio existed".
 
     Four case families, all on frozen fixtures:
-      endpointing  ep50/ep90/ep-cutoff against Silero-derived ground-truth
-                   turn ends, over complete / incomplete / pause-heavy turns.
-      bargein      interrupt onset -> detection -> queue flush -> acoustic
-                   silence, decomposed, plus false-barge-in rate on noise.
+      endpointing  every commit on the loop sample clock, with ep50/ep90 only
+                   over cases having exactly one valid post-final commit.
+      bargein      interrupt onset -> detection -> queue flush, plus a retained
+                   mixed-channel STOP diagnostic that is not gate evidence.
       duplex       acoustically-anchored end-of-owner-speech -> first audible
                    robot audio, decomposed against the enqueue-time number
                    the software ledger would have reported.
-      prosody      nod apexes (scheduled from the synthesis-side beat track,
-                   as the runtime schedules them) vs the pitch accents present
-                   in the CAPTURED audio.
+      prosody      one-to-one pitch-accent preservation through the virtual
+                   transport. No motion command or actuator is observed.
 
 WHAT IT DOES NOT PROVE  (repeated in every report's does_not_prove)
     There is no air in this rig. No room acoustics, no reverberation, no real
@@ -39,7 +38,9 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import functools
 import hashlib
+import itertools
 import json
 import platform
 import shutil
@@ -67,7 +68,7 @@ from parcel_robot.audio.voice_loop import (
 from . import rig as rig_mod
 
 SUITE_ID = "parcel-acoustic-loop-v1"
-RUNNER_VERSION = "virtual-pipewire-rig-v1"
+RUNNER_VERSION = "virtual-pipewire-rig-v2-measurement-validity"
 RNG_SEED = 20260804
 
 PACK_DIR = Path(__file__).resolve().parent
@@ -88,15 +89,26 @@ ACCENT_MATCH_WINDOW_S = 0.150    # head-nod / pitch-accent alignment literature
 
 GATES = {
     "endpointing_ep_cutoff_rate_max": 0.05,
+    "endpointing_commit_validity_failure_rate_max": 0.0,
     "endpointing_ep50_s_max": 0.500,
     "endpointing_ep90_s_max": 1.000,
     "bargein_detection_s_max": 0.400,
     "bargein_flush_s_max": 0.060,
     "bargein_acoustic_stop_s_max": 0.520,
     "bargein_false_rate_max": 0.02,
-    "duplex_ack_p50_s_max": 0.700,
-    "prosody_apex_within_window_min": 0.80,
+    "duplex_virtual_audible_ack_p50_s_max": 0.700,
+    "prosody_audio_transport_match_min": 0.80,
 }
+
+ISOLATED_ROBOT_CHANNEL_BASIS = "isolated_robot_output_channel"
+MIXED_STOP_UNMEASURED_REASON = (
+    "the sink monitor mixes owner and robot audio; mixed-minus-owner power "
+    "subtraction is diagnostic only and is not an isolated robot-output channel"
+)
+PHYSICAL_MOTION_UNMEASURED_REASON = (
+    "this family observes audio transport only; it does not construct BeatLayer, "
+    "observe a motion command, or measure an actuator"
+)
 
 
 class EvalError(RuntimeError):
@@ -123,6 +135,125 @@ def percentile(values: list[float], fraction: float) -> float | None:
     high = min(low + 1, len(ordered) - 1)
     weight = position - low
     return float(ordered[low] * (1 - weight) + ordered[high] * weight)
+
+
+def assess_endpoint_commits(
+    *,
+    kind: str,
+    commit_sample_clocks_s: list[float],
+    final_speech_end_s: float,
+    incomplete_hold_s: float,
+) -> dict[str, Any]:
+    """Classify every commit on the loop's sample clock.
+
+    Complete and pause-heavy turns are valid only when exactly one commit
+    follows final speech and no earlier commit fired. Incomplete fixtures are
+    not required to commit, but any commit before their full hold interval is
+    an explicit failure. Multiple or non-monotonic callbacks invalidate every
+    kind rather than allowing a convenient commit to hide the others.
+    """
+
+    commits = [float(value) for value in commit_sample_clocks_s]
+    premature = [value for value in commits if value < final_speech_end_s]
+    post_final = [value for value in commits if value >= final_speech_end_s]
+    non_monotonic = any(
+        current < previous for previous, current in itertools.pairwise(commits)
+    )
+    multiple = len(commits) > 1
+    incomplete_not_before = final_speech_end_s + incomplete_hold_s
+    incomplete_early = kind == "incomplete" and any(
+        value < incomplete_not_before for value in commits
+    )
+
+    reasons: list[str] = []
+    if premature:
+        reasons.append("premature_commit")
+    if multiple:
+        reasons.append("multiple_commits")
+    if non_monotonic:
+        reasons.append("non_monotonic_commit_clock")
+    if kind in {"complete", "pause_heavy"} and len(post_final) != 1:
+        reasons.append("expected_exactly_one_post_final_commit")
+    if incomplete_early:
+        reasons.append("incomplete_early_commit")
+
+    valid = not reasons
+    ep_s: float | None = None
+    if valid and kind in {"complete", "pause_heavy"}:
+        ep_s = post_final[0] - final_speech_end_s
+    elif valid and kind == "incomplete" and commits:
+        ep_s = commits[0] - final_speech_end_s
+
+    return {
+        "commit_sample_clocks_s": commits,
+        "commit_count": len(commits),
+        "premature_commit_sample_clocks_s": premature,
+        "post_final_commit_sample_clocks_s": post_final,
+        "premature_commit": bool(premature),
+        "multiple_commits": multiple,
+        "non_monotonic_commits": non_monotonic,
+        "incomplete_early": incomplete_early,
+        "incomplete_commit_not_before_s": (
+            incomplete_not_before if kind == "incomplete" else None
+        ),
+        "endpoint_measurement_valid": valid,
+        "endpoint_invalid_reasons": reasons,
+        "ep_s": ep_s,
+    }
+
+
+def monotonic_one_to_one_matches(
+    expected_s: list[float],
+    observed_s: list[float],
+    *,
+    window_s: float,
+) -> list[tuple[float, float]]:
+    """Return the maximum-cardinality ordered matching inside ``window_s``.
+
+    A captured accent can be used at most once. Among matchings with the same
+    cardinality, the one with the lowest total absolute lag wins. Inputs must
+    already be on the same origin and monotonically ordered.
+    """
+
+    if not np.isfinite(window_s) or window_s < 0.0:
+        raise ValueError("match window must be finite and non-negative")
+    expected = tuple(float(value) for value in expected_s)
+    observed = tuple(float(value) for value in observed_s)
+    for name, values in (("expected", expected), ("observed", observed)):
+        if any(not np.isfinite(value) for value in values):
+            raise ValueError(f"{name} accent clocks must be finite")
+        if any(
+            current < previous for previous, current in itertools.pairwise(values)
+        ):
+            raise ValueError(f"{name} accent clocks must be monotonic")
+
+    @functools.cache
+    def solve(expected_index: int, observed_index: int) -> tuple[tuple[int, int], ...]:
+        if expected_index >= len(expected) or observed_index >= len(observed):
+            return ()
+        candidates = [
+            solve(expected_index + 1, observed_index),
+            solve(expected_index, observed_index + 1),
+        ]
+        if abs(observed[observed_index] - expected[expected_index]) <= window_s:
+            candidates.append(
+                ((expected_index, observed_index),)
+                + solve(expected_index + 1, observed_index + 1)
+            )
+
+        def rank(pairs: tuple[tuple[int, int], ...]) -> tuple[Any, ...]:
+            total_lag = sum(
+                abs(observed[observed_i] - expected[expected_i])
+                for expected_i, observed_i in pairs
+            )
+            return (-len(pairs), total_lag, pairs)
+
+        return min(candidates, key=rank)
+
+    return [
+        (expected[expected_index], observed[observed_index])
+        for expected_index, observed_index in solve(0, 0)
+    ]
 
 
 def verify_manifest(manifest_path: Path) -> dict:
@@ -239,6 +370,14 @@ def robot_only_envelope(
     mixed = _envelope(haystack)
     owner = _envelope(needle)
     offset = round(needle_lag_s * SAMPLE_RATE_HZ / ANALYSIS_FRAME)
+    # A recorder can begin after the injected owner utterance has already
+    # started.  In that case ``offset`` is negative: discard the portion of
+    # the owner envelope that lies before the mixed capture and align the
+    # remaining overlap at frame zero.  Assigning with a negative slice start
+    # used to create an empty destination and crash the whole barge-in suite.
+    if offset < 0:
+        owner = owner[-offset:]
+        offset = 0
     aligned = np.zeros_like(mixed)
     end = min(mixed.size, offset + owner.size)
     if offset < mixed.size and end > offset:
@@ -325,10 +464,25 @@ def run_endpointing(rig: rig_mod.AcousticRig, corpus: dict[str, dict]) -> list[d
     for entry in sorted(targets, key=lambda item: item["name"]):
         neural = SileroVad(str(VAD_MODEL))
         endpointer = TurnEndpointer(str(TURN_MODEL))
-        commits: list[float] = []
+        commit_sample_clocks_s: list[float] = []
+        loop_ref: list[MicrophoneVoiceLoop] = []
 
         stop = threading.Event()
         tee = TeeFrames(rig.capture_frames(stop=stop))
+
+        # The observer's payload is an utterance duration in the current
+        # runtime, not a commit timestamp. Read the loop sample clock inside
+        # the synchronous callback instead. Accept arbitrary observer args so
+        # evaluator validity does not depend on a decorative callback shape.
+        def record_commit(
+            *_args: Any,
+            _sink: list[float] = commit_sample_clocks_s,
+            _loop_ref: list[MicrophoneVoiceLoop] = loop_ref,
+            **_kwargs: Any,
+        ) -> None:
+            if _loop_ref:
+                _sink.append(float(_loop_ref[0]._elapsed_s))
+
         loop = MicrophoneVoiceLoop(
             recognizer=FakeRecognizer(),
             submit_text=lambda *a, **k: None,
@@ -337,19 +491,21 @@ def run_endpointing(rig: rig_mod.AcousticRig, corpus: dict[str, dict]) -> list[d
             frames=tee,
             neural_vad=neural,
             endpointer=endpointer,
-            on_turn_commit=commits.append,
+            on_turn_commit=record_commit,
         )
+        loop_ref.append(loop)
         loop.start()
         time.sleep(0.6)  # let capture link before injecting
         rig.play_file(fixture_path(entry))
-        # Wait for a commit, bounded by the incomplete-turn timeout plus slack.
-        deadline = time.monotonic() + 6.0
-        while time.monotonic() < deadline and loop.turn_commits == 0:
+        # Do not stop at the first commit: that hid an internal-pause cutoff
+        # followed by a second commit after resumed speech. Observe beyond the
+        # incomplete timeout so every commit relevant to this fixture is kept.
+        deadline = time.monotonic() + endpointer.incomplete_silence_s + 0.75
+        while time.monotonic() < deadline:
             time.sleep(0.02)
-        commit_elapsed = loop._elapsed_s
-        fired = loop.turn_commits > 0
         stop.set()
         loop.close()
+        observation_end_s = float(loop._elapsed_s)
 
         captured = tee.samples()
         onset = rig_mod.audio_onset_s(
@@ -359,12 +515,24 @@ def run_endpointing(rig: rig_mod.AcousticRig, corpus: dict[str, dict]) -> list[d
             "name": entry["name"],
             "kind": entry["kind"],
             "family": "endpointing",
-            "fired": bool(fired),
+            "fired": bool(commit_sample_clocks_s),
             "captured_s": round(captured.size / SAMPLE_RATE_HZ, 4),
             "capture_onset_s": round(onset, 4) if onset is not None else None,
+            "loop_sample_clock_observed_until_s": round(observation_end_s, 4),
+            "commit_count": len(commit_sample_clocks_s),
+            "commit_sample_clocks_s": [
+                round(value, 4) for value in commit_sample_clocks_s
+            ],
+            "multiple_commits": len(commit_sample_clocks_s) > 1,
+            "commit_observer_complete": (
+                len(commit_sample_clocks_s) == loop.turn_commits
+            ),
+            "endpointer_detail": endpointer.detail,
         }
-        if not fired or onset is None or entry["speech_end_s"] is None:
-            detail["verdict"] = "no_commit" if not fired else "no_onset"
+        if onset is None or entry["speech_end_s"] is None:
+            detail["verdict"] = "no_onset"
+            detail["endpoint_measurement_valid"] = False
+            detail["endpoint_invalid_reasons"] = ["no_capture_onset"]
             detail["ep_s"] = None
             cases.append(detail)
             continue
@@ -374,15 +542,45 @@ def run_endpointing(rig: rig_mod.AcousticRig, corpus: dict[str, dict]) -> list[d
         # the fixture's own speech-start -> speech-end distance.
         speech_span = float(entry["speech_end_s"]) - float(entry["speech_start_s"])
         ground_truth = onset + speech_span
-        ep = commit_elapsed - ground_truth
+        assessment = assess_endpoint_commits(
+            kind=str(entry["kind"]),
+            commit_sample_clocks_s=commit_sample_clocks_s,
+            final_speech_end_s=ground_truth,
+            incomplete_hold_s=endpointer.incomplete_silence_s,
+        )
+        if len(commit_sample_clocks_s) != loop.turn_commits:
+            assessment["endpoint_measurement_valid"] = False
+            assessment["endpoint_invalid_reasons"].append(
+                "commit_observer_count_mismatch"
+            )
+            assessment["ep_s"] = None
+        for field_name in (
+            "commit_sample_clocks_s",
+            "premature_commit_sample_clocks_s",
+            "post_final_commit_sample_clocks_s",
+        ):
+            assessment[field_name] = [
+                round(value, 4) for value in assessment[field_name]
+            ]
+        if assessment["incomplete_commit_not_before_s"] is not None:
+            assessment["incomplete_commit_not_before_s"] = round(
+                assessment["incomplete_commit_not_before_s"], 4
+            )
+        if assessment["ep_s"] is not None:
+            assessment["ep_s"] = round(assessment["ep_s"], 4)
         detail.update(
             {
                 "ground_truth_end_s": round(ground_truth, 4),
-                "commit_s": round(commit_elapsed, 4),
-                "ep_s": round(ep, 4),
-                "cutoff": bool(ep < 0.0),
-                "verdict": "cutoff" if ep < 0.0 else "ok",
-                "endpointer_detail": endpointer.detail,
+                **assessment,
+                "cutoff": bool(
+                    assessment["premature_commit"]
+                    or assessment["incomplete_early"]
+                ),
+                "verdict": (
+                    "ok"
+                    if assessment["endpoint_measurement_valid"]
+                    else assessment["endpoint_invalid_reasons"][0]
+                ),
             }
         )
         cases.append(detail)
@@ -476,7 +674,7 @@ def run_bargein(rig: rig_mod.AcousticRig, corpus: dict[str, dict]) -> list[dict]
         captured = tee.samples()
         onset_monotonic = None
         interrupt_onset_file = None
-        acoustic_end = None
+        diagnostic_residual_end = None
         interrupt_onset_in_capture = rig_mod.audio_onset_s(
             captured, threshold=ONSET_RMS_THRESHOLD, frame=ANALYSIS_FRAME
         )
@@ -504,7 +702,7 @@ def run_bargein(rig: rig_mod.AcousticRig, corpus: dict[str, dict]) -> list[dict]
                 )
                 loud = np.where(robot_env > SILENCE_RMS_THRESHOLD)[0]
                 if loud.size:
-                    acoustic_end = float(
+                    diagnostic_residual_end = float(
                         (loud[-1] + 1) * ANALYSIS_FRAME / SAMPLE_RATE_HZ
                     )
 
@@ -517,28 +715,54 @@ def run_bargein(rig: rig_mod.AcousticRig, corpus: dict[str, dict]) -> list[dict]
             "monitor_samples": int(monitor.size),
             "echo_guard_suppressions": int(loop.echo_guard_suppressions),
         }
+        if is_speech:
+            detail.update(
+                {
+                    "acoustic_stop_s": None,
+                    "acoustic_stop_status": "not_measured",
+                    "acoustic_stop_measurement_basis": (
+                        "mixed_sink_monitor_without_isolated_robot_channel"
+                    ),
+                    "acoustic_stop_unmeasured_reason": MIXED_STOP_UNMEASURED_REASON,
+                }
+            )
         if is_speech and detections and onset_monotonic is not None:
             detection_lag = detections[0] - onset_monotonic
             flush = (flush_done - interrupt_requested) if flush_done else None
-            # Acoustic stop measured entirely inside the monitor file: from
-            # the interrupt's own onset to the last sample the sink emitted.
-            stop_lag = None
-            if interrupt_onset_file is not None and acoustic_end is not None:
-                stop_lag = acoustic_end - interrupt_onset_file
+            # Retain the historical subtraction for diagnosis only. The sink
+            # monitor mixes owner and robot paths that have separate filtering
+            # and resampling, so subtracting their powers cannot establish when
+            # robot output stopped.
+            diagnostic_residual_stop_lag = None
+            if (
+                interrupt_onset_file is not None
+                and diagnostic_residual_end is not None
+            ):
+                diagnostic_residual_stop_lag = (
+                    diagnostic_residual_end - interrupt_onset_file
+                )
             detail.update(
                 {
                     "detection_s": round(detection_lag, 4),
                     "flush_s": round(flush, 6) if flush is not None else None,
-                    "acoustic_stop_s": round(stop_lag, 4)
-                    if stop_lag is not None
+                    "diagnostic_mixed_minus_owner_stop_s": round(
+                        diagnostic_residual_stop_lag, 4
+                    )
+                    if diagnostic_residual_stop_lag is not None
                     else None,
                     "interrupt_onset_file_s": round(interrupt_onset_file, 4)
                     if interrupt_onset_file is not None
                     else None,
-                    "acoustic_end_file_s": round(acoustic_end, 4)
-                    if acoustic_end is not None
+                    "diagnostic_residual_end_file_s": round(
+                        diagnostic_residual_end, 4
+                    )
+                    if diagnostic_residual_end is not None
                     else None,
-                    "verdict": "ok" if detection_lag >= 0 else "impossible",
+                    "verdict": (
+                        "detection_ok_acoustic_stop_unmeasured"
+                        if detection_lag >= 0
+                        else "impossible"
+                    ),
                 }
             )
         elif not is_speech:
@@ -564,7 +788,10 @@ def run_duplex(rig: rig_mod.AcousticRig, corpus: dict[str, dict]) -> list[dict]:
     cases: list[dict] = []
     sink_index = rig.sounddevice_index(rig.sink_name, "output")
     reply = corpus["query_01"]  # stands in for the robot's spoken ack
-    reply_pcm, _reply_rate = wav_pcm16(fixture_path(reply))
+    # Preserve the fixture's declared sample rate. Passing its raw 22.05 kHz
+    # PCM to SpeakerSink would invoke the 16 kHz raw default and stretch the
+    # leading silence, manufacturing presentation latency.
+    reply_wav = fixture_path(reply).read_bytes()
 
     for name in ("query_01", "query_02", "query_03"):
         entry = corpus[name]
@@ -572,21 +799,22 @@ def run_duplex(rig: rig_mod.AcousticRig, corpus: dict[str, dict]) -> list[dict]:
         speaker = SpeakerSink(device=sink_index)
         stop = threading.Event()
         tee = TeeFrames(rig.capture_frames(stop=stop))
-        spoke_at: list[float] = []
+        enqueue_attempts: list[float] = []
 
         def respond(
             _text: str,
             _speaker: SpeakerSink = speaker,
-            _spoke_at: list[float] = spoke_at,
+            _enqueue_attempts: list[float] = enqueue_attempts,
             **_kwargs: Any,
         ) -> None:
-            # The moment the transcript lands, the reply is enqueued. This is
-            # the software ack; the acoustic ack is read off the monitor.
+            # This clock is queue admission ATTEMPT, not playback. Keep it as
+            # a separate diagnostic from the output-buffer write attempt and
+            # the monitor-observed virtual presentation below.
             # Loop variables are bound as defaults so each case writes to its
             # own sink and list rather than the last iteration's.
             _speaker.begin_utterance()
-            _speaker.enqueue(reply_pcm, token=None)
-            _spoke_at.append(time.monotonic())
+            _enqueue_attempts.append(time.monotonic())
+            _speaker.enqueue(reply_wav, token=None)
 
         loop = MicrophoneVoiceLoop(
             recognizer=FakeRecognizer("scripted transcript"),
@@ -603,7 +831,7 @@ def run_duplex(rig: rig_mod.AcousticRig, corpus: dict[str, dict]) -> list[dict]:
             time.sleep(0.5)
             rig.play_file(fixture_path(entry))
             deadline = time.monotonic() + 6.0
-            while time.monotonic() < deadline and not spoke_at:
+            while time.monotonic() < deadline and not enqueue_attempts:
                 time.sleep(0.02)
             time.sleep(1.5)
             speaker.close()
@@ -619,10 +847,16 @@ def run_duplex(rig: rig_mod.AcousticRig, corpus: dict[str, dict]) -> list[dict]:
         detail: dict[str, Any] = {
             "name": name,
             "family": "duplex",
-            "kind": "acoustic_ack",
-            "responded": bool(spoke_at),
+            "kind": "virtual_audible_ack",
+            "enqueue_attempted": bool(enqueue_attempts),
+            "virtual_audible_presented": False,
+            "enqueue_attempt_count": len(enqueue_attempts),
         }
-        if onset is not None and entry["speech_end_s"] is not None and spoke_at:
+        if (
+            onset is not None
+            and entry["speech_end_s"] is not None
+            and enqueue_attempts
+        ):
             # Put the owner's speech on the monitor's clock, then read the
             # robot's first audible sample off the SAME file. Both ends of the
             # ack interval are therefore acoustic, which is the entire point:
@@ -643,27 +877,50 @@ def run_duplex(rig: rig_mod.AcousticRig, corpus: dict[str, dict]) -> list[dict]:
                 detail["verdict"] = "no_robot_audio"
             else:
                 ack = robot_onset_file - owner_end_file
-                # The enqueue-time number the software ledger would have
-                # reported, for the honest side-by-side.
-                enqueue_ack = None
+                enqueue_attempt_ack = None
+                output_write_attempt_ack = None
                 owner_end_monotonic = tee.monotonic_at(onset + span)
                 if owner_end_monotonic is not None:
-                    enqueue_ack = spoke_at[0] - owner_end_monotonic
+                    enqueue_attempt_ack = (
+                        enqueue_attempts[0] - owner_end_monotonic
+                    )
+                    write_attempt_monotonic = getattr(
+                        speaker,
+                        "first_chunk_write_attempt_monotonic",
+                        None,
+                    )
+                    if isinstance(write_attempt_monotonic, (int, float)):
+                        output_write_attempt_ack = (
+                            float(write_attempt_monotonic) - owner_end_monotonic
+                        )
                 detail.update(
                     {
-                        "acoustic_ack_s": round(ack, 4),
-                        "enqueue_ack_s": round(enqueue_ack, 4)
-                        if enqueue_ack is not None
+                        "virtual_audible_ack_s": round(ack, 4),
+                        "virtual_audible_presented": True,
+                        "enqueue_attempt_ack_s": round(enqueue_attempt_ack, 4)
+                        if enqueue_attempt_ack is not None
                         else None,
-                        "sink_presentation_s": round(ack - enqueue_ack, 4)
-                        if enqueue_ack is not None
+                        "output_write_attempt_ack_s": round(
+                            output_write_attempt_ack, 4
+                        )
+                        if output_write_attempt_ack is not None
                         else None,
                         "owner_end_file_s": round(owner_end_file, 4),
                         "robot_onset_file_s": round(robot_onset_file, 4),
-                        "ack_anchor": (
-                            "acoustic end-of-owner-speech -> first audible robot "
-                            "sample, both read off one sink-monitor recording"
-                        ),
+                        "ack_clock_labels": {
+                            "enqueue_attempt_ack_s": (
+                                "owner end -> SpeakerSink.enqueue call attempt; "
+                                "not a playback timestamp"
+                            ),
+                            "output_write_attempt_ack_s": (
+                                "owner end -> first output-buffer write attempt; "
+                                "not device acceptance or audible presentation"
+                            ),
+                            "virtual_audible_ack_s": (
+                                "virtual acoustic owner end -> first robot sample, "
+                                "both read from one sink-monitor recording"
+                            ),
+                        },
                         "verdict": "ok",
                     }
                 )
@@ -677,33 +934,35 @@ def run_duplex(rig: rig_mod.AcousticRig, corpus: dict[str, dict]) -> list[dict]:
 
 # ----------------------------------------------------------- family: prosody
 def run_prosody(rig: rig_mod.AcousticRig, corpus: dict[str, dict]) -> list[dict]:
-    """Do nods land on the accents the owner actually HEARS?
+    """Measure accent preservation through virtual audio transport.
 
-    The runtime schedules a nod apex from the beat track of the audio it is
-    about to synthesize. This case recomputes that synthesis-side schedule,
-    then measures it against the accents present in the captured monitor
-    audio. Any divergence is transport distortion the owner experiences and
-    the synthesis-side fakes cannot see.
+    This family has no motion observer. It compares the synthesis-side accent
+    track with the sink-monitor track on a common first-audible-sample origin;
+    physical BeatLayer/actuator synchronization is reported separately as
+    unmeasured.
     """
 
     entry = corpus["expressive_01"]
     pcm, rate = wav_pcm16(fixture_path(entry))
     synth_track = prosody.analyze_pcm16(pcm, rate)
+    source_frame = max(1, round(rate * ANALYSIS_FRAME / SAMPLE_RATE_HZ))
+    source_onset = rig_mod.audio_onset_s(
+        np.frombuffer(pcm, dtype=np.int16),
+        threshold=ONSET_RMS_THRESHOLD,
+        frame=source_frame,
+        rate=rate,
+    )
 
     sink_index = rig.sounddevice_index(rig.sink_name, "output")
     monitor_raw = RESULTS_DIR / ".tmp" / "prosody.raw"
-    chunk_started: list[float] = []
-    # on_chunk_start is the runtime's own beat anchor; using it here keeps the
-    # eval on the same seam the production nod scheduling rides.
-    speaker = SpeakerSink(
-        device=sink_index,
-        on_chunk_start=lambda _t: chunk_started.append(time.monotonic()),
-    )
+    speaker = SpeakerSink(device=sink_index)
 
     with rig.record_monitor(rig.sink_name, monitor_raw):
         time.sleep(0.3)
         speaker.begin_utterance()
-        speaker.enqueue(pcm, token="prosody")
+        # Keep the WAV header so SpeakerSink uses the fixture's real 22.05 kHz
+        # rate instead of treating raw bytes as its 16 kHz default.
+        speaker.enqueue(fixture_path(entry).read_bytes(), token="prosody")
         deadline = time.monotonic() + 30.0
         time.sleep(0.5)
         while time.monotonic() < deadline and speaker.playback_active:
@@ -718,51 +977,62 @@ def run_prosody(rig: rig_mod.AcousticRig, corpus: dict[str, dict]) -> list[dict]
     with contextlib.suppress(OSError):
         monitor_raw.unlink()
 
-    if onset is None or monitor.size == 0:
+    if source_onset is None or onset is None or monitor.size == 0:
         return [
             {
                 "name": entry["name"],
                 "family": "prosody",
-                "kind": "nod_sync",
+                "kind": "audio_transport_accent_preservation",
+                "physical_motion_status": "not_measured",
+                "physical_motion_sync_s": None,
+                "physical_motion_unmeasured_reason": (
+                    PHYSICAL_MOTION_UNMEASURED_REASON
+                ),
                 "verdict": "no_audio",
             }
         ]
 
-    # Trim the recording to the utterance so both tracks share an origin.
-    captured = monitor[int(onset * SAMPLE_RATE_HZ) :]
-    captured_track = prosody.analyze_pcm16(captured.tobytes(), SAMPLE_RATE_HZ)
+    captured_track = prosody.analyze_pcm16(monitor.tobytes(), SAMPLE_RATE_HZ)
 
-    # Nod apexes are scheduled at the synthesis-side accent times (the runtime
-    # adds beats.lag_compensation_s, which is 0.0 in the shipped config).
-    apexes = [accent.time_s for accent in synth_track.accents]
-    heard = [accent.time_s for accent in captured_track.accents]
-    lags: list[float] = []
-    matched = 0
-    for apex in apexes:
-        if not heard:
-            break
-        nearest = min(heard, key=lambda t: abs(t - apex))
-        lag = apex - nearest
-        lags.append(lag)
-        if abs(lag) <= ACCENT_MATCH_WINDOW_S:
-            matched += 1
-
-    within = (matched / len(apexes)) if apexes else 0.0
+    # Both tracks retain their own leading silence during analysis. Subtract
+    # each track's measured audible onset only after accent extraction so the
+    # compared values share one utterance-local presentation origin.
+    expected = [accent.time_s - source_onset for accent in synth_track.accents]
+    observed = [accent.time_s - onset for accent in captured_track.accents]
+    matches = monotonic_one_to_one_matches(
+        expected,
+        observed,
+        window_s=ACCENT_MATCH_WINDOW_S,
+    )
+    lags = [captured_s - source_s for source_s, captured_s in matches]
+    matched = len(matches)
+    within = (matched / len(expected)) if expected else 0.0
     return [
         {
             "name": entry["name"],
             "family": "prosody",
-            "kind": "nod_sync",
-            "synthesis_accents": len(apexes),
-            "captured_accents": len(heard),
-            "apexes_within_window": matched,
-            "within_window_rate": round(within, 4),
-            "median_signed_lag_s": round(statistics.median(lags), 4) if lags else None,
-            "abs_lag_p95_s": round(percentile([abs(v) for v in lags], 0.95), 4)
+            "kind": "audio_transport_accent_preservation",
+            "source_audio_onset_s": round(source_onset, 4),
+            "captured_audio_onset_s": round(onset, 4),
+            "transport_clock_origin": "first audible sample in each audio track",
+            "transport_matching": "monotonic_one_to_one",
+            "synthesis_accents": len(expected),
+            "captured_accents": len(observed),
+            "transport_accents_matched": matched,
+            "transport_within_window_rate": round(within, 4),
+            "median_transport_lag_s": round(statistics.median(lags), 4)
+            if lags
+            else None,
+            "transport_abs_lag_p95_s": round(
+                percentile([abs(value) for value in lags], 0.95), 4
+            )
             if lags
             else None,
             "match_window_s": ACCENT_MATCH_WINDOW_S,
-            "verdict": "ok" if apexes and heard else "no_accents",
+            "physical_motion_status": "not_measured",
+            "physical_motion_sync_s": None,
+            "physical_motion_unmeasured_reason": PHYSICAL_MOTION_UNMEASURED_REASON,
+            "verdict": "transport_ok" if expected and observed else "no_accents",
         }
     ]
 
@@ -772,35 +1042,60 @@ def summarize(cases: list[dict]) -> dict[str, Any]:
     metrics: dict[str, Any] = {}
 
     ep_cases = [c for c in cases if c["family"] == "endpointing"]
-    clean = [c for c in ep_cases if c.get("ep_s") is not None]
+    clean = [
+        c
+        for c in ep_cases
+        if c.get("endpoint_measurement_valid") is True
+        and c.get("ep_s") is not None
+    ]
     eps = [float(c["ep_s"]) for c in clean]
     if ep_cases:
-        cutoffs = [c for c in clean if c.get("cutoff")]
-        # ep50/ep90 are defined over turns that ACTUALLY ended — the standard
-        # endpointing-latency definition. An incomplete turn is supposed to be
-        # held for incomplete_silence_s; folding that deliberate 2.5 s wait
-        # into a latency percentile would measure the design, not the
-        # implementation, and would make the number meaningless in both
-        # directions. Incomplete turns are judged by ep-cutoff (did the
-        # endpointer wrongly cut the owner off) and reported separately.
+        invalid = [
+            c for c in ep_cases if c.get("endpoint_measurement_valid") is not True
+        ]
+        cutoffs = [c for c in ep_cases if c.get("cutoff")]
         ended = [c for c in clean if c["kind"] in {"complete", "pause_heavy"}]
         ended_eps = [float(c["ep_s"]) for c in ended]
         held = [float(c["ep_s"]) for c in clean if c["kind"] == "incomplete"]
         metrics["endpointing"] = {
             "cases": len(ep_cases),
-            "committed": len(clean),
+            "cases_with_commits": len(
+                [c for c in ep_cases if int(c.get("commit_count", 0)) > 0]
+            ),
+            "total_commits": sum(int(c.get("commit_count", 0)) for c in ep_cases),
+            "valid_latency_cases": len(clean),
             "ep_definition": (
-                "commit minus Silero-derived ground-truth turn end, over turns "
-                "that actually ended (complete + pause_heavy)"
+                "the sole post-final commit sample clock minus final speech end "
+                "on the same captured-sample clock, over valid complete and "
+                "pause-heavy cases"
             ),
             "ep50_s": percentile(ended_eps, 0.50),
             "ep90_s": percentile(ended_eps, 0.90),
-            "ep_cutoff_rate": (len(cutoffs) / len(clean)) if clean else None,
+            "ep_cutoff_rate": len(cutoffs) / len(ep_cases),
+            "commit_validity_failure_rate": len(invalid) / len(ep_cases),
+            "premature_cases": len(
+                [c for c in ep_cases if c.get("premature_commit")]
+            ),
+            "multiple_commit_cases": len(
+                [c for c in ep_cases if c.get("multiple_commits")]
+            ),
+            "incomplete_early_cases": len(
+                [c for c in ep_cases if c.get("incomplete_early")]
+            ),
+            "missing_or_extra_post_final_cases": len(
+                [
+                    c
+                    for c in ep_cases
+                    if "expected_exactly_one_post_final_commit"
+                    in c.get("endpoint_invalid_reasons", [])
+                ]
+            ),
             "ep50_all_kinds_s": percentile(eps, 0.50),
             "incomplete_hold_p50_s": percentile(held, 0.50),
             "by_kind": {
                 kind: {
-                    "n": len([c for c in clean if c["kind"] == kind]),
+                    "n": len([c for c in ep_cases if c["kind"] == kind]),
+                    "valid_n": len([c for c in clean if c["kind"] == kind]),
                     "ep50_s": percentile(
                         [float(c["ep_s"]) for c in clean if c["kind"] == kind], 0.50
                     ),
@@ -817,20 +1112,52 @@ def summarize(cases: list[dict]) -> dict[str, Any]:
             float(c["detection_s"]) for c in speech if c.get("detection_s") is not None
         ]
         flushes = [float(c["flush_s"]) for c in speech if c.get("flush_s") is not None]
-        stops = [
+        isolated_stops = [
             float(c["acoustic_stop_s"])
             for c in speech
-            if c.get("acoustic_stop_s") is not None
+            if c.get("acoustic_stop_measurement_basis")
+            == ISOLATED_ROBOT_CHANNEL_BASIS
+            and c.get("acoustic_stop_s") is not None
         ]
+        stop_fully_measured = bool(speech) and len(isolated_stops) == len(speech)
+        diagnostic_residual_stops = [
+            float(c["diagnostic_mixed_minus_owner_stop_s"])
+            for c in speech
+            if c.get("diagnostic_mixed_minus_owner_stop_s") is not None
+        ]
+        stop_reason = None
+        if not stop_fully_measured:
+            stop_reason = next(
+                (
+                    str(c["acoustic_stop_unmeasured_reason"])
+                    for c in speech
+                    if c.get("acoustic_stop_unmeasured_reason")
+                ),
+                MIXED_STOP_UNMEASURED_REASON,
+            )
         metrics["bargein"] = {
             "speech_cases": len(speech),
-            "detected": len([c for c in speech if c["detected"]]),
+            "detected": len([c for c in speech if c.get("detected")]),
             "detection_p50_s": percentile(detections, 0.50),
             "detection_p90_s": percentile(detections, 0.90),
             "flush_p50_s": percentile(flushes, 0.50),
             "flush_max_s": max(flushes) if flushes else None,
-            "acoustic_stop_p50_s": percentile(stops, 0.50),
-            "acoustic_stop_p90_s": percentile(stops, 0.90),
+            "acoustic_stop_status": (
+                "measured" if stop_fully_measured else "not_measured"
+            ),
+            "acoustic_stop_measurement_basis": (
+                ISOLATED_ROBOT_CHANNEL_BASIS if stop_fully_measured else None
+            ),
+            "acoustic_stop_unmeasured_reason": stop_reason,
+            "acoustic_stop_p50_s": percentile(isolated_stops, 0.50)
+            if stop_fully_measured
+            else None,
+            "acoustic_stop_p90_s": percentile(isolated_stops, 0.90)
+            if stop_fully_measured
+            else None,
+            "diagnostic_mixed_minus_owner_stop_p50_s": percentile(
+                diagnostic_residual_stops, 0.50
+            ),
             "noise_cases": len(noise),
             "false_barge_in_rate": (
                 len([c for c in noise if c.get("false_barge_in")]) / len(noise)
@@ -841,22 +1168,62 @@ def summarize(cases: list[dict]) -> dict[str, Any]:
 
     dx = [c for c in cases if c["family"] == "duplex"]
     if dx:
-        acks = [
-            float(c["acoustic_ack_s"]) for c in dx if c.get("acoustic_ack_s") is not None
+        virtual_acks = [
+            float(c["virtual_audible_ack_s"])
+            for c in dx
+            if c.get("virtual_audible_ack_s") is not None
         ]
+        enqueue_attempt_acks = [
+            float(c["enqueue_attempt_ack_s"])
+            for c in dx
+            if c.get("enqueue_attempt_ack_s") is not None
+        ]
+        write_attempt_acks = [
+            float(c["output_write_attempt_ack_s"])
+            for c in dx
+            if c.get("output_write_attempt_ack_s") is not None
+        ]
+        virtual_ack_complete = len(virtual_acks) == len(dx)
         metrics["duplex"] = {
             "cases": len(dx),
-            "responded": len([c for c in dx if c.get("responded")]),
-            "acoustic_ack_p50_s": percentile(acks, 0.50),
-            "acoustic_ack_p90_s": percentile(acks, 0.90),
+            "enqueue_attempted": len(
+                [c for c in dx if c.get("enqueue_attempted")]
+            ),
+            "virtual_audible_presented": len(virtual_acks),
+            "enqueue_attempt_ack_p50_s": percentile(enqueue_attempt_acks, 0.50),
+            "output_write_attempt_ack_p50_s": percentile(write_attempt_acks, 0.50),
+            "virtual_audible_ack_status": (
+                "measured" if virtual_ack_complete else "not_measured"
+            ),
+            "virtual_audible_ack_p50_s": percentile(virtual_acks, 0.50)
+            if virtual_ack_complete
+            else None,
+            "virtual_audible_ack_p90_s": percentile(virtual_acks, 0.90)
+            if virtual_ack_complete
+            else None,
+            "virtual_audible_ack_unmeasured_reason": None
+            if virtual_ack_complete
+            else "not every duplex case had a monitor-observed robot onset",
         }
 
     pr = [c for c in cases if c["family"] == "prosody"]
     if pr:
         metrics["prosody"] = {
-            "within_window_rate": pr[0].get("within_window_rate"),
-            "median_signed_lag_s": pr[0].get("median_signed_lag_s"),
-            "abs_lag_p95_s": pr[0].get("abs_lag_p95_s"),
+            "audio_transport": {
+                "within_window_rate": pr[0].get("transport_within_window_rate"),
+                "median_lag_s": pr[0].get("median_transport_lag_s"),
+                "abs_lag_p95_s": pr[0].get("transport_abs_lag_p95_s"),
+                "clock_origin": pr[0].get("transport_clock_origin"),
+                "matching": pr[0].get("transport_matching"),
+            },
+            "physical_motion": {
+                "status": pr[0].get("physical_motion_status", "not_measured"),
+                "sync_s": pr[0].get("physical_motion_sync_s"),
+                "unmeasured_reason": pr[0].get(
+                    "physical_motion_unmeasured_reason",
+                    PHYSICAL_MOTION_UNMEASURED_REASON,
+                ),
+            },
         }
     return metrics
 
@@ -866,9 +1233,22 @@ def evaluate_gates(metrics: dict[str, Any]) -> dict[str, Any]:
 
     results: dict[str, Any] = {}
 
-    def gate(name: str, value: float | None, limit: float, direction: str) -> None:
+    def gate(
+        name: str,
+        value: float | None,
+        limit: float,
+        direction: str,
+        *,
+        unmeasured_reason: str | None = None,
+    ) -> None:
         if value is None:
-            results[name] = {"value": None, "limit": limit, "status": "not_measured"}
+            results[name] = {
+                "value": None,
+                "limit": limit,
+                "direction": direction,
+                "status": "not_measured",
+                "reason": unmeasured_reason or "required metric was absent",
+            }
             return
         ok = value <= limit if direction == "max" else value >= limit
         results[name] = {
@@ -879,27 +1259,83 @@ def evaluate_gates(metrics: dict[str, Any]) -> dict[str, Any]:
         }
 
     ep = metrics.get("endpointing", {})
-    gate("endpointing_ep_cutoff_rate", ep.get("ep_cutoff_rate"),
-         GATES["endpointing_ep_cutoff_rate_max"], "max")
-    gate("endpointing_ep50_s", ep.get("ep50_s"), GATES["endpointing_ep50_s_max"], "max")
-    gate("endpointing_ep90_s", ep.get("ep90_s"), GATES["endpointing_ep90_s_max"], "max")
+    gate(
+        "endpointing_ep_cutoff_rate",
+        ep.get("ep_cutoff_rate"),
+        GATES["endpointing_ep_cutoff_rate_max"],
+        "max",
+    )
+    gate(
+        "endpointing_commit_validity_failure_rate",
+        ep.get("commit_validity_failure_rate"),
+        GATES["endpointing_commit_validity_failure_rate_max"],
+        "max",
+    )
+    gate(
+        "endpointing_ep50_s",
+        ep.get("ep50_s"),
+        GATES["endpointing_ep50_s_max"],
+        "max",
+    )
+    gate(
+        "endpointing_ep90_s",
+        ep.get("ep90_s"),
+        GATES["endpointing_ep90_s_max"],
+        "max",
+    )
 
     bi = metrics.get("bargein", {})
-    gate("bargein_detection_p50_s", bi.get("detection_p50_s"),
-         GATES["bargein_detection_s_max"], "max")
-    gate("bargein_flush_max_s", bi.get("flush_max_s"), GATES["bargein_flush_s_max"], "max")
-    gate("bargein_acoustic_stop_p50_s", bi.get("acoustic_stop_p50_s"),
-         GATES["bargein_acoustic_stop_s_max"], "max")
-    gate("bargein_false_rate", bi.get("false_barge_in_rate"),
-         GATES["bargein_false_rate_max"], "max")
+    gate(
+        "bargein_detection_p50_s",
+        bi.get("detection_p50_s"),
+        GATES["bargein_detection_s_max"],
+        "max",
+    )
+    gate(
+        "bargein_flush_max_s",
+        bi.get("flush_max_s"),
+        GATES["bargein_flush_s_max"],
+        "max",
+    )
+    gate(
+        "bargein_acoustic_stop_p50_s",
+        bi.get("acoustic_stop_p50_s"),
+        GATES["bargein_acoustic_stop_s_max"],
+        "max",
+        unmeasured_reason=bi.get("acoustic_stop_unmeasured_reason"),
+    )
+    gate(
+        "bargein_false_rate",
+        bi.get("false_barge_in_rate"),
+        GATES["bargein_false_rate_max"],
+        "max",
+    )
 
     dx = metrics.get("duplex", {})
-    gate("duplex_acoustic_ack_p50_s", dx.get("acoustic_ack_p50_s"),
-         GATES["duplex_ack_p50_s_max"], "max")
+    gate(
+        "duplex_virtual_audible_ack_p50_s",
+        dx.get("virtual_audible_ack_p50_s"),
+        GATES["duplex_virtual_audible_ack_p50_s_max"],
+        "max",
+        unmeasured_reason=dx.get("virtual_audible_ack_unmeasured_reason"),
+    )
 
     pr = metrics.get("prosody", {})
-    gate("prosody_apex_within_window_rate", pr.get("within_window_rate"),
-         GATES["prosody_apex_within_window_min"], "min")
+    audio_transport = pr.get("audio_transport", {})
+    gate(
+        "prosody_audio_transport_accent_match_rate",
+        audio_transport.get("within_window_rate"),
+        GATES["prosody_audio_transport_match_min"],
+        "min",
+    )
+    physical_motion = pr.get("physical_motion", {})
+    results["prosody_physical_motion_sync"] = {
+        "value": physical_motion.get("sync_s"),
+        "status": physical_motion.get("status", "not_measured"),
+        "reason": physical_motion.get(
+            "unmeasured_reason", PHYSICAL_MOTION_UNMEASURED_REASON
+        ),
+    }
     return results
 
 
@@ -915,6 +1351,9 @@ DOES_NOT_PROVE = [
     "acoustic echo cancellation: there is no acoustic coupling to cancel",
     "human speech: the corpus is Piper-synthesized, not recorded from a person",
     "the sub-700ms ack bar end to end: the reply here is scripted, not generated",
+    "spoken STOP recognition or emergency-latch timing: barge-in uses generic VAD",
+    "robot acoustic STOP: this rig has no isolated robot-output capture channel",
+    "physical prosody synchronization: no motion command or actuator is observed",
     "hardware AEC (XVF3800) performance: this null-sink run exercises no physical device",
 ]
 

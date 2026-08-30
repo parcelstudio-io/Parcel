@@ -1110,6 +1110,7 @@ def test_unitree_state_source_converts_odometry_velocity_to_body_frame() -> None
         channel,
         subscriber_factory=factory,
         message_type=object,
+        session_epoch="unitree-test-session",
         clock=clock,
     )
     source.start()
@@ -1121,6 +1122,7 @@ def test_unitree_state_source_converts_odometry_velocity_to_body_frame() -> None
         foot_force=[10, 11, 12, 13],
         mode=3,
         error_code=0,
+        stamp=SimpleNamespace(sec=123, nanosec=456_000_000),
     )
     subscribers[0].callback(message)
 
@@ -1133,6 +1135,32 @@ def test_unitree_state_source_converts_odometry_velocity_to_body_frame() -> None
     assert state.velocity.vy == pytest.approx(0.0, abs=1e-8)
     assert state.velocity.vyaw == pytest.approx(0.2)
     assert state.foot_forces == (10.0, 11.0, 12.0, 13.0)
+    assert state.received_at == 20.0
+    assert state.source_time_s == pytest.approx(123.456)
+    assert state.session_epoch == "unitree-test-session"
+
+
+def test_unitree_state_source_rejects_a_malformed_device_stamp_without_replacing_state() -> None:
+    channel = UnitreeChannelContext(0, "lo", lambda *_: None)
+    source = UnitreeSportStateSource(channel, clock=FakeClock(20.0))
+    message = SimpleNamespace(
+        position=[0.0, 0.0, 0.3],
+        velocity=[0.0, 0.0, 0.0],
+        yaw_speed=0.0,
+        imu_state=SimpleNamespace(rpy=[0.0, 0.0, 0.0]),
+        foot_force=[10, 10, 10, 10],
+        mode=1,
+        error_code=0,
+        stamp=SimpleNamespace(sec=123, nanosec=0),
+    )
+    source._on_message(message)
+    accepted = source.latest()
+
+    message.stamp = SimpleNamespace(sec=123, nanosec=1_000_000_000)
+    with pytest.raises(ValueError, match="nanosec"):
+        source._on_message(message)
+
+    assert source.latest() is accepted
 
 
 def test_unitree_sport_controller_maps_body_velocity_and_refreshes() -> None:
@@ -1172,6 +1200,20 @@ def test_unitree_sport_controller_maps_body_velocity_and_refreshes() -> None:
     # close() must not append a new, unobservable StopMove after its caller has
     # already delivered the final stop boundary.
     assert client.stop_count == 2
+
+
+def test_real_unitree_controller_refuses_before_channel_init_without_writer_lock() -> None:
+    initialized: list[tuple[int, str]] = []
+    channel = UnitreeChannelContext(
+        0,
+        "eth0",
+        lambda domain, nic: initialized.append((domain, nic)),
+    )
+    controller = UnitreeSportController(channel, allowed_modes=(1,))
+
+    with pytest.raises(RuntimeError, match="device-wide writer lock"):
+        controller.activate()
+    assert initialized == []
 
 
 def test_unitree_controller_requires_an_explicit_mode_allowlist() -> None:
@@ -1232,38 +1274,35 @@ def test_unitree_controller_requires_an_explicit_mode_allowlist() -> None:
     ],
 )
 def test_physical_factory_fails_closed_without_lease_or_modes(sport, exception, message) -> None:
-    with pytest.raises(exception, match=message):
+    del exception, message
+    with pytest.raises(RuntimeError, match="direct unitree_sport control is retired"):
         build_unitree_sport_control_manager(
             {"unitree_sport": sport},
             SafetyLimits(),
         )
 
 
-def test_physical_factory_builds_only_after_all_commissioning_gates() -> None:
-    manager = build_unitree_sport_control_manager(
-        {
-            "unitree_sport": {
-                "interface": "dedicated-nic",
-                "enable_lease": True,
-                "axes_commissioned": True,
-                "state_velocity_frame": "base_link",
-                "state_frame_commissioned": True,
-                "lateral_sign": -1,
-                "yaw_sign": 1,
-                "allowed_modes": [1, 3],
-            }
-        },
-        SafetyLimits(),
-    )
-
-    assert isinstance(manager.controller, UnitreeSportController)
-    assert isinstance(manager.state_source, UnitreeSportStateSource)
-    assert manager.state_source.velocity_frame == "base_link"
-    assert manager.controller.allowed_modes == frozenset({1, 3})
+def test_physical_factory_is_retired_after_all_old_commissioning_gates() -> None:
+    with pytest.raises(RuntimeError, match="motion_gateway_commissioned"):
+        build_unitree_sport_control_manager(
+            {
+                "unitree_sport": {
+                    "interface": "dedicated-nic",
+                    "enable_lease": True,
+                    "axes_commissioned": True,
+                    "state_velocity_frame": "base_link",
+                    "state_frame_commissioned": True,
+                    "lateral_sign": -1,
+                    "yaw_sign": 1,
+                    "allowed_modes": [1, 3],
+                }
+            },
+            SafetyLimits(),
+        )
 
 
 def test_physical_factory_requires_shutdown_budget_to_cover_lease_activation() -> None:
-    with pytest.raises(ValueError, match="io_quiesce_timeout_s"):
+    with pytest.raises(RuntimeError, match="motion_gateway_commissioned"):
         build_unitree_sport_control_manager(
             {
                 "io_quiesce_timeout_s": 0.5,

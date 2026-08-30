@@ -762,15 +762,32 @@ def test_ordinary_stop_does_not_elide_on_stale_stationary_state(tmp_path: Path) 
 
 
 def test_adapter_source_contains_no_arm_command_or_vendor_import() -> None:
-    """Structural anti-regression: this rung cannot grow motion by accident."""
+    """Structural anti-regression: the disarmed classes cannot grow motion."""
 
     from parcel_robot.control import motion_gateway
 
     source = Path(motion_gateway.__file__).read_text(encoding="utf-8")
     tree = ast.parse(source, feature_version=(3, 10))
+    disarmed_classes = {
+        node.name: node
+        for node in tree.body
+        if isinstance(node, ast.ClassDef)
+        and node.name
+        in {
+            "_DisarmedGatewaySessionV1",
+            "DisarmedGatewayStateSourceV1",
+            "DisarmedGatewayControllerV1",
+        }
+    }
+    assert set(disarmed_classes) == {
+        "_DisarmedGatewaySessionV1",
+        "DisarmedGatewayStateSourceV1",
+        "DisarmedGatewayControllerV1",
+    }
     calls = {
         node.func.attr
-        for node in ast.walk(tree)
+        for class_node in disarmed_classes.values()
+        for node in ast.walk(class_node)
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
     }
     imported = {
@@ -788,7 +805,9 @@ def test_adapter_source_contains_no_arm_command_or_vendor_import() -> None:
     assert not any("unitree" in name or "fake_sport" in name for name in imported)
 
 
-def test_gateway_vendor_mode_still_refuses_before_any_backend_is_built(tmp_path: Path) -> None:
+def test_gateway_vendor_mode_refuses_incomplete_access_before_backend_build(
+    tmp_path: Path,
+) -> None:
     args = gateway_cli._parser().parse_args(
         [
             "--disarmed",
@@ -800,5 +819,8 @@ def test_gateway_vendor_mode_still_refuses_before_any_backend_is_built(tmp_path:
             str(tmp_path / "audit.jsonl"),
         ]
     )
-    with pytest.raises(gateway_cli.GatewayLaunchError, match="vendor is not implemented"):
+    with pytest.raises(
+        gateway_cli.GatewayLaunchError,
+        match="invalid vendor client/socket access",
+    ):
         gateway_cli.settings_from(args, {"PARCEL_ARMED": "0"})

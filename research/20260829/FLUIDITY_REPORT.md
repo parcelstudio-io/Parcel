@@ -194,7 +194,7 @@ this folder in parallel**: it wrote `VERDICT.md` files into my three
 experiment folders (17:31–18:38), rewrote the folder README into its own
 assessment structure, and created eleven further folders (DMC-1/2, DSOAK-1,
 MA-2, a LIT-1 grounding audit, product-evals, …) plus
-`SOL_METHODICAL_ASSESSMENT_DRAFT.md`. My verdicts are the `VERDICT_FABLE.md`
+`SOL_METHODICAL_ASSESSMENT.md`. My verdicts are the `VERDICT_FABLE.md`
 files; where Sol's audits made checkable claims (MA-1's three blocking code
 findings; LIT-1's 5/5 false terminal statements) I verified them in the code
 and artifacts and concur. The owner should read the two assessments as
@@ -349,7 +349,7 @@ sources were verified by finder + verifier agents only.
 sections and NAV-INT-1's H-NI1a/b written by the verifier from artifacts;
 CONV-1 rows re-run by the verifier. Foreign, live, same-directive work by
 Sol in the same folder: its `VERDICT.md` files, README rewrite, eleven
-folders and `SOL_METHODICAL_ASSESSMENT_DRAFT.md` are the owner's and were
+folders and `SOL_METHODICAL_ASSESSMENT.md` are the owner's and were
 never edited by this wave; my verdicts are `VERDICT_FABLE.md`. Shared-wave
 month-to-date hosted spend was about $2.21; MB-1's completed-Q increment was
 $1.32843624 (ledger `~/.cache/parcel-0e/wave20260829/spend.jsonl`). No
@@ -371,9 +371,11 @@ conflicting readiness sentence without rewriting that wave's authorship:
 - **DMC-4:** two identical 1,824-mutation runs and 256/256 corruptions support
   the source-level owner-authored journal → authenticated narrative-event
   transaction. A later 26-test hardening step wires a process-local,
-  journal-only observer into normal runtime and emits no speech; live session,
-  persistent cursor, provider/audio, and separate-child resume lineage remain
-  absent.
+  journal-only observer into normal runtime and emits no speech. Post-review
+  hardening preserves exact available authority/deadline lineage and rejects
+  expired queued frames; commit-time timestamp, live authenticated session,
+  persistent cursor, provider/audio, and authoritative separate-child resume
+  lineage remain absent.
 - **LHO-1:** in four 5,940-arm-episode scalar runs, a guarded latency-sized prefix
   reduced waiting 91.93% and visible gaps 91.02% versus blocking with zero
   authored stale/safety violations. Its additive supplement verified C/D as
@@ -383,9 +385,17 @@ conflicting readiness sentence without rewriting that wave's authorship:
 - **MJLAB-1:** upstream clean installation failed. With explicit pins, official
   Go2 MuJoCo-Warp ran 5,933–6,199 environment-steps/s and a 4,608-step PPO/
   checkpoint/ONNX plumbing smoke; it did not train a useful walking policy.
-- **SOS-1:** two 256-case source/fake-gateway runs support a distinct stop-only
-  software UID/principal. No real STOP input, physical E-stop, Go2, Orin timing,
-  or braking evidence exists.
+- **SOS-1:** maintenance exposed and repaired READY-before-handler ordering and
+  evaluator defects; two parallel and two sequential current-source 256-case
+  source/fake-gateway runs now support a distinct stop-only software
+  UID/principal. No real STOP input, physical E-stop, Go2, Orin timing, or
+  braking evidence exists.
+- **Acoustic v1 audit:** the historical 5/9 gate score remains, but none of its
+  four red values validly measures the capability it names. Exact inspection
+  found premature commits in all three 750 ms pause fixtures and one incomplete
+  turn. Direct PortAudio abort during device drain and a post-open worker-write
+  clock now pass guarded regressions; mounted audio/AEC and audible timing remain
+  red.
 
 These additions strengthen the architecture and its testability. They do not
 change the physical-motion verdict: **NO-GO**.

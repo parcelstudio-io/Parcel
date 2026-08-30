@@ -13,6 +13,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field, fields, is_dataclass
 from enum import Enum
 
+from parcel_robot.authority import PERSON_SOCIAL_ZONE_M
 from parcel_robot.contracts.navigation_snapshot_v2 import DynamicTrackV2, NavigationSnapshotV2
 from parcel_robot.navigation.social_progress import (
     MAX_PUBLIC_INTEGER,
@@ -35,6 +36,21 @@ MAX_PUBLIC_SNAPSHOT_BYTES = 256 * 1024
 # schema-growth room while keeping direct sample construction absolutely sized.
 MAX_SNAPSHOT_EVIDENCE_IDS = 8
 MAX_SNAPSHOT_EPOCH_ROWS = 8
+
+# The shadow observer's default corridor is one coherent geometry, not three
+# independently tuned proximity literals. Its forward reach starts at the
+# human-bucket social-zone authority and adds an observer-local reach margin;
+# the latter preserves the swept-boundary contract while keeping the social
+# distance's ownership explicit. Its angular view is then derived from that
+# reach and the explicitly observer-local half-width. These remain
+# uncommissioned proposal/evaluation defaults and cannot authorize motion.
+DEFAULT_SOCIAL_CORRIDOR_REACH_MARGIN_M = 0.05
+DEFAULT_SOCIAL_CORRIDOR_LOOKAHEAD_M = PERSON_SOCIAL_ZONE_M + DEFAULT_SOCIAL_CORRIDOR_REACH_MARGIN_M
+DEFAULT_SOCIAL_CORRIDOR_HALF_WIDTH_M = 0.45
+DEFAULT_SOCIAL_CORRIDOR_HALF_ANGLE_RAD = math.atan2(
+    DEFAULT_SOCIAL_CORRIDOR_HALF_WIDTH_M,
+    DEFAULT_SOCIAL_CORRIDOR_LOOKAHEAD_M,
+)
 
 _BAD_ROUTE_STATES = frozenset(
     {"error", "failed", "goal_blocked", "invalid", "no_path", "unavailable"}
@@ -256,9 +272,9 @@ class SocialProgressObserverConfigV1:
     missing_track_retention_s: float = 0.50
     lidar_max_age_s: float = 0.25
     max_clock_uncertainty_s: float = 0.05
-    corridor_lookahead_m: float = 1.25
-    corridor_half_width_m: float = 0.45
-    corridor_half_angle_rad: float = 0.35
+    corridor_lookahead_m: float = DEFAULT_SOCIAL_CORRIDOR_LOOKAHEAD_M
+    corridor_half_width_m: float = DEFAULT_SOCIAL_CORRIDOR_HALF_WIDTH_M
+    corridor_half_angle_rad: float = DEFAULT_SOCIAL_CORRIDOR_HALF_ANGLE_RAD
     minimum_corridor_rays: int = 5
     max_corridor_ray_gap_rad: float = 0.10
     lidar_mark_tolerance_m: float = 0.25

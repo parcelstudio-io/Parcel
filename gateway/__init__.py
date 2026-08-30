@@ -1,14 +1,16 @@
-"""M1-0 — the co-located final governor + sole-writer gateway process.
+"""M1-0 — the co-located final governor + autonomous sole-writer gateway.
 
 This package is deliberately a **top-level tree beside** ``src/``, not a
 module inside ``parcel_robot``.  On the dog it runs as its own systemd unit in
 its own vendor interpreter (``pyproject.toml`` floor ``>=3.10``; the Orin's
 JetPack CPython is 3.10), holding the one robot-network credential and the one
-vendor command writer.  ``src/parcel_robot`` is the *product* side of the seam
-and is not imported here — the deployable modules of this package import
-exactly one thing from it, the frozen wire contract
-``parcel_robot.bridge.protocol``, which is pure stdlib and is what both sides
-must agree on.  ``tests/test_m1_0_gateway.py`` pins that import surface.
+autonomous vendor command writer.  ``src/parcel_robot`` is the *product* side
+of the seam; deployable gateway modules may import only its pure-stdlib bridge
+surfaces: the frozen protocol, the product-owned client compatibility export,
+and the device-wide ``UnitreeWriterLockV1`` shared with supervised
+commissioning.  They do not import runtime, control, perception, or model code.
+``tests/test_m1_0_gateway.py`` and ``tests/test_motion_seam.py`` pin that import
+surface.
 
 Design record, in the order it binds:
 
@@ -26,11 +28,18 @@ Design record, in the order it binds:
   exact-zero on kill/stale/epoch; refuter = the seeded fault inventory; any
   non-zero on a loss class stops the program.
 
-**What this package is not.** It is not a Unitree SDK client: no vendor SDK is
-imported anywhere in this tree, and the vendor is reached only through the
-structural :class:`gateway.ports.SportPort`.  It is not wired to
-``RobotRuntime`` — that is a later card.  A bench run against
-``parcel_robot.bridge.fake_sport`` proves contract and fault behaviour on a
-desktop; it proves nothing about a robot, a vendor firmware, braking distance,
-or scheduling on the Orin.
+**What this package is not.** It is not a general Unitree control surface and
+it does not give the product runtime an SDK object.  The optional SDK2 binding
+is localized to :mod:`gateway.ports`, loaded dynamically only after an
+explicit physical launch profile, and exposes only ``Move``, ``StopMove`` and
+read-only Sport state through the structural :class:`gateway.ports.SportPort`.
+Before real SDK construction, both gateway entry points must hold the fixed
+device-wide writer lock.  The armed commissioning CLI uses that same lock only
+while this service is stopped and while running as the same ``parcel-gateway``
+UID; after SDK activation the authority lasts until that process exits.
+Importing this package or selecting the fake imports no vendor package.  The
+product reaches the gateway only over the frozen local socket contract.  A
+bench run against ``parcel_robot.bridge.fake_sport`` proves contract and fault
+behaviour on a desktop; it proves nothing about robot identity, vendor
+firmware, braking distance, physical safety, or scheduling on the Orin.
 """

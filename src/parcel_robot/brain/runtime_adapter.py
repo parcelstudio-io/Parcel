@@ -22,9 +22,47 @@ from parcel_robot.models import SpatialIntent
 # Kept as string literals so historical BARN bundles that pin an older
 # navigation.base remain import-compatible with this adapter.
 NAVIGATION_SUCCESS_STATES = frozenset({"arrived"})
-NAVIGATION_FAILURE_STATES = frozenset({"failed", "unresolved"})
+NAVIGATION_FAILURE_STATES = frozenset(
+    {
+        "cancelled",
+        "collision",
+        "expired",
+        "failed",
+        "rejected",
+        "stale",
+        "unreachable",
+        "unresolved",
+    }
+)
 NAVIGATION_IN_PROGRESS_STATES = frozenset(
     {"running", "searching", "verifying", "paused", "waiting"}
+)
+# Navigation command notes are not a separate success channel. Some navigator
+# paths retain ``arrived`` while reporting the reason a recovery actually
+# stopped; these markers keep collision, freshness, and reachability failures
+# from being turned into a fabricated ``skill_completed`` fact.
+NAVIGATION_FAILURE_REASON_MARKERS = frozenset(
+    {
+        "arbiter_veto",
+        "cancelled",
+        "collision",
+        "expired",
+        "failed",
+        "failure",
+        "goal_blocked",
+        "invalid",
+        "no_observation",
+        "no_path",
+        "not_found",
+        "not_grounded",
+        "not_resighted",
+        "rejected",
+        "stale",
+        "timed_out",
+        "timeout",
+        "unreachable",
+        "unsafe",
+    }
 )
 SPATIAL_SUCCESS_STATES = frozenset({"completed"})
 SPATIAL_FAILURE_STATES = frozenset({"failed", "cancelled"})
@@ -511,16 +549,20 @@ class SemanticTaskRuntimeAdapter:
             detail = state.search_reason or state.search_state
         elif branch == "instructnav":
             # ScanBehavior / SearchEntity: navigator recovery is the authority.
-            # skill_completed when the navigation channel reaches a terminal
-            # arrived/failed after being armed; still searching stays in progress.
-            if state.navigation_enabled and state.navigation_state not in (
-                NAVIGATION_SUCCESS_STATES | NAVIGATION_FAILURE_STATES
+            # Only an unambiguous arrived terminal proves skill_completed.
+            # A failure state OR failure reason is terminal failure, even if a
+            # stale state label still says arrived.
+            if state.navigation_state in NAVIGATION_FAILURE_STATES or (
+                _navigation_reason_is_failure(state.navigation_reason)
             ):
-                detail = state.navigation_reason or state.navigation_state
-            elif state.navigation_state in NAVIGATION_SUCCESS_STATES or (
-                state.navigation_state in NAVIGATION_FAILURE_STATES
-                and state.navigation_reason
-            ):
+                return _failed_result(
+                    request,
+                    started=item.started_at_monotonic_s,
+                    snapshot_id=state.snapshot_id,
+                    detail=state.navigation_reason or state.navigation_state,
+                    finished=now,
+                )
+            if state.navigation_state in NAVIGATION_SUCCESS_STATES and not state.navigation_enabled:
                 return _terminal_result(
                     request,
                     started=item.started_at_monotonic_s,
@@ -530,16 +572,15 @@ class SemanticTaskRuntimeAdapter:
                     finished=now,
                     verified_target=request.success.target,
                 )
-            elif not state.navigation_enabled and state.navigation_state == "idle":
+            if not state.navigation_enabled:
                 return _failed_result(
                     request,
                     started=item.started_at_monotonic_s,
                     snapshot_id=state.snapshot_id,
-                    detail="instructnav_recovery_not_active",
+                    detail=state.navigation_reason or "instructnav_recovery_not_active",
                     finished=now,
                 )
-            else:
-                detail = state.navigation_reason or state.navigation_state
+            detail = state.navigation_reason or state.navigation_state
         elif branch == "posture":
             # ReturnToSafePose names it "pose"; the Pose skill names it "name".
             requested_pose = str(
@@ -878,6 +919,11 @@ def _detail(value: object) -> str:
 
 def _normalized(value: str) -> str:
     return "".join(character for character in value.lower() if character.isalnum())
+
+
+def _navigation_reason_is_failure(reason: str) -> bool:
+    clean = "_".join(str(reason).strip().lower().replace("-", "_").split())
+    return bool(clean) and any(marker in clean for marker in NAVIGATION_FAILURE_REASON_MARKERS)
 
 
 __all__ = [

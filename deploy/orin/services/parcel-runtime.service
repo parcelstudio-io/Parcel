@@ -21,23 +21,31 @@ Description=Parcel companion runtime (world model, conversation, drives, memory)
 Documentation=file:///opt/parcel/doc/PORTABLE_LIVING_DOG_HLD.md
 After=parcel-gateway.service parcel-safety.service parcel-lio.service parcel-audio.service
 Wants=parcel-lio.service parcel-audio.service
-# Requires the two authority services and nothing else: losing LIO or audio
-# degrades the companion, losing the gateway or the supervisor ends motion.
+# Requires= makes both authority services start first. BindsTo= plus After=
+# also stops runtime when either service fails or becomes inactive unexpectedly;
+# Requires= alone covers only activation and explicit stop/restart propagation.
+# Losing LIO or audio remains a degraded companion rather than motion authority.
 Requires=parcel-gateway.service parcel-safety.service
+BindsTo=parcel-gateway.service parcel-safety.service
 
 [Service]
 Type=notify
 NotifyAccess=main
 User=parcel-runtime
 Group=parcel-runtime
-Environment=PARCEL_ARMED=0
-Environment=PARCEL_ROLE=runtime
-Environment=PARCEL_PROFILE=physical
+SupplementaryGroups=parcel-motion
+# Optional hosted credentials and runtime tuning live here. EnvironmentFile=
+# overrides Environment= regardless of directive order, so fixed invariants are
+# deliberately assigned later by /usr/bin/env in ExecStart, not Environment=.
 EnvironmentFile=-/etc/parcel/runtime.env
 ExecStartPre=/usr/bin/test -x /opt/parcel/bin/parcel-runtime
-# --profile physical is what makes the observation spine refuse simulation and
-# replay evidence (parcel_robot/contracts/evidence_header.py::physical_profile).
-ExecStart=/opt/parcel/bin/parcel-runtime --disarmed --profile physical
+# Keep one authoritative profile selector. The reviewed, loadable physical-rig
+# overlay is configs/robot.go2_edu_plus.yaml; a `physical` profile does not
+# exist. Command-line selection takes precedence over PARCEL_PROFILE, including
+# an accidental value inherited through runtime.env.
+# The socket is fixed after runtime.env, is never world-writable, and kernel UID
+# still decides lease authority through the parcel-motion group.
+ExecStart=/usr/bin/env PARCEL_ARMED=0 PARCEL_ROLE=runtime PARCEL_GATEWAY_SOCKET=/run/parcel-gateway/gateway.sock /opt/parcel/bin/parcel-runtime --disarmed --profile go2_edu_plus
 Restart=on-failure
 RestartSec=5
 WatchdogSec=10

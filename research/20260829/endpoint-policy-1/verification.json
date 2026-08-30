@@ -1,0 +1,22 @@
+{
+  "schema": "parcel-endpoint-policy-verification-1",
+  "pass": true,
+  "checks": {
+    "retained_runs_byte_identical": true,
+    "schema_exact": true,
+    "source_pin_current": true,
+    "endpointing_pin_current": true,
+    "voice_loop_pin_current": true,
+    "corrected_v2_pin_current": true,
+    "baseline_parity_red": true,
+    "all_declared_grid_points_red": true,
+    "no_nomination": true,
+    "onnxruntime_provenance_present": true,
+    "resumed_speech_outcomes_partitioned": true,
+    "production_parity_runs_byte_identical": true,
+    "production_loop_sample_clock_parity": true,
+    "production_parity_sources_current": true
+  },
+  "run_sha256": "009f9a8dc3c2bb66ed6c13469f0c172a25ee11bf9d382c489babd85747933616",
+  "production_parity_sha256": "4931513d1d457d0ae526c7c66545c97b45f86239ed6606fc3b8719d91f85518a"
+}

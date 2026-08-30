@@ -11,7 +11,46 @@ import yaml
 
 from parcel_robot.geometry import ROBOT_FOOTPRINT_RADIUS_M
 
-from . import stall_attribution as stall
+# This file is copied into the frozen BARN v8 reference tree as a reviewed
+# replacement.  That tree predates the C3 stall-attribution leaf, so keep the
+# same soft-dependency discipline used for the other post-bundle navigation
+# leaves below.  The fallback is deliberately the pre-C3 behaviour: progress
+# hysteresis and person-yield handling remain available, while the opt-in held
+# release door cannot arm without its implementation module.
+try:
+    from . import stall_attribution as stall
+except ImportError:  # pragma: no cover - exercised in the isolated BARN bundle
+    class _BundleStallAttribution:
+        HELD_RELEASE_NOTE = "semantic_replan_after_held_route"
+        _PROGRESS_HYSTERESIS_M = 0.025
+
+        @staticmethod
+        def goal_progress_made(best_distance_m: float | None, distance_m: float) -> bool:
+            return (
+                best_distance_m is None
+                or distance_m
+                < best_distance_m - _BundleStallAttribution._PROGRESS_HYSTERESIS_M
+            )
+
+        @staticmethod
+        def person_yield_holds(
+            nearest_person_m: float | None,
+            person_stop_m: float,
+        ) -> bool:
+            return nearest_person_m is not None and nearest_person_m < person_stop_m
+
+        @staticmethod
+        def held_release_due(
+            metadata: dict,
+            route_status: str | None,
+            body_is_still: bool,
+            *,
+            enabled: bool,
+        ) -> bool:
+            del metadata, route_status, body_is_still, enabled
+            return False
+
+    stall = _BundleStallAttribution()
 from .approach import (
     point_in_polygon,
     point_in_polygon_with_clearance,
@@ -25,7 +64,21 @@ from .goals import (
     semantic_goal_from_directive,
 )
 from .grounder import PlaceGrounder
-from .poi_admission import ground_admitted_poi, poi_lookup_metadata
+
+# The frozen BARN v8 bundle predates scene-bound POI admission.  Its reviewed
+# replacement copy of this module must retain the historical direct-grounder
+# behaviour without expanding the bundle allowlist.  Product builds import the
+# admission authority; only a bundle where that leaf is absent takes this seam.
+try:
+    from .poi_admission import ground_admitted_poi, poi_lookup_metadata
+except ImportError:  # pragma: no cover - exercised in the isolated BARN bundle
+    def ground_admitted_poi(grounder: Any, directive: str) -> Any:
+        return grounder.ground(directive)
+
+    def poi_lookup_metadata(grounder: Any, error: BaseException) -> dict[str, str]:
+        del error
+        disabled = str(getattr(grounder, "disabled_reason", "") or "")
+        return {"poi_grounding_disabled": disabled} if disabled else {}
 from .registry import ModelRegistry
 from .search import ActiveSemanticSearch
 from .semantic_map import ObservationSemanticMap, SemanticCandidate, SemanticMap
@@ -1444,7 +1497,7 @@ class DirectiveNavigator:
         stalled = self._progress_watchdog(control_observation)
         if stalled is not None:
             return stalled
-        unroutable = self._unroutable_goal_recovery()
+        unroutable = self._unroutable_goal_recovery(observation)
         if unroutable is not None:
             return unroutable
         # RM-2 trigger (ii): the beyond-window case, which is CLIPPED to
@@ -1452,7 +1505,7 @@ class DirectiveNavigator:
         # nothing, so the tick proceeds exactly as it would have.
         if self._route_memory is not None:
             self._route_memory_partial_recovery()
-        gate_blocked = self._gate_blocked_route_recovery()
+        gate_blocked = self._gate_blocked_route_recovery(observation)
         if gate_blocked is not None:
             return gate_blocked
 
@@ -3151,37 +3204,11 @@ class DirectiveNavigator:
             refused = self._lock_on_admission_guard(semantic_goal, result, observation)
             if refused is not None:
                 return refused
-        approach_costs: dict[str, Any] = {}
-        pose = safe_approach_pose(
+        pose, approach_costs = self._solve_semantic_approach_pose(
             semantic_goal,
             result,
             observation,
-            footprint_clearance_m=ROBOT_FOOTPRINT_RADIUS_M,
-            obstacle_stop_m=self.collision.obstacle_stop_m,
-            tracks=_dynamic_tracks_from_observation(observation),
-            cost_out=approach_costs,
         )
-        if pose is not None:
-            self.mission.metadata["approach_pose_source"] = "support_gated"
-        if pose is None:
-            # Before conceding this instance, try the K0-band approach fallback.
-            # ``safe_approach_pose`` plans a ``near`` pose on the object's
-            # SUPPORT SURFACE (the sidewalk it sits on). For a wide object on a
-            # narrow strip flanked by other furniture — a 0.73 m bench on a 2 m
-            # sidewalk with a lamppost and a tree ~2.5 m to each side — that
-            # support-gated ring has no admissible point from ANY robot pose, so
-            # the solver returns ``None`` unconditionally, the release below
-            # banishes the only real target from the excluding semantic map, and
-            # the search-reground loop spins out its whole budget never seeing
-            # the bench again (2026-08-09 root cause). But the directive's own
-            # success test — the same K0 vicinity band the mission then verifies
-            # against — accepts any collision-clear pose in that band, sidewalk
-            # or not. Committing there is a grounded arrival at the real object,
-            # not a hallucination: we only reach here for a candidate already
-            # grounded, confirmed, reachable, and frustum-visible.
-            pose = self._fallback_near_arrival_pose(semantic_goal, result, observation)
-        if pose is not None:
-            pose = self._apply_arrival_etiquette(semantic_goal, result, observation, pose)
         if pose is None:
             # "No admissible approach pose for THIS instance" is a fact about
             # one instance, not about the directive. Failing the mission on it
@@ -3313,31 +3340,10 @@ class DirectiveNavigator:
                 "plan_step": "align_then_translate",
             }
         )
-        now_s = float(observation.extras.get("time_s") or 0.0)
-        if (
-            _HAS_INSTRUCTNAV
-            and SE2Goal is not None
-            and self.proposer_bus is not None
-            and self.goal_arbiter is not None
-        ):
-            proposed = SE2Goal(
-                source="grounder",
-                pose=(pose.x, pose.y, math.radians(pose.heading_deg)),
-                confidence=float(result.confidence),
-                ttl_s=2.0,
-                plan_step_id="align_then_translate",
-                issued_s=now_s,
-                priority=10,
-                task_id=self._active_task_id,
-                plan_revision=self._active_plan_revision,
-            )
-            self.proposer_bus.publish(proposed)
-            self.goal_arbiter.set_plan_step("align_then_translate")
-            chosen = self.goal_arbiter.resolve((proposed,), now_s=now_s)
-            if chosen is None:
-                self.mission.status = "failed"
-                self.mission.metadata["resolution_state"] = "arbiter_veto"
-                return MidLevelCommand(stop=True, note="semantic_goal_vetoed")
+        if not self._approach_goal_admitted(pose, result.confidence, observation):
+            self.mission.status = "failed"
+            self.mission.metadata["resolution_state"] = "arbiter_veto"
+            return MidLevelCommand(stop=True, note="semantic_goal_vetoed")
         self._navigator.reset(self.mission)
         # MAP: ``pose`` is a world-frame approach pose, so the seed distance is
         # a MAP-frame measurement.
@@ -3365,6 +3371,82 @@ class DirectiveNavigator:
             vyaw=0.0,
             note=self._lock_on_telemetry_note("semantic_target_resolved"),
         )
+
+    def _solve_semantic_approach_pose(
+        self,
+        semantic_goal: Any,
+        result: SemanticCandidate,
+        observation: NavObservation,
+    ) -> tuple[GoalPose | None, dict[str, Any]]:
+        """Resolve one currently observed, gate-clear terminal pose.
+
+        Keeping this solver in one method matters after a commitment: an
+        obstacle can become visible only on final approach.  The retry path
+        must use the identical support, K0-band and etiquette authorities as
+        the first commitment rather than growing a second placement policy.
+        """
+
+        assert self.mission is not None
+        approach_costs: dict[str, Any] = {}
+        pose = safe_approach_pose(
+            semantic_goal,
+            result,
+            observation,
+            footprint_clearance_m=ROBOT_FOOTPRINT_RADIUS_M,
+            obstacle_stop_m=self.collision.obstacle_stop_m,
+            tracks=_dynamic_tracks_from_observation(observation),
+            cost_out=approach_costs,
+        )
+        if pose is not None:
+            self.mission.metadata["approach_pose_source"] = "support_gated"
+        else:
+            # Before conceding this instance, try a collision-clear pose in the
+            # same K0 near/next-to band.  This never widens the verified band or
+            # relaxes the obstacle ring.
+            pose = self._fallback_near_arrival_pose(
+                semantic_goal,
+                result,
+                observation,
+            )
+        if pose is not None:
+            pose = self._apply_arrival_etiquette(
+                semantic_goal,
+                result,
+                observation,
+                pose,
+            )
+        return pose, approach_costs
+
+    def _approach_goal_admitted(
+        self,
+        pose: GoalPose,
+        confidence: float,
+        observation: NavObservation,
+    ) -> bool:
+        """Submit a local terminal-pose proposal through the existing arbiter."""
+
+        if not (
+            _HAS_INSTRUCTNAV
+            and SE2Goal is not None
+            and self.proposer_bus is not None
+            and self.goal_arbiter is not None
+        ):
+            return True
+        now_s = float(observation.extras.get("time_s") or 0.0)
+        proposed = SE2Goal(
+            source="grounder",
+            pose=(pose.x, pose.y, math.radians(pose.heading_deg)),
+            confidence=float(confidence),
+            ttl_s=2.0,
+            plan_step_id="align_then_translate",
+            issued_s=now_s,
+            priority=10,
+            task_id=self._active_task_id,
+            plan_revision=self._active_plan_revision,
+        )
+        self.proposer_bus.publish(proposed)
+        self.goal_arbiter.set_plan_step("align_then_translate")
+        return self.goal_arbiter.resolve((proposed,), now_s=now_s) is not None
 
     def _clear_terminal_pose_diagnostics(self) -> None:
         """Drop authority/phase facts left by an earlier commitment attempt."""
@@ -4672,7 +4754,21 @@ class DirectiveNavigator:
     #: alternate.
     UNROUTABLE_GOAL_STEPS = 60
 
-    def _unroutable_goal_recovery(self) -> MidLevelCommand | None:
+    #: One terminal-pose retry for a committed ``near`` / ``next_to`` object.
+    #:
+    #: A route failure proves that the selected pose cannot be executed from
+    #: the current observation; it does not prove that every pose in the
+    #: object's already-approved K0 arrival region is blocked. The retry is
+    #: deliberately one-shot so fresh perception can repair that distinction
+    #: without turning a genuinely boxed-in object into an unbounded resample
+    #: loop. No alternate pose means the existing fail-closed release runs on
+    #: the same tick.
+    TERMINAL_POSE_REPLAN_LIMIT = 1
+
+    def _unroutable_goal_recovery(
+        self,
+        observation: NavObservation,
+    ) -> MidLevelCommand | None:
         """Release a commitment the planner has *proved* it cannot route to.
 
         ``goal_blocked`` / ``no_path`` is not "slow": it is the A* planner
@@ -4734,10 +4830,267 @@ class DirectiveNavigator:
             self._steps_goal_unroutable = 0
             return None
 
+        replanned = self._retry_committed_terminal_pose(
+            observation,
+            trigger=f"unroutable:{status}",
+        )
+        if replanned is not None:
+            return replanned
+
         self.mission.metadata["unroutable_route_status"] = str(status)
         return self._release_unreachable_candidate(
             str(self.mission.metadata.get("candidate_id") or ""),
             note="semantic_replan_after_unroutable_goal",
+        )
+
+    def _retry_committed_terminal_pose(
+        self,
+        observation: NavObservation,
+        *,
+        trigger: str,
+    ) -> MidLevelCommand | None:
+        """Re-solve one blocked terminal pose without abandoning its object.
+
+        ``goal_blocked`` and the local obstacle gate are evidence against the
+        *selected pose*. For ``near`` / ``next_to`` an object exposes a whole
+        verified arrival region, so blacklisting the object before asking the
+        existing approach solver for another point loses valid solutions. A
+        fresh, exact-id sighting gets one bounded retry through the same support,
+        clearance, etiquette, K0-region, and goal-arbiter authorities used at
+        initial commitment.
+
+        Any missing evidence, unchanged pose, solver refusal, or arbiter veto
+        returns ``None``. The caller then executes the pre-existing unreachable
+        release immediately; this method never weakens a gate or keeps a boxed
+        target alive.
+        """
+
+        mission = self.mission
+        if mission is None or mission.goal is None or mission.semantic_goal is None:
+            return None
+        if mission.semantic_goal.terminal_relation not in {"near", "next_to"}:
+            return None
+        # Preserve the resolution ladder's candidate-selection authority. Its
+        # first recovery move is instance substitution: salvaging the first
+        # blocked sighting locally can turn "the lamppost" into a verified
+        # arrival at a farther, contextually wrong instance that merely entered
+        # view first. Once the ladder has actually ruled out one instance, terminal
+        # pose diversity on the alternate is the remaining recovery axis. This
+        # is the bounded candidate-then-pose schedule; it contains no object-id
+        # or scene-specific exception.
+        if not self._unreachable_candidates:
+            mission.metadata["terminal_pose_replan_refusal"] = (
+                "candidate_alternative_not_yet_tried"
+            )
+            return None
+        attempts = int(mission.metadata.get("terminal_pose_replan_attempts", 0))
+        if attempts >= self.TERMINAL_POSE_REPLAN_LIMIT:
+            return None
+
+        # Count the opportunity, not only a success. A blind or boxed-in
+        # object therefore cannot be re-sampled again after another hold window.
+        mission.metadata["terminal_pose_replan_attempts"] = attempts + 1
+        mission.metadata["terminal_pose_replan_trigger"] = str(trigger)
+
+        candidate = self._terminal_retry_candidate(observation)
+        if candidate is None:
+            return None
+
+        previous = mission.goal
+        self._clear_terminal_pose_diagnostics()
+        pose, approach_costs = self._solve_semantic_approach_pose(
+            mission.semantic_goal,
+            candidate,
+            observation,
+        )
+        if pose is None:
+            mission.metadata["terminal_pose_replan_refusal"] = "no_safe_pose"
+            return None
+        displacement = math.hypot(pose.x - previous.x, pose.y - previous.y)
+        if displacement < self.GATE_HOLD_DISPLACEMENT_M:
+            mission.metadata["terminal_pose_replan_refusal"] = "pose_unchanged"
+            mission.metadata["terminal_pose_replan_displacement_m"] = displacement
+            return None
+        committed_region = self._arrival_goal_region()
+        if committed_region is None or not committed_region.contains(pose.x, pose.y):
+            mission.metadata["terminal_pose_replan_refusal"] = (
+                "outside_committed_arrival_region"
+            )
+            return None
+        if not self._approach_goal_admitted(pose, candidate.confidence, observation):
+            mission.metadata["terminal_pose_replan_refusal"] = "arbiter_veto"
+            return None
+
+        return self._commit_terminal_pose_retry(
+            observation=observation,
+            candidate=candidate,
+            previous=previous,
+            pose=pose,
+            approach_costs=approach_costs,
+            trigger=trigger,
+            displacement=displacement,
+        )
+
+    def _terminal_retry_candidate(
+        self,
+        observation: NavObservation,
+    ) -> SemanticCandidate | None:
+        """Return the exact committed candidate only while its geometry agrees."""
+
+        mission = self.mission
+        assert mission is not None and mission.semantic_goal is not None
+        candidate_id = str(mission.metadata.get("candidate_id") or "")
+        candidate = next(
+            (
+                item
+                for item in self.semantic_map.query(mission.semantic_goal, observation)
+                if item.candidate_id == candidate_id
+            ),
+            None,
+        )
+        if candidate is None:
+            mission.metadata["terminal_pose_replan_refusal"] = "candidate_not_visible"
+            return None
+        # Identity is insufficient: retaining the old K0 region while solving
+        # against changed polygon/support/clearance geometry would combine two
+        # incompatible safety proofs.
+        if not self._terminal_retry_geometry_matches_commit(candidate):
+            mission.metadata["terminal_pose_replan_refusal"] = (
+                "candidate_geometry_changed"
+            )
+            return None
+        return candidate
+
+    def _terminal_retry_geometry_matches_commit(
+        self,
+        candidate: SemanticCandidate,
+    ) -> bool:
+        """Bind a pose retry to the exact geometry already commissioned at K0."""
+
+        mission = self.mission
+        if mission is None or mission.semantic_goal is None:
+            return False
+        committed_region = mission.metadata.get("arrival_goal_region")
+        refreshed_region = self._build_arrival_goal_region(
+            mission.semantic_goal.terminal_relation,
+            candidate,
+        )
+        if refreshed_region != committed_region:
+            return False
+        if _polygon(candidate.polygon) != _polygon(mission.metadata.get("target_polygon")):
+            return False
+        if _polygon(candidate.metadata.get("support_polygon")) != _polygon(
+            mission.metadata.get("support_polygon")
+        ):
+            return False
+        scalar_geometry = (
+            (
+                "candidate_radius_m",
+                _metadata_float(
+                    candidate.metadata,
+                    "radius_m",
+                    default=0.0,
+                    minimum=0.0,
+                    maximum=5.0,
+                ),
+            ),
+            (
+                "terminal_clearance_m",
+                _metadata_float(
+                    candidate.metadata,
+                    "terminal_clearance_m",
+                    default=0.32,
+                    minimum=0.10,
+                    maximum=1.0,
+                ),
+            ),
+            (
+                "terminal_support_clearance_m",
+                _metadata_float(
+                    candidate.metadata,
+                    "terminal_support_clearance_m",
+                    default=0.32,
+                    minimum=0.10,
+                    maximum=1.0,
+                ),
+            ),
+        )
+        for key, refreshed in scalar_geometry:
+            committed = mission.metadata.get(key)
+            if isinstance(committed, bool) or not isinstance(committed, (int, float)):
+                return False
+            if not math.isclose(float(committed), refreshed, rel_tol=0.0, abs_tol=1e-12):
+                return False
+        return True
+
+    def _commit_terminal_pose_retry(
+        self,
+        *,
+        observation: NavObservation,
+        candidate: SemanticCandidate,
+        previous: GoalPose,
+        pose: GoalPose,
+        approach_costs: dict[str, Any],
+        trigger: str,
+        displacement: float,
+    ) -> MidLevelCommand:
+        """Commit an admitted retry and reset only pose-dependent state."""
+
+        # A route-memory waypoint is relative to the old terminal pose. Purge
+        # only that source's pending proposal before resetting the local planner.
+        if self._route_memory is not None:
+            self._flush_route_memory_waypoints("terminal_pose_replanned")
+        mission = self.mission
+        assert mission is not None and mission.semantic_goal is not None
+        mission.goal = pose
+        mission.status = "running"
+        mission.metadata.update(
+            {
+                "resolution_state": "resolved",
+                "plan_step": "align_then_translate",
+                "candidate_position": (candidate.x, candidate.y, candidate.z),
+                "candidate_confidence": candidate.confidence,
+                "candidate_source": candidate.source,
+                "target_polygon": candidate.polygon,
+                "associated_lidar_ids": sorted(_candidate_obstacle_ids(candidate)),
+                "goal_landmark_position": (float(candidate.x), float(candidate.y)),
+                "goal_landmark_offset": (
+                    float(pose.x) - float(candidate.x),
+                    float(pose.y) - float(candidate.y),
+                    float(pose.heading_deg),
+                ),
+                "terminal_pose_replan_count": int(
+                    mission.metadata.get("terminal_pose_replan_count", 0)
+                )
+                + 1,
+                "terminal_pose_replan_previous": (
+                    float(previous.x),
+                    float(previous.y),
+                    float(previous.heading_deg),
+                ),
+                "terminal_pose_replan_goal": (
+                    float(pose.x),
+                    float(pose.y),
+                    float(pose.heading_deg),
+                ),
+                "terminal_pose_replan_displacement_m": displacement,
+                **approach_costs,
+            }
+        )
+        mission.metadata.pop("terminal_pose_replan_refusal", None)
+        self._navigator.reset(mission)
+        robot_map = _pose_in(observation, MAP_FRAME)
+        self._best_goal_distance_m = math.hypot(
+            pose.x - robot_map.x,
+            pose.y - robot_map.y,
+        )
+        self._steps_without_progress = 0
+        self._steps_goal_unroutable = 0
+        self._steps_gate_blocked = 0
+        self._gate_blocked_anchor_xy = None
+        self._terminal_verification_steps = 0
+        return MidLevelCommand(
+            note=f"semantic_terminal_pose_replanned_after_{trigger}"
         )
 
     # ------------------------------------------------------------------
@@ -5707,7 +6060,10 @@ class DirectiveNavigator:
             return
         self._body_is_still = True
 
-    def _gate_blocked_route_recovery(self) -> MidLevelCommand | None:
+    def _gate_blocked_route_recovery(
+        self,
+        observation: NavObservation,
+    ) -> MidLevelCommand | None:
         """Release a commitment the *safety gate* has proved unexecutable.
 
         Sibling of :meth:`_unroutable_goal_recovery`, and the same defect: the
@@ -5753,6 +6109,13 @@ class DirectiveNavigator:
         # jittering semantic goal could reset it on the very tick the release
         # was due. The counter now advances only on ticks the BODY did not
         # travel, so it is its own proof and needs no second opinion here.
+        replanned = self._retry_committed_terminal_pose(
+            observation,
+            trigger="obstacle_stop",
+        )
+        if replanned is not None:
+            return replanned
+
         self.mission.metadata["blocked_route_gate"] = "obstacle_stop"
         self.mission.metadata["gate_blocked_steps"] = int(self._steps_gate_blocked)
         return self._release_unreachable_candidate(

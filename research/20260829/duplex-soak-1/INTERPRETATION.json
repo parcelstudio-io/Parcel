@@ -1,0 +1,20 @@
+{
+  "schema": "parcel.dsoak.interpretation.v1",
+  "artifact_set": "DSOAK-1",
+  "evidence_class": "SELF_REPORTED_PARTIALLY_CORROBORATED_DESKTOP_PROCEDURAL_DURABILITY",
+  "preregistered_soak_gate_pass": true,
+  "promotion_eligible": false,
+  "physical_readiness_evaluable": false,
+  "oracle_validity": false,
+  "semantic_truth_evaluable": false,
+  "independent_safety_evaluable": false,
+  "aggregate_consistency_verified": true,
+  "temporal_provenance_strictly_verified": false,
+  "process_identity_strictly_bound": false,
+  "source_drift_sticky_latched": false,
+  "external_monitor_full_run_coverage": false,
+  "external_monitor_coverage_fraction": 0.803769768,
+  "successful_replay_digests_retained": false,
+  "legacy_field_note": "promotion_pass and narration gates in frozen artifacts are preregistered procedural measurements, not model-promotion or semantic-truth evidence",
+  "controlling_decision": "MODEL_A_SHADOW_ONLY_PHYSICAL_MOTION_NO_GO"
+}

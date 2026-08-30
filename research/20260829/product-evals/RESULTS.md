@@ -10,12 +10,15 @@
 | Embodied plan v1 | 4/4 supported cases pass; 1 unsupported; 0 collisions | Product-path integration evidence, not generalization |
 | Brain v1 | 15/15 cases; 7/7 expected fail-closed | Typed authority boundary works on frozen cases |
 | Duplex v1 | 7/7 scripted hard gates | Text-injected timing only; no audio or production model |
-| Acoustic loop | **5/9 gates pass, 4/9 fail** in all three runs | Audio software is not promotion-ready, even before hardware acoustics |
+| Corrected acoustic v2 | 25 cases / 223.4 s; **6 pass, 3 fail, 2 not measured**; 4/13 endpoint cases invalid; virtual-audible ack p50 0.790 s | Measurement is repaired on the virtual rig; endpoint semantics and acknowledgement remain red, isolated acoustic STOP and physical motion sync are unmeasured |
+| Endpoint-policy sensitivity | Two identical 1,560-cell runs; 0/30 declared points pass; corrected-rig parity fails | No production endpoint setting or provisional motion admission is supported |
 | Historical Realtime corpus | 0 machine hard failures; 66 review flags | Machine checks pass but semantic quality is poor/mixed |
 | Personal conversation fixture | 13/13 contract turns | Reference ceiling only; provider is a deterministic fixture |
 | DSP-2 dynamic social | 580 episodes; S2/S3 each contacted in 25/145; H1–H4 refuted | No sidewalk/crosswalk/elevator or safe-proximity promotion |
 | MB-1 hosted Q | 120/120 scenarios; every absolute gate failed | Current hosted candidate is refuted; paired direct/human effects unmeasured |
-| DMC-4 transaction | Two identical 1,824-mutation runs; 256/256 corruptions; 26-test disarmed runtime-frame composition passes | Journal → process-local Model-B frames is wired; live session/provider/audio/persistence remains red |
+| DMC-4 transaction | Two identical 1,824-mutation runs; 256/256 corruptions; post-review lineage/drain-expiry and valid-lifecycle regressions pass | Journal → process-local Model-B frames preserves and drain-revalidates available authority lineage; valid next-step waits and deferred replacement progress no longer false-latch narration, but commit-time timestamp/live session/provider/audio/persistence remains red |
+| DSOAK-1 durability | Artifact self-reports 12.050004 h, 66,434 episodes, and 664 sampled replays / 0 recorded mismatches; 17/17 predicates pass post-run aggregate checks | Partially corroborated desktop procedural durability only; strict temporal/process provenance is absent, monitor is late, narration oracle is refuted, safety counters are coupled, and there is no learned promotion |
+| Repository gates | Latest commit tier green over 11,330 selected non-slow tests (11,417 total; 87 slow); extended nightly red on degraded-pose floors. Post-remediation slow rerun: 1 failed / 74 passed / 8 skipped / 3 xfailed / 1 xpassed; sole failure is a retained 0.875-vs-0.90 person-cell pin | Software/evaluation evidence only. A quiet repeat matched start/end checkout identity; nightly remains a release-readiness blocker and says nothing physical is safe |
 
 ## Navigation and instruction following
 
@@ -144,6 +147,42 @@ run 2, so case-level determinism also failed even though the aggregate gate vect
 was stable.  These tests use synthesized speech and null sinks, with no room,
 physical microphone/speaker, AEC, or hosted-response generation.
 
+An additive source and measurement audit keeps that historical 5/9 score but
+changes its interpretation: **none of the four red values validly measures its
+named capability**. Endpoint is sampled after full synchronous WAV playback and
+hides premature commits in all three 750 ms pause cases plus `incomplete_04`;
+STOP power subtraction leaves owner speech in the inferred robot channel;
+acknowledgment feeds 22.05 kHz raw fixture PCM to a 16 kHz default and includes
+stretched leading silence; prosody mixes clocks/rates, permits reused matches,
+and observes no motion. The production sink now directly aborts a live PortAudio
+stream even while its worker is draining and moves its worker-write timestamp
+after stream open; a guarded **86-test** selection passed with two expected
+warnings. This is source hardening, not an acoustic pass. See the
+[acoustic-loop v1 audit](../ACOUSTIC_LOOP_V1_AUDIT.md).
+
+### Corrected acoustic v2 and endpoint sensitivity
+
+The additive v2 runner supersedes interpretation of those historical metrics.
+It records every commit on the sample clock, requires exactly one post-final
+commit, uses rate-correct audio, separates write-attempt from virtual audibility,
+and uses monotonic one-to-one prosody matching. Its 11 gates are 6 pass, 3 fail,
+and 2 not measured. `incomplete_02`, `incomplete_04`, `pause_01`, and `pause_03`
+are invalid; valid-only ep50/ep90 are 0.274/0.2916 s, while semantic invalidity
+is 30.77%. Virtual-audible acknowledgement p50/p90 is 0.790/2.633 s. Isolated
+robot-output acoustic STOP and physical motion/audio synchronization remain
+unmeasured; 13/14 prosody covers audio transport only.
+
+A follow-up declared exploratory grid ran twice over 30 confidence/silence
+settings × 52 phase variants. Both 1,560-cell JSON results are byte-identical;
+no setting passes. Direct replay also fails corrected-v2 parity. The closest
+semantic row is only 49/52 valid and has valid-only ep90 2.577 s. These results
+support no production threshold change and no provisional motion admission.
+Two source-pinned repeats through the actual `MicrophoneVoiceLoop` match the
+duplicate runner at all 52 default 30 ms sample-frame indices, ruling out a
+state-machine transcription mismatch without establishing device/room parity.
+See [corrected v2](../acoustic-eval-v2/RESULTS.md) and the
+[endpoint-policy verdict](../endpoint-policy-1/VERDICT.md).
+
 ### Conversation quality
 
 The historical Realtime corpus contains 25 threads and 174 turns captured from
@@ -204,12 +243,20 @@ gates passed with identical normalized trace and chain roots. The resulting
 
 The normal `RobotRuntime` now keeps its bare executive as task owner and polls
 its journal through a process-local authenticated observer into bounded,
-non-actuating Model-B frames. A focused 26-test selection covers ordering,
-verified terminal facts, overflow isolation, and the runtime product seam. The
-frames are not sent to Realtime or audio. Persistent cursor/restart recovery,
-live authentication and speech-generation epoch/cancellation, provider
-backpressure, and separate-child resume lineage remain absent. The complete
+non-actuating Model-B frames. Post-review hardening carries exact plan, step,
+attempt, mission, action, evidence, source epoch, speech generation, issue time,
+and deadline into the compact frame and atomically revalidates queued frames at
+drain. The frames are not sent to Realtime or audio. Persistent cursor/restart
+recovery, independently authenticated live speech-generation epoch/cancellation,
+provider acknowledgement/backpressure, and authoritative separate-child resume
+lineage remain absent. The complete
 live Model A -> Model B -> Realtime narration path therefore remains red.
+
+Freshness is also not yet enforced from authoritative commit to speech: the
+transition omits a commit timestamp and the bridge starts TTL when it polls.
+Drain-time expiry is now enforced, but a late poll can still manufacture a new
+TTL window. Restart replays or loses history without persisted executive/outbox/
+read/consume/provider-ack cursors.
 
 An independent post-hoc audit of the five retained LIT-1 fake-voice traces supplies
 a concrete consequence. Every run ended the bench revision with `task_failed` /
@@ -225,5 +272,7 @@ production failure-rate estimate, but it is a valid blocking counterexample.
 The codebase has credible typed authority primitives and useful deterministic
 integration harnesses. DMC-4 advances source-level task-to-narration truth, but
 generalized navigation, social safety, hosted wording quality, acoustic timing,
-and live runtime/session composition remain red or unmeasured. Motion-enabled
+and live runtime/session composition remain red or unmeasured. Model A also has
+no qualified learned artifact, commissioned launcher/arm path, or honest physical
+observation product. Motion-enabled
 physical readiness is **NO-GO**.

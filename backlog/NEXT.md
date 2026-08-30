@@ -1357,3 +1357,11 @@ The original card is retained below as historical scope, not active work.
   explicit `does_not_prove`; every affected gate is green.
 - **Does not prove:** physical navigation quality, generalization, or superiority
   over an external benchmark.
+
+## N47 — Freezing a NAV_INSTRUCT baseline must be explicit, and the gate must select the frozen row by version · **READY · hours**
+
+- **Opened / priority:** 2026-08-30 (wave B, FIX-SUBSTRATE-2 — integrator parcel-fb, verifier parcel-0e) · evaluation integrity; a latent way for research runs to silently become the hard gate's baseline.
+- **Defect:** `evals/nav_instruct/run_nav_instruct_v1.py:514` marks ANY `--mode baseline` run `frozen_baseline: True` when it writes a ledger row, and `scripts/ci_gate.py` `_latest_frozen_baseline_row` takes the LAST such row — so a research baseline run with the ledger enabled retargets `evaluate_hard_safety` onto itself, and a re-freeze that appends both a minival and a full-matrix row leaves the gate on whichever was written second. Tonight's mitigation is procedural (every run `--no-ledger` except the one re-freeze row; ledger diff must show exactly one row).
+- **Build:** freezing requires an explicit `--freeze` flag (with `--refreeze-provenance`); `--mode baseline` without it writes `frozen_baseline: False`; `_latest_frozen_baseline_row` selects by `episode_set_version` (the current frozen set) and refuses when more than one frozen row exists for that version without an explicit supersession field. Also: `tests/test_nav_instruct_digest_recipe.py` must encode the budget policy in the pinned recipe (the CLI default `fixed` vs the committed `scaled-path-v1` produced two digests for one tree on 2026-08-30 — fixed in W5 for the recipe test; the flag defect is this card).
+- **Exit:** a test that a baseline run without `--freeze` cannot become the gate's row; a test that two frozen rows for one version fail closed; the recipe test distinguishes budget policies.
+- **Does not prove:** anything about navigation quality; this closes a gate-plumbing hazard only.

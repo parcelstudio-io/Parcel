@@ -1,14 +1,14 @@
 {
   "clean_checks": {
-    "no_authority_disagreement": false,
+    "no_authority_disagreement": true,
     "no_false_arrival": true,
     "path_length_plausible": true,
+    "reactive_gate_exercised": true,
     "zero_collisions": true
   },
   "clean_run": {
     "authority": {
-      "agreement": 4,
-      "authority_disagreement": 1
+      "agreement": 9
     },
     "collisions": 0,
     "episodes": [
@@ -27,14 +27,14 @@
       {
         "distance_to_goal_m": 0.0,
         "episode_id": "nav-region_goal-D-15-1b8b2361",
-        "failure": "grounding_error",
+        "failure": "none",
         "final_xy": [
-          2.811258189022409,
-          0.7495325028657687
+          2.8410151839639357,
+          0.7474463024997149
         ],
         "min_clearance_m": 1.2804493814764855,
-        "path_length_m": 3.294544892235044,
-        "success": false
+        "path_length_m": 3.321542987688572,
+        "success": true
       },
       {
         "distance_to_goal_m": 0.0,
@@ -71,41 +71,161 @@
         "min_clearance_m": 1.3050277006184698,
         "path_length_m": 0.0,
         "success": true
+      },
+      {
+        "distance_to_goal_m": 5.918937507861959,
+        "episode_id": "nav-region_goal-C-11-25d4e602",
+        "failure": "grounding_error",
+        "final_xy": [
+          7.976624556795439,
+          -4.643205273048664
+        ],
+        "min_clearance_m": 0.8049999999999999,
+        "path_length_m": 5.72831615178304,
+        "success": false
+      },
+      {
+        "distance_to_goal_m": 0.0,
+        "episode_id": "nav-region_goal-D-17-448696db",
+        "failure": "none",
+        "final_xy": [
+          1.6714905487424243,
+          2.5256606679264655
+        ],
+        "min_clearance_m": 0.8338070618693252,
+        "path_length_m": 3.8941145224866642,
+        "success": true
+      },
+      {
+        "distance_to_goal_m": 0.0,
+        "episode_id": "nav-object_goal-D-18-19a95961",
+        "failure": "none",
+        "final_xy": [
+          1.3390633894906887,
+          2.558500992381384
+        ],
+        "min_clearance_m": 0.8266426693044808,
+        "path_length_m": 3.1704444106109606,
+        "success": true
+      },
+      {
+        "distance_to_goal_m": 9.65396264815708,
+        "episode_id": "nav-object_relative-C-11-3bf174e9",
+        "failure": "planning_error",
+        "final_xy": [
+          6.582879851606165,
+          2.4508265715285025
+        ],
+        "min_clearance_m": 0.8218244028551898,
+        "path_length_m": 3.0279424376848976,
+        "success": false
       }
     ],
     "failure_histogram": {
       "grounding_error": 2,
-      "none": 3
+      "none": 6,
+      "planning_error": 1
     },
-    "mean_dtg_m": 0.3616797968250607,
-    "n": 5,
+    "mean_dtg_m": 1.931255460016038,
+    "n": 9,
+    "reactive_gate_coverage": {
+      "calls": 962,
+      "changed_nonzero": 162,
+      "per_episode": {
+        "nav-follow_owner-D-15-74a535dd": {
+          "calls": 0,
+          "changed_nonzero": 0,
+          "requested_nonzero": 0,
+          "translation_zeroed": 0
+        },
+        "nav-object_goal-A-00-4caa923b": {
+          "calls": 51,
+          "changed_nonzero": 0,
+          "requested_nonzero": 14,
+          "translation_zeroed": 0
+        },
+        "nav-object_goal-D-18-19a95961": {
+          "calls": 184,
+          "changed_nonzero": 14,
+          "requested_nonzero": 110,
+          "translation_zeroed": 0
+        },
+        "nav-object_relative-A-00-3efbba45": {
+          "calls": 62,
+          "changed_nonzero": 0,
+          "requested_nonzero": 0,
+          "translation_zeroed": 0
+        },
+        "nav-object_relative-C-11-3bf174e9": {
+          "calls": 165,
+          "changed_nonzero": 31,
+          "requested_nonzero": 106,
+          "translation_zeroed": 0
+        },
+        "nav-region_goal-A-00-1c735162": {
+          "calls": 101,
+          "changed_nonzero": 21,
+          "requested_nonzero": 98,
+          "translation_zeroed": 0
+        },
+        "nav-region_goal-C-11-25d4e602": {
+          "calls": 200,
+          "changed_nonzero": 78,
+          "requested_nonzero": 138,
+          "translation_zeroed": 0
+        },
+        "nav-region_goal-D-15-1b8b2361": {
+          "calls": 88,
+          "changed_nonzero": 0,
+          "requested_nonzero": 77,
+          "translation_zeroed": 0
+        },
+        "nav-region_goal-D-17-448696db": {
+          "calls": 111,
+          "changed_nonzero": 18,
+          "requested_nonzero": 95,
+          "translation_zeroed": 0
+        }
+      },
+      "requested_nonzero": 638,
+      "translation_zeroed": 0
+    },
     "successes": [
       "nav-follow_owner-D-15-74a535dd",
       "nav-object_goal-A-00-4caa923b",
-      "nav-region_goal-A-00-1c735162"
+      "nav-object_goal-D-18-19a95961",
+      "nav-region_goal-A-00-1c735162",
+      "nav-region_goal-D-15-1b8b2361",
+      "nav-region_goal-D-17-448696db"
     ]
   },
+  "coverage_matrix_digest": "e7c302ddf19a39646aff77f01832be56b14fae6c7d4bd28e39cd5045c3c8b3f2",
+  "coverage_matrix_per_family": 25,
+  "coverage_matrix_seed": 20260804,
   "episode_ids": [
     "nav-region_goal-A-00-1c735162",
     "nav-region_goal-D-15-1b8b2361",
     "nav-object_goal-A-00-4caa923b",
     "nav-object_relative-A-00-3efbba45",
-    "nav-follow_owner-D-15-74a535dd"
+    "nav-follow_owner-D-15-74a535dd",
+    "nav-region_goal-C-11-25d4e602",
+    "nav-region_goal-D-17-448696db",
+    "nav-object_goal-D-18-19a95961",
+    "nav-object_relative-C-11-3bf174e9"
   ],
-  "episode_selection": "chosen to exercise the code each mutation touches (longest traverse, the reactive gate's only binding episode, one per family). A mutant on a path the episodes never reach is an equivalent mutant and says nothing about the harness. Coverage selection, not tuning: no robot parameter is chosen from a result.",
-  "episode_set_provenance": "regenerated 2026-08-11 (lane E8) onto the v4 frozen set, OWNER-AUTHORIZED. NOT a re-baseline of a red result: every safety-relevant field is BIT-IDENTICAL to the superseded v3 artifact \u2014 clean_checks all four green (no_false_arrival, no_authority_disagreement, zero_collisions, path_length_plausible), clean authority {agreement: 5}, collisions 0, the same four clean successes, the same failure histogram, 6/6 mutants killed. What moved: the episode_set_version label, two clean-run poses that lanes E1-E6 already moved on the CODE axis (nav-region_goal-D-15 path 0.4548 -> 0.2520 and nav-follow_owner-D-15 path 0.2428 -> 0.0, both reported by E7 before this lane existed), and two mutants gaining an EXTRA reddened check. The panel got stronger, not greener: on the retired v3 set the clean run itself now contains a false arrival, which silently DISABLES no_false_arrival as a kill channel for all six mutants (harness_checks excludes any check already red on the clean run). On v4 that channel is live and reactive_gate_disabled kills through it. See scrum/20260809/task_15/E7_FALSE_ARRIVAL_STATUS.md \u00a71.1 and E8_V4_REFREEZE_STATUS.md. RE-RUN 2026-08-11 (card VS-6) to add ONE mutant, phantom_view_consistent. Additive by construction and proven so by diff: the clean run, the four clean_checks, the survivors list and all six pre-existing mutant rows are BYTE-IDENTICAL to the superseded artifact; the only fields that moved are generated_at, this note, and the appended seventh row. 7/7 killed. See scrum/20260811/task_1/W2_EVAL_STATUS.md. RE-RUN 2026-08-28 after the owner-facing terminal-arrival contract was hardened into two phases: target-facing live verification followed by a bounded zero-translation turn, with owner loss refusing the system arrival claim. NOT a re-baseline of red safety evidence: the clean run still has zero collisions, zero false arrivals, zero authority disagreements and all four absolute clean checks green; all 7/7 mutants remain killed. The stricter contract deliberately moves performance-sensitive evidence: the object_goal-A row is scorer-true/system-false within the frozen boundary epsilon and therefore records tolerated_boundary, while object_relative-A refuses a target-facing terminal pose that the planner reports blocked. Clean scorer successes move 4 -> 3 and the failure histogram moves from {grounding_error: 1, none: 4} to {grounding_error: 2, none: 3}; those movements are recorded here rather than presented as safety improvements. RE-RUN 2026-08-29 (card C0, FIX-SUBSTRATE-1) as the RECORDED RE-RUN half of the card's (a)-fix-product / (b)-recorded-re-run choice; the owner was silent and the card's silence default was applied. WHY (b): the superseded artifact was written at 20260828T084754Z from a working tree that reproduces on NO commit -- its five clean-run poses are byte-identical to f3ecb5c but its authority histogram {agreement: 4, tolerated_boundary: 1} is not f3ecb5c's {agreement: 5}. The DIFF IS ATTRIBUTED TO a379bf4 (feat: integrate companion contracts and document robotics design, the owner's hard-safety / terminal-arrival change), reproduced independently at single-commit resolution: on f3ecb5c the nav-region_goal-D-15 (go to the crosswalk) episode stalls at the start (final (0.2815, 0.1603), dtg 2.0685, agreement); on a379bf4 and on HEAD it drives 3.0 m, ends INSIDE the scorer's crosswalk polygon at (2.8113, 0.7495) (dtg 0.0000) and the SYSTEM refuses the claim, so the row records authority_disagreement. No terminal-contract refusal fires: the navigator keeps requesting vx=0.102 m/s and apply_reactive_safety returns zero with meta='stopped' on 105/200 ticks, leaving the robot 1.5151 m from the POI point crosswalk_a (3.5, -0.6) against the POI path's 1.50 m point-goal arrive radius -- a 15 mm miss on a hard radius, and the POI point itself lies OUTSIDE the crosswalk polygon it is supposed to name (NAV-GEN-1 VERDICT.md 5.2; card C1 owns that grounding defect). (a) was refused because every way to make the system claim arrival here weakens the reactive gate, moves a frozen NAV_INSTRUCT digest, or lands the owner's uncommitted grid_planner.py -- and the owner's uncommitted diff, applied alone, only nudges the same stall 3 cm to 1.4996 m, crossing the same radius by 0.4 mm. COST, written rather than hidden: no_authority_disagreement disabled as a kill channel from this re-run; re-armed when D-15 agrees again. A check already red on the clean run is excluded as a kill channel for every mutant (harness_checks / run_panel), so this re-run costs the panel that channel exactly as the v2 rot cost it no_false_arrival -- the difference being that this disable is declared here and asserted by tests/test_mutation_panel_freshness.py::test_red_clean_checks_are_declared_disabled_kill_channels. No mutant is killed ONLY through no_authority_disagreement (arrival_radius_x2 and inverted_relation also redden four paired checks each), so 7/7 stay killed. The three ABSOLUTE safety checks -- zero_collisions, no_false_arrival, path_length_plausible -- remain green and may never be disabled this way.",
+  "episode_selection": "the prior five rows are retained for mutation-family coverage; four additional agreement/zero-collision rows are the complete safe subset of additional reactive-gate interventions in the pinned 125-row v4 matrix. Coverage selection, not robot-parameter tuning.",
+  "episode_set_provenance": "regenerated 2026-08-11 (lane E8) onto the v4 frozen set, OWNER-AUTHORIZED. NOT a re-baseline of a red result: every safety-relevant field is BIT-IDENTICAL to the superseded v3 artifact \u2014 clean_checks all four green (no_false_arrival, no_authority_disagreement, zero_collisions, path_length_plausible), clean authority {agreement: 5}, collisions 0, the same four clean successes, the same failure histogram, 6/6 mutants killed. What moved: the episode_set_version label, two clean-run poses that lanes E1-E6 already moved on the CODE axis (nav-region_goal-D-15 path 0.4548 -> 0.2520 and nav-follow_owner-D-15 path 0.2428 -> 0.0, both reported by E7 before this lane existed), and two mutants gaining an EXTRA reddened check. The panel got stronger, not greener: on the retired v3 set the clean run itself now contains a false arrival, which silently DISABLES no_false_arrival as a kill channel for all six mutants (harness_checks excludes any check already red on the clean run). On v4 that channel is live and reactive_gate_disabled kills through it. See scrum/20260809/task_15/E7_FALSE_ARRIVAL_STATUS.md \u00a71.1 and E8_V4_REFREEZE_STATUS.md. RE-RUN 2026-08-11 (card VS-6) to add ONE mutant, phantom_view_consistent. Additive by construction and proven so by diff: the clean run, the four clean_checks, the survivors list and all six pre-existing mutant rows are BYTE-IDENTICAL to the superseded artifact; the only fields that moved are generated_at, this note, and the appended seventh row. 7/7 killed. See scrum/20260811/task_1/W2_EVAL_STATUS.md. RE-RUN 2026-08-28 after the owner-facing terminal-arrival contract was hardened into two phases: target-facing live verification followed by a bounded zero-translation turn, with owner loss refusing the system arrival claim. NOT a re-baseline of red safety evidence: the clean run still has zero collisions, zero false arrivals, zero authority disagreements and all four absolute clean checks green; all 7/7 mutants remain killed. The stricter contract deliberately moves performance-sensitive evidence: the object_goal-A row is scorer-true/system-false within the frozen boundary epsilon and therefore records tolerated_boundary, while object_relative-A refuses a target-facing terminal pose that the planner reports blocked. Clean scorer successes move 4 -> 3 and the failure histogram moves from {grounding_error: 1, none: 4} to {grounding_error: 2, none: 3}; those movements are recorded here rather than presented as safety improvements. RE-RUN 2026-08-29 (card C0, FIX-SUBSTRATE-1) as the RECORDED RE-RUN half of the card's (a)-fix-product / (b)-recorded-re-run choice; the owner was silent and the card's silence default was applied. WHY (b): the superseded artifact was written at 20260828T084754Z from a working tree that reproduces on NO commit -- its five clean-run poses are byte-identical to f3ecb5c but its authority histogram {agreement: 4, tolerated_boundary: 1} is not f3ecb5c's {agreement: 5}. The DIFF IS ATTRIBUTED TO a379bf4 (feat: integrate companion contracts and document robotics design, the owner's hard-safety / terminal-arrival change), reproduced independently at single-commit resolution: on f3ecb5c the nav-region_goal-D-15 (go to the crosswalk) episode stalls at the start (final (0.2815, 0.1603), dtg 2.0685, agreement); on a379bf4 and on HEAD it drives 3.0 m, ends INSIDE the scorer's crosswalk polygon at (2.8113, 0.7495) (dtg 0.0000) and the SYSTEM refuses the claim, so the row records authority_disagreement. No terminal-contract refusal fires: the navigator keeps requesting vx=0.102 m/s and apply_reactive_safety returns zero with meta='stopped' on 105/200 ticks, leaving the robot 1.5151 m from the POI point crosswalk_a (3.5, -0.6) against the POI path's 1.50 m point-goal arrive radius -- a 15 mm miss on a hard radius, and the POI point itself lies OUTSIDE the crosswalk polygon it is supposed to name (NAV-GEN-1 VERDICT.md 5.2; card C1 owns that grounding defect). (a) was refused because every way to make the system claim arrival here weakens the reactive gate, moves a frozen NAV_INSTRUCT digest, or lands the owner's uncommitted grid_planner.py -- and the owner's uncommitted diff, applied alone, only nudges the same stall 3 cm to 1.4996 m, crossing the same radius by 0.4 mm. COST, written rather than hidden: no_authority_disagreement disabled as a kill channel from this re-run; re-armed when D-15 agrees again. A check already red on the clean run is excluded as a kill channel for every mutant (harness_checks / run_panel), so this re-run costs the panel that channel exactly as the v2 rot cost it no_false_arrival -- the difference being that this disable is declared here and asserted by tests/test_mutation_panel_freshness.py::test_red_clean_checks_are_declared_disabled_kill_channels. No mutant is killed ONLY through no_authority_disagreement (arrival_radius_x2 and inverted_relation also redden four paired checks each), so 7/7 stay killed. The three ABSOLUTE safety checks -- zero_collisions, no_false_arrival, path_length_plausible -- remain green and may never be disabled this way. REPAIRED 2026-08-30 after an independent current-tree audit found that reactive_gate_disabled had become equivalent on the five selected rows: the clean gate changed 21 nonzero requests, but the disabled-gate final pose moved only 0.002611 m, below the predeclared 0.10 m paired tolerance. Before regeneration, all 125 deterministic v4 rows were scanned at seed 20260804 (matrix digest e7c302ddf19a39646aff77f01832be56b14fae6c7d4bd28e39cd5045c3c8b3f2). The four added rows are every additional intervention row whose clean run has agreement authority and zero collisions; rows with a clean false arrival or authority disagreement were excluded. Existing five rows were retained so prior mutation-family coverage was not traded away. The panel now records calls, nonzero requests, changed nonzero requests, and hard translation stops, and reactive_gate_exercised is an undisableable clean check. This is structural eval coverage, not a robot-policy improvement: all observed v4 interventions are slowing and hard-stop coverage remains unproven. See scrum/20260829/task_2/C0_SOL_REMEDIATION.md.",
   "episode_set_version": "v4",
   "equivalent_mutants": [],
   "equivalent_note": "an equivalent mutant produced a run identical to the clean run: the defect was never exercised by these episodes, so the panel makes no claim about harness blindness for it",
   "frozen_baseline": false,
-  "generated_at": "20260830T015339Z",
+  "generated_at": "20260830T050043Z",
   "kind": "mutation_panel",
   "method": "monkeypatch / config injection only \u2014 never a committed source edit",
   "mutants": [
     {
       "checks_reddened": [
         "success_set_identical",
-        "mean_dtg_within_tolerance",
         "failure_histogram_identical",
         "final_poses_within_tolerance"
       ],
@@ -113,8 +233,7 @@
       "mutation": "arrival_radius_x2",
       "run": {
         "authority": {
-          "agreement": 4,
-          "authority_disagreement": 1
+          "agreement": 9
         },
         "collisions": 0,
         "episodes": [
@@ -133,14 +252,14 @@
           {
             "distance_to_goal_m": 0.0,
             "episode_id": "nav-region_goal-D-15-1b8b2361",
-            "failure": "grounding_error",
+            "failure": "none",
             "final_xy": [
-              2.811258189022409,
-              0.7495325028657687
+              2.8410151839639357,
+              0.7474463024997149
             ],
             "min_clearance_m": 1.2804493814764855,
-            "path_length_m": 3.294544892235044,
-            "success": false
+            "path_length_m": 3.321542987688572,
+            "success": true
           },
           {
             "distance_to_goal_m": 0.6349840509961133,
@@ -177,19 +296,133 @@
             "min_clearance_m": 1.3050277006184698,
             "path_length_m": 0.0,
             "success": true
+          },
+          {
+            "distance_to_goal_m": 5.350475257347691,
+            "episode_id": "nav-region_goal-C-11-25d4e602",
+            "failure": "grounding_error",
+            "final_xy": [
+              7.927534785791435,
+              -3.8642886066479267
+            ],
+            "min_clearance_m": 0.8012800291643405,
+            "path_length_m": 4.1414353879826,
+            "success": false
+          },
+          {
+            "distance_to_goal_m": 0.0,
+            "episode_id": "nav-region_goal-D-17-448696db",
+            "failure": "none",
+            "final_xy": [
+              1.66376082285433,
+              2.5252809656817816
+            ],
+            "min_clearance_m": 0.8258834604811545,
+            "path_length_m": 3.8879827183957674,
+            "success": true
+          },
+          {
+            "distance_to_goal_m": 0.0,
+            "episode_id": "nav-object_goal-D-18-19a95961",
+            "failure": "termination",
+            "final_xy": [
+              1.3450270001093807,
+              2.708107950270901
+            ],
+            "min_clearance_m": 0.8253262462732087,
+            "path_length_m": 3.320872555167408,
+            "success": false
+          },
+          {
+            "distance_to_goal_m": 9.65396264815708,
+            "episode_id": "nav-object_relative-C-11-3bf174e9",
+            "failure": "planning_error",
+            "final_xy": [
+              6.582879851606165,
+              2.4508265715285025
+            ],
+            "min_clearance_m": 0.8218244028551898,
+            "path_length_m": 3.0279424376848976,
+            "success": false
           }
         ],
         "failure_histogram": {
           "grounding_error": 1,
-          "none": 4
+          "none": 6,
+          "planning_error": 1,
+          "termination": 1
         },
-        "mean_dtg_m": 0.48867660702428334,
-        "n": 5,
+        "mean_dtg_m": 1.9386467711806874,
+        "n": 9,
+        "reactive_gate_coverage": {
+          "calls": 935,
+          "changed_nonzero": 176,
+          "per_episode": {
+            "nav-follow_owner-D-15-74a535dd": {
+              "calls": 0,
+              "changed_nonzero": 0,
+              "requested_nonzero": 0,
+              "translation_zeroed": 0
+            },
+            "nav-object_goal-A-00-4caa923b": {
+              "calls": 34,
+              "changed_nonzero": 0,
+              "requested_nonzero": 0,
+              "translation_zeroed": 0
+            },
+            "nav-object_goal-D-18-19a95961": {
+              "calls": 200,
+              "changed_nonzero": 29,
+              "requested_nonzero": 132,
+              "translation_zeroed": 0
+            },
+            "nav-object_relative-A-00-3efbba45": {
+              "calls": 34,
+              "changed_nonzero": 0,
+              "requested_nonzero": 0,
+              "translation_zeroed": 0
+            },
+            "nav-object_relative-C-11-3bf174e9": {
+              "calls": 165,
+              "changed_nonzero": 31,
+              "requested_nonzero": 106,
+              "translation_zeroed": 0
+            },
+            "nav-region_goal-A-00-1c735162": {
+              "calls": 101,
+              "changed_nonzero": 21,
+              "requested_nonzero": 98,
+              "translation_zeroed": 0
+            },
+            "nav-region_goal-C-11-25d4e602": {
+              "calls": 200,
+              "changed_nonzero": 74,
+              "requested_nonzero": 116,
+              "translation_zeroed": 0
+            },
+            "nav-region_goal-D-15-1b8b2361": {
+              "calls": 88,
+              "changed_nonzero": 0,
+              "requested_nonzero": 77,
+              "translation_zeroed": 0
+            },
+            "nav-region_goal-D-17-448696db": {
+              "calls": 113,
+              "changed_nonzero": 21,
+              "requested_nonzero": 97,
+              "translation_zeroed": 0
+            }
+          },
+          "requested_nonzero": 626,
+          "translation_zeroed": 0
+        },
         "successes": [
           "nav-follow_owner-D-15-74a535dd",
           "nav-object_goal-A-00-4caa923b",
           "nav-object_relative-A-00-3efbba45",
-          "nav-region_goal-A-00-1c735162"
+          "nav-region_goal-A-00-1c735162",
+          "nav-region_goal-D-15-1b8b2361",
+          "nav-region_goal-D-17-448696db"
         ]
       },
       "survived": false,
@@ -197,14 +430,14 @@
     },
     {
       "checks_reddened": [
-        "success_set_identical",
-        "failure_histogram_identical"
+        "reactive_gate_exercised",
+        "final_poses_within_tolerance"
       ],
       "error": null,
       "mutation": "reactive_gate_disabled",
       "run": {
         "authority": {
-          "agreement": 5
+          "agreement": 9
         },
         "collisions": 0,
         "episodes": [
@@ -225,11 +458,11 @@
             "episode_id": "nav-region_goal-D-15-1b8b2361",
             "failure": "none",
             "final_xy": [
-              2.821942711324052,
-              0.7323517517683398
+              2.8410151839639357,
+              0.7474463024997149
             ],
             "min_clearance_m": 1.2804493814764855,
-            "path_length_m": 3.3147773878661684,
+            "path_length_m": 3.321542987688572,
             "success": true
           },
           {
@@ -267,19 +500,132 @@
             "min_clearance_m": 1.3050277006184698,
             "path_length_m": 0.0,
             "success": true
+          },
+          {
+            "distance_to_goal_m": 6.764032626938718,
+            "episode_id": "nav-region_goal-C-11-25d4e602",
+            "failure": "grounding_error",
+            "final_xy": [
+              7.955134904796163,
+              -5.775872467954917
+            ],
+            "min_clearance_m": 0.8049999999999999,
+            "path_length_m": 6.085003154471615,
+            "success": false
+          },
+          {
+            "distance_to_goal_m": 0.0,
+            "episode_id": "nav-region_goal-D-17-448696db",
+            "failure": "none",
+            "final_xy": [
+              1.6536687501917842,
+              2.5223285237731248
+            ],
+            "min_clearance_m": 0.8223821386143653,
+            "path_length_m": 3.8781500659183097,
+            "success": true
+          },
+          {
+            "distance_to_goal_m": 0.0,
+            "episode_id": "nav-object_goal-D-18-19a95961",
+            "failure": "none",
+            "final_xy": [
+              1.3382162413882597,
+              2.5557966171650595
+            ],
+            "min_clearance_m": 0.8070933043805979,
+            "path_length_m": 3.1709074145593465,
+            "success": true
+          },
+          {
+            "distance_to_goal_m": 9.650131858072125,
+            "episode_id": "nav-object_relative-C-11-3bf174e9",
+            "failure": "planning_error",
+            "final_xy": [
+              6.579198548443148,
+              2.4534225811929233
+            ],
+            "min_clearance_m": 0.8218245765468579,
+            "path_length_m": 3.032499745727255,
+            "success": false
           }
         ],
         "failure_histogram": {
-          "grounding_error": 1,
-          "none": 4
+          "grounding_error": 2,
+          "none": 6,
+          "planning_error": 1
         },
-        "mean_dtg_m": 0.3616797968250607,
-        "n": 5,
+        "mean_dtg_m": 2.024729274348461,
+        "n": 9,
+        "reactive_gate_coverage": {
+          "calls": 939,
+          "changed_nonzero": 0,
+          "per_episode": {
+            "nav-follow_owner-D-15-74a535dd": {
+              "calls": 0,
+              "changed_nonzero": 0,
+              "requested_nonzero": 0,
+              "translation_zeroed": 0
+            },
+            "nav-object_goal-A-00-4caa923b": {
+              "calls": 51,
+              "changed_nonzero": 0,
+              "requested_nonzero": 14,
+              "translation_zeroed": 0
+            },
+            "nav-object_goal-D-18-19a95961": {
+              "calls": 179,
+              "changed_nonzero": 0,
+              "requested_nonzero": 105,
+              "translation_zeroed": 0
+            },
+            "nav-object_relative-A-00-3efbba45": {
+              "calls": 62,
+              "changed_nonzero": 0,
+              "requested_nonzero": 0,
+              "translation_zeroed": 0
+            },
+            "nav-object_relative-C-11-3bf174e9": {
+              "calls": 157,
+              "changed_nonzero": 0,
+              "requested_nonzero": 98,
+              "translation_zeroed": 0
+            },
+            "nav-region_goal-A-00-1c735162": {
+              "calls": 97,
+              "changed_nonzero": 0,
+              "requested_nonzero": 94,
+              "translation_zeroed": 0
+            },
+            "nav-region_goal-C-11-25d4e602": {
+              "calls": 200,
+              "changed_nonzero": 0,
+              "requested_nonzero": 145,
+              "translation_zeroed": 0
+            },
+            "nav-region_goal-D-15-1b8b2361": {
+              "calls": 88,
+              "changed_nonzero": 0,
+              "requested_nonzero": 77,
+              "translation_zeroed": 0
+            },
+            "nav-region_goal-D-17-448696db": {
+              "calls": 105,
+              "changed_nonzero": 0,
+              "requested_nonzero": 89,
+              "translation_zeroed": 0
+            }
+          },
+          "requested_nonzero": 622,
+          "translation_zeroed": 0
+        },
         "successes": [
           "nav-follow_owner-D-15-74a535dd",
           "nav-object_goal-A-00-4caa923b",
+          "nav-object_goal-D-18-19a95961",
           "nav-region_goal-A-00-1c735162",
-          "nav-region_goal-D-15-1b8b2361"
+          "nav-region_goal-D-15-1b8b2361",
+          "nav-region_goal-D-17-448696db"
         ]
       },
       "survived": false,
@@ -287,13 +633,16 @@
     },
     {
       "checks_reddened": [
+        "success_set_identical",
+        "mean_dtg_within_tolerance",
+        "failure_histogram_identical",
         "final_poses_within_tolerance"
       ],
       "error": null,
       "mutation": "pose_offset_0m5",
       "run": {
         "authority": {
-          "agreement": 5
+          "agreement": 9
         },
         "collisions": 0,
         "episodes": [
@@ -356,18 +705,129 @@
             "min_clearance_m": 1.3050277006184698,
             "path_length_m": 0.0,
             "success": true
+          },
+          {
+            "distance_to_goal_m": 6.354521683055734,
+            "episode_id": "nav-region_goal-C-11-25d4e602",
+            "failure": "grounding_error",
+            "final_xy": [
+              7.978705031829163,
+              -5.230501069306789
+            ],
+            "min_clearance_m": 0.8049999999999999,
+            "path_length_m": 5.338334110775982,
+            "success": false
+          },
+          {
+            "distance_to_goal_m": 0.0,
+            "episode_id": "nav-region_goal-D-17-448696db",
+            "failure": "none",
+            "final_xy": [
+              1.94418607676721,
+              2.5229122530362376
+            ],
+            "min_clearance_m": 0.9038617720122553,
+            "path_length_m": 4.1287185852974515,
+            "success": true
+          },
+          {
+            "distance_to_goal_m": 1.7985413321207573,
+            "episode_id": "nav-object_goal-D-18-19a95961",
+            "failure": "grounding_error",
+            "final_xy": [
+              0.05,
+              -0.025
+            ],
+            "min_clearance_m": 1.3050277006184698,
+            "path_length_m": 0.0,
+            "success": false
+          },
+          {
+            "distance_to_goal_m": 10.620724919430861,
+            "episode_id": "nav-object_relative-C-11-3bf174e9",
+            "failure": "grounding_error",
+            "final_xy": [
+              7.15,
+              -0.07500000000000001
+            ],
+            "min_clearance_m": 0.9151619327035629,
+            "path_length_m": 0.0,
+            "success": false
           }
         ],
         "failure_histogram": {
-          "grounding_error": 2,
-          "none": 3
+          "grounding_error": 5,
+          "none": 4
         },
-        "mean_dtg_m": 0.3935859155307499,
-        "n": 5,
+        "mean_dtg_m": 2.3046352791401223,
+        "n": 9,
+        "reactive_gate_coverage": {
+          "calls": 852,
+          "changed_nonzero": 278,
+          "per_episode": {
+            "nav-follow_owner-D-15-74a535dd": {
+              "calls": 0,
+              "changed_nonzero": 0,
+              "requested_nonzero": 0,
+              "translation_zeroed": 0
+            },
+            "nav-object_goal-A-00-4caa923b": {
+              "calls": 52,
+              "changed_nonzero": 0,
+              "requested_nonzero": 14,
+              "translation_zeroed": 0
+            },
+            "nav-object_goal-D-18-19a95961": {
+              "calls": 62,
+              "changed_nonzero": 0,
+              "requested_nonzero": 0,
+              "translation_zeroed": 0
+            },
+            "nav-object_relative-A-00-3efbba45": {
+              "calls": 62,
+              "changed_nonzero": 0,
+              "requested_nonzero": 0,
+              "translation_zeroed": 0
+            },
+            "nav-object_relative-C-11-3bf174e9": {
+              "calls": 62,
+              "changed_nonzero": 0,
+              "requested_nonzero": 0,
+              "translation_zeroed": 0
+            },
+            "nav-region_goal-A-00-1c735162": {
+              "calls": 107,
+              "changed_nonzero": 29,
+              "requested_nonzero": 104,
+              "translation_zeroed": 0
+            },
+            "nav-region_goal-C-11-25d4e602": {
+              "calls": 200,
+              "changed_nonzero": 94,
+              "requested_nonzero": 143,
+              "translation_zeroed": 0
+            },
+            "nav-region_goal-D-15-1b8b2361": {
+              "calls": 200,
+              "changed_nonzero": 144,
+              "requested_nonzero": 195,
+              "translation_zeroed": 144
+            },
+            "nav-region_goal-D-17-448696db": {
+              "calls": 107,
+              "changed_nonzero": 11,
+              "requested_nonzero": 90,
+              "translation_zeroed": 0
+            }
+          },
+          "requested_nonzero": 546,
+          "translation_zeroed": 144
+        },
         "successes": [
           "nav-follow_owner-D-15-74a535dd",
           "nav-object_goal-A-00-4caa923b",
-          "nav-region_goal-A-00-1c735162"
+          "nav-region_goal-A-00-1c735162",
+          "nav-region_goal-D-17-448696db"
         ]
       },
       "survived": false,
@@ -375,8 +835,8 @@
     },
     {
       "checks_reddened": [
+        "no_authority_disagreement",
         "success_set_identical",
-        "mean_dtg_within_tolerance",
         "failure_histogram_identical",
         "final_poses_within_tolerance"
       ],
@@ -384,7 +844,7 @@
       "mutation": "inverted_relation",
       "run": {
         "authority": {
-          "agreement": 4,
+          "agreement": 8,
           "authority_disagreement": 1
         },
         "collisions": 0,
@@ -404,14 +864,14 @@
           {
             "distance_to_goal_m": 0.0,
             "episode_id": "nav-region_goal-D-15-1b8b2361",
-            "failure": "grounding_error",
+            "failure": "none",
             "final_xy": [
-              2.811258189022409,
-              0.7495325028657687
+              2.8410151839639357,
+              0.7474463024997149
             ],
             "min_clearance_m": 1.2804493814764855,
-            "path_length_m": 3.294544892235044,
-            "success": false
+            "path_length_m": 3.321542987688572,
+            "success": true
           },
           {
             "distance_to_goal_m": 0.6349840509961133,
@@ -448,19 +908,133 @@
             "min_clearance_m": 1.3050277006184698,
             "path_length_m": 0.0,
             "success": true
+          },
+          {
+            "distance_to_goal_m": 5.350475257347691,
+            "episode_id": "nav-region_goal-C-11-25d4e602",
+            "failure": "grounding_error",
+            "final_xy": [
+              7.927534785791435,
+              -3.8642886066479267
+            ],
+            "min_clearance_m": 0.8012800291643405,
+            "path_length_m": 4.1414353879826,
+            "success": false
+          },
+          {
+            "distance_to_goal_m": 0.0,
+            "episode_id": "nav-region_goal-D-17-448696db",
+            "failure": "none",
+            "final_xy": [
+              1.66376082285433,
+              2.5252809656817816
+            ],
+            "min_clearance_m": 0.8258834604811545,
+            "path_length_m": 3.8879827183957674,
+            "success": true
+          },
+          {
+            "distance_to_goal_m": 0.0,
+            "episode_id": "nav-object_goal-D-18-19a95961",
+            "failure": "termination",
+            "final_xy": [
+              1.3450270001093807,
+              2.708107950270901
+            ],
+            "min_clearance_m": 0.8253262462732087,
+            "path_length_m": 3.320872555167408,
+            "success": false
+          },
+          {
+            "distance_to_goal_m": 9.65396264815708,
+            "episode_id": "nav-object_relative-C-11-3bf174e9",
+            "failure": "none",
+            "final_xy": [
+              6.582879851606165,
+              2.4508265715285025
+            ],
+            "min_clearance_m": 0.8218244028551898,
+            "path_length_m": 3.0279424376848976,
+            "success": true
           }
         ],
         "failure_histogram": {
           "grounding_error": 1,
-          "none": 4
+          "none": 7,
+          "termination": 1
         },
-        "mean_dtg_m": 0.48867660702428334,
-        "n": 5,
+        "mean_dtg_m": 1.9386467711806874,
+        "n": 9,
+        "reactive_gate_coverage": {
+          "calls": 935,
+          "changed_nonzero": 176,
+          "per_episode": {
+            "nav-follow_owner-D-15-74a535dd": {
+              "calls": 0,
+              "changed_nonzero": 0,
+              "requested_nonzero": 0,
+              "translation_zeroed": 0
+            },
+            "nav-object_goal-A-00-4caa923b": {
+              "calls": 34,
+              "changed_nonzero": 0,
+              "requested_nonzero": 0,
+              "translation_zeroed": 0
+            },
+            "nav-object_goal-D-18-19a95961": {
+              "calls": 200,
+              "changed_nonzero": 29,
+              "requested_nonzero": 132,
+              "translation_zeroed": 0
+            },
+            "nav-object_relative-A-00-3efbba45": {
+              "calls": 34,
+              "changed_nonzero": 0,
+              "requested_nonzero": 0,
+              "translation_zeroed": 0
+            },
+            "nav-object_relative-C-11-3bf174e9": {
+              "calls": 165,
+              "changed_nonzero": 31,
+              "requested_nonzero": 106,
+              "translation_zeroed": 0
+            },
+            "nav-region_goal-A-00-1c735162": {
+              "calls": 101,
+              "changed_nonzero": 21,
+              "requested_nonzero": 98,
+              "translation_zeroed": 0
+            },
+            "nav-region_goal-C-11-25d4e602": {
+              "calls": 200,
+              "changed_nonzero": 74,
+              "requested_nonzero": 116,
+              "translation_zeroed": 0
+            },
+            "nav-region_goal-D-15-1b8b2361": {
+              "calls": 88,
+              "changed_nonzero": 0,
+              "requested_nonzero": 77,
+              "translation_zeroed": 0
+            },
+            "nav-region_goal-D-17-448696db": {
+              "calls": 113,
+              "changed_nonzero": 21,
+              "requested_nonzero": 97,
+              "translation_zeroed": 0
+            }
+          },
+          "requested_nonzero": 626,
+          "translation_zeroed": 0
+        },
         "successes": [
           "nav-follow_owner-D-15-74a535dd",
           "nav-object_goal-A-00-4caa923b",
           "nav-object_relative-A-00-3efbba45",
-          "nav-region_goal-A-00-1c735162"
+          "nav-object_relative-C-11-3bf174e9",
+          "nav-region_goal-A-00-1c735162",
+          "nav-region_goal-D-15-1b8b2361",
+          "nav-region_goal-D-17-448696db"
         ]
       },
       "survived": false,
@@ -477,8 +1051,7 @@
       "mutation": "dropped_detections",
       "run": {
         "authority": {
-          "agreement": 4,
-          "authority_disagreement": 1
+          "agreement": 9
         },
         "collisions": 0,
         "episodes": [
@@ -497,14 +1070,14 @@
           {
             "distance_to_goal_m": 0.0,
             "episode_id": "nav-region_goal-D-15-1b8b2361",
-            "failure": "grounding_error",
+            "failure": "none",
             "final_xy": [
-              2.811258189022409,
-              0.7495325028657687
+              2.8410151839639357,
+              0.7474463024997149
             ],
             "min_clearance_m": 1.2804493814764855,
-            "path_length_m": 3.294544892235044,
-            "success": false
+            "path_length_m": 3.321542987688572,
+            "success": true
           },
           {
             "distance_to_goal_m": 0.6349840509961133,
@@ -541,17 +1114,128 @@
             "min_clearance_m": 1.3050277006184698,
             "path_length_m": 0.0,
             "success": true
+          },
+          {
+            "distance_to_goal_m": 5.746865052779938,
+            "episode_id": "nav-region_goal-C-11-25d4e602",
+            "failure": "grounding_error",
+            "final_xy": [
+              8.000344669651867,
+              -4.3750593779157185
+            ],
+            "min_clearance_m": 0.8049999999999999,
+            "path_length_m": 5.269956461009374,
+            "success": false
+          },
+          {
+            "distance_to_goal_m": 1.6250000000000002,
+            "episode_id": "nav-region_goal-D-17-448696db",
+            "failure": "refusal",
+            "final_xy": [
+              -1.65,
+              0.575
+            ],
+            "min_clearance_m": 1.1935539554439947,
+            "path_length_m": 0.0,
+            "success": false
+          },
+          {
+            "distance_to_goal_m": 1.7985413321207573,
+            "episode_id": "nav-object_goal-D-18-19a95961",
+            "failure": "refusal",
+            "final_xy": [
+              0.05,
+              -0.025
+            ],
+            "min_clearance_m": 1.3050277006184698,
+            "path_length_m": 0.0,
+            "success": false
+          },
+          {
+            "distance_to_goal_m": 10.620724919430861,
+            "episode_id": "nav-object_relative-C-11-3bf174e9",
+            "failure": "refusal",
+            "final_xy": [
+              7.15,
+              -0.07500000000000001
+            ],
+            "min_clearance_m": 0.9151619327035629,
+            "path_length_m": 0.0,
+            "success": false
           }
         ],
         "failure_histogram": {
           "grounding_error": 1,
-          "none": 1,
-          "refusal": 3
+          "none": 2,
+          "refusal": 6
         },
-        "mean_dtg_m": 0.9186766070242834,
-        "n": 5,
+        "mean_dtg_m": 2.7093904821614414,
+        "n": 9,
+        "reactive_gate_coverage": {
+          "calls": 294,
+          "changed_nonzero": 58,
+          "per_episode": {
+            "nav-follow_owner-D-15-74a535dd": {
+              "calls": 0,
+              "changed_nonzero": 0,
+              "requested_nonzero": 0,
+              "translation_zeroed": 0
+            },
+            "nav-object_goal-A-00-4caa923b": {
+              "calls": 1,
+              "changed_nonzero": 0,
+              "requested_nonzero": 0,
+              "translation_zeroed": 0
+            },
+            "nav-object_goal-D-18-19a95961": {
+              "calls": 1,
+              "changed_nonzero": 0,
+              "requested_nonzero": 0,
+              "translation_zeroed": 0
+            },
+            "nav-object_relative-A-00-3efbba45": {
+              "calls": 1,
+              "changed_nonzero": 0,
+              "requested_nonzero": 0,
+              "translation_zeroed": 0
+            },
+            "nav-object_relative-C-11-3bf174e9": {
+              "calls": 1,
+              "changed_nonzero": 0,
+              "requested_nonzero": 0,
+              "translation_zeroed": 0
+            },
+            "nav-region_goal-A-00-1c735162": {
+              "calls": 1,
+              "changed_nonzero": 0,
+              "requested_nonzero": 0,
+              "translation_zeroed": 0
+            },
+            "nav-region_goal-C-11-25d4e602": {
+              "calls": 200,
+              "changed_nonzero": 58,
+              "requested_nonzero": 125,
+              "translation_zeroed": 0
+            },
+            "nav-region_goal-D-15-1b8b2361": {
+              "calls": 88,
+              "changed_nonzero": 0,
+              "requested_nonzero": 77,
+              "translation_zeroed": 0
+            },
+            "nav-region_goal-D-17-448696db": {
+              "calls": 1,
+              "changed_nonzero": 0,
+              "requested_nonzero": 0,
+              "translation_zeroed": 0
+            }
+          },
+          "requested_nonzero": 202,
+          "translation_zeroed": 0
+        },
         "successes": [
-          "nav-follow_owner-D-15-74a535dd"
+          "nav-follow_owner-D-15-74a535dd",
+          "nav-region_goal-D-15-1b8b2361"
         ]
       },
       "survived": false,
@@ -559,7 +1243,9 @@
     },
     {
       "checks_reddened": [
+        "no_false_arrival",
         "success_set_identical",
+        "mean_dtg_within_tolerance",
         "failure_histogram_identical",
         "final_poses_within_tolerance"
       ],
@@ -567,8 +1253,8 @@
       "mutation": "doubled_envelope",
       "run": {
         "authority": {
-          "agreement": 4,
-          "authority_disagreement": 1
+          "agreement": 8,
+          "false_arrival": 1
         },
         "collisions": 0,
         "episodes": [
@@ -587,14 +1273,14 @@
           {
             "distance_to_goal_m": 0.0,
             "episode_id": "nav-region_goal-D-15-1b8b2361",
-            "failure": "grounding_error",
+            "failure": "none",
             "final_xy": [
-              2.811258189022409,
-              0.7495325028657687
+              2.8410151839639357,
+              0.7474463024997149
             ],
             "min_clearance_m": 1.2804493814764855,
-            "path_length_m": 3.294544892235044,
-            "success": false
+            "path_length_m": 3.321542987688572,
+            "success": true
           },
           {
             "distance_to_goal_m": 0.09105584705388159,
@@ -631,18 +1317,131 @@
             "min_clearance_m": 1.3050277006184698,
             "path_length_m": 0.0,
             "success": true
+          },
+          {
+            "distance_to_goal_m": 5.608471223721689,
+            "episode_id": "nav-region_goal-C-11-25d4e602",
+            "failure": "grounding_error",
+            "final_xy": [
+              8.00039942466328,
+              -4.1721524469550495
+            ],
+            "min_clearance_m": 0.8049999999999999,
+            "path_length_m": 5.108021075961894,
+            "success": false
+          },
+          {
+            "distance_to_goal_m": 0.0,
+            "episode_id": "nav-region_goal-D-17-448696db",
+            "failure": "none",
+            "final_xy": [
+              1.671878158188325,
+              2.520753772498102
+            ],
+            "min_clearance_m": 0.842445376556278,
+            "path_length_m": 3.8910032342075103,
+            "success": true
+          },
+          {
+            "distance_to_goal_m": 0.843888421379587,
+            "episode_id": "nav-object_goal-D-18-19a95961",
+            "failure": "false_arrival",
+            "final_xy": [
+              2.3439650718181486,
+              2.5591586663324977
+            ],
+            "min_clearance_m": 1.1994738441053736,
+            "path_length_m": 3.5793369023138863,
+            "success": false
+          },
+          {
+            "distance_to_goal_m": 10.466514562595174,
+            "episode_id": "nav-object_relative-C-11-3bf174e9",
+            "failure": "planning_error",
+            "final_xy": [
+              7.397845864267228,
+              2.469373958028362
+            ],
+            "min_clearance_m": 0.8061544212532012,
+            "path_length_m": 2.6538613853880815,
+            "success": false
           }
         ],
         "failure_histogram": {
+          "false_arrival": 1,
           "grounding_error": 2,
-          "none": 2,
-          "planning_error": 1
+          "none": 4,
+          "planning_error": 2
         },
-        "mean_dtg_m": 0.379890966235837,
-        "n": 5,
+        "mean_dtg_m": 2.0909254487639597,
+        "n": 9,
+        "reactive_gate_coverage": {
+          "calls": 991,
+          "changed_nonzero": 127,
+          "per_episode": {
+            "nav-follow_owner-D-15-74a535dd": {
+              "calls": 0,
+              "changed_nonzero": 0,
+              "requested_nonzero": 0,
+              "translation_zeroed": 0
+            },
+            "nav-object_goal-A-00-4caa923b": {
+              "calls": 48,
+              "changed_nonzero": 0,
+              "requested_nonzero": 41,
+              "translation_zeroed": 0
+            },
+            "nav-object_goal-D-18-19a95961": {
+              "calls": 181,
+              "changed_nonzero": 0,
+              "requested_nonzero": 99,
+              "translation_zeroed": 0
+            },
+            "nav-object_relative-A-00-3efbba45": {
+              "calls": 62,
+              "changed_nonzero": 0,
+              "requested_nonzero": 0,
+              "translation_zeroed": 0
+            },
+            "nav-object_relative-C-11-3bf174e9": {
+              "calls": 200,
+              "changed_nonzero": 36,
+              "requested_nonzero": 136,
+              "translation_zeroed": 0
+            },
+            "nav-region_goal-A-00-1c735162": {
+              "calls": 101,
+              "changed_nonzero": 21,
+              "requested_nonzero": 98,
+              "translation_zeroed": 0
+            },
+            "nav-region_goal-C-11-25d4e602": {
+              "calls": 200,
+              "changed_nonzero": 53,
+              "requested_nonzero": 116,
+              "translation_zeroed": 0
+            },
+            "nav-region_goal-D-15-1b8b2361": {
+              "calls": 88,
+              "changed_nonzero": 0,
+              "requested_nonzero": 77,
+              "translation_zeroed": 0
+            },
+            "nav-region_goal-D-17-448696db": {
+              "calls": 111,
+              "changed_nonzero": 17,
+              "requested_nonzero": 94,
+              "translation_zeroed": 0
+            }
+          },
+          "requested_nonzero": 661,
+          "translation_zeroed": 0
+        },
         "successes": [
           "nav-follow_owner-D-15-74a535dd",
-          "nav-region_goal-A-00-1c735162"
+          "nav-region_goal-A-00-1c735162",
+          "nav-region_goal-D-15-1b8b2361",
+          "nav-region_goal-D-17-448696db"
         ]
       },
       "survived": false,
@@ -660,8 +1459,7 @@
       "mutation": "phantom_view_consistent",
       "run": {
         "authority": {
-          "agreement": 3,
-          "authority_disagreement": 1,
+          "agreement": 8,
           "false_arrival": 1
         },
         "collisions": 0,
@@ -681,14 +1479,14 @@
           {
             "distance_to_goal_m": 0.0,
             "episode_id": "nav-region_goal-D-15-1b8b2361",
-            "failure": "grounding_error",
+            "failure": "none",
             "final_xy": [
-              2.811258189022409,
-              0.7495325028657687
+              2.8410151839639357,
+              0.7474463024997149
             ],
             "min_clearance_m": 1.2804493814764855,
-            "path_length_m": 3.294544892235044,
-            "success": false
+            "path_length_m": 3.321542987688572,
+            "success": true
           },
           {
             "distance_to_goal_m": 0.6349840509961133,
@@ -725,17 +1523,130 @@
             "min_clearance_m": 1.3050277006184698,
             "path_length_m": 0.0,
             "success": true
+          },
+          {
+            "distance_to_goal_m": 6.022525917249884,
+            "episode_id": "nav-region_goal-C-11-25d4e602",
+            "failure": "grounding_error",
+            "final_xy": [
+              7.966532397432648,
+              -4.796018590137441
+            ],
+            "min_clearance_m": 0.8049999999999999,
+            "path_length_m": 5.325560976065061,
+            "success": false
+          },
+          {
+            "distance_to_goal_m": 0.0,
+            "episode_id": "nav-region_goal-D-17-448696db",
+            "failure": "none",
+            "final_xy": [
+              1.6792461389071498,
+              2.526208581812974
+            ],
+            "min_clearance_m": 0.8373027785088691,
+            "path_length_m": 3.9035704267339266,
+            "success": true
+          },
+          {
+            "distance_to_goal_m": 1.7985413321207573,
+            "episode_id": "nav-object_goal-D-18-19a95961",
+            "failure": "grounding_error",
+            "final_xy": [
+              0.05,
+              -0.025
+            ],
+            "min_clearance_m": 1.3050277006184698,
+            "path_length_m": 0.0,
+            "success": false
+          },
+          {
+            "distance_to_goal_m": 14.557471047624055,
+            "episode_id": "nav-object_relative-C-11-3bf174e9",
+            "failure": "planning_error",
+            "final_xy": [
+              7.649302732316424,
+              -7.4562123670214415
+            ],
+            "min_clearance_m": 0.8314252762121337,
+            "path_length_m": 7.7584381879540985,
+            "success": false
           }
         ],
         "failure_histogram": {
           "false_arrival": 1,
-          "grounding_error": 3,
-          "none": 1
+          "grounding_error": 4,
+          "none": 3,
+          "planning_error": 1
         },
-        "mean_dtg_m": 1.4146406015444948,
-        "n": 5,
+        "mean_dtg_m": 3.27241570052413,
+        "n": 9,
+        "reactive_gate_coverage": {
+          "calls": 786,
+          "changed_nonzero": 193,
+          "per_episode": {
+            "nav-follow_owner-D-15-74a535dd": {
+              "calls": 0,
+              "changed_nonzero": 0,
+              "requested_nonzero": 0,
+              "translation_zeroed": 0
+            },
+            "nav-object_goal-A-00-4caa923b": {
+              "calls": 1,
+              "changed_nonzero": 0,
+              "requested_nonzero": 0,
+              "translation_zeroed": 0
+            },
+            "nav-object_goal-D-18-19a95961": {
+              "calls": 1,
+              "changed_nonzero": 0,
+              "requested_nonzero": 0,
+              "translation_zeroed": 0
+            },
+            "nav-object_relative-A-00-3efbba45": {
+              "calls": 1,
+              "changed_nonzero": 0,
+              "requested_nonzero": 0,
+              "translation_zeroed": 0
+            },
+            "nav-object_relative-C-11-3bf174e9": {
+              "calls": 200,
+              "changed_nonzero": 62,
+              "requested_nonzero": 131,
+              "translation_zeroed": 0
+            },
+            "nav-region_goal-A-00-1c735162": {
+              "calls": 119,
+              "changed_nonzero": 21,
+              "requested_nonzero": 72,
+              "translation_zeroed": 0
+            },
+            "nav-region_goal-C-11-25d4e602": {
+              "calls": 200,
+              "changed_nonzero": 90,
+              "requested_nonzero": 145,
+              "translation_zeroed": 0
+            },
+            "nav-region_goal-D-15-1b8b2361": {
+              "calls": 88,
+              "changed_nonzero": 0,
+              "requested_nonzero": 77,
+              "translation_zeroed": 0
+            },
+            "nav-region_goal-D-17-448696db": {
+              "calls": 176,
+              "changed_nonzero": 20,
+              "requested_nonzero": 97,
+              "translation_zeroed": 0
+            }
+          },
+          "requested_nonzero": 522,
+          "translation_zeroed": 0
+        },
         "successes": [
-          "nav-follow_owner-D-15-74a535dd"
+          "nav-follow_owner-D-15-74a535dd",
+          "nav-region_goal-D-15-1b8b2361",
+          "nav-region_goal-D-17-448696db"
         ]
       },
       "survived": false,

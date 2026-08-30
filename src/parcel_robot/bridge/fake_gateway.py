@@ -25,13 +25,16 @@ from .protocol import (
     GatewayAckDispositionV1,
     GatewayAckV1,
     GatewayAcquireV1,
+    GatewayBodyKindV1,
     GatewayCommandV1,
     GatewayHashesV1,
     GatewayHelloV1,
     GatewayMessage,
     GatewayPhaseV1,
     GatewayStateQueryV1,
+    GatewayStateQueryV2,
     GatewayStateV1,
+    GatewayStateV2,
     GatewayStopReportV1,
     GatewayStopV1,
     decode_gateway_message,
@@ -54,6 +57,8 @@ class FakeGatewayCoreV1:
     ) -> None:
         self.sport = sport
         self.required_hashes = required_hashes
+        # Test doubles can never self-promote into physical provenance.
+        self.body_kind = GatewayBodyKindV1.FAKE
         self.boot_epoch = boot_epoch or uuid.uuid4().hex
         self.timing = timing or ControlTiming()
         self._clock = clock
@@ -197,6 +202,55 @@ class FakeGatewayCoreV1:
     def state_query(self, request: GatewayStateQueryV1) -> GatewayStateV1:
         del request
         return self.state()
+
+    def state_v2(self) -> GatewayStateV2:
+        """Expose fake provenance and explicitly unavailable native telemetry."""
+
+        state = self.state()
+        return GatewayStateV2(
+            boot_epoch=state.boot_epoch,
+            gateway_sequence=state.gateway_sequence,
+            phase=state.phase,
+            state_sequence=state.state_sequence,
+            state_age_ms=state.state_age_ms,
+            lease_active=state.lease_active,
+            writer_id=state.writer_id,
+            vx_mps=state.vx_mps,
+            vy_mps=state.vy_mps,
+            vyaw_rad_s=state.vyaw_rad_s,
+            stationary=state.stationary,
+            last_stop_sequence=state.last_stop_sequence,
+            last_stop_reason=state.last_stop_reason,
+            body_kind=self.body_kind,
+            telemetry_valid=False,
+            vendor_position_m=(0.0, 0.0, 0.0),
+            vendor_rpy_rad=(0.0, 0.0, 0.0),
+            mode=0,
+            error_code=0,
+            source_time_s=None,
+            sport_foot_force_raw=(0, 0, 0, 0),
+            feedback_integrity_ok=None,
+            feedback_integrity_reason="feedback_integrity_unavailable",
+            commissioned_soc_ok=None,
+            commissioned_soc_reason="commissioned_soc_unavailable",
+            low_state_valid=False,
+            low_state_sequence=0,
+            low_state_age_ms=None,
+            low_state_tick=None,
+            battery_soc_percent=None,
+            power_v=None,
+            power_a=None,
+            max_motor_temperature_raw=None,
+            motor_lost_max_raw=None,
+            foot_force_est_raw=None,
+            imu_temperature_raw=None,
+            temperature_ntc_raw=None,
+            bms_status=None,
+        )
+
+    def state_query_v2(self, request: GatewayStateQueryV2) -> GatewayStateV2:
+        del request
+        return self.state_v2()
 
     def client_lost(self, connection_id: int) -> GatewayStopReportV1 | None:
         with self._lock:
@@ -485,6 +539,8 @@ class FakeGatewayServerV1:
             return self.core.explicit_stop(connection_id, message)
         if isinstance(message, GatewayStateQueryV1):
             return self.core.state_query(message)
+        if isinstance(message, GatewayStateQueryV2):
+            return self.core.state_query_v2(message)
         raise ValueError(f"client cannot send gateway response kind {message.kind!r}")
 
     def _send(self, client: socket.socket, message: GatewayMessage) -> None:

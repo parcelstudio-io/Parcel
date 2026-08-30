@@ -114,6 +114,50 @@ def _git(*args: str) -> str:
     return (proc.stdout or "").rstrip("\n")
 
 
+def _dirty_paths_from_porcelain_z(payload: bytes) -> list[str]:
+    """Decode every complete path from ``git status --porcelain=v1 -z``.
+
+    In ``-z`` mode Git emits the destination path first for a rename/copy and
+    the source path as the following NUL-delimited record.  Keeping both makes
+    the nightly provenance useful without parsing the ambiguous human-facing
+    ``old -> new`` spelling or losing paths that contain spaces.
+    """
+
+    records = payload.split(b"\0")
+    paths: list[str] = []
+    index = 0
+    while index < len(records):
+        row = records[index]
+        index += 1
+        if not row:
+            continue
+        if len(row) < 4 or row[2:3] != b" ":
+            continue
+        status = row[:2]
+        paths.append(os.fsdecode(row[3:]))
+        if (b"R" in status or b"C" in status) and index < len(records) and records[index]:
+            paths.append(os.fsdecode(records[index]))
+            index += 1
+    return paths
+
+
+def _git_dirty_paths() -> list[str]:
+    """Return exact dirty paths, including both sides of renames/copies."""
+
+    try:
+        proc = subprocess.run(
+            ["git", "status", "--porcelain=v1", "-z", "--untracked-files=all"],
+            cwd=str(REPO),
+            capture_output=True,
+            text=False,
+            check=False,
+            timeout=30,
+        )
+    except (OSError, subprocess.SubprocessError):  # pragma: no cover - no git
+        return []
+    return _dirty_paths_from_porcelain_z(proc.stdout or b"")
+
+
 def environment() -> dict[str, Any]:
     """Everything a reader needs to know this run happened on THIS tree.
 
@@ -123,12 +167,12 @@ def environment() -> dict[str, Any]:
     contain. The list of dirty paths is recorded, not just the boolean.
     """
 
-    dirty = [line for line in _git("status", "--porcelain").splitlines() if line.strip()]
+    dirty = _git_dirty_paths()
     return {
         "git_head": _git("rev-parse", "HEAD"),
         "git_head_subject": _git("log", "-1", "--pretty=%s"),
         "git_dirty": bool(dirty),
-        "git_dirty_paths": [line[3:] for line in dirty],
+        "git_dirty_paths": dirty,
         "python": sys.version.split()[0],
         "executable": sys.executable,
         "platform": platform.platform(),

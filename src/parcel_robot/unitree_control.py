@@ -45,6 +45,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from parcel_robot import __version__
+from parcel_robot.bridge.unitree_writer_lock import UnitreeWriterLockV1
 from parcel_robot.commissioning.limits import (
     DEFAULT_MAX_DURATION_S,
     MAX_LINEAR_MPS,
@@ -186,7 +187,10 @@ def _run_observe(args: argparse.Namespace, parser: argparse.ArgumentParser) -> i
 # ------------------------------------------------------------------------- run
 
 
-def _run_session(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
+def _validated_run_inputs(
+    args: argparse.Namespace,
+    parser: argparse.ArgumentParser,
+) -> tuple[dict[CommissioningAxis, ObservedDirection], ObservationEvidence | None]:
     if not args.arm:
         parser.error("--arm is required; this subcommand can move physical hardware")
     missing = REQUIRED_ACKNOWLEDGEMENTS - set(args.ack)
@@ -205,67 +209,99 @@ def _run_session(args: argparse.Namespace, parser: argparse.ArgumentParser) -> i
             f"--mode {sorted(set(args.mode))} is not a subset of the modes the observation "
             f"actually saw {sorted(observation.modes_seen)}"
         )
+    return directions, observation
+
+
+def _run_session(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
+    directions, observation = _validated_run_inputs(args, parser)
 
     for index, line in enumerate(OPERATOR_INSTRUCTIONS, start=1):
         _echo(f"{index}. {line}")
     _echo("")
 
-    store = ConfigStore(args.config)
     arming = CommissioningArming.arm(
         operator=args.operator,
         robot_serial=args.robot_serial,
         acknowledgements=args.ack,
         observed_modes=args.mode,
     )
-    try:
-        session = build_unitree_sport_commissioning_session(
-            store.section("control"),
-            store.safety_limits(),
-            arming=arming,
-            journal_path=args.journal,
-        )
-    except CommissioningError as error:
-        _echo(f"commissioning refused: {error}")
-        return 1
 
-    axes = (
-        tuple(CommissioningAxis(name) for name in args.axis)
-        if args.axis
-        else tuple(CommissioningAxis)
-    )
-    if observation is not None:
-        session.adopt_observation(observation)
-    failed = False
+    # The commissioning writer and autonomous gateway contend on one fixed
+    # kernel inode. Acquire before configuration can construct a channel or SDK
+    # object, and hold through session.record(), which performs the final stop
+    # and controller close. The parcel-gateway service must be stopped and this
+    # command must run as its dedicated UID; permissions are intentionally not
+    # widened for an ordinary operator account.
+    writer_lock = UnitreeWriterLockV1(required=True)
     try:
-        session.start()
-        for axis in axes:
-            speed = args.yaw_speed if axis.is_angular else args.speed
-            _echo(f"Commanding {axis.value} at {speed:g} for {args.duration:g}s. Watch the robot.")
-            session.run_axis_step(
-                axis,
-                speed,
-                args.duration,
-                observed_direction=directions.get(axis, ObservedDirection.UNCERTAIN),
+        writer_lock.acquire()
+    except (OSError, RuntimeError) as error:
+        _echo(f"commissioning refused: Unitree writer authority unavailable: {error}")
+        return 1
+    activation_attempted = False
+    try:
+        store = ConfigStore(args.config)
+        try:
+            session = build_unitree_sport_commissioning_session(
+                store.section("control"),
+                store.safety_limits(),
+                arming=arming,
+                journal_path=args.journal,
+                writer_authority=writer_lock,
             )
-            _echo(f"{axis.value}: step complete and stop confirmed.")
-    except KeyboardInterrupt:
-        failed = True
-        _echo("Interrupted. The session is latched; use the physical E-stop if the robot moved.")
-    except CommissioningError as error:
-        failed = True
-        _echo(f"commissioning stopped: {error}")
-    finally:
-        record = session.record(
-            performed_at=_utc_now(),
-            software_revision=args.software_revision,
-            artifact_paths=args.artifact,
+        except CommissioningError as error:
+            _echo(f"commissioning refused: {error}")
+            return 1
+
+        axes = (
+            tuple(CommissioningAxis(name) for name in args.axis)
+            if args.axis
+            else tuple(CommissioningAxis)
         )
-        path = record.save(args.record_out)
-        _echo(f"record written to {path} (outcome={record.outcome.value})")
-        missing_evidence = record.missing_evidence()
-        if missing_evidence:
-            _echo("this record authorizes nothing; missing: " + ", ".join(missing_evidence))
-    return 1 if failed or session.latched else 0
+        if observation is not None:
+            session.adopt_observation(observation)
+        failed = False
+        try:
+            # A failed activate may still have started the SDK lease thread, so
+            # crossing this line makes the lock process-lifetime authority.
+            activation_attempted = True
+            session.start()
+            for axis in axes:
+                speed = args.yaw_speed if axis.is_angular else args.speed
+                _echo(
+                    f"Commanding {axis.value} at {speed:g} for {args.duration:g}s. Watch the robot."
+                )
+                session.run_axis_step(
+                    axis,
+                    speed,
+                    args.duration,
+                    observed_direction=directions.get(axis, ObservedDirection.UNCERTAIN),
+                )
+                _echo(f"{axis.value}: step complete and stop confirmed.")
+        except KeyboardInterrupt:
+            failed = True
+            _echo(
+                "Interrupted. The session is latched; use the physical E-stop if the robot moved."
+            )
+        except CommissioningError as error:
+            failed = True
+            _echo(f"commissioning stopped: {error}")
+        finally:
+            record = session.record(
+                performed_at=_utc_now(),
+                software_revision=args.software_revision,
+                artifact_paths=args.artifact,
+            )
+            path = record.save(args.record_out)
+            _echo(f"record written to {path} (outcome={record.outcome.value})")
+            missing_evidence = record.missing_evidence()
+            if missing_evidence:
+                _echo("this record authorizes nothing; missing: " + ", ".join(missing_evidence))
+        return 1 if failed or session.latched else 0
+    finally:
+        if activation_attempted:
+            writer_lock.retain_until_process_exit()
+        writer_lock.close()
 
 
 # ---------------------------------------------------------------------- review

@@ -20,8 +20,8 @@ be grounded or safely represented.
 
 Navigation and motion are proposals only. A deterministic validator and task
 executive decide whether and when the plan can run; camera/LiDAR navigation,
-the reactive safety shield, and the Unitree Sport controller retain actuator
-authority. Never claim an action has happened in PlanIR.
+the reactive safety shield, `ControlManager`, and the physical sole-writer
+gateway retain execution authority. Never claim an action has happened in PlanIR.
 
 Protect an active critical task. Social gestures and voice may be deferred,
 and must not interrupt navigation at an unsafe point. Emergency stop, manual

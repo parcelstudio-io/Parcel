@@ -28,6 +28,7 @@ from parcel_robot.instructnav.scoring import (
 from parcel_robot.models import VelocityCommand
 from parcel_robot.navigation.approach import point_in_polygon_with_clearance
 from parcel_robot.navigation.base import NavObservation
+from parcel_robot.navigation.dynamic_costs import DEFAULT_DYNAMIC_AGENT_RADIUS_M
 from parcel_robot.navigation.follow import FollowOwnerController
 from parcel_robot.navigation.goals import navigation_directive_from_text
 from parcel_robot.navigation.pipeline import DirectiveNavigator
@@ -1160,7 +1161,7 @@ def _nav_observation(
                         "y": float(observation.owner.y),
                         "vx": 0.0,
                         "vy": 0.0,
-                        "radius_m": 0.35,
+                        "radius_m": DEFAULT_DYNAMIC_AGENT_RADIUS_M,
                     },
                 )
                 if observation.owner.visible

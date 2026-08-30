@@ -721,6 +721,52 @@ def test_the_typed_hosted_turn_is_governed_too_and_refuses_as_a_RuntimeError() -
     assert RobotRuntime._require_hosted_budget(_Unmetered(), "a turn") is None
 
 
+def test_text_mode_constructs_the_governor_before_returning_its_sink() -> None:
+    from parcel_robot.realtime.browser_sink import DiscardSink
+    from parcel_robot.runtime import RobotRuntime
+
+    class Store:
+        @staticmethod
+        def section(name: str) -> dict[str, object]:
+            assert name == "audio"
+            return {}
+
+    class Ledger:
+        @staticmethod
+        def month_to_date() -> _Total:
+            return _Total(500.0)
+
+        @staticmethod
+        def day_to_date() -> _Day:
+            return _Day(0.0)
+
+    class Config:
+        audio = False
+
+    class RuntimeStub:
+        realtime_config = Config()
+        realtime_governor = None
+        _realtime_spend_ledger = Ledger()
+        store = Store()
+        _build_hosted_governor = RobotRuntime._build_hosted_governor
+
+        @staticmethod
+        def _emit(_source: str, _message: str, _level: str) -> None:
+            return None
+
+    runtime = RuntimeStub()
+    sink = RobotRuntime._build_realtime_sink(runtime)  # type: ignore[arg-type]
+
+    assert isinstance(sink, DiscardSink)
+    assert isinstance(runtime.realtime_governor, HostedCallGovernor)
+    with pytest.raises(HostedCallRefused) as raised:
+        RobotRuntime._require_hosted_budget(
+            runtime,  # type: ignore[arg-type]
+            "the owner's typed hosted turn",
+        )
+    assert raised.value.code == CODE_ENVELOPE_REACHED
+
+
 def test_the_press_only_raises_on_a_budget_refusal() -> None:
     """A press that has not been admitted YET is not a refusal. Regression."""
 

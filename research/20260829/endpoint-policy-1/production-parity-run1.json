@@ -1,0 +1,1170 @@
+{
+  "schema": "parcel-endpoint-production-loop-parity-1",
+  "scope": "direct_frames_real_models_actual_microphone_voice_loop_no_pipewire_no_device",
+  "policy": {
+    "confidence_threshold": 0.5,
+    "complete_silence_s": 0.2
+  },
+  "cell_count": 52,
+  "sample_clock_match_count": 52,
+  "mismatch_count": 0,
+  "pass": true,
+  "source_hashes": {
+    "parity_script": "fe5737233470d7297edf796791dce4a5a05e7c4320f4c6189a975245f0cc8f75",
+    "sensitivity_runner": "238dff207f12eb09db69baaa03cc040e910b7dbf1a739ab4618375e6b062744c",
+    "voice_loop": "3e57210203bb183a2c62c3bac7d208acb26dffa7b4129a148c024a9214b9cabb",
+    "endpointing": "4ee2032b4e1c0cfcf301d9b0dcc2b67d727bd47cdf09eda3b0fe2d60a0f66ab5",
+    "silero": "1a153a22f4509e292a94e67d6f9b85e8deb25b4988682b7e174c65279d8788e3",
+    "smart_turn": "2bb026316b14a660486a75b1733cd3fbab8c2fd0314dc9af7be49f8cca967e4f"
+  },
+  "mismatches": [],
+  "cells": [
+    {
+      "name": "complete_01",
+      "kind": "complete",
+      "phase_offset_samples": 0,
+      "duplicate_state_machine_commit_clocks_s": [
+        2.67
+      ],
+      "production_loop_commit_clocks_s": [
+        2.6699999999999973
+      ],
+      "commit_clock_abs_deltas_s": [
+        2.6645352591003757e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        89
+      ],
+      "production_loop_commit_frame_indices": [
+        89
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "complete_01",
+      "kind": "complete",
+      "phase_offset_samples": 120,
+      "duplicate_state_machine_commit_clocks_s": [
+        2.67
+      ],
+      "production_loop_commit_clocks_s": [
+        2.6699999999999973
+      ],
+      "commit_clock_abs_deltas_s": [
+        2.6645352591003757e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        89
+      ],
+      "production_loop_commit_frame_indices": [
+        89
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "complete_01",
+      "kind": "complete",
+      "phase_offset_samples": 240,
+      "duplicate_state_machine_commit_clocks_s": [
+        2.67
+      ],
+      "production_loop_commit_clocks_s": [
+        2.6699999999999973
+      ],
+      "commit_clock_abs_deltas_s": [
+        2.6645352591003757e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        89
+      ],
+      "production_loop_commit_frame_indices": [
+        89
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "complete_01",
+      "kind": "complete",
+      "phase_offset_samples": 360,
+      "duplicate_state_machine_commit_clocks_s": [
+        2.6999999999999997
+      ],
+      "production_loop_commit_clocks_s": [
+        2.699999999999997
+      ],
+      "commit_clock_abs_deltas_s": [
+        2.6645352591003757e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        90
+      ],
+      "production_loop_commit_frame_indices": [
+        90
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "complete_02",
+      "kind": "complete",
+      "phase_offset_samples": 0,
+      "duplicate_state_machine_commit_clocks_s": [
+        1.89
+      ],
+      "production_loop_commit_clocks_s": [
+        1.8900000000000015
+      ],
+      "commit_clock_abs_deltas_s": [
+        1.5543122344752192e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        63
+      ],
+      "production_loop_commit_frame_indices": [
+        63
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "complete_02",
+      "kind": "complete",
+      "phase_offset_samples": 120,
+      "duplicate_state_machine_commit_clocks_s": [
+        1.92
+      ],
+      "production_loop_commit_clocks_s": [
+        1.9200000000000015
+      ],
+      "commit_clock_abs_deltas_s": [
+        1.5543122344752192e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        64
+      ],
+      "production_loop_commit_frame_indices": [
+        64
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "complete_02",
+      "kind": "complete",
+      "phase_offset_samples": 240,
+      "duplicate_state_machine_commit_clocks_s": [
+        1.92
+      ],
+      "production_loop_commit_clocks_s": [
+        1.9200000000000015
+      ],
+      "commit_clock_abs_deltas_s": [
+        1.5543122344752192e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        64
+      ],
+      "production_loop_commit_frame_indices": [
+        64
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "complete_02",
+      "kind": "complete",
+      "phase_offset_samples": 360,
+      "duplicate_state_machine_commit_clocks_s": [
+        1.92
+      ],
+      "production_loop_commit_clocks_s": [
+        1.9200000000000015
+      ],
+      "commit_clock_abs_deltas_s": [
+        1.5543122344752192e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        64
+      ],
+      "production_loop_commit_frame_indices": [
+        64
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "complete_03",
+      "kind": "complete",
+      "phase_offset_samples": 0,
+      "duplicate_state_machine_commit_clocks_s": [
+        1.98
+      ],
+      "production_loop_commit_clocks_s": [
+        1.9800000000000015
+      ],
+      "commit_clock_abs_deltas_s": [
+        1.5543122344752192e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        66
+      ],
+      "production_loop_commit_frame_indices": [
+        66
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "complete_03",
+      "kind": "complete",
+      "phase_offset_samples": 120,
+      "duplicate_state_machine_commit_clocks_s": [
+        1.98
+      ],
+      "production_loop_commit_clocks_s": [
+        1.9800000000000015
+      ],
+      "commit_clock_abs_deltas_s": [
+        1.5543122344752192e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        66
+      ],
+      "production_loop_commit_frame_indices": [
+        66
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "complete_03",
+      "kind": "complete",
+      "phase_offset_samples": 240,
+      "duplicate_state_machine_commit_clocks_s": [
+        2.01
+      ],
+      "production_loop_commit_clocks_s": [
+        2.0100000000000016
+      ],
+      "commit_clock_abs_deltas_s": [
+        1.7763568394002505e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        67
+      ],
+      "production_loop_commit_frame_indices": [
+        67
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "complete_03",
+      "kind": "complete",
+      "phase_offset_samples": 360,
+      "duplicate_state_machine_commit_clocks_s": [
+        2.01
+      ],
+      "production_loop_commit_clocks_s": [
+        2.0100000000000016
+      ],
+      "commit_clock_abs_deltas_s": [
+        1.7763568394002505e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        67
+      ],
+      "production_loop_commit_frame_indices": [
+        67
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "complete_04",
+      "kind": "complete",
+      "phase_offset_samples": 0,
+      "duplicate_state_machine_commit_clocks_s": [
+        2.31
+      ],
+      "production_loop_commit_clocks_s": [
+        2.3099999999999996
+      ],
+      "commit_clock_abs_deltas_s": [
+        4.440892098500626e-16
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        77
+      ],
+      "production_loop_commit_frame_indices": [
+        77
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "complete_04",
+      "kind": "complete",
+      "phase_offset_samples": 120,
+      "duplicate_state_machine_commit_clocks_s": [
+        2.31
+      ],
+      "production_loop_commit_clocks_s": [
+        2.3099999999999996
+      ],
+      "commit_clock_abs_deltas_s": [
+        4.440892098500626e-16
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        77
+      ],
+      "production_loop_commit_frame_indices": [
+        77
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "complete_04",
+      "kind": "complete",
+      "phase_offset_samples": 240,
+      "duplicate_state_machine_commit_clocks_s": [
+        2.31
+      ],
+      "production_loop_commit_clocks_s": [
+        2.3099999999999996
+      ],
+      "commit_clock_abs_deltas_s": [
+        4.440892098500626e-16
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        77
+      ],
+      "production_loop_commit_frame_indices": [
+        77
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "complete_04",
+      "kind": "complete",
+      "phase_offset_samples": 360,
+      "duplicate_state_machine_commit_clocks_s": [
+        2.31
+      ],
+      "production_loop_commit_clocks_s": [
+        2.3099999999999996
+      ],
+      "commit_clock_abs_deltas_s": [
+        4.440892098500626e-16
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        77
+      ],
+      "production_loop_commit_frame_indices": [
+        77
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "complete_05",
+      "kind": "complete",
+      "phase_offset_samples": 0,
+      "duplicate_state_machine_commit_clocks_s": [
+        2.13
+      ],
+      "production_loop_commit_clocks_s": [
+        2.130000000000001
+      ],
+      "commit_clock_abs_deltas_s": [
+        8.881784197001252e-16
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        71
+      ],
+      "production_loop_commit_frame_indices": [
+        71
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "complete_05",
+      "kind": "complete",
+      "phase_offset_samples": 120,
+      "duplicate_state_machine_commit_clocks_s": [
+        2.13
+      ],
+      "production_loop_commit_clocks_s": [
+        2.130000000000001
+      ],
+      "commit_clock_abs_deltas_s": [
+        8.881784197001252e-16
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        71
+      ],
+      "production_loop_commit_frame_indices": [
+        71
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "complete_05",
+      "kind": "complete",
+      "phase_offset_samples": 240,
+      "duplicate_state_machine_commit_clocks_s": [
+        2.13
+      ],
+      "production_loop_commit_clocks_s": [
+        2.130000000000001
+      ],
+      "commit_clock_abs_deltas_s": [
+        8.881784197001252e-16
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        71
+      ],
+      "production_loop_commit_frame_indices": [
+        71
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "complete_05",
+      "kind": "complete",
+      "phase_offset_samples": 360,
+      "duplicate_state_machine_commit_clocks_s": [
+        2.13
+      ],
+      "production_loop_commit_clocks_s": [
+        2.130000000000001
+      ],
+      "commit_clock_abs_deltas_s": [
+        8.881784197001252e-16
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        71
+      ],
+      "production_loop_commit_frame_indices": [
+        71
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "complete_06",
+      "kind": "complete",
+      "phase_offset_samples": 0,
+      "duplicate_state_machine_commit_clocks_s": [
+        2.76
+      ],
+      "production_loop_commit_clocks_s": [
+        2.7599999999999967
+      ],
+      "commit_clock_abs_deltas_s": [
+        3.1086244689504383e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        92
+      ],
+      "production_loop_commit_frame_indices": [
+        92
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "complete_06",
+      "kind": "complete",
+      "phase_offset_samples": 120,
+      "duplicate_state_machine_commit_clocks_s": [
+        2.76
+      ],
+      "production_loop_commit_clocks_s": [
+        2.7599999999999967
+      ],
+      "commit_clock_abs_deltas_s": [
+        3.1086244689504383e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        92
+      ],
+      "production_loop_commit_frame_indices": [
+        92
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "complete_06",
+      "kind": "complete",
+      "phase_offset_samples": 240,
+      "duplicate_state_machine_commit_clocks_s": [
+        2.76
+      ],
+      "production_loop_commit_clocks_s": [
+        2.7599999999999967
+      ],
+      "commit_clock_abs_deltas_s": [
+        3.1086244689504383e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        92
+      ],
+      "production_loop_commit_frame_indices": [
+        92
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "complete_06",
+      "kind": "complete",
+      "phase_offset_samples": 360,
+      "duplicate_state_machine_commit_clocks_s": [
+        2.76
+      ],
+      "production_loop_commit_clocks_s": [
+        2.7599999999999967
+      ],
+      "commit_clock_abs_deltas_s": [
+        3.1086244689504383e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        92
+      ],
+      "production_loop_commit_frame_indices": [
+        92
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "incomplete_01",
+      "kind": "incomplete",
+      "phase_offset_samples": 0,
+      "duplicate_state_machine_commit_clocks_s": [
+        4.6499999999999995
+      ],
+      "production_loop_commit_clocks_s": [
+        4.649999999999994
+      ],
+      "commit_clock_abs_deltas_s": [
+        5.329070518200751e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        155
+      ],
+      "production_loop_commit_frame_indices": [
+        155
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "incomplete_01",
+      "kind": "incomplete",
+      "phase_offset_samples": 120,
+      "duplicate_state_machine_commit_clocks_s": [
+        4.6499999999999995
+      ],
+      "production_loop_commit_clocks_s": [
+        4.649999999999994
+      ],
+      "commit_clock_abs_deltas_s": [
+        5.329070518200751e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        155
+      ],
+      "production_loop_commit_frame_indices": [
+        155
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "incomplete_01",
+      "kind": "incomplete",
+      "phase_offset_samples": 240,
+      "duplicate_state_machine_commit_clocks_s": [
+        4.6499999999999995
+      ],
+      "production_loop_commit_clocks_s": [
+        4.649999999999994
+      ],
+      "commit_clock_abs_deltas_s": [
+        5.329070518200751e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        155
+      ],
+      "production_loop_commit_frame_indices": [
+        155
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "incomplete_01",
+      "kind": "incomplete",
+      "phase_offset_samples": 360,
+      "duplicate_state_machine_commit_clocks_s": [
+        2.34
+      ],
+      "production_loop_commit_clocks_s": [
+        2.3399999999999994
+      ],
+      "commit_clock_abs_deltas_s": [
+        4.440892098500626e-16
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        78
+      ],
+      "production_loop_commit_frame_indices": [
+        78
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "incomplete_02",
+      "kind": "incomplete",
+      "phase_offset_samples": 0,
+      "duplicate_state_machine_commit_clocks_s": [
+        4.109999999999999
+      ],
+      "production_loop_commit_clocks_s": [
+        4.10999999999999
+      ],
+      "commit_clock_abs_deltas_s": [
+        9.769962616701378e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        137
+      ],
+      "production_loop_commit_frame_indices": [
+        137
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "incomplete_02",
+      "kind": "incomplete",
+      "phase_offset_samples": 120,
+      "duplicate_state_machine_commit_clocks_s": [
+        1.7999999999999998
+      ],
+      "production_loop_commit_clocks_s": [
+        1.8000000000000014
+      ],
+      "commit_clock_abs_deltas_s": [
+        1.5543122344752192e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        60
+      ],
+      "production_loop_commit_frame_indices": [
+        60
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "incomplete_02",
+      "kind": "incomplete",
+      "phase_offset_samples": 240,
+      "duplicate_state_machine_commit_clocks_s": [
+        1.7999999999999998
+      ],
+      "production_loop_commit_clocks_s": [
+        1.8000000000000014
+      ],
+      "commit_clock_abs_deltas_s": [
+        1.5543122344752192e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        60
+      ],
+      "production_loop_commit_frame_indices": [
+        60
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "incomplete_02",
+      "kind": "incomplete",
+      "phase_offset_samples": 360,
+      "duplicate_state_machine_commit_clocks_s": [
+        4.109999999999999
+      ],
+      "production_loop_commit_clocks_s": [
+        4.10999999999999
+      ],
+      "commit_clock_abs_deltas_s": [
+        9.769962616701378e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        137
+      ],
+      "production_loop_commit_frame_indices": [
+        137
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "incomplete_03",
+      "kind": "incomplete",
+      "phase_offset_samples": 0,
+      "duplicate_state_machine_commit_clocks_s": [
+        4.77
+      ],
+      "production_loop_commit_clocks_s": [
+        4.769999999999995
+      ],
+      "commit_clock_abs_deltas_s": [
+        4.440892098500626e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        159
+      ],
+      "production_loop_commit_frame_indices": [
+        159
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "incomplete_03",
+      "kind": "incomplete",
+      "phase_offset_samples": 120,
+      "duplicate_state_machine_commit_clocks_s": [
+        4.77
+      ],
+      "production_loop_commit_clocks_s": [
+        4.769999999999995
+      ],
+      "commit_clock_abs_deltas_s": [
+        4.440892098500626e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        159
+      ],
+      "production_loop_commit_frame_indices": [
+        159
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "incomplete_03",
+      "kind": "incomplete",
+      "phase_offset_samples": 240,
+      "duplicate_state_machine_commit_clocks_s": [
+        4.8
+      ],
+      "production_loop_commit_clocks_s": [
+        4.799999999999995
+      ],
+      "commit_clock_abs_deltas_s": [
+        4.440892098500626e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        160
+      ],
+      "production_loop_commit_frame_indices": [
+        160
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "incomplete_03",
+      "kind": "incomplete",
+      "phase_offset_samples": 360,
+      "duplicate_state_machine_commit_clocks_s": [
+        4.8
+      ],
+      "production_loop_commit_clocks_s": [
+        4.799999999999995
+      ],
+      "commit_clock_abs_deltas_s": [
+        4.440892098500626e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        160
+      ],
+      "production_loop_commit_frame_indices": [
+        160
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "incomplete_04",
+      "kind": "incomplete",
+      "phase_offset_samples": 0,
+      "duplicate_state_machine_commit_clocks_s": [
+        2.31
+      ],
+      "production_loop_commit_clocks_s": [
+        2.3099999999999996
+      ],
+      "commit_clock_abs_deltas_s": [
+        4.440892098500626e-16
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        77
+      ],
+      "production_loop_commit_frame_indices": [
+        77
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "incomplete_04",
+      "kind": "incomplete",
+      "phase_offset_samples": 120,
+      "duplicate_state_machine_commit_clocks_s": [
+        2.34
+      ],
+      "production_loop_commit_clocks_s": [
+        2.3399999999999994
+      ],
+      "commit_clock_abs_deltas_s": [
+        4.440892098500626e-16
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        78
+      ],
+      "production_loop_commit_frame_indices": [
+        78
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "incomplete_04",
+      "kind": "incomplete",
+      "phase_offset_samples": 240,
+      "duplicate_state_machine_commit_clocks_s": [
+        2.34
+      ],
+      "production_loop_commit_clocks_s": [
+        2.3399999999999994
+      ],
+      "commit_clock_abs_deltas_s": [
+        4.440892098500626e-16
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        78
+      ],
+      "production_loop_commit_frame_indices": [
+        78
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "incomplete_04",
+      "kind": "incomplete",
+      "phase_offset_samples": 360,
+      "duplicate_state_machine_commit_clocks_s": [
+        2.34
+      ],
+      "production_loop_commit_clocks_s": [
+        2.3399999999999994
+      ],
+      "commit_clock_abs_deltas_s": [
+        4.440892098500626e-16
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        78
+      ],
+      "production_loop_commit_frame_indices": [
+        78
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "pause_01",
+      "kind": "pause_heavy",
+      "phase_offset_samples": 0,
+      "duplicate_state_machine_commit_clocks_s": [
+        1.5,
+        3.75
+      ],
+      "production_loop_commit_clocks_s": [
+        1.500000000000001,
+        3.7499999999999902
+      ],
+      "commit_clock_abs_deltas_s": [
+        1.1102230246251565e-15,
+        9.769962616701378e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        50,
+        125
+      ],
+      "production_loop_commit_frame_indices": [
+        50,
+        125
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "pause_01",
+      "kind": "pause_heavy",
+      "phase_offset_samples": 120,
+      "duplicate_state_machine_commit_clocks_s": [
+        1.53,
+        3.75
+      ],
+      "production_loop_commit_clocks_s": [
+        1.5300000000000011,
+        3.7499999999999902
+      ],
+      "commit_clock_abs_deltas_s": [
+        1.1102230246251565e-15,
+        9.769962616701378e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        51,
+        125
+      ],
+      "production_loop_commit_frame_indices": [
+        51,
+        125
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "pause_01",
+      "kind": "pause_heavy",
+      "phase_offset_samples": 240,
+      "duplicate_state_machine_commit_clocks_s": [
+        1.53,
+        3.75
+      ],
+      "production_loop_commit_clocks_s": [
+        1.5300000000000011,
+        3.7499999999999902
+      ],
+      "commit_clock_abs_deltas_s": [
+        1.1102230246251565e-15,
+        9.769962616701378e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        51,
+        125
+      ],
+      "production_loop_commit_frame_indices": [
+        51,
+        125
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "pause_01",
+      "kind": "pause_heavy",
+      "phase_offset_samples": 360,
+      "duplicate_state_machine_commit_clocks_s": [
+        1.53,
+        3.78
+      ],
+      "production_loop_commit_clocks_s": [
+        1.5300000000000011,
+        3.77999999999999
+      ],
+      "commit_clock_abs_deltas_s": [
+        1.1102230246251565e-15,
+        9.769962616701378e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        51,
+        126
+      ],
+      "production_loop_commit_frame_indices": [
+        51,
+        126
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "pause_02",
+      "kind": "pause_heavy",
+      "phase_offset_samples": 0,
+      "duplicate_state_machine_commit_clocks_s": [
+        1.47,
+        3.42
+      ],
+      "production_loop_commit_clocks_s": [
+        1.470000000000001,
+        3.4199999999999924
+      ],
+      "commit_clock_abs_deltas_s": [
+        1.1102230246251565e-15,
+        7.549516567451064e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        49,
+        114
+      ],
+      "production_loop_commit_frame_indices": [
+        49,
+        114
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "pause_02",
+      "kind": "pause_heavy",
+      "phase_offset_samples": 120,
+      "duplicate_state_machine_commit_clocks_s": [
+        3.42
+      ],
+      "production_loop_commit_clocks_s": [
+        3.4199999999999924
+      ],
+      "commit_clock_abs_deltas_s": [
+        7.549516567451064e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        114
+      ],
+      "production_loop_commit_frame_indices": [
+        114
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "pause_02",
+      "kind": "pause_heavy",
+      "phase_offset_samples": 240,
+      "duplicate_state_machine_commit_clocks_s": [
+        3.4499999999999997
+      ],
+      "production_loop_commit_clocks_s": [
+        3.449999999999992
+      ],
+      "commit_clock_abs_deltas_s": [
+        7.549516567451064e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        115
+      ],
+      "production_loop_commit_frame_indices": [
+        115
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "pause_02",
+      "kind": "pause_heavy",
+      "phase_offset_samples": 360,
+      "duplicate_state_machine_commit_clocks_s": [
+        1.47,
+        3.4499999999999997
+      ],
+      "production_loop_commit_clocks_s": [
+        1.470000000000001,
+        3.449999999999992
+      ],
+      "commit_clock_abs_deltas_s": [
+        1.1102230246251565e-15,
+        7.549516567451064e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        49,
+        115
+      ],
+      "production_loop_commit_frame_indices": [
+        49,
+        115
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "pause_03",
+      "kind": "pause_heavy",
+      "phase_offset_samples": 0,
+      "duplicate_state_machine_commit_clocks_s": [
+        1.5,
+        4.29
+      ],
+      "production_loop_commit_clocks_s": [
+        1.500000000000001,
+        4.289999999999991
+      ],
+      "commit_clock_abs_deltas_s": [
+        1.1102230246251565e-15,
+        8.881784197001252e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        50,
+        143
+      ],
+      "production_loop_commit_frame_indices": [
+        50,
+        143
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "pause_03",
+      "kind": "pause_heavy",
+      "phase_offset_samples": 120,
+      "duplicate_state_machine_commit_clocks_s": [
+        1.5,
+        4.29
+      ],
+      "production_loop_commit_clocks_s": [
+        1.500000000000001,
+        4.289999999999991
+      ],
+      "commit_clock_abs_deltas_s": [
+        1.1102230246251565e-15,
+        8.881784197001252e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        50,
+        143
+      ],
+      "production_loop_commit_frame_indices": [
+        50,
+        143
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "pause_03",
+      "kind": "pause_heavy",
+      "phase_offset_samples": 240,
+      "duplicate_state_machine_commit_clocks_s": [
+        1.53,
+        4.29
+      ],
+      "production_loop_commit_clocks_s": [
+        1.5300000000000011,
+        4.289999999999991
+      ],
+      "commit_clock_abs_deltas_s": [
+        1.1102230246251565e-15,
+        8.881784197001252e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        51,
+        143
+      ],
+      "production_loop_commit_frame_indices": [
+        51,
+        143
+      ],
+      "same_sample_clock": true
+    },
+    {
+      "name": "pause_03",
+      "kind": "pause_heavy",
+      "phase_offset_samples": 360,
+      "duplicate_state_machine_commit_clocks_s": [
+        1.53,
+        4.32
+      ],
+      "production_loop_commit_clocks_s": [
+        1.5300000000000011,
+        4.319999999999991
+      ],
+      "commit_clock_abs_deltas_s": [
+        1.1102230246251565e-15,
+        8.881784197001252e-15
+      ],
+      "duplicate_state_machine_commit_frame_indices": [
+        51,
+        144
+      ],
+      "production_loop_commit_frame_indices": [
+        51,
+        144
+      ],
+      "same_sample_clock": true
+    }
+  ],
+  "does_not_prove": [
+    "PipeWire, capture-device, room, noise, AEC, or human-speech parity",
+    "corrected acoustic-v2 baseline parity",
+    "endpoint policy quality or mount readiness"
+  ]
+}

@@ -812,8 +812,8 @@
       "mode": "0644",
       "origin": "mirror",
       "packaged": "prompts/system/planner.md",
-      "sha256": "52e3636ae1e4f3042d8cbd9839b6cd0b41883ecc7744d223a2b724796743f44e",
-      "size": 3960,
+      "sha256": "ebdb3bdc94bb704913238799a9157db55664b757c4c6efd47ae397ca2330a22d",
+      "size": 3983,
       "source": "prompts/system/planner.md"
     },
     {
@@ -851,5 +851,5 @@
       "target": "src/parcel_robot/config/robot.yaml"
     }
   ],
-  "tree_digest": "76f3e63b0cadfe90372002c5895d21637dd851271016afa5940fbc70b2e629c8"
+  "tree_digest": "ac07a3d8108cf5518c75c09a643a2d4caf7ac9537c8b9cb1edef3390c5bb8309"
 }

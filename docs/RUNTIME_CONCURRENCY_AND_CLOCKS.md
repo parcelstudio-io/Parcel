@@ -38,16 +38,18 @@ owns `RobotRuntime`, the command arbiter, voice session, dashboards, and the
 simulator backend client.
 
 The physical Unitree entry point is different: it constructs an explicit
-Unitree Sport `ControlManager`. Configuration alone cannot arm physical
-hardware, and the simulator and physical writer must not run against the same
-robot.
+commissioned-gateway `ControlManager` whose backend is only the typed Unix
+client. The separate `parcel-gateway` process is the sole SDK/DDS writer.
+Configuration alone cannot inject or arm that composition, and the standalone
+commissioning CLI is mutually exclusive with the gateway under their shared
+fixed writer lock.
 
 ## Threads inside the runtime process
 
 | Execution context | Nominal cadence | Responsibility | Authority boundary |
 | --- | ---: | --- | --- |
 | `parcel-control-loop` | 10 Hz | Observe, update follow/search/spatial/navigation, tick the task executive, arbitrate, apply the reactive gate, dispatch motion, and produce a D0 duplex frame | The only behavior loop that selects the active body command |
-| `parcel-*-control` | configured 50 Hz on an explicit/physical manager | Refresh the leased target, read feedback, enforce state/command watchdogs, confirm stops | Sole controller/HAL writer; simulator mode is synchronously ticked instead |
+| `parcel-*-control` | configured 50 Hz on an explicit/physical manager | Refresh the leased target, read feedback, enforce state/command watchdogs, confirm stops | Sole application-side controller writer; the gateway remains sole vendor writer; simulator mode is synchronously ticked instead |
 | `parcel-expression` | 50 Hz | Add bounded breathing/reaction/beat offsets | Decorative and subordinate; no locomotion lease |
 | `parcel-service-health` | every 10 s | Probe model services and, when enabled, audio devices | Observability only |
 | `parcel-voice-input` | queue-driven | Serialize committed text turns and call deterministic routing/model/planner code | May propose/commit typed actions through the current-turn guard, never raw motor output |

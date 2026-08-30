@@ -401,21 +401,21 @@ not a safety rate.
   false-arrival failures remain.
 - Two current follow-bench invocations reproduced 7/9 follow and 2/2
   navigation successes. The `pedestrian_group` and `pedestrian_cut_in` follow
-  cases miss their contracts, and the broader 475-episode dynamic-social study
-  retained contacts in every arm.
+  cases miss their contracts. In the later 580-episode DSP-2 study, S2/S3 each
+  retained 25 contact episodes and every registered hypothesis was refuted.
 - Same-day conversation replay is 6 PASS / 8 MIXED / 11 FAIL across 25 threads,
   with 66 risk flags. It is a historical captured model corpus, not a current
   hosted-model measurement.
-- The incomplete hosted Model B stage stopped at 61 robot turns, below its
-  registered floor, with 0.819 grounding, 0.294 coverage, and 19
-  machine-flagged invented actions. It lacks the hosted direct arm and blind
-  adjudication, so it is negative stage evidence rather than a completed
-  comparison.
-- The repaired 25-case null-sink acoustic suite completed three times. Its gate
-  vector was stable at 5/9 pass: endpoint p50, acoustic stop p50, duplex
-  acknowledgment p50, and prosody timing fail. One barge-in case also changed
-  verdict across runs. Physical microphone, loudspeaker, AEC, and room
-  acoustics remain unmeasured.
+- Hosted Model B candidate Q completed 120/120 scenarios and failed every
+  absolute gate. Hosted direct stopped at 2/120, and calibrated human
+  adjudication is absent, so the paired effect and human failure rate remain
+  unmeasured.
+- The 25-case null-sink acoustic v1 suite completed three times at 5/9. A later
+  audit found all four red values invalid for their named capabilities and
+  exposed premature commits in all three 750 ms pauses plus one incomplete
+  turn. Direct abort during device drain is now covered, but physical
+  microphone, loudspeaker, AEC, room acoustics, and valid cold/warm timing are
+  unmeasured.
 - NAV-INT-1 completed after the first report draft and refuted all three
   registered hypotheses. Admission was 24/32, amended-goal success 11/28,
   return 8/9 with 1.4905 mean oracle path ratio, and arrival authorities
@@ -425,11 +425,12 @@ not a safety rate.
 - DMC-1's learned A1 missed promotion, made more raw-unsafe/wrong-route
   proposals than deterministic arms, and its narration/receipt oracle failed
   independent counterexamples.
-- DMC-2 independently verified 8,448 cases per run across the real executive
-  seam and the real dialogue receipt/claim seam, with identical normalized
-  roots on two runs. The architecture gate is nevertheless red: the product
-  still lacks a trustworthy executive-to-receipt bridge carrying task,
-  revision, step, attempt, source epoch, and speech generation.
+- DMC-2 independently verified 8,448 cases per run across the older executive
+  and dialogue seams. DMC-4 then passed two identical 1,824-mutation source
+  transactions and 256 corruption cases; normal runtime now observes its
+  journal into process-local, non-actuating frames. Persistent cursor/restart,
+  live key/session/speech epoch, separate-child lineage, provider, and audio
+  remain red.
 - The current five-case embodied product-path evaluation passes all four
   supported frozen cases with zero kinematic collisions, while moving-owner
   `FollowFormation` is explicitly unsupported. This is integration evidence,
@@ -451,16 +452,17 @@ capability development, but it cannot waive hardware commissioning.
 
 ### P0 — next 1–2 weeks
 
-1. Freeze the four contracts above and add append-only traces at the real
-   executive/receipt/dispatch/Realtime boundaries.
-2. Implement a real plan stack with parent/child lineage and explicit resume
-   offer; do not rely on destructive amendment or LLM context.
-3. Use the completed DMC-2 seam benchmark as a regression test, then build the
-   missing production bridge that mints receipts from exact executive results;
-   extend DMC-2 to make its architecture-level rows evaluable and green.
-4. Use the repaired acoustic evaluator to fix endpointing, acoustic stop,
-   acknowledgment, and prosody timing; then add real AEC/mic/speaker replay,
-   owner/addressee ambiguity, and receipt-grounded narration.
+1. Freeze the four contracts above and complete append-only traces at the real
+   executive/dispatch/Realtime boundaries.
+2. Finish parent/child lineage and explicit resume offers in the executive; do
+   not rely on destructive amendment or LLM context.
+3. Extend the DMC-4 runtime observer with an independently owned live key,
+   persistent cursor/restart recovery, exact speech epoch, provider delivery,
+   and cancellation/backpressure while keeping narration non-actuating.
+4. Replace acoustic v1's invalid measurements with an additive evaluator using
+   exact commit clocks, isolated channels, correct sample rates, cold/warm
+   audible latency, one-to-one prosody, and actual BeatLayer motion; then fix
+   measured behavior and add real AEC/mic/speaker replay.
 5. Keep L1-style temporal blocker logic as champion; add A0/A1 only in shadow.
 
 ### P1 — next 2–6 weeks

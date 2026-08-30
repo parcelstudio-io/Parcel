@@ -68,6 +68,7 @@ from gateway.governor import (
     MotionCandidateV1,
 )
 from gateway.limits import GovernorLimitsV1, default_limits, regime
+from gateway.ports import SportSampleV1, UnitreeLowStateSampleV1
 from gateway.process import BENCH_HASHES, AuditExporterV1, _evidence_exit_code
 from gateway.server import GatewayServerV1
 from parcel_robot.bridge.fake_sport import (
@@ -529,8 +530,8 @@ def test_no_vendor_sdk_is_imported_anywhere_in_the_gateway_tree() -> None:
     assert offenders == {}
 
 
-def test_the_deployable_gateway_imports_exactly_one_product_module() -> None:
-    """The vendor venv needs stdlib plus ``bridge/protocol.py`` and nothing else."""
+def test_the_deployable_gateway_imports_only_two_pure_product_seams() -> None:
+    """The vendor venv reaches the wire contract and shared writer lock only."""
 
     surface: dict[str, set[str]] = {}
     for name, source in _gateway_sources().items():
@@ -541,13 +542,20 @@ def test_the_deployable_gateway_imports_exactly_one_product_module() -> None:
         if product:
             surface[name] = product
     reached = set().union(*surface.values()) if surface else set()
-    assert reached == {"parcel_robot.bridge.protocol"}, surface
-    # And the one module it does reach must itself be stdlib-only, or the
+    expected = {
+        "parcel_robot.bridge.protocol",
+        "parcel_robot.bridge.unitree_writer_lock",
+    }
+    assert reached == expected, surface
+    # Both shared modules must remain stdlib-only, or the narrow dependency
     # claim above buys nothing.
-    protocol_modules, _ = _imports(
-        (REPO / "src" / "parcel_robot" / "bridge" / "protocol.py").read_text(encoding="utf-8")
-    )
-    assert not any(module.startswith("parcel_robot") for module in protocol_modules)
+    for filename in ("protocol.py", "unitree_writer_lock.py"):
+        modules, _ = _imports(
+            (REPO / "src" / "parcel_robot" / "bridge" / filename).read_text(
+                encoding="utf-8"
+            )
+        )
+        assert not any(module.startswith("parcel_robot") for module in modules), filename
 
 
 def test_the_bench_modules_reach_only_the_fake_vendor() -> None:
@@ -863,6 +871,93 @@ def test_a_fresh_gateway_boots_disarmed_and_stops_the_vendor_first(bench: Bench)
     assert bench.core.stop_sequence == 1
     assert bench.vendor_is_exactly_zero()
     assert bench.physical_events() == ["stop_move_succeeded"]
+
+
+@pytest.mark.parametrize(
+    ("verdict", "stationary_confirmed", "expected_phase"),
+    (
+        ("low_battery", True, GatewayPhaseV1.DISARMED),
+        ("low_state_unavailable", True, GatewayPhaseV1.DISARMED),
+        ("bad_feedback_integrity", False, GatewayPhaseV1.LATCHED),
+    ),
+)
+def test_boot_stop_witness_uses_sport_integrity_not_soc_authorization(
+    verdict: str,
+    stationary_confirmed: bool,
+    expected_phase: GatewayPhaseV1,
+) -> None:
+    """A failed SOC gate must never erase valid exact-zero evidence.
+
+    Stop witnessing needs fresh, advancing Sport velocity and a commissioned
+    mode/error verdict. Low battery or unavailable LowState blocks subsequent
+    motion, but neither makes a valid zero-velocity Sport sample unobservable.
+    """
+
+    class HealthDecoratedSport:
+        def __init__(self) -> None:
+            self._inner = FakeSportServiceV1()
+
+        def __getattr__(self, name: str) -> object:
+            return getattr(self._inner, name)
+
+        def state(self) -> object:
+            sample = self._inner.state()
+            low_state = UnitreeLowStateSampleV1(
+                sequence=sample.sequence,
+                received_at_monotonic_s=sample.received_at_monotonic_s,
+                tick=sample.sequence,
+                battery_soc_percent=8 if verdict == "low_battery" else 87,
+                power_v=30.5,
+                power_a=0.0,
+                max_motor_temperature_raw=43,
+                motor_lost_max_raw=0,
+                foot_force_est_raw=(0, 0, 0, 0),
+                imu_temperature_raw=39,
+                temperature_ntc_raw=(44, 45),
+                bms_status=0,
+            )
+            common = {
+                "sequence": sample.sequence,
+                "received_at_monotonic_s": sample.received_at_monotonic_s,
+                "vx_mps": sample.vx_mps,
+                "vy_mps": sample.vy_mps,
+                "vyaw_rad_s": sample.vyaw_rad_s,
+                "lease_active": sample.lease_active,
+                "telemetry_valid": True,
+            }
+            if verdict == "low_state_unavailable":
+                return SportSampleV1(
+                    **common,
+                    low_state=None,
+                    commissioned_soc_ok=None,
+                    commissioned_soc_reason="commissioned_soc_unavailable",
+                )
+            return SportSampleV1(
+                **common,
+                low_state=low_state,
+                feedback_integrity_ok=verdict != "bad_feedback_integrity",
+                feedback_integrity_reason=(
+                    "sport_mode_not_commissioned_13"
+                    if verdict == "bad_feedback_integrity"
+                    else "ok"
+                ),
+                commissioned_soc_ok=verdict != "low_battery",
+                commissioned_soc_reason=(
+                    "soc_at_or_below_commissioned_minimum"
+                    if verdict == "low_battery"
+                    else "soc_above_commissioned_minimum"
+                ),
+            )
+
+    sport = HealthDecoratedSport()
+    core = GatewayCoreV1(sport, policy=_policy(), limits=BENCH_LIMITS)
+    try:
+        report = core.boot_stop_report
+        assert report.stop_rpc_completed is True
+        assert report.stationary_confirmed is stationary_confirmed
+        assert core.phase is expected_phase
+    finally:
+        core.close()
 
 
 def test_each_boot_mints_a_new_epoch() -> None:

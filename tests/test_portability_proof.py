@@ -45,10 +45,11 @@ def manager():
     built.close()
 
 
-def test_registry_offers_both_vendors() -> None:
+def test_registry_offers_mock_and_the_gateway_physical_composition() -> None:
     names = controller_factory_names()
-    assert "unitree_sport" in names
     assert "mock_quadruped" in names
+    assert "motion_gateway_commissioned" in names
+    assert "unitree_sport" not in names
 
 
 def test_unknown_vendor_fails_closed() -> None:

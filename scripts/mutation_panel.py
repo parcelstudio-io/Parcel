@@ -15,8 +15,8 @@ How it works
 Six defects from the plan are seeded **one at a time**, each by monkeypatching a
 live object or injecting a config at runtime. **Nothing is ever committed as a
 source edit**: a mutation panel that edits files is one bad exit away from
-shipping its own defect. Each mutant then runs the NAV_INSTRUCT v3 minival and
-the result is compared against the clean run through a fixed list of named
+shipping its own defect. Each mutant then runs a pinned nine-row NAV_INSTRUCT
+v4 selection and the result is compared against the clean run through named
 harness checks. A mutant that reddens **no** check has *survived*, and a
 surviving mutant is itself a panel failure — it means the harness is blind to
 that class of defect.
@@ -71,7 +71,12 @@ REPO = Path(__file__).resolve().parents[1]
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
-from evals.nav_instruct.generator import EPISODE_SET_V4, EpisodeSpec, generate_minival
+from evals.nav_instruct.generator import (
+    EPISODE_SET_V4,
+    EpisodeSpec,
+    generate_episode_matrix,
+    matrix_digest,
+)
 from evals.nav_instruct.runner import ARRIVAL_RULE_FOR_VERSION, NavInstructRunner
 
 DEFAULT_REPORT = REPO / "evals" / "nav_instruct" / "results" / "mutation_panel.json"
@@ -82,7 +87,17 @@ DEFAULT_REPORT = REPO / "evals" / "nav_instruct" / "results" / "mutation_panel.j
 #: (0.1 s x ~1 m/s), below which two trajectories are the same trajectory.
 PAIRED_TOLERANCE_M = 0.10
 
-#: Episodes the panel runs. Four, for a bounded runtime, chosen to *exercise*
+#: Frozen substrate used only to RESOLVE the selected panel rows.  Four of the
+#: intervention witnesses are outside the 25-row minival, so resolving by id
+#: from an unpinned "current" generator would make the gated artifact
+#: irreproducible.  This digest is independently recomputed before every run.
+PANEL_MATRIX_SEED = 20260804
+PANEL_MATRIX_PER_FAMILY = 25
+PANEL_MATRIX_DIGEST = (
+    "e7c302ddf19a39646aff77f01832be56b14fae6c7d4bd28e39cd5045c3c8b3f2"
+)
+
+#: Episodes the panel runs. Nine, for a bounded nightly runtime, chosen to *exercise*
 #: the code each mutation touches — a mutant on a code path the episodes never
 #: reach is an equivalent mutant and tells you nothing about the harness.
 #:
@@ -180,7 +195,22 @@ PANEL_REGENERATION_PROVENANCE = (
     "inverted_relation also redden four paired checks each), so 7/7 stay "
     "killed. The three ABSOLUTE safety checks -- zero_collisions, "
     "no_false_arrival, path_length_plausible -- remain green and may never be "
-    "disabled this way."
+    "disabled this way. "
+    "REPAIRED 2026-08-30 after an independent current-tree audit found that "
+    "reactive_gate_disabled had become equivalent on the five selected rows: "
+    "the clean gate changed 21 nonzero requests, but the disabled-gate final "
+    "pose moved only 0.002611 m, below the predeclared 0.10 m paired tolerance. "
+    "Before regeneration, all 125 deterministic v4 rows were scanned at seed "
+    "20260804 (matrix digest e7c302ddf19a39646aff77f01832be56b14fae6c7d4bd28e39cd5045c3c8b3f2). "
+    "The four added rows are every additional intervention row whose clean run "
+    "has agreement authority and zero collisions; rows with a clean false "
+    "arrival or authority disagreement were excluded. Existing five rows were "
+    "retained so prior mutation-family coverage was not traded away. The panel "
+    "now records calls, nonzero requests, changed nonzero requests, and hard "
+    "translation stops, and reactive_gate_exercised is an undisableable clean "
+    "check. This is structural eval coverage, not a robot-policy improvement: "
+    "all observed v4 interventions are slowing and hard-stop coverage remains "
+    "unproven. See scrum/20260829/task_2/C0_SOL_REMEDIATION.md."
 )
 
 #: The frozen episode set the panel certifies. Bumped v3 -> v4 on 2026-08-11
@@ -193,9 +223,9 @@ PANEL_REGENERATION_PROVENANCE = (
 #: been silently disabled as a kill channel for every mutant (the exact v2 rot,
 #: recurring; see ``scrum/20260809/task_15/E7_FALSE_ARRIVAL_STATUS.md`` §1.1).
 #:
-#: The five episode ids below are UNCHANGED by the re-freeze: v4 moves only the
-#: ``follow_owner`` goal radius, and the selection is a coverage argument about
-#: which code each mutation touches, not about any goal's size.
+#: The first five episode ids below are unchanged historical witnesses. The
+#: final four are current-tree reactive-gate witnesses resolved from the pinned
+#: full matrix; selection is a coverage argument, not a goal-size retune.
 PANEL_EPISODE_IDS: tuple[str, ...] = (
     # longest traverse in the minival (184 control ticks): the episode a pose
     # error has time to accumulate over
@@ -209,6 +239,13 @@ PANEL_EPISODE_IDS: tuple[str, ...] = (
     "nav-object_relative-A-00-3efbba45",
     # spatial family, and the minival's one clean success
     "nav-follow_owner-D-15-74a535dd",
+    # Full-matrix intervention witnesses selected before regeneration.  Each
+    # is agreement/zero-collision in the clean run; together they make the
+    # reactive-gate mutation consequential without weakening a threshold.
+    "nav-region_goal-C-11-25d4e602",
+    "nav-region_goal-D-17-448696db",
+    "nav-object_goal-D-18-19a95961",
+    "nav-object_relative-C-11-3bf174e9",
 )
 
 
@@ -237,6 +274,14 @@ def harness_checks(run: dict[str, Any], clean: dict[str, Any] | None) -> dict[st
         "path_length_plausible": all(
             0.0 <= item["path_length_m"] <= 200.0 for item in run["episodes"]
         ),
+        # An outcome-only mutation check can silently become equivalent when a
+        # policy still intervenes but its displacement falls below the paired
+        # trajectory tolerance.  Keep a direct structural witness in the same
+        # gated artifact: at least one translating request must actually be
+        # changed by the bound reactive gate.
+        "reactive_gate_exercised": (
+            int((run.get("reactive_gate_coverage") or {}).get("changed_nonzero", 0)) > 0
+        ),
     }
     if clean is not None:
         checks["success_set_identical"] = run["successes"] == clean["successes"]
@@ -264,9 +309,9 @@ def harness_checks(run: dict[str, Any], clean: dict[str, Any] | None) -> dict[st
 # ---------------------------------------------------------------------------
 
 #: The clean-run checks ``scripts/ci_gate.py``'s HARD ``hard-safety`` gate
-#: certifies from. All four are **absolute** (computed from one run, never
-#: relative to a baseline), so they are reproducible from the tree alone — which
-#: is what makes a freshness comparison possible at all. The paired checks
+#: certifies from. Four are **absolute outcome** checks and the fifth is direct
+#: structural coverage; all are computed from one run, never relative to a
+#: baseline, so they are reproducible from the tree alone. The paired checks
 #: (``success_set_identical`` and friends) are deliberately absent: they only
 #: exist for a mutant-vs-clean comparison.
 SAFETY_RELEVANT_CLEAN_CHECKS: tuple[str, ...] = (
@@ -274,6 +319,7 @@ SAFETY_RELEVANT_CLEAN_CHECKS: tuple[str, ...] = (
     "no_authority_disagreement",
     "no_false_arrival",
     "path_length_plausible",
+    "reactive_gate_exercised",
 )
 
 
@@ -285,7 +331,7 @@ def clean_safety_fields(payload: dict[str, Any]) -> dict[str, Any]:
     that reddens on those is a guard somebody eventually turns off. What is left
     is exactly what the hard gate reads and prints as a safety certification:
     the collision count, the arrival-authority histogram (where ``false_arrival``
-    lives), and the four absolute clean checks.
+    lives), the four absolute outcome checks, and the reactive-gate witness.
 
     A missing check reads as ``False`` — a payload that simply *drops*
     ``no_false_arrival`` must not be able to satisfy a guard that a payload
@@ -302,6 +348,15 @@ def clean_safety_fields(payload: dict[str, Any]) -> dict[str, Any]:
         "clean_checks": {
             name: bool(checks.get(name, False)) for name in SAFETY_RELEVANT_CLEAN_CHECKS
         },
+        "reactive_gate_coverage": {
+            name: int((clean.get("reactive_gate_coverage") or {}).get(name, -1))
+            for name in (
+                "calls",
+                "requested_nonzero",
+                "changed_nonzero",
+                "translation_zeroed",
+            )
+        },
     }
 
 
@@ -312,7 +367,7 @@ def live_clean_safety_fields(
 ) -> dict[str, Any]:
     """Re-derive :func:`clean_safety_fields` from a LIVE clean run on this tree.
 
-    One clean run (~4 s), not the whole panel (seven runs): the six mutants say
+    One clean run, not the whole eight-run campaign: the seven mutants say
     nothing about whether the committed clean run is still true, and the point
     of this helper is to be cheap enough for the *commit* tier. A guard that
     only runs nightly is how the committed payload got a whole batch out of date
@@ -610,9 +665,9 @@ class MutantResult:
         pass condition;
     ``equivalent``
         the mutated run is **identical** to the clean run, so the defect was
-        never exercised by these episodes. The panel makes no claim about
-        harness blindness here, because there was nothing to be blind to.
-        Calling this a survivor would be a false alarm;
+        never exercised by these episodes. The panel fails because it cannot
+        make a sensitivity claim for that defect, while preserving the label
+        separately from genuine harness blindness;
     ``survived``
         the run changed and no check noticed. This is genuine harness
         blindness and it fails the panel.
@@ -640,7 +695,21 @@ class MutantResult:
 
 
 def _episodes(ids: Sequence[str]) -> list[EpisodeSpec]:
-    by_id = {ep.episode_id: ep for ep in generate_minival(version=EPISODE_SET_V4)}
+    matrix = generate_episode_matrix(
+        seed=PANEL_MATRIX_SEED,
+        per_family=PANEL_MATRIX_PER_FAMILY,
+        version=EPISODE_SET_V4,
+    )
+    actual_digest = matrix_digest(matrix)
+    if actual_digest != PANEL_MATRIX_DIGEST:
+        raise RuntimeError(
+            "mutation-panel substrate digest drifted: "
+            f"expected {PANEL_MATRIX_DIGEST}, got {actual_digest}"
+        )
+    by_id = {ep.episode_id: ep for ep in matrix}
+    missing = [episode_id for episode_id in ids if episode_id not in by_id]
+    if missing:
+        raise KeyError(f"panel episode ids absent from pinned matrix: {missing}")
     return [by_id[episode_id] for episode_id in ids]
 
 
@@ -656,6 +725,8 @@ def _path_length(trace: Sequence[dict[str, Any]]) -> float:
 
 
 def run_once(episodes: Sequence[EpisodeSpec], *, max_steps: int) -> dict[str, Any]:
+    from evals.nav_instruct import runner as runner_module
+
     runner = NavInstructRunner(
         max_steps=max_steps,
         mode="baseline",
@@ -663,10 +734,46 @@ def run_once(episodes: Sequence[EpisodeSpec], *, max_steps: int) -> dict[str, An
     )
     results = []
     clearances = []
-    for episode in episodes:
-        results.append(runner.run_episode(episode))
-        value = float(runner.world.minimum_clearance_m)
-        clearances.append(value if math.isfinite(value) else 99.0)
+    active_episode: list[str | None] = [None]
+    coverage_by_episode: dict[str, dict[str, int]] = {
+        episode.episode_id: {
+            "calls": 0,
+            "requested_nonzero": 0,
+            "changed_nonzero": 0,
+            "translation_zeroed": 0,
+        }
+        for episode in episodes
+    }
+    bound_gate = runner_module.apply_reactive_safety
+
+    def observed_gate(requested: Any, observation: Any, **kwargs: Any) -> Any:
+        result = bound_gate(requested, observation, **kwargs)
+        applied = result[0]
+        episode_id = active_episode[0]
+        if episode_id is None:  # pragma: no cover - runner contract violation
+            raise RuntimeError("reactive gate called outside an active panel episode")
+        counters = coverage_by_episode[episode_id]
+        counters["calls"] += 1
+        requested_nonzero = abs(float(requested.vx)) > 1e-12 or abs(float(requested.vy)) > 1e-12
+        if requested_nonzero:
+            counters["requested_nonzero"] += 1
+            changed = any(
+                abs(float(getattr(applied, axis)) - float(getattr(requested, axis))) > 1e-12
+                for axis in ("vx", "vy", "vyaw")
+            )
+            if changed:
+                counters["changed_nonzero"] += 1
+            if abs(float(applied.vx)) <= 1e-12 and abs(float(applied.vy)) <= 1e-12:
+                counters["translation_zeroed"] += 1
+        return result
+
+    with _patched(runner_module, "apply_reactive_safety", observed_gate):
+        for episode in episodes:
+            active_episode[0] = episode.episode_id
+            results.append(runner.run_episode(episode))
+            value = float(runner.world.minimum_clearance_m)
+            clearances.append(value if math.isfinite(value) else 99.0)
+        active_episode[0] = None
     rows = []
     authority: dict[str, int] = {}
     failures: dict[str, int] = {}
@@ -695,6 +802,16 @@ def run_once(episodes: Sequence[EpisodeSpec], *, max_steps: int) -> dict[str, An
         for row in rows
         if math.isfinite(row["distance_to_goal_m"])
     ]
+    coverage = {
+        name: sum(row[name] for row in coverage_by_episode.values())
+        for name in (
+            "calls",
+            "requested_nonzero",
+            "changed_nonzero",
+            "translation_zeroed",
+        )
+    }
+    coverage["per_episode"] = coverage_by_episode
     return {
         "n": len(rows),
         "successes": sorted(row["episode_id"] for row in rows if row["success"]),
@@ -703,6 +820,7 @@ def run_once(episodes: Sequence[EpisodeSpec], *, max_steps: int) -> dict[str, An
         "authority": authority,
         "failure_histogram": failures,
         "episodes": rows,
+        "reactive_gate_coverage": coverage,
     }
 
 
@@ -762,13 +880,15 @@ def run_panel(
         "generated_at": datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ"),
         "episode_set_version": EPISODE_SET_V4,
         "episode_set_provenance": PANEL_REGENERATION_PROVENANCE,
+        "coverage_matrix_seed": PANEL_MATRIX_SEED,
+        "coverage_matrix_per_family": PANEL_MATRIX_PER_FAMILY,
+        "coverage_matrix_digest": PANEL_MATRIX_DIGEST,
         "episode_ids": list(episode_ids),
         "episode_selection": (
-            "chosen to exercise the code each mutation touches (longest traverse, "
-            "the reactive gate's only binding episode, one per family). A mutant "
-            "on a path the episodes never reach is an equivalent mutant and says "
-            "nothing about the harness. Coverage selection, not tuning: no robot "
-            "parameter is chosen from a result."
+            "the prior five rows are retained for mutation-family coverage; four "
+            "additional agreement/zero-collision rows are the complete safe subset "
+            "of additional reactive-gate interventions in the pinned 125-row v4 "
+            "matrix. Coverage selection, not robot-parameter tuning."
         ),
         "method": "monkeypatch / config injection only — never a committed source edit",
         "clean_run": clean,
@@ -781,7 +901,9 @@ def run_panel(
             "defect was never exercised by these episodes, so the panel makes no "
             "claim about harness blindness for it"
         ),
-        "passed": not survivors,
+        # An equivalent mutant is an untested defect, not a passing panel.  It
+        # used to be reported separately while the CLI still exited zero.
+        "passed": not survivors and not equivalent,
         "frozen_baseline": False,
     }
 
@@ -805,11 +927,15 @@ def markdown_table(payload: dict[str, Any]) -> str:
     lines.append("")
     survivors = payload["survivors"]
     equivalent = payload.get("equivalent_mutants") or []
-    lines.append(
-        "**PANEL PASSED** — every exercised defect reddened at least one harness check."
-        if not survivors
-        else f"**PANEL FAILED** — survivors: {', '.join(survivors)}"
-    )
+    if payload["passed"]:
+        lines.append("**PANEL PASSED** — every seeded defect was exercised and killed.")
+    else:
+        failed = []
+        if survivors:
+            failed.append(f"survivors: {', '.join(survivors)}")
+        if equivalent:
+            failed.append(f"equivalent: {', '.join(equivalent)}")
+        lines.append(f"**PANEL FAILED** — {'; '.join(failed) or 'invalid result'}")
     if equivalent:
         lines.append(
             f"Equivalent (never exercised by these episodes, no claim made): "

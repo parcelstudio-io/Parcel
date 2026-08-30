@@ -538,8 +538,11 @@ fixtures exist.
 The registered `motion_gateway_disarmed` composition lets the normal runtime cross
 the real Unix gateway boundary through `ControlManager`, using fake Sport in desktop
 tests. It intentionally exposes no acquire or command call, declares body velocity
-unsupported, and reconnects disarmed. This proves a production-shaped lifecycle and
-STOP seam; it does not implement the native Unitree simulator or physical writer.
+unsupported, and reconnects disarmed. A separate `motion_gateway_commissioned`
+factory now implements the explicit-arm runtime client, while the gateway owns the
+only autonomous SDK2 port and fixed device lock. Neither is selected by the normal
+builder or target-qualified; this proves a production-shaped software seam, not a
+native Unitree simulator or physical readiness.
 
 Canonical configuration reinforces this:
 
@@ -598,7 +601,7 @@ was commissioned.
 | --- | --- | --- |
 | `CapabilityManifestV1` | Deployment-bound manifest plus process-local authenticated commissioning input | Software truth boundary only; the normal builder does not supply it, so automatic simulator actions fail closed; no physical capability was commissioned |
 | Companion state/contracts | Consent, identity, embodiment, proposal/admission, receipts, corrections, memory, opportunity and terminal claims | Strict local reducers; incomplete live-session/executive wiring and no physical receipts |
-| Disarmed motion-gateway composition | Normal runtime → `ControlManager` → Unix client → gateway → fake Sport | Desktop lifecycle/STOP evidence only; zero acquire/velocity authority |
+| Motion-gateway compositions | Runtime → `ControlManager` → typed Unix client → sole-writer gateway; disarmed and explicit commissioned factories exist | Desktop fake/injected lifecycle, credential, arm/STOP and writer-lock evidence only; normal builder does not inject the commissioned path and no Go2/Orin run exists |
 | `NavigationSnapshotV2` spine | Simulator source is runtime-wired; replay adapter is implemented/tested; physical source remains a skeleton | No commissioned sensor synchronization, calibration or localization |
 | H2b independent completion | 600 cases × three arms; 120/120 nominal and zero false claims in 360 false opportunities; typed HMAC evidence channels | **REFUTED** at 113/120 alias recovery versus 114/120; isolated/default-off; local interface authenticity is not sensor independence |
 | Social-progress research/observer | 475 paired 2-D episodes plus a prototype bounded in-memory shadow trace around the final gate | All hypotheses **REFUTED**; no motion surface and no venue authority |
@@ -740,7 +743,8 @@ The executive quality statement is therefore:
 
 Parcel has a useful high-level Unitree foundation:
 
-- lazy Unitree Sport controller factory;
+- a retired direct Unitree Sport runtime factory that now always refuses, plus a
+  commissioned Unix-gateway client factory that keeps the runtime SDK-free;
 - high-level body-velocity mapping to `Move`/`StopMove`;
 - controller state source and mode handling;
 - leases, command/state freshness, limits, faults, tilt response, stop retries and
@@ -752,9 +756,10 @@ Parcel has a useful high-level Unitree foundation:
 - array-audio and mic-arm seams plus static aarch64/Orin deployment artifacts;
 - a separately packaged gateway with boot epochs, writer leases, TTL/watchdog,
   restart-disarmed behavior, bounded hung-I/O handling and stationary stop reports;
-  and
-- a normal-runtime adapter that reaches that Unix boundary while permanently
-  disarmed and stop-capable in desktop fake-Sport tests.
+  a fixed device-wide writer lock shared by the gateway and the mutually exclusive
+  commissioning CLI; and
+- disarmed and explicitly commissioned runtime adapters that reach only that Unix
+  boundary, exercised with fake/injected Sport on the desktop but not on a Go2.
 
 Using Unitree Sport for the first ODD is the correct tradeoff. The vendor controller
 owns high-rate balance, contact and gait, while Parcel supplies bounded body-velocity

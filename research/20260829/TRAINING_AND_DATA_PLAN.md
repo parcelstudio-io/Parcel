@@ -224,10 +224,12 @@ and pass^k; do not tune on the frozen set.
   preference improvement without increased verbosity.
 - Current evidence: DMC-2 proves the older seams independently. DMC-4 then
   proves the owner-authored journal transaction, and a focused 26-test additive
-  step composes a process-local, non-actuating runtime observer. The live
-  session key/epoch, persistent cursor, separate-child resume lineage,
-  provider, audio, cancellation, and human-utility arms remain red or
-  unmeasured. The independent LIT-1 audit also found five failed terminals
+  step composes a process-local, non-actuating runtime observer. Post-review
+  checks retain exact available authority/deadline lineage and reject expired
+  queued frames. The live session key/epoch, commit-time timestamp, persistent executive/outbox and
+  read/consume/provider-ack cursors, separate-child resume lineage, provider,
+  audio, cancellation, and human-utility arms remain red or unmeasured. The
+  independent LIT-1 audit also found five failed terminals
   followed by five scripted “I've reached the bench” claims, so terminal event
   type must be a hard narration input, not merely a callback trigger.
 
@@ -292,7 +294,8 @@ Parcel already has useful foundations: the read-only, no-motion capture envelope
 dialogue reducer in
 [`voice/companion_state.py`](../../src/parcel_robot/voice/companion_state.py). The
 missing pieces are an external spool/uploader, relational catalog, consent/deletion
-service, exact executive-to-receipt bridge and experiment registry.
+service, restart-safe narrative outbox/cursor chain, live provider/audio
+acknowledgements, and experiment registry.
 
 ## 7. Compute and API budget
 
@@ -311,8 +314,9 @@ service, exact executive-to-receipt bridge and experiment registry.
 
 ## 8. Immediate build order
 
-1. Implement the exact executive-result -> authenticated receipt bridge and an
-   explicit task stack; make DMC-2 architecture rows evaluable.
+1. Extend DMC-4's process-local journal observer into a persisted, idempotent
+   executive/outbox/read/consume/provider/audio acknowledgement transaction with
+   commit-time expiry and live session/speech lineage; keep it non-actuating.
 2. Freeze `EmbodiedFrameV1`, `SemanticControlV1`, `SteeringEventV1`, and
    `ExecutionNarrativeEventV1` with parser, version, expiry and trace tests.
 3. Make the explicit temporal controller the champion. Train Model A only in shadow
@@ -321,8 +325,11 @@ service, exact executive-to-receipt bridge and experiment registry.
    delays before adding a larger VLM.
 5. Implement tracked predicted occupancy and the asymmetric resume state machine;
    build the sidewalk/crosswalk/elevator A-H3 corpus with independent truth.
-6. Close the four failed null-sink acoustic gates, then repeat with real mic,
-   loudspeaker, AEC and walking noise.
+6. Replace acoustic-loop v1's four invalid capability measurements with exact
+   endpoint clocks, isolated owner/robot channels, correct sample rates,
+   cold/warm audible latency, one-to-one prosody, and actual motion traces.
+   Then fix measured behavior and repeat with real mic, loudspeaker, AEC, and
+   walking noise.
 7. Stand up the external object-store/PostgreSQL catalog and signed dataset/model/
    evaluation manifests before collecting large quantities of owner data.
 8. Only then integrate official Go2 dynamics, second-engine transfer, HIL, stationary

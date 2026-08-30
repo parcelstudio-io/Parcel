@@ -1,4 +1,7 @@
-"""Strict, bounded V1 DTOs for the gateway/fake-Sport process seam.
+"""Strict, bounded gateway DTOs for the gateway/fake-Sport process seam.
+
+The authority-bearing protocol remains V1.  State-query V2 is a distinct,
+additive, observation-only path; it does not change any V1 kind or field.
 
 The wire carries *duration TTLs*.  It intentionally carries no client-side
 absolute monotonic deadline: monotonic clocks from different processes are
@@ -19,7 +22,14 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, TypeAlias
 
+from .state_v2_codec import (
+    GatewayStateV2Codec,
+    gateway_state_v2_from_mapping,
+    validate_gateway_state_v2,
+)
+
 GATEWAY_PROTOCOL_VERSION = 1
+GATEWAY_STATE_PROTOCOL_VERSION_V2 = 2
 MAX_GATEWAY_PACKET_BYTES = 16 * 1024
 # The existing 0.35 s simulator/control lease is frozen, not retuned, by N24.
 MAX_LOCAL_TTL_MS = 350
@@ -31,6 +41,14 @@ class GatewayPhaseV1(str, Enum):
     DISARMED = "disarmed"
     ARMED = "armed"
     LATCHED = "latched"
+
+
+class GatewayBodyKindV1(str, Enum):
+    """The body implementation the gateway process explicitly attests."""
+
+    UNKNOWN = "unknown"
+    FAKE = "fake"
+    UNITREE_SDK2 = "unitree_sdk2"
 
 
 class GatewayAckDispositionV1(str, Enum):
@@ -93,6 +111,83 @@ def _version(value: object) -> int:
     if version != GATEWAY_PROTOCOL_VERSION:
         raise ValueError(f"unsupported gateway schema version {version}")
     return version
+
+
+def _version_v2(value: object) -> int:
+    version = _integer(value, "schema_version", minimum=1)
+    if version != GATEWAY_STATE_PROTOCOL_VERSION_V2:
+        raise ValueError(f"unsupported gateway schema version {version}")
+    return version
+
+
+def _fixed_numbers(value: object, name: str, *, length: int) -> tuple[float, ...]:
+    if not isinstance(value, (list, tuple)):
+        raise TypeError(f"{name} must be an array")
+    if len(value) != length:
+        raise ValueError(f"{name} must contain exactly {length} values")
+    return tuple(_number(item, f"{name}[{index}]") for index, item in enumerate(value))
+
+
+def _fixed_integers(
+    value: object,
+    name: str,
+    *,
+    length: int,
+    minimum: int,
+    maximum: int,
+) -> tuple[int, ...]:
+    if not isinstance(value, (list, tuple)):
+        raise TypeError(f"{name} must be an array")
+    if len(value) != length:
+        raise ValueError(f"{name} must contain exactly {length} values")
+    return tuple(
+        _integer(item, f"{name}[{index}]", minimum=minimum, maximum=maximum)
+        for index, item in enumerate(value)
+    )
+
+
+def _optional_number(value: object, name: str) -> float | None:
+    if value is None:
+        return None
+    return _number(value, name)
+
+
+def _optional_nonnegative_number(value: object, name: str) -> float | None:
+    result = _optional_number(value, name)
+    if result is not None and result < 0.0:
+        raise ValueError(f"{name} must be non-negative")
+    return result
+
+
+def _optional_integer(
+    value: object,
+    name: str,
+    *,
+    minimum: int,
+    maximum: int | None = None,
+) -> int | None:
+    if value is None:
+        return None
+    return _integer(value, name, minimum=minimum, maximum=maximum)
+
+
+def _optional_fixed_integers(
+    value: object,
+    name: str,
+    *,
+    length: int,
+    minimum: int,
+    maximum: int,
+) -> tuple[int, ...] | None:
+    if value is None:
+        return None
+    return _fixed_integers(
+        value,
+        name,
+        length=length,
+        minimum=minimum,
+        maximum=maximum,
+    )
 
 
 def _sha256(value: object, name: str) -> str:
@@ -382,6 +477,30 @@ class GatewayStateQueryV1:
 
 
 @dataclass(frozen=True, slots=True)
+class GatewayStateQueryV2:
+    """Additive query for telemetry-bearing state; V1 remains unchanged."""
+
+    sequence: int
+    schema_version: int = GATEWAY_STATE_PROTOCOL_VERSION_V2
+    kind: str = field(default="state_query_v2", init=False)
+
+    def __post_init__(self) -> None:
+        _version_v2(self.schema_version)
+        _integer(self.sequence, "sequence", minimum=1)
+
+    @classmethod
+    def from_mapping(cls, value: object) -> GatewayStateQueryV2:
+        data = _message_mapping_v2(value, "state_query_v2", {"sequence"})
+        return cls(
+            sequence=_integer(data["sequence"], "sequence", minimum=1),
+            schema_version=_version_v2(data["schema_version"]),
+        )
+
+    def as_dict(self) -> dict[str, object]:
+        return _base(self) | {"sequence": self.sequence}
+
+
+@dataclass(frozen=True, slots=True)
 class GatewayAckV1:
     boot_epoch: str
     gateway_sequence: int
@@ -537,6 +656,125 @@ class GatewayStateV1:
         }
 
 
+_STATE_V2_CODEC = GatewayStateV2Codec(
+    version=_version_v2,
+    string=_string,
+    integer=_integer,
+    number=_number,
+    boolean=_boolean,
+    fixed_numbers=_fixed_numbers,
+    fixed_integers=_fixed_integers,
+    optional_number=_optional_number,
+    optional_nonnegative_number=_optional_nonnegative_number,
+    optional_integer=_optional_integer,
+    optional_fixed_integers=_optional_fixed_integers,
+    mapping=_mapping,
+    exact_fields=_exact_fields,
+    kind=_kind,
+    phase_type=GatewayPhaseV1,
+    body_kind_type=GatewayBodyKindV1,
+)
+
+
+@dataclass(frozen=True, slots=True)
+class GatewayStateV2:
+    """V1 gateway state plus a bounded subset of native Sport telemetry."""
+
+    boot_epoch: str
+    gateway_sequence: int
+    phase: GatewayPhaseV1
+    state_sequence: int
+    state_age_ms: float
+    lease_active: bool
+    writer_id: str
+    vx_mps: float
+    vy_mps: float
+    vyaw_rad_s: float
+    stationary: bool
+    last_stop_sequence: int
+    last_stop_reason: str
+    body_kind: GatewayBodyKindV1
+    telemetry_valid: bool
+    vendor_position_m: tuple[float, float, float]
+    vendor_rpy_rad: tuple[float, float, float]
+    mode: int
+    error_code: int
+    source_time_s: float | None
+    sport_foot_force_raw: tuple[int, int, int, int]
+    feedback_integrity_ok: bool | None
+    feedback_integrity_reason: str
+    commissioned_soc_ok: bool | None
+    commissioned_soc_reason: str
+    low_state_valid: bool
+    low_state_sequence: int
+    low_state_age_ms: float | None
+    low_state_tick: int | None
+    battery_soc_percent: int | None
+    power_v: float | None
+    power_a: float | None
+    max_motor_temperature_raw: int | None
+    motor_lost_max_raw: int | None
+    foot_force_est_raw: tuple[int, int, int, int] | None
+    imu_temperature_raw: int | None
+    temperature_ntc_raw: tuple[int, int] | None
+    bms_status: int | None
+    schema_version: int = GATEWAY_STATE_PROTOCOL_VERSION_V2
+    kind: str = field(default="state_v2", init=False)
+
+    def __post_init__(self) -> None:
+        validate_gateway_state_v2(self, _STATE_V2_CODEC)
+
+    @classmethod
+    def from_mapping(cls, value: object) -> GatewayStateV2:
+        return gateway_state_v2_from_mapping(cls, value, _STATE_V2_CODEC)
+
+    def as_dict(self) -> dict[str, object]:
+        return _base(self) | {
+            "boot_epoch": self.boot_epoch,
+            "gateway_sequence": self.gateway_sequence,
+            "phase": self.phase.value,
+            "state_sequence": self.state_sequence,
+            "state_age_ms": self.state_age_ms,
+            "lease_active": self.lease_active,
+            "writer_id": self.writer_id,
+            "vx_mps": self.vx_mps,
+            "vy_mps": self.vy_mps,
+            "vyaw_rad_s": self.vyaw_rad_s,
+            "stationary": self.stationary,
+            "last_stop_sequence": self.last_stop_sequence,
+            "last_stop_reason": self.last_stop_reason,
+            "body_kind": self.body_kind.value,
+            "telemetry_valid": self.telemetry_valid,
+            "vendor_position_m": list(self.vendor_position_m),
+            "vendor_rpy_rad": list(self.vendor_rpy_rad),
+            "mode": self.mode,
+            "error_code": self.error_code,
+            "source_time_s": self.source_time_s,
+            "sport_foot_force_raw": list(self.sport_foot_force_raw),
+            "feedback_integrity_ok": self.feedback_integrity_ok,
+            "feedback_integrity_reason": self.feedback_integrity_reason,
+            "commissioned_soc_ok": self.commissioned_soc_ok,
+            "commissioned_soc_reason": self.commissioned_soc_reason,
+            "low_state_valid": self.low_state_valid,
+            "low_state_sequence": self.low_state_sequence,
+            "low_state_age_ms": self.low_state_age_ms,
+            "low_state_tick": self.low_state_tick,
+            "battery_soc_percent": self.battery_soc_percent,
+            "power_v": self.power_v,
+            "power_a": self.power_a,
+            "max_motor_temperature_raw": self.max_motor_temperature_raw,
+            "motor_lost_max_raw": self.motor_lost_max_raw,
+            "foot_force_est_raw": (
+                None if self.foot_force_est_raw is None else list(self.foot_force_est_raw)
+            ),
+            "imu_temperature_raw": self.imu_temperature_raw,
+            "temperature_ntc_raw": (
+                None if self.temperature_ntc_raw is None else list(self.temperature_ntc_raw)
+            ),
+            "bms_status": self.bms_status,
+        }
+
+
 @dataclass(frozen=True, slots=True)
 class GatewayStopReportV1:
     boot_epoch: str
@@ -604,8 +842,10 @@ GatewayMessage: TypeAlias = (
     | GatewayCommandV1
     | GatewayStopV1
     | GatewayStateQueryV1
+    | GatewayStateQueryV2
     | GatewayAckV1
     | GatewayStateV1
+    | GatewayStateV2
     | GatewayStopReportV1
 )
 
@@ -615,8 +855,10 @@ _DECODERS: dict[str, type[GatewayMessage]] = {
     "command": GatewayCommandV1,
     "stop": GatewayStopV1,
     "state_query": GatewayStateQueryV1,
+    "state_query_v2": GatewayStateQueryV2,
     "ack": GatewayAckV1,
     "state": GatewayStateV1,
+    "state_v2": GatewayStateV2,
     "stop_report": GatewayStopReportV1,
 }
 
@@ -625,6 +867,14 @@ def _message_mapping(value: object, kind: str, fields: set[str]) -> dict[str, ob
     data = _mapping(value, f"{kind} message")
     _exact_fields(data, fields | {"schema_version", "kind"}, f"{kind} message")
     _version(data["schema_version"])
+    _kind(data["kind"], kind)
+    return data
+
+
+def _message_mapping_v2(value: object, kind: str, fields: set[str]) -> dict[str, object]:
+    data = _mapping(value, f"{kind} message")
+    _exact_fields(data, fields | {"schema_version", "kind"}, f"{kind} message")
+    _version_v2(data["schema_version"])
     _kind(data["kind"], kind)
     return data
 
@@ -644,7 +894,7 @@ def _reject_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
 
 def encode_gateway_message(message: GatewayMessage) -> bytes:
     if not isinstance(message, tuple(_DECODERS.values())):
-        raise TypeError("message must be a gateway V1 DTO")
+        raise TypeError("message must be a gateway DTO")
     packet = json.dumps(message.as_dict(), sort_keys=True, separators=(",", ":")).encode("utf-8")
     if len(packet) > MAX_GATEWAY_PACKET_BYTES:
         raise ValueError("gateway packet exceeds the bounded wire size")

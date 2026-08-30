@@ -122,11 +122,11 @@ off-dog. Either way, card **HW-1**'s 3.10 row must be **green** before the Orin 
 |---|---|---|---|---|
 | **B11** extrinsics | mount sheet, two people: D455 height/tilt, Mid-360 to `base_link`, array position; tape and photographs; then the clock-map ritual `python3 -m scripts.parcel_capture.syncevents --ritual-card` | `hw/B11_extrinsics.yaml` | 30 | owner + second |
 | **B12** recorder smoke | in order: `python3 -m scripts.parcel_capture.record --check --dest <target>` (readiness + free space); `python3 -m scripts.parcel_capture.stage0_addendum --print-argv humble` (**prints** the `ros2 bag record` argv — the repo's single argv truth; never `--emit-distro`, which **writes into the checkout**, and git is read-only here); run that argv 60 s; `python3 -m scripts.parcel_capture.record --verify <bag>.mcap`. One transcript, all four outputs. **The bag stays on the record target** — it is gibibytes; the transcript carries its path and digest | `hw/B12_record.txt` | 20 | engineer, owner present |
-| **S19** Stage 0 | `python3 -m parcel_robot.unitree_control observe --min-samples 3000 --timeout 90 --out hw/S19_stage0_01.json`. **There is no duration mode**: it stops at whichever comes first, `--min-samples` messages or `--timeout` seconds, and **refuses** (`NO_FEEDBACK`) below `--min-samples` — itself a finding worth keeping. 3,000 messages ≈ 60 s at the *expected* ~50 Hz (expected, not measured), so a ten-minute Stage 0 is **ten runs of that line**, `_01`…`_10`; keep every file, refusals included | `hw/S19_stage0_01.json` … `_10.json` | 15 | owner |
+| **S19** Stage 0 | With `parcel-runtime` and `parcel-gateway` stopped: `python3 -m parcel_robot.unitree_control observe --min-samples 3000 --timeout 90 --duration 600 --out hw/S19_stage0.json \| tee hw/S19_stage0.txt`. `observe` constructs no controller, claims no lease and sends no `Move`; each window still refuses below `--min-samples`. Keep the JSON plus duration summary/refusals in the transcript | `hw/S19_stage0.json`, `hw/S19_stage0.txt` | 15 | owner |
 | **Q-stop** | on the stand, sport mode on, issue `StopMove`, then `L2`+`B` from the remote **with the head board's NIC unplugged**. Does it damp? | `hw/Q_stop.txt` | 10 | owner |
 | **Q-link** | RTT from the Orin to the hosted lane over Wi-Fi 6, and 4G if provisioned; 5-minute sample | `hw/Q_link.txt` | 10 | owner |
 | **Q-batt** | 30 min idle + 30 min roam, Orin + Mid-360 + D455 + array powered; log voltage and runtime (vendor's 2–4 h is unloaded). The roam is **driven from the Unitree remote or app, never from Parcel** | `hw/Q_batt.txt` | 15 attended | owner |
-| **first armed step** (card HW-12) | one axis, on the stand, inside the commissioning band: linear **0.02–0.05 m/s**, yaw **≤ 0.156 rad/s**, step **≤ 1.0 s**, so one step travels **≤ 0.10 m** (`commissioning/limits.py`). The band **refuses 0.10 m/s** — that older figure is a retired 08-03 cap. Preconditions below | HW-12's status doc | 45 | owner + second |
+| **first armed step** (card HW-12) | Separate authorization only. Stop `parcel-runtime` and `parcel-gateway`; prove the fixed writer lock is free; run `parcel-unitree-control run` as the same `parcel-gateway` UID. One axis, on the stand, inside the commissioning band: linear **0.02–0.05 m/s**, yaw **≤ 0.156 rad/s**, step **≤ 1.0 s**, so one step travels **≤ 0.10 m** (`commissioning/limits.py`). The band **refuses 0.10 m/s**. The commissioning process must exit before the gateway may restart. Preconditions below | HW-12's status doc | 45 | owner + second |
 | **first leashed follow** | after HW-12 is green | HW-12's status doc | 60 | owner + second person |
 
 **Sum with you present: 205 min. Grand total 105 + 205 = 310 min (5.2 h).**
@@ -140,12 +140,13 @@ bake-off (HW-10); the native gateway build (HW-11).
 
 ## Before the first armed step — all four, no exceptions
 
-1. **PO-1's e-stop record exists**, with the `MOTION.md:441-442` waiver
-   written down if the choice was the remote plus a leash
+1. **PO-1's e-stop record exists**, with the independent-E-stop limitation in
+   `MOTION.md` written down if the choice was the remote plus a leash
    (`scrum/20260822/task_27/README.md`).
 2. **Q-stop passed** — the remote damped the dog with the head board's NIC
    unplugged. If not, it is no independent stop and PO-1 is re-decided.
-3. **S19 Stage 0 is green** — 10 minutes of observation, zero `Move`.
+3. **S19 Stage 0 is green** — 10 minutes of read-only observation, zero
+   `Move`, with the autonomous runtime and gateway stopped.
 4. **The stopping envelope re-run is green with measured numbers** (card
    HW-6, `src/parcel_robot/bridge/timing.py`): measured braking latency, LIO
    jump magnitude and gateway watchdog period must fit inside the
@@ -171,21 +172,25 @@ around above — listed so nobody types a spelling that fails:
 - **`record --plan stage0 --dry-run`** — no `--plan`, `stage0` or
   `--dry-run`. B12 uses `record --check`, `stage0_addendum --print-argv`
   and `record --verify`.
-- **`parcel-commission observe`** — the real one is
-  `parcel-unitree-control observe`, with **no fixed-duration mode**: hence
-  S19's ten runs.
+- **`parcel-commission observe`** — the real command is
+  `parcel-unitree-control observe`; it now has a bounded `--duration` mode, so
+  S19 uses one ten-minute invocation and retains its summary.
 - **A firmware read off the robot** does not exist — S20 is an app read the
   harness records. <!-- HW-FW --> `deploy/orin/nftables.conf` now **does**
   exist (card HW-FW): B-fw is a file to apply, not rules to type.
 
 ## What this runbook does not authorise, and does not prove
 
-It authorises **no motion**. Nothing here imports
-`parcel_robot.control.unitree_sport`, and nothing here is evidence about how
-the dog behaves — the reads produce the evidence, and a person rules on it
-afterwards, in the box-day card. A green first two hours means the machine is
-what we think it is. It says nothing about perception, SLAM, owner tracking,
-battery under load, or whether the robot is safe to walk.
+It authorises **no motion**. S19 reaches only the read-only state observer: it
+constructs no controller, claims no lease and sends no `Move`. The later armed
+row is a schedule reference to separately authorized HW-12, not permission from
+this page. Armed commissioning and the autonomous gateway are mutually
+exclusive writers guarded by one persistent lock; both run under the
+`parcel-gateway` UID, never concurrently. The reads produce evidence and a
+person rules on it afterwards. A green first two hours says only that the
+machine is what we think it is; it says nothing about perception, SLAM, owner
+tracking, battery under load, stopping distance, or whether the robot is safe
+to walk.
 
 ---
 

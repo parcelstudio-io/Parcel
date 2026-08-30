@@ -225,6 +225,47 @@ def test_runtime_executes_one_deliberative_call_through_verified_semantic_hold(
     runtime.close()
 
 
+def test_runtime_composes_journal_only_model_b_frames_without_speech_or_motion_authority(
+    tmp_path: Path,
+) -> None:
+    runtime = RobotRuntime(
+        _config(tmp_path),
+        _Backend(),
+        language_model=_PlanningModel(),
+        audio_status=_audio(),
+    )
+    try:
+        runtime.handle_text("Wait here for me.")
+        assert runtime.drain_execution_narrative_frames() == ()
+
+        runtime._step_execution_narrative()
+        accepted = runtime.drain_execution_narrative_frames()
+        assert [frame.status for frame in accepted] == ["accepted"]
+        assert all(frame.authorizes_actuation is False for frame in accepted)
+
+        _seed_feedback(runtime)
+        runtime._step_brain()
+        runtime._step_execution_narrative()
+        started = runtime.drain_execution_narrative_frames()
+        assert [frame.status for frame in started] == ["started"]
+
+        runtime._step_brain()
+        runtime._step_execution_narrative()
+        terminal = runtime.drain_execution_narrative_frames()
+        assert [frame.status for frame in terminal] == ["succeeded"]
+        assert terminal[0].claimable_facts
+
+        status = runtime.snapshot()["brain"]["execution_narrative"]
+        assert status["mode"] == "journal_only_disarmed"
+        assert status["provider_bound"] is False
+        assert status["audio_bound"] is False
+        assert status["live_session_bound"] is False
+        assert status["resume_parent_lineage_bound"] is False
+        assert status["authorizes_actuation"] is False
+    finally:
+        runtime.close()
+
+
 def test_runtime_opt_in_plansketch_uses_same_trusted_planir_executive(
     tmp_path: Path,
 ) -> None:

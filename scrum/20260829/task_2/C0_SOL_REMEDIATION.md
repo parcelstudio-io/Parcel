@@ -46,3 +46,40 @@ A guarded scan found:
 The intervention count is a structural coverage witness, not evidence that the
 reactive policy is human-safe or physically sufficient. Physical motion remains
 NO-GO.
+
+## Executed result
+
+Two guarded full campaigns ran the exact nine-row selection at 200 steps per
+episode. After removing only `generated_at`, their JSON payloads were identical.
+
+- scratch SHA-256: `fd94bc0e2406cc86e59cd4c02f7e705a3896d5a8168472ac64bd362b6569528a`;
+- committed SHA-256: `6ad2d47880b5dc4b856b3ba84fecbb9f030384035e5709f1783f8d61f2c0931a`;
+- clean authority: 9 agreement / 0 disagreement / 0 false arrival;
+- clean collisions: 0;
+- reactive coverage: 962 calls, 638 translating requests, 162 changed
+  requests, and 0 hard translation stops;
+- all five clean checks green;
+- seven of seven mutants killed; no survivor or equivalent; and
+- `reactive_gate_disabled` reddened both `reactive_gate_exercised` and
+  `final_poses_within_tolerance`.
+
+The focused freshness and hard-safety integration selection then passed 22
+tests in 138.88 seconds, with 80 unrelated tests deselected and two pre-existing
+deprecation warnings. The CLI now fails on equivalent mutants as well as
+survivors, and its Markdown cannot print “PANEL PASSED” when the JSON is red.
+
+One follow-up isolated `region-C-11` run observed 70 changed translating
+requests, versus 78 when the same row is sixth in the frozen nine-row campaign.
+`HeadlessCityWorld` seeds its scan RNG once at construction and does not reset
+that stream per episode, so row-level noise depends on preceding episode order.
+Clean and mutant arms still start fresh runners and consume the identical
+ordered stream, and the two complete campaigns match. The freshness assertion
+therefore pins the exact ordered `episode_ids`; these numbers must not be cited
+as episode-independent estimates. A future evaluator revision should seed scan
+noise by episode identity and be separately preregistered.
+
+**Decision:** C0's stale artifact and coverage blind spot are repaired on this
+checkout. Accept it as a deterministic evaluation substrate only. It still has
+no hard-stop witness, physical perception, measured stopping distance, or human
+safety claim; add a designed nonzero-to-zero obstacle case before treating the
+reactive policy's stop branch as mutation-covered.

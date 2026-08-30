@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Independent standard-library verifier for DSOAK-1 result snapshots.
 
 The verifier deliberately does not import the soak runner, DMC simulator, or
@@ -13,9 +12,10 @@ import hashlib
 import json
 import math
 import sys
+from datetime import datetime
+from itertools import pairwise
 from pathlib import Path
 from typing import Any
-
 
 HERE = Path(__file__).resolve().parent
 DMC = HERE.parent / "duplex-mission-control-1"
@@ -60,6 +60,14 @@ ADDITIVE_FIELDS = (
     "duplicate_receipts_rejected",
     "simulated_hours",
 )
+COUNT_FIELDS = {
+    "primary_episodes",
+    "frozen_episodes",
+    "adversarial_episodes",
+    "candidate_failures",
+    "deterministic_replays",
+    "deterministic_replay_mismatches",
+}
 
 
 def digest(path: Path) -> str:
@@ -70,7 +78,7 @@ def digest(path: Path) -> str:
     return value.hexdigest()
 
 
-def ratio(numerator: int | float, denominator: int | float) -> float:
+def ratio(numerator: float, denominator: float) -> float:
     return float(numerator) / max(1.0, float(denominator))
 
 
@@ -79,6 +87,32 @@ def close(left: Any, right: Any, *, tolerance: float = 1e-12) -> bool:
         return math.isclose(float(left), float(right), rel_tol=tolerance, abs_tol=tolerance)
     except (TypeError, ValueError):
         return False
+
+
+def finite_number(value: object) -> bool:
+    return (
+        not isinstance(value, bool)
+        and isinstance(value, (int, float))
+        and math.isfinite(float(value))
+    )
+
+
+def nonnegative_int(value: object) -> bool:
+    return type(value) is int and value >= 0
+
+
+def aware_timestamp(value: object) -> bool:
+    if not isinstance(value, str):
+        return False
+    try:
+        parsed = datetime.fromisoformat(value)
+    except ValueError:
+        return False
+    return parsed.tzinfo is not None
+
+
+def reject_constant(value: str) -> None:
+    raise ValueError(f"non-finite JSON constant {value}")
 
 
 def rss_slope(samples: list[dict[str, Any]]) -> float | None:
@@ -130,6 +164,17 @@ class Audit:
                              f"{system}: missing additive field {field}")
                 if field not in all_row or field not in frozen or field not in adversarial:
                     continue
+                for split_name, value in (
+                    ("all", all_row[field]),
+                    ("frozen", frozen[field]),
+                    ("adversarial", adversarial[field]),
+                ):
+                    valid = (
+                        finite_number(value) and float(value) >= 0.0
+                        if field == "simulated_hours"
+                        else nonnegative_int(value)
+                    )
+                    self.require(valid, f"{system}.{split_name}: invalid {field}")
                 expected = float(frozen[field]) + float(adversarial[field])
                 self.require(close(all_row[field], expected, tolerance=1e-10),
                              f"{system}: all.{field} is not frozen + adversarial")
@@ -150,6 +195,11 @@ class Audit:
                     ),
                 }
                 for field, expected in expected_rates.items():
+                    self.require(
+                        finite_number(row.get(field))
+                        and 0.0 <= float(row[field]) <= 1.0,
+                        f"{system}.{split_name}: invalid {field}",
+                    )
                     self.require(close(row.get(field), expected),
                                  f"{system}.{split_name}: incorrect {field}")
 
@@ -159,6 +209,9 @@ class Audit:
         if not isinstance(counts, dict) or not isinstance(candidate, dict):
             self.errors.append("counts/candidate aggregates missing")
             return
+        self.require(set(counts) == COUNT_FIELDS, "run count inventory mismatch")
+        for field in COUNT_FIELDS:
+            self.require(nonnegative_int(counts.get(field)), f"invalid count {field}")
         all_row = candidate.get("all", {})
         frozen = candidate.get("frozen", {})
         adversarial = candidate.get("adversarial", {})
@@ -178,16 +231,74 @@ class Audit:
         episodes = int(counts.get("primary_episodes", 0))
         self.require(replays == episodes // 100,
                      "deterministic replay count is not floor(primary episodes / 100)")
+        for system, splits in (self.result.get("aggregates") or {}).items():
+            if not isinstance(splits, dict):
+                continue
+            for split_name, expected in (
+                ("all", counts.get("primary_episodes")),
+                ("frozen", counts.get("frozen_episodes")),
+                ("adversarial", counts.get("adversarial_episodes")),
+            ):
+                row = splits.get(split_name)
+                if isinstance(row, dict):
+                    self.require(
+                        row.get("episodes") == expected,
+                        f"{system}.{split_name}: episode count differs from run count",
+                    )
         mismatch_details = self.result.get("replay_mismatch_details", [])
         self.require(isinstance(mismatch_details, list), "replay mismatch details must be a list")
         if isinstance(mismatch_details, list):
-            self.require(int(counts.get("deterministic_replay_mismatches", -1)) >=
-                         len(mismatch_details), "more mismatch details than mismatches")
+            mismatches = int(counts.get("deterministic_replay_mismatches", -1))
+            self.require(
+                len(mismatch_details) == min(max(mismatches, 0), 100),
+                "replay mismatch detail retention is inconsistent",
+            )
         failure_details = self.result.get("candidate_failure_details", [])
         self.require(isinstance(failure_details, list), "candidate failure details must be a list")
         if isinstance(failure_details, list):
-            self.require(failures >= len(failure_details), "more failure details than failures")
-            self.require(len(failure_details) <= 1000, "failure detail bound exceeded")
+            self.require(
+                len(failure_details) == min(max(failures, 0), 1000),
+                "candidate failure detail retention is inconsistent",
+            )
+            self.require(
+                self.result.get("candidate_failure_details_truncated")
+                is (failures > len(failure_details)),
+                "candidate failure truncation flag is inconsistent",
+            )
+            identities: set[tuple[str, int]] = set()
+            for index, detail in enumerate(failure_details):
+                self.require(isinstance(detail, dict), f"failure detail {index} is not an object")
+                if not isinstance(detail, dict):
+                    continue
+                split = str(detail.get("split"))
+                seed = detail.get("seed")
+                self.require(
+                    isinstance(seed, int) and not isinstance(seed, bool),
+                    f"failure detail {index} has an invalid seed",
+                )
+                if not isinstance(seed, int) or isinstance(seed, bool):
+                    continue
+                key = (split, seed)
+                self.require(key not in identities, f"duplicate failure detail {key}")
+                identities.add(key)
+                if split == "frozen":
+                    valid_seed = 1_000_000 <= seed < 1_000_000 + int(
+                        counts.get("frozen_episodes", 0)
+                    )
+                elif split == "adversarial":
+                    valid_seed = 2_000_000 <= seed < 2_000_000 + int(
+                        counts.get("adversarial_episodes", 0)
+                    )
+                else:
+                    valid_seed = False
+                self.require(valid_seed, f"failure detail {index} is outside its seed range")
+                spec_digest = detail.get("spec_digest")
+                self.require(
+                    isinstance(spec_digest, str)
+                    and len(spec_digest) == 64
+                    and all(character in "0123456789abcdef" for character in spec_digest),
+                    f"failure detail {index} has an invalid spec digest",
+                )
 
     def verify_health(self) -> float | None:
         health = self.result.get("process_health", {})
@@ -195,11 +306,30 @@ class Audit:
         self.require(isinstance(samples, list) and bool(samples), "RSS samples must be nonempty")
         if not isinstance(samples, list) or not samples:
             return None
+        for index, sample in enumerate(samples):
+            self.require(isinstance(sample, dict), f"RSS sample {index} is not an object")
+            if not isinstance(sample, dict):
+                return None
+            self.require(
+                set(sample) == {"elapsed_seconds", "rss_mib"},
+                f"RSS sample {index} field inventory mismatch",
+            )
+            self.require(
+                finite_number(sample.get("elapsed_seconds"))
+                and float(sample["elapsed_seconds"]) >= 0.0,
+                f"RSS sample {index} has invalid elapsed time",
+            )
+            self.require(
+                finite_number(sample.get("rss_mib")) and float(sample["rss_mib"]) >= 0.0,
+                f"RSS sample {index} has invalid RSS",
+            )
+        if any(not isinstance(sample, dict) for sample in samples):
+            return None
         elapsed = [float(sample["elapsed_seconds"]) for sample in samples]
         rss = [float(sample["rss_mib"]) for sample in samples]
         self.require(all(math.isfinite(value) and value >= 0.0 for value in elapsed + rss),
                      "RSS samples contain invalid numbers")
-        self.require(all(right > left for left, right in zip(elapsed, elapsed[1:])),
+        self.require(all(right > left for left, right in pairwise(elapsed)),
                      "RSS sample times are not strictly increasing")
         self.require(close(health.get("current_rss_mib"), rss[-1]),
                      "current RSS is not the last sample")
@@ -296,12 +426,34 @@ class Audit:
                      "unexpected evidence class")
         self.require(self.result.get("minimum_passing_wall_hours") == 12.0,
                      "minimum wall time differs from frozen design")
-        self.require(float(self.result.get("target_wall_hours", 0.0)) >= 12.0,
+        self.require(
+            finite_number(self.result.get("elapsed_monotonic_seconds"))
+            and float(self.result["elapsed_monotonic_seconds"]) >= 0.0,
+            "elapsed monotonic time is invalid",
+        )
+        self.require(aware_timestamp(self.result.get("started_utc")),
+                     "started_utc is invalid")
+        self.require(aware_timestamp(self.result.get("updated_utc")),
+                     "updated_utc is invalid")
+        target_wall_hours = float(self.result.get("target_wall_hours", 0.0))
+        self.require(finite_number(self.result.get("target_wall_hours")),
+                     "configured target is not finite")
+        self.require(target_wall_hours >= 12.0,
                      "configured target is below 12 hours")
         config = self.result.get("configuration", {})
+        self.require(isinstance(config, dict), "configuration must be an object")
+        if not isinstance(config, dict):
+            config = {}
+        self.require(nonnegative_int(config.get("process_id")) and config.get("process_id") > 0,
+                     "process ID is invalid")
         self.require(config.get("torch_threads") == 1, "torch thread count is not one")
-        self.require(int(config.get("batch_size", 0)) > 0, "batch size is invalid")
-        self.require(float(config.get("checkpoint_seconds", 0.0)) <= 60.0,
+        self.require(type(config.get("torch_threads")) is int,
+                     "torch thread count type is invalid")
+        self.require(nonnegative_int(config.get("batch_size")) and config.get("batch_size") > 0,
+                     "batch size is invalid")
+        self.require(
+            finite_number(config.get("checkpoint_seconds"))
+            and 0.0 < float(config["checkpoint_seconds"]) <= 60.0,
                      "checkpoint interval exceeds one minute")
         self.verify_aggregates()
         self.verify_counts()
@@ -310,6 +462,16 @@ class Audit:
         gates = self.recompute_gates(slope, hashes_ok)
         self.require(self.result.get("gates") == gates, "serialized gates differ from oracle")
         status = self.result.get("status")
+        self.require(status in {"running", "complete", "interrupted", "error"},
+                     "unexpected result status")
+        target_duration_reached = float(
+            self.result.get("elapsed_monotonic_seconds", 0.0)
+        ) >= target_wall_hours * 3600.0
+        if status == "complete":
+            self.require(
+                target_duration_reached,
+                "complete status was written before the configured target duration",
+            )
         expected_verdict = (
             "RUNNING_NOT_A_VERDICT"
             if status == "running"
@@ -321,12 +483,29 @@ class Audit:
                      "serialized verdict differs from oracle")
         if status != "complete":
             self.warnings.append("snapshot is not a completed soak and cannot support promotion")
+        promotion_pass = not self.errors and status == "complete" and all(gates.values())
+        candidate_all = self.result.get("aggregates", {}).get(CANDIDATE, {}).get("all", {})
+        exercised_counters = {
+            "raw_unsafe_proposals_positive": int(candidate_all.get("raw_unsafe", 0)) > 0,
+            "stale_action_rejections_positive": int(
+                candidate_all.get("stale_action_rejections", 0)
+            ) > 0,
+        }
+        completion_acceptance_pass = (
+            promotion_pass
+            and target_duration_reached
+            and not self.warnings
+            and all(exercised_counters.values())
+        )
         return {
             "schema": "parcel.duplex_soak.verification.v1",
             "source": str(self.source_path),
             "source_sha256": digest(self.source_path),
             "structural_and_integrity_pass": not self.errors,
-            "promotion_pass": not self.errors and status == "complete" and all(gates.values()),
+            "promotion_pass": promotion_pass,
+            "completion_acceptance_pass": completion_acceptance_pass,
+            "configured_target_duration_reached": target_duration_reached,
+            "supplementary_exercise_checks": exercised_counters,
             "recomputed_gates": gates,
             "errors": self.errors,
             "warnings": self.warnings,
@@ -335,6 +514,12 @@ class Audit:
                 "supports durability and frozen procedural invariants only, not narration "
                 "truthfulness, physical safety, or mount readiness."
             ),
+            "counter_limitations": (
+                "stale_action_acceptances is never incremented by the frozen simulator; "
+                "post_stop_motion and admitted_unsafe are coupled to same-thread rejection "
+                "checks. Their zero values are structural invariants, not independent "
+                "safety evidence."
+            ),
         }
 
 
@@ -342,13 +527,20 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("result", nargs="?", type=Path, default=HERE / "results.json")
     args = parser.parse_args()
-    value = json.loads(args.result.read_text(encoding="utf-8"))
+    value = json.loads(
+        args.result.read_text(encoding="utf-8"),
+        parse_constant=reject_constant,
+    )
     if not isinstance(value, dict):
         raise SystemExit("result must be a JSON object")
     report = Audit(value, args.result).run()
     json.dump(report, sys.stdout, indent=2, sort_keys=True)
     sys.stdout.write("\n")
-    return 0 if report["structural_and_integrity_pass"] else 2
+    # Command success means the COMPLETED artifact is acceptable under both
+    # preregistered and post-hoc integrity checks.  Interim files and completed
+    # scientific failures deliberately exit nonzero even when their JSON is
+    # structurally well formed.
+    return 0 if report["completion_acceptance_pass"] else 2
 
 
 if __name__ == "__main__":

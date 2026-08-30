@@ -27,3 +27,6 @@ The immediate mount verdict improves from an absent software principal to a
 tested source-level principal. It does not advance beyond motors-disabled HIL
 or tethered commissioning.
 
+This is the original verdict. The current-source decision, including the
+READY/signal race repair and strict maintenance-3 rerun, is in
+`MAINTENANCE_VERDICT.md`; physical readiness remains NO-GO.

@@ -31,12 +31,12 @@ NotifyAccess=main
 User=parcel-audio
 Group=parcel-audio
 SupplementaryGroups=audio
-Environment=PARCEL_ARMED=0
-Environment=PARCEL_ROLE=audio
-Environment=PARCEL_VOICE_MODE=push_to_talk
+# Optional commissioned device/calibration settings may live here. Fixed
+# disarm, role, and conservative voice mode are assigned after the file by
+# ExecStart's /usr/bin/env.
 EnvironmentFile=-/etc/parcel/audio.env
 ExecStartPre=/usr/bin/test -x /opt/parcel/bin/parcel-audio
-ExecStart=/opt/parcel/bin/parcel-audio --disarmed --local-stop
+ExecStart=/usr/bin/env PARCEL_ARMED=0 PARCEL_ROLE=audio PARCEL_VOICE_MODE=push_to_talk /opt/parcel/bin/parcel-audio --disarmed --local-stop
 Restart=on-failure
 RestartSec=2
 WatchdogSec=5

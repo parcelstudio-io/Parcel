@@ -1,4 +1,4 @@
-"""Disarmed product adapter for the Unix motion gateway.
+"""Product adapters for the Unix motion gateway.
 
 This module closes the first, deliberately narrow, product-composition rung:
 ``RobotRuntime`` can receive a :class:`ControlManager` whose controller and
@@ -6,18 +6,18 @@ feedback source use
 :class:`parcel_robot.bridge.gateway_client.MotionGatewayClientV1` over the real
 ``AF_UNIX``/``SOCK_SEQPACKET`` boundary.
 
-It does **not** close the motion-enabled rung.  The adapter has no call site for
-``MotionGatewayClientV1.acquire`` or ``MotionGatewayClientV1.command`` and
-declares ``body_velocity=False``.  A non-zero setpoint is therefore refused by
-``ControlManager`` before this controller is called, even if a future caller
-tries to bypass that declaration and invokes :meth:`update` directly.  The
-only authority-affecting packet this adapter can emit is a stop.
+The original disarmed rung remains deliberately incapable of acquiring or
+commanding and declares ``body_velocity=False``.  The separate commissioned
+rung below has an explicit operator arm transaction, but passive activation,
+connect, reconnect, and gateway restart never invoke it.  Both compositions
+share only the production :class:`MotionGatewayClientV1` wire client; neither
+imports the gateway server, fake Sport service, or a vendor SDK.
 
-The gateway does not attest which ``SportPort`` is behind its V1 hello, so this
-module makes no fake-versus-physical claim and declares feedback provenance
-``UNKNOWN``.  That is intentional: the adapter is safe against either because
-it never arms.  Desktop integration tests launch the existing fake Sport
-gateway separately; vendor mode remains the gateway CLI's fail-closed concern.
+Both raw sources declare feedback provenance ``UNKNOWN``.  Only the dedicated
+factory may commission one as ``PHYSICAL``, and only after the production
+client has matched independently configured hashes and a strict
+``UNITREE_SDK2`` V2 state body-kind attestation.  ``FAKE`` and ``UNKNOWN`` can
+therefore never produce physical feedback through this composition.
 """
 
 from __future__ import annotations
@@ -25,7 +25,6 @@ from __future__ import annotations
 import math
 import threading
 import time
-from collections.abc import Callable
 from pathlib import Path
 
 from parcel_robot.bridge.gateway_client import (
@@ -43,8 +42,18 @@ from .models import (
     RobotMotionState,
     TimedVelocitySetpoint,
 )
-
-ClientFactory = Callable[..., MotionGatewayClientV1]
+from .motion_gateway_commissioned import (
+    CommissionedGatewayControllerV1,
+    build_commissioned_gateway_pair,
+)
+from .motion_gateway_common import (
+    ClientFactory,
+    CommissionedGatewayError,
+)
+from .motion_gateway_common import (
+    bounded_reason as _bounded_reason,
+)
+from .motion_gateway_state import CommissionedGatewayStateSourceV1
 
 
 class DisarmedGatewayError(RuntimeError):
@@ -171,10 +180,7 @@ class _DisarmedGatewaySessionV1:
             if already_stopped:
                 return None
             report = client.stop(reason=reason, emergency=False)
-            if (
-                report.boot_epoch != client.identity.boot_epoch
-                or not report.confirmed_stationary
-            ):
+            if report.boot_epoch != client.identity.boot_epoch or not report.confirmed_stationary:
                 self._drop_client(client)
                 raise DisarmedGatewayError(
                     "gateway stop report violates epoch or stationary contract"
@@ -428,14 +434,13 @@ def build_disarmed_gateway_pair(
     )
 
 
-def _bounded_reason(reason: str) -> str:
-    clean = " ".join(str(reason).split()) or "runtime_stop"
-    return clean[:160]
-
-
 __all__ = [
+    "CommissionedGatewayControllerV1",
+    "CommissionedGatewayError",
+    "CommissionedGatewayStateSourceV1",
     "DisarmedGatewayControllerV1",
     "DisarmedGatewayError",
     "DisarmedGatewayStateSourceV1",
+    "build_commissioned_gateway_pair",
     "build_disarmed_gateway_pair",
 ]

@@ -5,8 +5,12 @@
 SOS-H1 through SOS-H5 passed in two fresh evidentiary runs. Their volatile run
 labels differ, but their normalized contents are exactly equal with digest
 `dbba4218141da09ab5fbc1587644a58dd52bbfc4dc0458362b11f5a1f581dc9e`.
-The independent verifier recomputed every gate and current frozen source hash,
-then rejected a one-field in-memory tamper.
+The historical verifier recomputed every gate and source hash, but later audit
+found that its final predicate checked agreement with a stored false gate
+claim without separately requiring the recomputed gates to be true. The two
+original runs were themselves green, so their outcome is unchanged; current
+maintenance evidence and the corrected verification are documented in
+`MAINTENANCE_RESULTS.md`.
 
 | Gate | Run A | Run B | Evidence |
 |---|---:|---:|---|
@@ -60,3 +64,10 @@ power rail, or Unitree transport fails together, this process cannot guarantee
 a stop. It also does not measure braking distance, balance, foot contact,
 thermal limits, or human-safe clearance.
 
+## Current-source correction
+
+Do not use this historical section as the current-source lifecycle claim.
+Concurrent maintenance later exposed and repaired READY-before-handler
+ordering, then replaced the instantaneous process-state oracle. See
+`MAINTENANCE_RESULTS.md` and `MAINTENANCE_VERDICT.md` for the preserved red
+evidence and final four-run post-fix result.

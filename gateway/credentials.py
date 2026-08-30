@@ -1,4 +1,4 @@
-"""The one authenticated lease credential.
+"""Kernel-authenticated runtime and stop-only gateway credentials.
 
 HLD §8.8: the gateway has "one robot-network credential and one vendor command
 writer" and "one authenticated local client lease".  V1 of the wire contract
@@ -8,8 +8,9 @@ are not forgeable by a message alone:
 
 * the **transport peer credential** — ``SO_PEERCRED`` on the accepted
   ``AF_UNIX``/``SOCK_SEQPACKET`` connection gives the kernel's own answer for
-  the peer's pid/uid/gid.  A process that is not the commissioned product user
-  never reaches the protocol layer at all; and
+  the peer's pid/uid/gid.  A process that is neither the commissioned runtime
+  nor the separately commissioned stop-only principal never reaches the
+  protocol layer at all; and
 * the **contract identity** — ``GatewayHashesV1`` (config/capability/
   calibration/firmware) must equal this gateway's required hashes exactly, so
   a client built against a different config or capability manifest cannot
@@ -61,11 +62,18 @@ def read_peer_credential(connection: socket.socket) -> PeerCredentialV1:
 
 @dataclass(frozen=True)
 class CredentialPolicyV1:
-    """Who may connect, who may hold the lease, and against which contract."""
+    """Who may connect/STOP, who may lease, and against which contract.
+
+    ``allowed_uids`` is the connection allowlist. Every admitted peer may read
+    state and invoke the gateway's unconditional STOP path. ``lease_uids`` is
+    the strict subset that may acquire or refresh motion authority. Leaving it
+    unset preserves the historical one-principal policy exactly.
+    """
 
     required_hashes: GatewayHashesV1
     allowed_writer_ids: frozenset[str]
     allowed_uids: frozenset[int]
+    lease_uids: frozenset[int] | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.required_hashes, GatewayHashesV1):
@@ -74,9 +82,26 @@ class CredentialPolicyV1:
             raise ValueError("the writer allowlist may not be empty")
         if not self.allowed_uids:
             raise ValueError("the uid allowlist may not be empty")
+        lease_uids = self.allowed_uids if self.lease_uids is None else self.lease_uids
+        if not lease_uids:
+            raise ValueError("the lease uid allowlist may not be empty")
+        if not lease_uids <= self.allowed_uids:
+            raise ValueError("lease uids must be a subset of connected uids")
+        object.__setattr__(self, "lease_uids", frozenset(lease_uids))
 
     def admits_peer(self, peer: PeerCredentialV1) -> bool:
         return peer.uid in self.allowed_uids
+
+    def admits_lease_peer(self, peer: PeerCredentialV1) -> bool:
+        """Whether this kernel peer may create or refresh positive authority."""
+
+        lease_uids = self.lease_uids
+        return lease_uids is not None and peer.uid in lease_uids
+
+    def is_stop_only_peer(self, peer: PeerCredentialV1) -> bool:
+        """Whether the peer can observe/STOP but never hold a lease."""
+
+        return self.admits_peer(peer) and not self.admits_lease_peer(peer)
 
     def admits_writer(self, writer_id: str) -> bool:
         return writer_id in self.allowed_writer_ids
@@ -97,4 +122,27 @@ def single_writer_policy(
         required_hashes=required_hashes,
         allowed_writer_ids=frozenset({writer_id}),
         allowed_uids=frozenset({os.geteuid() if uid is None else uid}),
+    )
+
+
+def writer_with_stop_only_policy(
+    *,
+    required_hashes: GatewayHashesV1,
+    writer_id: str,
+    writer_uid: int,
+    stop_uid: int,
+) -> CredentialPolicyV1:
+    """One lease UID plus one distinct observe/latched-STOP-only UID."""
+
+    if isinstance(writer_uid, bool) or not isinstance(writer_uid, int) or writer_uid < 0:
+        raise ValueError("writer_uid must be a non-negative integer")
+    if isinstance(stop_uid, bool) or not isinstance(stop_uid, int) or stop_uid < 0:
+        raise ValueError("stop_uid must be a non-negative integer")
+    if writer_uid == stop_uid:
+        raise ValueError("stop-only uid must differ from the writer uid")
+    return CredentialPolicyV1(
+        required_hashes=required_hashes,
+        allowed_writer_ids=frozenset({writer_id}),
+        allowed_uids=frozenset({writer_uid, stop_uid}),
+        lease_uids=frozenset({writer_uid}),
     )

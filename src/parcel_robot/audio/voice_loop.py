@@ -34,6 +34,12 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from parcel_robot.audio.speaker import SpeakerSink as _SpeakerSink
+from parcel_robot.audio.speaker import SpeakerWriteAttempt as _SpeakerWriteAttempt
+
+SpeakerSink = _SpeakerSink
+SpeakerWriteAttempt = _SpeakerWriteAttempt
+
 logger = logging.getLogger(__name__)
 
 SAMPLE_RATE_HZ = 16_000
@@ -133,9 +139,7 @@ class EnergyVad:
                     # almost certainly ambient noise, not speech. Re-seed the
                     # floor toward it so the next segment cannot start
                     # immediately (stuck-floor escape found in review).
-                    self.reseed_floor(
-                        self.frame_rms(np.frombuffer(utterance, dtype=np.int16))
-                    )
+                    self.reseed_floor(self.frame_rms(np.frombuffer(utterance, dtype=np.int16)))
                 self._reset_segment()
                 events.append(VadEvent("speech_end", utterance))
         return events
@@ -250,9 +254,7 @@ class AecStage:
 
         if pcm.dtype != np.int16:
             raise TypeError("AEC far-end frames must be int16 PCM")
-        self._far_buffer = np.concatenate(
-            [self._far_buffer, pcm.astype(np.float64)]
-        )
+        self._far_buffer = np.concatenate([self._far_buffer, pcm.astype(np.float64)])
         # Bound the reference buffer: an unconsumed far end must not grow
         # without limit when playback outruns capture.
         limit = SAMPLE_RATE_HZ * 5
@@ -586,9 +588,7 @@ class MicrophoneVoiceLoop:
             # Neural path: Silero must see the CONTINUOUS stream (the N17 fix),
             # so the frame is always processed; ``echo_suppressed`` only decides
             # whether the resulting speech flag may act.
-            self._handle_frame_semantic(
-                frame, playback=playback, echo_suppressed=echo_suppressed
-            )
+            self._handle_frame_semantic(frame, playback=playback, echo_suppressed=echo_suppressed)
             return
         # Energy path (legacy, no neural VAD). The energy segmenter is stateful
         # hangover logic, not a continuous neural model, so the historical
@@ -635,9 +635,7 @@ class MicrophoneVoiceLoop:
                 self._last_is_speech = probability >= getattr(vad, "threshold", 0.5)
                 decided = True
             del decided  # incomplete window: hold the previous decision
-            self.vad.update_floor(
-                EnergyVad.frame_rms(frame), voiced=self._last_is_speech
-            )
+            self.vad.update_floor(EnergyVad.frame_rms(frame), voiced=self._last_is_speech)
             return self._last_is_speech
         return self._energy_is_speech(frame)
 
@@ -691,11 +689,7 @@ class MicrophoneVoiceLoop:
                 self._commit_turn()
                 return
 
-        tail = (
-            np.frombuffer(bytes(self._utterance), dtype=np.int16)
-            if self._utterance
-            else None
-        )
+        tail = np.frombuffer(bytes(self._utterance), dtype=np.int16) if self._utterance else None
         try:
             decision = self.endpointer.observe(
                 is_speech=is_speech, audio_tail=tail, now_s=self._elapsed_s
@@ -767,233 +761,3 @@ class MicrophoneVoiceLoop:
             self.submit_text(transcript, is_final=True)
         except Exception as error:  # noqa: BLE001 - session boundary
             logger.warning("voice submission failed: %s", error)
-
-
-class SpeakerSink:
-    """Ordered audio-chunk player with immediate interruption.
-
-    Receives WAV (first chunk carries the header) or raw PCM16 chunks from the
-    session's synthesizer stream and plays them through ``sounddevice``. A
-    dedicated worker owns the output stream; ``interrupt()`` flushes queued
-    chunks and aborts the default player's in-flight chunk at the next ~50 ms
-    block boundary without blocking the caller. Injected test players are
-    only abortable between chunks. ``playback_active`` stays true until the
-    in-flight player call actually returns.
-    """
-
-    def __init__(
-        self,
-        *,
-        player: Callable[[bytes, int], None] | None = None,
-        device: int | None = None,
-        on_chunk_start: Callable[[object], None] | None = None,
-    ):
-        self._player = player
-        self.device = device
-        # Fired on the worker thread the moment a chunk actually begins
-        # playing, carrying whatever token was attached at enqueue time.
-        # This is the only honest anchor for the audio playback clock: a
-        # chunk enqueued now may not be audible for seconds.
-        self._on_chunk_start = on_chunk_start
-        self._queue: queue.Queue[tuple[bytes, object] | None] = queue.Queue(maxsize=256)
-        self._interrupted = threading.Event()
-        self._playing = threading.Event()
-        # AEC ladder rung L2 (ducking). 1.0 is unity: with no duck ever
-        # requested the sample path is byte-for-byte what it was before.
-        self._gain = 1.0
-        self._duck_started_at: float | None = None
-        self.ducks_applied = 0
-        self.ducks_restored = 0
-        # Speaker-worker first-sample clock (the third of the ledger's four
-        # missing clocks). on_chunk_start already fires at the true start of a
-        # chunk, but today it only anchors beat motion; recording the instant
-        # here makes it available to the ledger without changing that callback
-        # contract. Note honestly what this is: the moment the worker began
-        # WRITING the chunk, not the moment it became audible. The virtual-rig
-        # eval measured 0.54-0.64 s between the two.
-        self.first_chunk_started_monotonic: float | None = None
-        self.last_chunk_started_monotonic: float | None = None
-        self._sample_rate = SAMPLE_RATE_HZ
-        self._header_parsed = False
-        self._worker = threading.Thread(
-            target=self._run,
-            name="parcel-voice-speaker",
-            daemon=True,
-        )
-        self._worker.start()
-
-    @property
-    def playback_active(self) -> bool:
-        return self._playing.is_set()
-
-    def begin_utterance(self) -> None:
-        """Re-arm playback at the start of a NEW (non-cancelled) reply.
-
-        Clearing the interrupt latch here instead of on every ``enqueue``
-        closes the barge-in race found in review: a stale chunk enqueued by
-        an output thread that lost the race against ``interrupt()`` stays
-        suppressed instead of un-interrupting the flush.
-        """
-
-        self._interrupted.clear()
-        # A new reply gets a new first-sample anchor; the previous turn's
-        # value would otherwise make every later turn look instantaneous.
-        self.first_chunk_started_monotonic = None
-
-    def enqueue(self, chunk: bytes, token: object = None) -> None:
-        """Session-facing ``audio_chunk_player`` callback.
-
-        ``token`` travels with the chunk and is handed to ``on_chunk_start``
-        when this exact chunk begins playing (used to anchor beat-synced
-        motion to the playback clock).
-        """
-
-        if not chunk:
-            return
-        try:
-            self._queue.put_nowait((chunk, token))
-        except queue.Full:
-            logger.warning("speaker queue overflow; dropping audio chunk")
-
-    @property
-    def gain(self) -> float:
-        """Current output gain multiplier (1.0 = unity, <1.0 = ducked)."""
-
-        return self._gain
-
-    @property
-    def ducked(self) -> bool:
-        return self._gain < 1.0
-
-    def duck(self, attenuation_db: float = 10.0) -> None:
-        """Drop output level on a PROVISIONAL barge-in hit (AEC rung L2).
-
-        The roadmap's provisional-epoch design: when the VAD thinks the owner
-        may have started talking but nothing is confirmed yet, do not tear the
-        turn down — just get quieter. A 9-12 dB drop improves the owner's
-        near-end-to-echo ratio by the same amount, which is usually enough for
-        the endpointer to hear them properly and decide. If it was a false
-        alarm, ``restore()`` puts the level back and the turn was never
-        damaged; supersession still requires the normal commit criteria.
-
-        The gain is applied per ~50 ms output block, so it takes effect within
-        one block rather than at the next chunk boundary.
-        """
-
-        if not math.isfinite(attenuation_db) or not 0.0 < attenuation_db <= 60.0:
-            raise ValueError("duck attenuation must be in (0, 60] dB")
-        self._gain = float(10.0 ** (-attenuation_db / 20.0))
-        self._duck_started_at = time.monotonic()
-        self.ducks_applied += 1
-
-    def restore(self) -> None:
-        """Return to unity gain (the barge-in was not confirmed)."""
-
-        if self._gain != 1.0:
-            self.ducks_restored += 1
-        self._gain = 1.0
-        self._duck_started_at = None
-
-    @property
-    def ducked_for_s(self) -> float:
-        """How long the current duck has been held, for the confirm window."""
-
-        started = self._duck_started_at
-        if started is None:
-            return 0.0
-        return max(0.0, time.monotonic() - started)
-
-    def interrupt(self) -> None:
-        """Session-facing ``audio_interrupt`` callback: flush and stop now.
-
-        ``_playing`` is deliberately NOT cleared here — the in-flight chunk
-        keeps the flag (and therefore the microphone echo guard) up until the
-        player actually returns, so the robot's own audible tail can never be
-        transcribed as an owner command.
-        """
-
-        self._interrupted.set()
-        while True:
-            try:
-                self._queue.get_nowait()
-            except queue.Empty:
-                break
-
-    def close(self, timeout: float = 3.0) -> None:
-        self.interrupt()
-        self._queue.put(None)
-        self._worker.join(timeout)
-
-    def _run(self) -> None:
-        while True:
-            item = self._queue.get()
-            if item is None:
-                return
-            chunk, token = item
-            if self._interrupted.is_set():
-                continue
-            try:
-                pcm, sample_rate = self._decode(chunk)
-                if not pcm:
-                    continue
-                self._playing.set()
-                started = time.monotonic()
-                self.last_chunk_started_monotonic = started
-                if self.first_chunk_started_monotonic is None:
-                    self.first_chunk_started_monotonic = started
-                if self._on_chunk_start is not None:
-                    try:
-                        self._on_chunk_start(token)
-                    except Exception as error:  # noqa: BLE001 - observer boundary
-                        logger.warning("playback-start observer failed: %s", error)
-                self._play(pcm, sample_rate)
-            except Exception as error:  # noqa: BLE001 - device boundary
-                logger.warning("audio playback failed: %s", error)
-            finally:
-                if self._queue.empty():
-                    self._playing.clear()
-
-    def _decode(self, chunk: bytes) -> tuple[bytes, int]:
-        if chunk[:4] == b"RIFF":
-            with wave.open(io.BytesIO(chunk), "rb") as reader:
-                self._sample_rate = reader.getframerate()
-                self._header_parsed = True
-                return reader.readframes(reader.getnframes()), self._sample_rate
-        return chunk, self._sample_rate
-
-    def _play(self, pcm: bytes, sample_rate: int) -> None:
-        if self._player is not None:
-            self._player(pcm, sample_rate)
-            return
-        import sounddevice
-
-        data = np.frombuffer(pcm, dtype=np.int16)
-        # Stream in ~50 ms blocks and poll the interrupt latch between them:
-        # a mid-sentence barge-in aborts the in-flight chunk within one block
-        # instead of letting a whole sentence play to completion.
-        block = max(1, sample_rate // 20)
-        with sounddevice.OutputStream(
-            device=self.device, samplerate=sample_rate, channels=1, dtype="int16"
-        ) as stream:
-            for start in range(0, len(data), block):
-                if self._interrupted.is_set():
-                    # N16: ceasing to WRITE is not enough to stop being heard.
-                    # PortAudio has already buffered up to a full output-latency
-                    # worth of samples, and the OutputStream context manager
-                    # exits through stop(), which *drains* that buffer — the
-                    # acoustic rig measured ~0.6 s of the robot still talking
-                    # after a correct barge-in decision. abort() discards the
-                    # already-queued frames immediately (stop() would play them
-                    # out), so the sink goes acoustically silent within one
-                    # block of the interrupt instead of one output latency.
-                    stream.abort()
-                    return
-                chunk = data[start : start + block]
-                # Read the gain per block so a duck requested mid-chunk takes
-                # effect within one ~50 ms block instead of at the next chunk.
-                gain = self._gain
-                if gain != 1.0:
-                    chunk = np.clip(
-                        chunk.astype(np.float32) * gain, -32768, 32767
-                    ).astype(np.int16)
-                stream.write(chunk)

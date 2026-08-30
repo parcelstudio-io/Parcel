@@ -3,202 +3,202 @@
     "A0_ledger_snapshot_mlp": {
       "adversarial": {
         "admitted_unsafe": 0,
-        "duplicate_receipts_rejected": 45815,
-        "episodes": 15256,
-        "interrupt_accuracy": 0.9993226708617374,
-        "interrupt_checks": 45768,
-        "interrupt_correct": 45737,
-        "mission_success": 15208,
-        "mission_success_rate": 0.9968536969061353,
+        "duplicate_receipts_rejected": 99756,
+        "episodes": 33216,
+        "interrupt_accuracy": 0.999337668593449,
+        "interrupt_checks": 99648,
+        "interrupt_correct": 99582,
+        "mission_success": 33102,
+        "mission_success_rate": 0.9965679190751445,
         "narration_semantic_precision": 1.0,
-        "narration_terminal": 45751,
-        "narration_total": 234308,
-        "narration_valid": 234308,
-        "narration_valid_terminal": 45751,
+        "narration_terminal": 99600,
+        "narration_total": 510032,
+        "narration_valid": 510032,
+        "narration_valid_terminal": 99600,
         "post_stop_motion": 0,
         "premature_completion": 0,
-        "raw_unsafe": 3615,
-        "simulated_hours": 1017.0666666670446,
+        "raw_unsafe": 8038,
+        "simulated_hours": 2214.3999999993007,
         "stale_action_acceptances": 0,
-        "stale_action_rejections": 30337,
-        "stale_receipts_rejected": 24997,
-        "task_stack_exact": 15208,
-        "task_stack_exact_rate": 0.9968536969061353,
+        "stale_action_rejections": 66055,
+        "stale_receipts_rejected": 54513,
+        "task_stack_exact": 33102,
+        "task_stack_exact_rate": 0.9965679190751445,
         "terminal_claim_precision": 1.0,
         "terminal_coverage": 1.0,
-        "terminal_narrations_covered": 45751,
-        "terminal_receipts_accepted": 45751,
+        "terminal_narrations_covered": 99600,
+        "terminal_receipts_accepted": 99600,
         "wrong_route_moves": 0
       },
       "all": {
         "admitted_unsafe": 0,
-        "duplicate_receipts_rejected": 91663,
-        "episodes": 30516,
-        "interrupt_accuracy": 0.999289989950627,
-        "interrupt_checks": 91548,
-        "interrupt_correct": 91483,
-        "mission_success": 30402,
-        "mission_success_rate": 0.9962642548171451,
+        "duplicate_receipts_rejected": 199555,
+        "episodes": 66434,
+        "interrupt_accuracy": 0.9992724608885009,
+        "interrupt_checks": 199302,
+        "interrupt_correct": 199157,
+        "mission_success": 66188,
+        "mission_success_rate": 0.9962970767980251,
         "narration_semantic_precision": 1.0,
-        "narration_terminal": 91499,
-        "narration_total": 468637,
-        "narration_valid": 468637,
-        "narration_valid_terminal": 91499,
+        "narration_terminal": 199201,
+        "narration_total": 1020281,
+        "narration_valid": 1020281,
+        "narration_valid_terminal": 199201,
         "post_stop_motion": 0,
         "premature_completion": 0,
-        "raw_unsafe": 5350,
-        "simulated_hours": 2034.3999999994644,
+        "raw_unsafe": 11865,
+        "simulated_hours": 4428.93333333062,
         "stale_action_acceptances": 0,
-        "stale_action_rejections": 45505,
-        "stale_receipts_rejected": 49990,
-        "task_stack_exact": 30402,
-        "task_stack_exact_rate": 0.9962642548171451,
+        "stale_action_rejections": 99063,
+        "stale_receipts_rejected": 108781,
+        "task_stack_exact": 66188,
+        "task_stack_exact_rate": 0.9962970767980251,
         "terminal_claim_precision": 1.0,
         "terminal_coverage": 1.0,
-        "terminal_narrations_covered": 91499,
-        "terminal_receipts_accepted": 91499,
+        "terminal_narrations_covered": 199201,
+        "terminal_receipts_accepted": 199201,
         "wrong_route_moves": 0
       },
       "frozen": {
         "admitted_unsafe": 0,
-        "duplicate_receipts_rejected": 45848,
-        "episodes": 15260,
-        "interrupt_accuracy": 0.9992573176059415,
-        "interrupt_checks": 45780,
-        "interrupt_correct": 45746,
-        "mission_success": 15194,
-        "mission_success_rate": 0.9956749672346002,
+        "duplicate_receipts_rejected": 99799,
+        "episodes": 33218,
+        "interrupt_accuracy": 0.9992072571095992,
+        "interrupt_checks": 99654,
+        "interrupt_correct": 99575,
+        "mission_success": 33086,
+        "mission_success_rate": 0.9960262508278644,
         "narration_semantic_precision": 1.0,
-        "narration_terminal": 45748,
-        "narration_total": 234329,
-        "narration_valid": 234329,
-        "narration_valid_terminal": 45748,
+        "narration_terminal": 99601,
+        "narration_total": 510249,
+        "narration_valid": 510249,
+        "narration_valid_terminal": 99601,
         "post_stop_motion": 0,
         "premature_completion": 0,
-        "raw_unsafe": 1735,
-        "simulated_hours": 1017.3333333337115,
+        "raw_unsafe": 3827,
+        "simulated_hours": 2214.533333332634,
         "stale_action_acceptances": 0,
-        "stale_action_rejections": 15168,
-        "stale_receipts_rejected": 24993,
-        "task_stack_exact": 15194,
-        "task_stack_exact_rate": 0.9956749672346002,
+        "stale_action_rejections": 33008,
+        "stale_receipts_rejected": 54268,
+        "task_stack_exact": 33086,
+        "task_stack_exact_rate": 0.9960262508278644,
         "terminal_claim_precision": 1.0,
         "terminal_coverage": 1.0,
-        "terminal_narrations_covered": 45748,
-        "terminal_receipts_accepted": 45748,
+        "terminal_narrations_covered": 99601,
+        "terminal_receipts_accepted": 99601,
         "wrong_route_moves": 0
       }
     },
     "A1_ledger_history_gru": {
       "adversarial": {
         "admitted_unsafe": 0,
-        "duplicate_receipts_rejected": 45829,
-        "episodes": 15256,
-        "interrupt_accuracy": 0.9999126026918371,
-        "interrupt_checks": 45768,
-        "interrupt_correct": 45764,
-        "mission_success": 15189,
-        "mission_success_rate": 0.9956082852648138,
+        "duplicate_receipts_rejected": 99783,
+        "episodes": 33216,
+        "interrupt_accuracy": 0.9998795761078998,
+        "interrupt_checks": 99648,
+        "interrupt_correct": 99636,
+        "mission_success": 33068,
+        "mission_success_rate": 0.9955443159922929,
         "narration_semantic_precision": 1.0,
-        "narration_terminal": 45705,
-        "narration_total": 229648,
-        "narration_valid": 229648,
-        "narration_valid_terminal": 45705,
+        "narration_terminal": 99511,
+        "narration_total": 500020,
+        "narration_valid": 500020,
+        "narration_valid_terminal": 99511,
         "post_stop_motion": 0,
         "premature_completion": 0,
-        "raw_unsafe": 41166,
-        "simulated_hours": 1017.0666666670446,
+        "raw_unsafe": 90095,
+        "simulated_hours": 2214.3999999993007,
         "stale_action_acceptances": 0,
-        "stale_action_rejections": 29725,
-        "stale_receipts_rejected": 19218,
-        "task_stack_exact": 15189,
-        "task_stack_exact_rate": 0.9956082852648138,
+        "stale_action_rejections": 64624,
+        "stale_receipts_rejected": 41898,
+        "task_stack_exact": 33068,
+        "task_stack_exact_rate": 0.9955443159922929,
         "terminal_claim_precision": 1.0,
         "terminal_coverage": 1.0,
-        "terminal_narrations_covered": 45705,
-        "terminal_receipts_accepted": 45705,
-        "wrong_route_moves": 3501
+        "terminal_narrations_covered": 99511,
+        "terminal_receipts_accepted": 99511,
+        "wrong_route_moves": 7621
       },
       "all": {
         "admitted_unsafe": 0,
-        "duplicate_receipts_rejected": 91685,
-        "episodes": 30516,
-        "interrupt_accuracy": 0.9998689212216542,
-        "interrupt_checks": 91548,
-        "interrupt_correct": 91536,
-        "mission_success": 30373,
-        "mission_success_rate": 0.9953139336741381,
+        "duplicate_receipts_rejected": 199604,
+        "episodes": 66434,
+        "interrupt_accuracy": 0.999834422133245,
+        "interrupt_checks": 199302,
+        "interrupt_correct": 199269,
+        "mission_success": 66116,
+        "mission_success_rate": 0.9952132943974471,
         "narration_semantic_precision": 1.0,
-        "narration_terminal": 91417,
-        "narration_total": 459216,
-        "narration_valid": 459216,
-        "narration_valid_terminal": 91417,
+        "narration_terminal": 199016,
+        "narration_total": 999732,
+        "narration_valid": 999732,
+        "narration_valid_terminal": 199016,
         "post_stop_motion": 0,
         "premature_completion": 0,
-        "raw_unsafe": 78765,
-        "simulated_hours": 2034.3999999994644,
+        "raw_unsafe": 172427,
+        "simulated_hours": 4428.93333333062,
         "stale_action_acceptances": 0,
-        "stale_action_rejections": 44483,
-        "stale_receipts_rejected": 38597,
-        "task_stack_exact": 30373,
-        "task_stack_exact_rate": 0.9953139336741381,
+        "stale_action_rejections": 96772,
+        "stale_receipts_rejected": 84033,
+        "task_stack_exact": 66116,
+        "task_stack_exact_rate": 0.9952132943974471,
         "terminal_claim_precision": 1.0,
         "terminal_coverage": 1.0,
-        "terminal_narrations_covered": 91417,
-        "terminal_receipts_accepted": 91417,
-        "wrong_route_moves": 6088
+        "terminal_narrations_covered": 199016,
+        "terminal_receipts_accepted": 199016,
+        "wrong_route_moves": 13257
       },
       "frozen": {
         "admitted_unsafe": 0,
-        "duplicate_receipts_rejected": 45856,
-        "episodes": 15260,
-        "interrupt_accuracy": 0.999825251201398,
-        "interrupt_checks": 45780,
-        "interrupt_correct": 45772,
-        "mission_success": 15184,
-        "mission_success_rate": 0.9950196592398427,
+        "duplicate_receipts_rejected": 99821,
+        "episodes": 33218,
+        "interrupt_accuracy": 0.9997892708772352,
+        "interrupt_checks": 99654,
+        "interrupt_correct": 99633,
+        "mission_success": 33048,
+        "mission_success_rate": 0.9948822927328557,
         "narration_semantic_precision": 1.0,
-        "narration_terminal": 45712,
-        "narration_total": 229568,
-        "narration_valid": 229568,
-        "narration_valid_terminal": 45712,
+        "narration_terminal": 99505,
+        "narration_total": 499712,
+        "narration_valid": 499712,
+        "narration_valid_terminal": 99505,
         "post_stop_motion": 0,
         "premature_completion": 0,
-        "raw_unsafe": 37599,
-        "simulated_hours": 1017.3333333337115,
+        "raw_unsafe": 82332,
+        "simulated_hours": 2214.533333332634,
         "stale_action_acceptances": 0,
-        "stale_action_rejections": 14758,
-        "stale_receipts_rejected": 19379,
-        "task_stack_exact": 15184,
-        "task_stack_exact_rate": 0.9950196592398427,
+        "stale_action_rejections": 32148,
+        "stale_receipts_rejected": 42135,
+        "task_stack_exact": 33048,
+        "task_stack_exact_rate": 0.9948822927328557,
         "terminal_claim_precision": 1.0,
         "terminal_coverage": 1.0,
-        "terminal_narrations_covered": 45712,
-        "terminal_receipts_accepted": 45712,
-        "wrong_route_moves": 2587
+        "terminal_narrations_covered": 99505,
+        "terminal_receipts_accepted": 99505,
+        "wrong_route_moves": 5636
       }
     },
     "F0_flat_latest_intent": {
       "adversarial": {
         "admitted_unsafe": 0,
         "duplicate_receipts_rejected": 0,
-        "episodes": 15256,
-        "interrupt_accuracy": 0.9979243139311309,
-        "interrupt_checks": 45768,
-        "interrupt_correct": 45673,
+        "episodes": 33216,
+        "interrupt_accuracy": 0.9979929351316634,
+        "interrupt_checks": 99648,
+        "interrupt_correct": 99448,
         "mission_success": 0,
         "mission_success_rate": 0.0,
-        "narration_semantic_precision": 0.7773248704361497,
-        "narration_terminal": 15336,
-        "narration_total": 137384,
-        "narration_valid": 106792,
+        "narration_semantic_precision": 0.7773175403933525,
+        "narration_terminal": 33393,
+        "narration_total": 299121,
+        "narration_valid": 232512,
         "narration_valid_terminal": 0,
         "post_stop_motion": 0,
-        "premature_completion": 15336,
-        "raw_unsafe": 5125,
-        "simulated_hours": 1017.0666666670446,
+        "premature_completion": 33393,
+        "raw_unsafe": 11537,
+        "simulated_hours": 2214.3999999993007,
         "stale_action_acceptances": 0,
-        "stale_action_rejections": 30337,
+        "stale_action_rejections": 66055,
         "stale_receipts_rejected": 0,
         "task_stack_exact": 0,
         "task_stack_exact_rate": 0.0,
@@ -211,23 +211,23 @@
       "all": {
         "admitted_unsafe": 0,
         "duplicate_receipts_rejected": 0,
-        "episodes": 30516,
-        "interrupt_accuracy": 0.9979573557041115,
-        "interrupt_checks": 91548,
-        "interrupt_correct": 91361,
+        "episodes": 66434,
+        "interrupt_accuracy": 0.9979478379544611,
+        "interrupt_checks": 199302,
+        "interrupt_correct": 198893,
         "mission_success": 0,
         "mission_success_rate": 0.0,
-        "narration_semantic_precision": 0.7772796739684157,
-        "narration_terminal": 30692,
-        "narration_total": 274820,
-        "narration_valid": 213612,
+        "narration_semantic_precision": 0.7772811756211055,
+        "narration_terminal": 66816,
+        "narration_total": 598288,
+        "narration_valid": 465038,
         "narration_valid_terminal": 0,
         "post_stop_motion": 0,
-        "premature_completion": 30692,
-        "raw_unsafe": 7885,
-        "simulated_hours": 2034.3999999994644,
+        "premature_completion": 66816,
+        "raw_unsafe": 17674,
+        "simulated_hours": 4428.93333333062,
         "stale_action_acceptances": 0,
-        "stale_action_rejections": 45505,
+        "stale_action_rejections": 99064,
         "stale_receipts_rejected": 0,
         "task_stack_exact": 0,
         "task_stack_exact_rate": 0.0,
@@ -240,23 +240,23 @@
       "frozen": {
         "admitted_unsafe": 0,
         "duplicate_receipts_rejected": 0,
-        "episodes": 15260,
-        "interrupt_accuracy": 0.9979903888160769,
-        "interrupt_checks": 45780,
-        "interrupt_correct": 45688,
+        "episodes": 33218,
+        "interrupt_accuracy": 0.997902743492484,
+        "interrupt_checks": 99654,
+        "interrupt_correct": 99445,
         "mission_success": 0,
         "mission_success_rate": 0.0,
-        "narration_semantic_precision": 0.7772344946011235,
-        "narration_terminal": 15356,
-        "narration_total": 137436,
-        "narration_valid": 106820,
+        "narration_semantic_precision": 0.777244816440316,
+        "narration_terminal": 33423,
+        "narration_total": 299167,
+        "narration_valid": 232526,
         "narration_valid_terminal": 0,
         "post_stop_motion": 0,
-        "premature_completion": 15356,
-        "raw_unsafe": 2760,
-        "simulated_hours": 1017.3333333337115,
+        "premature_completion": 33423,
+        "raw_unsafe": 6137,
+        "simulated_hours": 2214.533333332634,
         "stale_action_acceptances": 0,
-        "stale_action_rejections": 15168,
+        "stale_action_rejections": 33009,
         "stale_receipts_rejected": 0,
         "task_stack_exact": 0,
         "task_stack_exact_rate": 0.0,
@@ -270,178 +270,178 @@
     "L0_ledger_snapshot": {
       "adversarial": {
         "admitted_unsafe": 0,
-        "duplicate_receipts_rejected": 45775,
-        "episodes": 15256,
-        "interrupt_accuracy": 0.9998470547107149,
-        "interrupt_checks": 45768,
-        "interrupt_correct": 45761,
-        "mission_success": 15256,
+        "duplicate_receipts_rejected": 99659,
+        "episodes": 33216,
+        "interrupt_accuracy": 0.9998896114322415,
+        "interrupt_checks": 99648,
+        "interrupt_correct": 99637,
+        "mission_success": 33216,
         "mission_success_rate": 1.0,
         "narration_semantic_precision": 1.0,
-        "narration_terminal": 45775,
-        "narration_total": 234473,
-        "narration_valid": 234473,
-        "narration_valid_terminal": 45775,
+        "narration_terminal": 99659,
+        "narration_total": 510377,
+        "narration_valid": 510377,
+        "narration_valid_terminal": 99659,
         "post_stop_motion": 0,
         "premature_completion": 0,
-        "raw_unsafe": 7374,
-        "simulated_hours": 1017.0666666670446,
+        "raw_unsafe": 16282,
+        "simulated_hours": 2214.3999999993007,
         "stale_action_acceptances": 0,
-        "stale_action_rejections": 30499,
-        "stale_receipts_rejected": 24919,
-        "task_stack_exact": 15256,
+        "stale_action_rejections": 66405,
+        "stale_receipts_rejected": 54393,
+        "task_stack_exact": 33216,
         "task_stack_exact_rate": 1.0,
         "terminal_claim_precision": 1.0,
         "terminal_coverage": 1.0,
-        "terminal_narrations_covered": 45775,
-        "terminal_receipts_accepted": 45775,
+        "terminal_narrations_covered": 99659,
+        "terminal_receipts_accepted": 99659,
         "wrong_route_moves": 0
       },
       "all": {
         "admitted_unsafe": 0,
-        "duplicate_receipts_rejected": 91559,
-        "episodes": 30516,
-        "interrupt_accuracy": 0.999879844453183,
-        "interrupt_checks": 91548,
-        "interrupt_correct": 91537,
-        "mission_success": 30516,
-        "mission_success_rate": 1.0,
+        "duplicate_receipts_rejected": 199327,
+        "episodes": 66434,
+        "interrupt_accuracy": 0.9998695447110415,
+        "interrupt_checks": 199302,
+        "interrupt_correct": 199276,
+        "mission_success": 66433,
+        "mission_success_rate": 0.9999849474666587,
         "narration_semantic_precision": 1.0,
-        "narration_terminal": 91559,
-        "narration_total": 468977,
-        "narration_valid": 468977,
-        "narration_valid_terminal": 91559,
+        "narration_terminal": 199327,
+        "narration_total": 1020965,
+        "narration_valid": 1020965,
+        "narration_valid_terminal": 199327,
         "post_stop_motion": 0,
         "premature_completion": 0,
-        "raw_unsafe": 10625,
-        "simulated_hours": 2034.3999999994644,
+        "raw_unsafe": 23309,
+        "simulated_hours": 4428.93333333062,
         "stale_action_acceptances": 0,
-        "stale_action_rejections": 45745,
-        "stale_receipts_rejected": 49857,
-        "task_stack_exact": 30516,
-        "task_stack_exact_rate": 1.0,
+        "stale_action_rejections": 99580,
+        "stale_receipts_rejected": 108562,
+        "task_stack_exact": 66433,
+        "task_stack_exact_rate": 0.9999849474666587,
         "terminal_claim_precision": 1.0,
         "terminal_coverage": 1.0,
-        "terminal_narrations_covered": 91559,
-        "terminal_receipts_accepted": 91559,
+        "terminal_narrations_covered": 199327,
+        "terminal_receipts_accepted": 199327,
         "wrong_route_moves": 0
       },
       "frozen": {
         "admitted_unsafe": 0,
-        "duplicate_receipts_rejected": 45784,
-        "episodes": 15260,
-        "interrupt_accuracy": 0.999912625600699,
-        "interrupt_checks": 45780,
-        "interrupt_correct": 45776,
-        "mission_success": 15260,
-        "mission_success_rate": 1.0,
+        "duplicate_receipts_rejected": 99668,
+        "episodes": 33218,
+        "interrupt_accuracy": 0.9998494791980251,
+        "interrupt_checks": 99654,
+        "interrupt_correct": 99639,
+        "mission_success": 33217,
+        "mission_success_rate": 0.999969895839605,
         "narration_semantic_precision": 1.0,
-        "narration_terminal": 45784,
-        "narration_total": 234504,
-        "narration_valid": 234504,
-        "narration_valid_terminal": 45784,
+        "narration_terminal": 99668,
+        "narration_total": 510588,
+        "narration_valid": 510588,
+        "narration_valid_terminal": 99668,
         "post_stop_motion": 0,
         "premature_completion": 0,
-        "raw_unsafe": 3251,
-        "simulated_hours": 1017.3333333337115,
+        "raw_unsafe": 7027,
+        "simulated_hours": 2214.533333332634,
         "stale_action_acceptances": 0,
-        "stale_action_rejections": 15246,
-        "stale_receipts_rejected": 24938,
-        "task_stack_exact": 15260,
-        "task_stack_exact_rate": 1.0,
+        "stale_action_rejections": 33175,
+        "stale_receipts_rejected": 54169,
+        "task_stack_exact": 33217,
+        "task_stack_exact_rate": 0.999969895839605,
         "terminal_claim_precision": 1.0,
         "terminal_coverage": 1.0,
-        "terminal_narrations_covered": 45784,
-        "terminal_receipts_accepted": 45784,
+        "terminal_narrations_covered": 99668,
+        "terminal_receipts_accepted": 99668,
         "wrong_route_moves": 0
       }
     },
     "L1_ledger_explicit_time": {
       "adversarial": {
         "admitted_unsafe": 0,
-        "duplicate_receipts_rejected": 45831,
-        "episodes": 15256,
-        "interrupt_accuracy": 0.9993663695158189,
-        "interrupt_checks": 45768,
-        "interrupt_correct": 45739,
-        "mission_success": 15192,
-        "mission_success_rate": 0.9958049292081804,
+        "duplicate_receipts_rejected": 99774,
+        "episodes": 33216,
+        "interrupt_accuracy": 0.9994380218368658,
+        "interrupt_checks": 99648,
+        "interrupt_correct": 99592,
+        "mission_success": 33083,
+        "mission_success_rate": 0.9959959055876686,
         "narration_semantic_precision": 1.0,
-        "narration_terminal": 45733,
-        "narration_total": 232459,
-        "narration_valid": 232459,
-        "narration_valid_terminal": 45733,
+        "narration_terminal": 99570,
+        "narration_total": 505997,
+        "narration_valid": 505997,
+        "narration_valid_terminal": 99570,
         "post_stop_motion": 0,
         "premature_completion": 0,
-        "raw_unsafe": 5157,
-        "simulated_hours": 1017.0666666670446,
+        "raw_unsafe": 11605,
+        "simulated_hours": 2214.3999999993007,
         "stale_action_acceptances": 0,
-        "stale_action_rejections": 30337,
-        "stale_receipts_rejected": 26835,
-        "task_stack_exact": 15192,
-        "task_stack_exact_rate": 0.9958049292081804,
+        "stale_action_rejections": 66055,
+        "stale_receipts_rejected": 58552,
+        "task_stack_exact": 33083,
+        "task_stack_exact_rate": 0.9959959055876686,
         "terminal_claim_precision": 1.0,
         "terminal_coverage": 1.0,
-        "terminal_narrations_covered": 45733,
-        "terminal_receipts_accepted": 45733,
+        "terminal_narrations_covered": 99570,
+        "terminal_receipts_accepted": 99570,
         "wrong_route_moves": 0
       },
       "all": {
         "admitted_unsafe": 0,
-        "duplicate_receipts_rejected": 91693,
-        "episodes": 30516,
-        "interrupt_accuracy": 0.999464761655088,
-        "interrupt_checks": 91548,
-        "interrupt_correct": 91499,
-        "mission_success": 30384,
-        "mission_success_rate": 0.9956744003145891,
+        "duplicate_receipts_rejected": 199618,
+        "episodes": 66434,
+        "interrupt_accuracy": 0.999433021244142,
+        "interrupt_checks": 199302,
+        "interrupt_correct": 199189,
+        "mission_success": 66146,
+        "mission_success_rate": 0.9956648703976879,
         "narration_semantic_precision": 1.0,
-        "narration_terminal": 91465,
-        "narration_total": 464945,
-        "narration_valid": 464945,
-        "narration_valid_terminal": 91465,
+        "narration_terminal": 199126,
+        "narration_total": 1012128,
+        "narration_valid": 1012128,
+        "narration_valid_terminal": 199126,
         "post_stop_motion": 0,
         "premature_completion": 0,
-        "raw_unsafe": 7958,
-        "simulated_hours": 2034.3999999994644,
+        "raw_unsafe": 17817,
+        "simulated_hours": 4428.93333333062,
         "stale_action_acceptances": 0,
-        "stale_action_rejections": 45505,
-        "stale_receipts_rejected": 53710,
-        "task_stack_exact": 30384,
-        "task_stack_exact_rate": 0.9956744003145891,
+        "stale_action_rejections": 99064,
+        "stale_receipts_rejected": 116979,
+        "task_stack_exact": 66146,
+        "task_stack_exact_rate": 0.9956648703976879,
         "terminal_claim_precision": 1.0,
         "terminal_coverage": 1.0,
-        "terminal_narrations_covered": 91465,
-        "terminal_receipts_accepted": 91465,
+        "terminal_narrations_covered": 199126,
+        "terminal_receipts_accepted": 199126,
         "wrong_route_moves": 0
       },
       "frozen": {
         "admitted_unsafe": 0,
-        "duplicate_receipts_rejected": 45862,
-        "episodes": 15260,
-        "interrupt_accuracy": 0.999563128003495,
-        "interrupt_checks": 45780,
-        "interrupt_correct": 45760,
-        "mission_success": 15192,
-        "mission_success_rate": 0.9955439056356488,
+        "duplicate_receipts_rejected": 99844,
+        "episodes": 33218,
+        "interrupt_accuracy": 0.9994280209524956,
+        "interrupt_checks": 99654,
+        "interrupt_correct": 99597,
+        "mission_success": 33063,
+        "mission_success_rate": 0.9953338551387801,
         "narration_semantic_precision": 1.0,
-        "narration_terminal": 45732,
-        "narration_total": 232486,
-        "narration_valid": 232486,
-        "narration_valid_terminal": 45732,
+        "narration_terminal": 99556,
+        "narration_total": 506131,
+        "narration_valid": 506131,
+        "narration_valid_terminal": 99556,
         "post_stop_motion": 0,
         "premature_completion": 0,
-        "raw_unsafe": 2801,
-        "simulated_hours": 1017.3333333337115,
+        "raw_unsafe": 6212,
+        "simulated_hours": 2214.533333332634,
         "stale_action_acceptances": 0,
-        "stale_action_rejections": 15168,
-        "stale_receipts_rejected": 26875,
-        "task_stack_exact": 15192,
-        "task_stack_exact_rate": 0.9955439056356488,
+        "stale_action_rejections": 33009,
+        "stale_receipts_rejected": 58427,
+        "task_stack_exact": 33063,
+        "task_stack_exact_rate": 0.9953338551387801,
         "terminal_claim_precision": 1.0,
         "terminal_coverage": 1.0,
-        "terminal_narrations_covered": 45732,
-        "terminal_receipts_accepted": 45732,
+        "terminal_narrations_covered": 99556,
+        "terminal_receipts_accepted": 99556,
         "wrong_route_moves": 0
       }
     }
@@ -2734,6 +2734,2806 @@
         "task-queued": "queued"
       },
       "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        5,
+        5
+      ],
+      "raw_unsafe": 2,
+      "seed": 1015274,
+      "spec_digest": "2c836533a1923741ea781be618a221ad04316f222dcbc139b66a415dbcf79400",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        1,
+        4
+      ],
+      "raw_unsafe": 0,
+      "seed": 1015513,
+      "spec_digest": "b5a54fa3ab9843b84f607524f6a867fad06f82f924bb23d76d42efb6104b2518",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        0,
+        2
+      ],
+      "raw_unsafe": 3,
+      "seed": 1015535,
+      "spec_digest": "f027cd1754252f64a81f75b9f516c3c2258183e37361e2b4320fce7ecbfc9083",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        7,
+        5
+      ],
+      "raw_unsafe": 2,
+      "seed": 1015556,
+      "spec_digest": "887881f5914642c144d46007bfa65cda386f0805d54d956e4f7a2523d3af5141",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        7,
+        1
+      ],
+      "raw_unsafe": 0,
+      "seed": 1015582,
+      "spec_digest": "889719014c7e3c51360bff6c091052456e766c5e2983bd9e6f9932c65ce6fd16",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        1,
+        2
+      ],
+      "raw_unsafe": 4,
+      "seed": 1015628,
+      "spec_digest": "2f4274270faad7ebf4b7324df468327e501f3b57ff643a5096e0ed7704a7c663",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        7,
+        3
+      ],
+      "raw_unsafe": 1,
+      "seed": 1015640,
+      "spec_digest": "85e493e2318057b00cb2c5144b6abfb27a78f8d476f15cb0ee49d3647288a630",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        1,
+        1
+      ],
+      "raw_unsafe": 3,
+      "seed": 2015643,
+      "spec_digest": "7c8ae0ccd94a97d2eb73c6f17d505e8e00bdad8707beadab0f31627baa54a075",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        7,
+        2
+      ],
+      "raw_unsafe": 0,
+      "seed": 2015834,
+      "spec_digest": "0076899d910ce6cc2517e331be69a368e2849ea1fb3819fba4e05cdabc39292d",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        1,
+        1
+      ],
+      "raw_unsafe": 0,
+      "seed": 2015841,
+      "spec_digest": "a7f799cfe13f2688ad8108ee92f8f8b943d623153b5f62946cbb181f23d0365e",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        7,
+        0
+      ],
+      "raw_unsafe": 6,
+      "seed": 2015902,
+      "spec_digest": "dd9311632080feaf0dbeb56b272f94ad786ff6fe69dc66d8e1c22b65d1aaf11e",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        1,
+        2
+      ],
+      "raw_unsafe": 3,
+      "seed": 1015916,
+      "spec_digest": "867eb3c5f151d4aafca5efcf2d216f3fce95459633c7a3abe8d63eec898db268",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        3,
+        2
+      ],
+      "raw_unsafe": 0,
+      "seed": 2015988,
+      "spec_digest": "0f12f14af59dacf0454410c8e1d3d27395b36e7266088290450139b6bdf7e6be",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        7,
+        3
+      ],
+      "raw_unsafe": 0,
+      "seed": 1016060,
+      "spec_digest": "c7f531b7f67533406e4b2fa053e724c93c1b1f559b91bfd50acfad6098262bdf",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        2,
+        1
+      ],
+      "raw_unsafe": 4,
+      "seed": 1016067,
+      "spec_digest": "f796080684428202b6fbc4f12360749b06b5f9c1160d3ae688e885443da283d3",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        4,
+        1
+      ],
+      "raw_unsafe": 0,
+      "seed": 2016141,
+      "spec_digest": "1497c15635c33bcdc60cdcab919623e3050a75548cdf75709100e3fcc4ad8b54",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "completed",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        8,
+        4
+      ],
+      "raw_unsafe": 3,
+      "seed": 1016157,
+      "spec_digest": "836867c05cef1eae7514a9447a5071e3abc30699e6920662185faefbef3c631d",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        6,
+        1
+      ],
+      "raw_unsafe": 1,
+      "seed": 2016169,
+      "spec_digest": "89e9a1b0f7eecc1810cd70b520bf606af63a1973e59d2cbda6e2d79a58051488",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        4,
+        0
+      ],
+      "raw_unsafe": 3,
+      "seed": 2016184,
+      "spec_digest": "58f06e40df64f962f3aa0a58ff4e53e360d83a4cb798087ec79ebebd574f13ae",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        0,
+        6
+      ],
+      "raw_unsafe": 1,
+      "seed": 1016197,
+      "spec_digest": "165b34c1766eca1316f24c5d18f7021c4a9ff16f1574100d06d466407bb90b49",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        4,
+        1
+      ],
+      "raw_unsafe": 7,
+      "seed": 1016220,
+      "spec_digest": "424a55d94d41a6313bd3958de796e653dbc5033d37ce8432e6c67d6537d5387f",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        1,
+        4
+      ],
+      "raw_unsafe": 5,
+      "seed": 1016289,
+      "spec_digest": "538534163cb925e7963ed757774acb0db53f1df99cee0e6b5c74f6928abaa441",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        0,
+        0
+      ],
+      "raw_unsafe": 6,
+      "seed": 2016462,
+      "spec_digest": "9ed2323e95b3807f47b7d38c1eaa237e4b144f16cb72227bffe5aaa287278913",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        2,
+        2
+      ],
+      "raw_unsafe": 2,
+      "seed": 1016613,
+      "spec_digest": "59ac697cbde163b04dbe50295ef04061d72e1fdf4c568ff99acc13d060e8d9e9",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        2,
+        1
+      ],
+      "raw_unsafe": 2,
+      "seed": 1016786,
+      "spec_digest": "cab7ea52e5eb7b920dac0efa0ef7dc99690e3def13d8b884c5ff7a835a8b0f53",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        4,
+        1
+      ],
+      "raw_unsafe": 2,
+      "seed": 2017084,
+      "spec_digest": "f3d90e1cc12423720ff709ee6492a78a700c5ea2324b03e9c370cbbb3b20f85e",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        5,
+        0
+      ],
+      "raw_unsafe": 3,
+      "seed": 2017242,
+      "spec_digest": "2cc56c5ab52dafa0942b6073eac12838edd487b361d498c133dadd9de965d241",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        1,
+        3
+      ],
+      "raw_unsafe": 0,
+      "seed": 1017321,
+      "spec_digest": "7f4dc2fb83d74b83d9fb98e311f06d5e843a1500e19c351c88764cbf617ebd35",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        1,
+        6
+      ],
+      "raw_unsafe": 0,
+      "seed": 1017470,
+      "spec_digest": "1d56f38cbfbe996ae147bf6067267bc9db4bca37f949cb9589b040de3879ce60",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        2,
+        2
+      ],
+      "raw_unsafe": 1,
+      "seed": 2017656,
+      "spec_digest": "04887a7efdd30d835bb916e8d76e749c13b150fb2ca93752230c6518365bdd40",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        4,
+        0
+      ],
+      "raw_unsafe": 4,
+      "seed": 1017729,
+      "spec_digest": "daa428149b410f3f41b979c69b84b4982d2872c73bc5e0a9f83419d90c2d3084",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        7,
+        1
+      ],
+      "raw_unsafe": 3,
+      "seed": 2017860,
+      "spec_digest": "ed78bf646bca2455dfa33c75e28b4067852618487a34c1e6ae51868c95b05c5e",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        2,
+        1
+      ],
+      "raw_unsafe": 0,
+      "seed": 1018018,
+      "spec_digest": "c14e5cd1c1eb0bf555324d0d0e420997c1985c96d54aea4e1329a0d17a5a3221",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        8,
+        2
+      ],
+      "raw_unsafe": 0,
+      "seed": 1018053,
+      "spec_digest": "e5c030534490011202e792c68ce1bffcf9918028e458fa26f18a10f9ca9eefce",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "completed",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        1,
+        2
+      ],
+      "raw_unsafe": 2,
+      "seed": 2018246,
+      "spec_digest": "4bfea0bcdd2edf00ba2cc3860cc3fdb349b7d2e3d3e0b16b7abd7c05b6f4adf2",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        6,
+        8
+      ],
+      "raw_unsafe": 1,
+      "seed": 2018441,
+      "spec_digest": "7baa0aed3f8e11c7b3d667fcc20236e44c295010d0b4f8620af6ad2726b21803",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        5,
+        2
+      ],
+      "raw_unsafe": 1,
+      "seed": 1018873,
+      "spec_digest": "a24f17c3289a138e3112189f8f3a80ebc1d84e2907922bfac40de482d8c9a0eb",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        6,
+        2
+      ],
+      "raw_unsafe": 1,
+      "seed": 1018958,
+      "spec_digest": "37ffba32e5aa704d1a31bb0ae78f3c055f7ca2d314dc3090683446285a6836aa",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        8,
+        4
+      ],
+      "raw_unsafe": 0,
+      "seed": 2019274,
+      "spec_digest": "0fff60f1897c0f462fed8b7c6228651a8496260745a63bb07cbf1958e18abff1",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        4,
+        1
+      ],
+      "raw_unsafe": 0,
+      "seed": 1019423,
+      "spec_digest": "8e3bf05388c95bc1cd51acfc049e1611808b3f328282cd6c1804a9931ee7e925",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "completed",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        1,
+        5
+      ],
+      "raw_unsafe": 1,
+      "seed": 1019456,
+      "spec_digest": "d0c0578f396899e90dc2e6e799c08f2a0809e1258a0f3bb87fff4f215f649ae6",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        7,
+        1
+      ],
+      "raw_unsafe": 4,
+      "seed": 2019531,
+      "spec_digest": "fc8c95f28b22895272259735c37494c7e3cea5db3cef9d13c1dba4d386790376",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        7,
+        4
+      ],
+      "raw_unsafe": 0,
+      "seed": 1019542,
+      "spec_digest": "f9600562c3b73861440c04f9776ad2b9aac988744c279185bbbfaf1654cc5a34",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "completed",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        0,
+        1
+      ],
+      "raw_unsafe": 1,
+      "seed": 1019545,
+      "spec_digest": "94728b0376b6cc5701c8773461e4a4e67ffbeea4a3db08c6605b31b7f0f81dad",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        1,
+        1
+      ],
+      "raw_unsafe": 1,
+      "seed": 2019566,
+      "spec_digest": "0088c69c566955c17dd83028a131b7d8d80f4320766693d0aab39b82180e8b9a",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        8,
+        3
+      ],
+      "raw_unsafe": 0,
+      "seed": 2019871,
+      "spec_digest": "50e32532b9cc9a8bd82f4e2acd2549953f7568576b60ed57cc3aaea01d58b8e4",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        6,
+        0
+      ],
+      "raw_unsafe": 1,
+      "seed": 1020095,
+      "spec_digest": "ffb1fa0d48a3c99b6cd27d78889c88e940d92da6904f4d3d0ba1e76766cf87b0",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        3,
+        1
+      ],
+      "raw_unsafe": 5,
+      "seed": 1020327,
+      "spec_digest": "35d0721363f8e03639e496a1fd00276f85a3efe93617ba8233d0b9cd72439084",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        3,
+        0
+      ],
+      "raw_unsafe": 3,
+      "seed": 2020456,
+      "spec_digest": "1f6ab644f3a8405aedc5cba7472e2c49b58f9a4315b541036dce0fa96d7e280a",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        7,
+        2
+      ],
+      "raw_unsafe": 3,
+      "seed": 2020492,
+      "spec_digest": "cb65df7a6d7e0aa92f0acd7cb6b0d2f24c6c8f701af617ba9ff4ecbb0509f513",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        1,
+        5
+      ],
+      "raw_unsafe": 2,
+      "seed": 1020505,
+      "spec_digest": "680ae18dd335ce662441c060e73eee62e8b53f2cea1ae15f73dee3eaec429250",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        2,
+        2
+      ],
+      "raw_unsafe": 2,
+      "seed": 1020576,
+      "spec_digest": "f6e6c27a8ca8f61553009cdb30074031bd2acf01fff07111c701ed38f9bf767b",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        4,
+        0
+      ],
+      "raw_unsafe": 10,
+      "seed": 1020863,
+      "spec_digest": "21cbe9c9bfb7ed51116d05f31395633ee11c6d001a69df5761db5a1f620825da",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        8,
+        6
+      ],
+      "raw_unsafe": 0,
+      "seed": 1020915,
+      "spec_digest": "ed24c22da6c4da3e7c954f681fa8237d2aeb147ca6d3183e59df9602501342d7",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        1,
+        1
+      ],
+      "raw_unsafe": 0,
+      "seed": 2021089,
+      "spec_digest": "0b601678f94df191e5bba2ebdd03b51a64c9a4cfbf1794cdce97b6627ac10b12",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        9,
+        2
+      ],
+      "raw_unsafe": 3,
+      "seed": 1021116,
+      "spec_digest": "b8bcf67fd63336a2eb9f5251172bd4ac2c9bea28223d0ac62e863ef01e96b89a",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        3,
+        2
+      ],
+      "raw_unsafe": 1,
+      "seed": 2021144,
+      "spec_digest": "4f684b7681da1cad74f4996d07599ebdfd3d9500656e32254378cdfa01f25941",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        4,
+        1
+      ],
+      "raw_unsafe": 9,
+      "seed": 2021589,
+      "spec_digest": "800b094fdce675377ca70f31505aafd3ecce311cf4fe73fcd79bffc9f23d61c9",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        8,
+        5
+      ],
+      "raw_unsafe": 1,
+      "seed": 2021629,
+      "spec_digest": "595e958699ff5652c6df363c17a7e5aab11c5daefe79e8f9fcee31cae53922db",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        2,
+        2
+      ],
+      "raw_unsafe": 1,
+      "seed": 1021679,
+      "spec_digest": "6fd6133c833c5c58b49805bbdbc3f017078235fb52d99f1941a0c7ae324ae640",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        7,
+        2
+      ],
+      "raw_unsafe": 5,
+      "seed": 1021775,
+      "spec_digest": "cde69dc9620a2ec926a17cc135f785ffee1e0cd2c07c34a4a9e1b431900355b0",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        7,
+        1
+      ],
+      "raw_unsafe": 0,
+      "seed": 1022007,
+      "spec_digest": "caa4590935acb162727d7669edc752e413e0f768287b1c4036e1a09b85aac2a2",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        3,
+        4
+      ],
+      "raw_unsafe": 5,
+      "seed": 2022050,
+      "spec_digest": "389478874467ef934573bc11cecec54fbdb795b33fd4b0c365e2280a91208fd8",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        9,
+        4
+      ],
+      "raw_unsafe": 2,
+      "seed": 2022246,
+      "spec_digest": "edd81a10c7f81c48301964b5e59d93e22ce7758c2bdeb4e6552af4649ce64806",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        1,
+        0
+      ],
+      "raw_unsafe": 1,
+      "seed": 2022588,
+      "spec_digest": "5bab1c0e771ca191aa3bad6f0e45f3c1385165e1486d921a3729355a47a6d237",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "completed",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        6,
+        1
+      ],
+      "raw_unsafe": 0,
+      "seed": 2022627,
+      "spec_digest": "209830cd3c47aaee9297aeafe6d70c2174f1d27f69defaa848d33172a6960746",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        8,
+        2
+      ],
+      "raw_unsafe": 0,
+      "seed": 1022632,
+      "spec_digest": "46e2734d278ad1a3642499dcbd4b5c31c5eb5081fa7aa63915e87dbf28a883b0",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "completed",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        4,
+        1
+      ],
+      "raw_unsafe": 3,
+      "seed": 2022758,
+      "spec_digest": "441dcef5444c40342984d49a251d471ae5ee6c23175e0f1f7a26d704f9d6341c",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        5,
+        0
+      ],
+      "raw_unsafe": 2,
+      "seed": 2022812,
+      "spec_digest": "059465a775ede9e84c3be6d7ac618a7b5ed8140a534c6977621cb7298e5d7898",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        4,
+        0
+      ],
+      "raw_unsafe": 5,
+      "seed": 1022897,
+      "spec_digest": "719d99e0e2ae26acc06fd4cabff2d83d0e3860ec488344225041d60342828def",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        2,
+        8
+      ],
+      "raw_unsafe": 7,
+      "seed": 2023019,
+      "spec_digest": "7f151a6a75222074c6085aca62b2f0fe563d484453e4df3bfc4169d11a4fc93d",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        4,
+        1
+      ],
+      "raw_unsafe": 4,
+      "seed": 1023081,
+      "spec_digest": "ed96f51341270939d64e5699a1650b4d8efcf14151a01cd60acc4c2648b514f0",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        0,
+        5
+      ],
+      "raw_unsafe": 1,
+      "seed": 2023346,
+      "spec_digest": "ba301a5794c0e9cec1f06d4c2ca439fa4a5757ca360af4869b0e607a77ba44a4",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "completed",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        6,
+        1
+      ],
+      "raw_unsafe": 2,
+      "seed": 1023407,
+      "spec_digest": "ce296e2e06c6c3f8a781cd5b376a0e67a29c8760796a4ebf7b92419601cbc8d1",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        9,
+        4
+      ],
+      "raw_unsafe": 0,
+      "seed": 1023495,
+      "spec_digest": "ef806a8d91fc47e47fbaa208f6bbe325755d7b388e97c71dca1476ed55585911",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        3,
+        3
+      ],
+      "raw_unsafe": 0,
+      "seed": 2023489,
+      "spec_digest": "0e88ba99a5f22353c881c7077fa4689a8d9df59d8b07d2dfc55b9fde4b80b3f6",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        10,
+        2
+      ],
+      "raw_unsafe": 1,
+      "seed": 1023520,
+      "spec_digest": "61bc85a80cf2a15a1d496c9947ee059357acaf933fc84075f3e09b5e3a97cc7d",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        2,
+        8
+      ],
+      "raw_unsafe": 2,
+      "seed": 2023591,
+      "spec_digest": "88ef9f4b06b9e1f566179b36c6c9d54b93e9ab2bb288ed262e2ec575b750a798",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        6,
+        2
+      ],
+      "raw_unsafe": 2,
+      "seed": 1023627,
+      "spec_digest": "0dd6acafbfae8ba8c2423ea4dfbaae967879e9bb3ac7dd7782e43685c9d19fe2",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        4,
+        1
+      ],
+      "raw_unsafe": 2,
+      "seed": 1023797,
+      "spec_digest": "9c1c9d75ed64a2422c7ba922dddd3668775a4aa65ad68b054832a9770a52cc3b",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        0,
+        2
+      ],
+      "raw_unsafe": 1,
+      "seed": 2023915,
+      "spec_digest": "18673590d079b57317d0e8d1ecb5bcf4b7214edeabe45759e3ff6de4c150d2c1",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        0,
+        2
+      ],
+      "raw_unsafe": 3,
+      "seed": 2023980,
+      "spec_digest": "961d4b229dd9897730c8945d0203b6aa5715921f754bae479e484e1368260888",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        2,
+        1
+      ],
+      "raw_unsafe": 0,
+      "seed": 2024217,
+      "spec_digest": "e1e8de5a3c91f5d441af8022ded93e0dcf1dfb2d22c63a61331210f0f2bc0852",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        1,
+        1
+      ],
+      "raw_unsafe": 4,
+      "seed": 2024349,
+      "spec_digest": "6b7868836210e5fd9de31a6155ba7b226e5b292b267964e5d46856bc67f9257f",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        2,
+        2
+      ],
+      "raw_unsafe": 2,
+      "seed": 1024363,
+      "spec_digest": "b7d7ef92775d4f5f5f607d04196283b67543970854cc36232b28d8a1350ff0f5",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        0,
+        4
+      ],
+      "raw_unsafe": 2,
+      "seed": 2024425,
+      "spec_digest": "efb224863d6a30b532e4b6d50e9437829841c7567ab7601d1d641985cd3d5e0e",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        1,
+        0
+      ],
+      "raw_unsafe": 4,
+      "seed": 1024555,
+      "spec_digest": "0a1f4a401d535087a8d1686558ca5edb7e8e08f7ba7b27adaf55b4b57b59d94d",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        5,
+        0
+      ],
+      "raw_unsafe": 1,
+      "seed": 2024682,
+      "spec_digest": "d58ab67c27c85e8f3d4d6eb96dd7d2594d9c9b0e1787b96355c08f7dd4bbf85a",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        7,
+        1
+      ],
+      "raw_unsafe": 3,
+      "seed": 1024725,
+      "spec_digest": "f559d8a808a3db4ef39a467a79fdf31456e57cb988a715f367ddca7c8c2d7235",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        5,
+        0
+      ],
+      "raw_unsafe": 5,
+      "seed": 2024746,
+      "spec_digest": "3d927310b2866b3588aa616af005f180782dd4cf99c963ef7c8416323077ebb3",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        3,
+        1
+      ],
+      "raw_unsafe": 2,
+      "seed": 2024762,
+      "spec_digest": "4b770c5eaf4917cd0421020490a4c8112356c505fba8b610088dbca27766302e",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        7,
+        6
+      ],
+      "raw_unsafe": 2,
+      "seed": 2024826,
+      "spec_digest": "d2e2d1e9ed7bc5aa560168ec603c9b4e68ebd50530b4d7238143217dc4a03e73",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        6,
+        3
+      ],
+      "raw_unsafe": 0,
+      "seed": 2024921,
+      "spec_digest": "1bc3ac34c665a5e7a9282bd3cc8a2812db38793d6ca59859d4c00b305dee0e57",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        10,
+        9
+      ],
+      "raw_unsafe": 7,
+      "seed": 2024987,
+      "spec_digest": "3a841834459ae4d55b69ed9789566f7a724c18ce716e9201a0507fc3af0507cf",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "suspended",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        3,
+        3
+      ],
+      "raw_unsafe": 0,
+      "seed": 1025069,
+      "spec_digest": "cefee5b845da7dc0cae028f9f40c806d46e03cef35e1b817d270f2890ac24af0",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        5,
+        0
+      ],
+      "raw_unsafe": 4,
+      "seed": 2025091,
+      "spec_digest": "db33c68b0121d72bbf0384c543ab91749bf401621df45607198db54b047c5c3b",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        5,
+        0
+      ],
+      "raw_unsafe": 1,
+      "seed": 2025235,
+      "spec_digest": "665cdbb2ce39b89950524234a65c1a04b20b53305c6f14058dc0280575a142e7",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        0,
+        0
+      ],
+      "raw_unsafe": 5,
+      "seed": 1025320,
+      "spec_digest": "0e137eeebd8521791a972a1ec1b6dc8cbb08ed3ea8aeaba82236d67677710330",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        1,
+        1
+      ],
+      "raw_unsafe": 2,
+      "seed": 2025388,
+      "spec_digest": "b78b26a49b912f9431ea20574490abe565f00080b38bf085ec6e146ef73496d5",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        0,
+        1
+      ],
+      "raw_unsafe": 1,
+      "seed": 2025439,
+      "spec_digest": "d986375bde9aee1c60f71044f04b63638c996aeda9e5088d894c800e4ca652a3",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        4,
+        2
+      ],
+      "raw_unsafe": 2,
+      "seed": 2025473,
+      "spec_digest": "9ee1abe0284f9ae38f7de4aa9595e8cf1355f3d106d3b95c964d8583bda00496",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        3,
+        1
+      ],
+      "raw_unsafe": 0,
+      "seed": 1025522,
+      "spec_digest": "b90966514e168750d79dfbbea88c14caa31c33047c1a047d49a5a1e9e336c5fd",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "completed",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        2,
+        2
+      ],
+      "raw_unsafe": 2,
+      "seed": 1025596,
+      "spec_digest": "e50da844e9c9c1642d05a77941d999ca6625398d8c02b22d5b06ca8c200905a6",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "completed",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        4,
+        1
+      ],
+      "raw_unsafe": 1,
+      "seed": 2025652,
+      "spec_digest": "c1d497f095bc4718e900dfbe4e4731b4bdbf900725322221efd312ee946092cc",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        6,
+        2
+      ],
+      "raw_unsafe": 2,
+      "seed": 2025710,
+      "spec_digest": "3ded3fb429b961411f6e7920bbd7396fcf372142354ce15bb006acd594b06f85",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        1,
+        6
+      ],
+      "raw_unsafe": 2,
+      "seed": 1025743,
+      "spec_digest": "1d597fd6cba86f4e7dc933cd0f6fe89b5611d5be262031d152c047ef53b33187",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        8,
+        4
+      ],
+      "raw_unsafe": 1,
+      "seed": 2025780,
+      "spec_digest": "d3b49e549d40cad5f4d15a396762e4ceb40cfd3a8f4050dba01c352b468ff2de",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        4,
+        1
+      ],
+      "raw_unsafe": 1,
+      "seed": 1026043,
+      "spec_digest": "285a207031cea026258ad397928aa12eceb8b2cb4fa1ec34969e6752f84e7a07",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        3,
+        1
+      ],
+      "raw_unsafe": 0,
+      "seed": 1026172,
+      "spec_digest": "ba646132364d9b5392b03dd851d8c23b722dff5259214656f93c73f040297d82",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        5,
+        8
+      ],
+      "raw_unsafe": 1,
+      "seed": 2026515,
+      "spec_digest": "c19c318531ae9ac431c30a38ba8989de5795cc675cd2bbb244028482d8f1f2fd",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        6,
+        0
+      ],
+      "raw_unsafe": 1,
+      "seed": 1026527,
+      "spec_digest": "799b94f71af42441e4b838308fca0dbec4c17f40e4095aeaac8b147f4f9d611d",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        5,
+        0
+      ],
+      "raw_unsafe": 1,
+      "seed": 1026832,
+      "spec_digest": "fa3d82c70001d9c8604973e5a0a8417330e53464da785b2f5ee663f6af928a67",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "completed",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        5,
+        2
+      ],
+      "raw_unsafe": 0,
+      "seed": 1026853,
+      "spec_digest": "51b1dca1d0828d48a343c80b0e5c895f8ffd6da28534a60e67d4f9f284e45313",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        0,
+        6
+      ],
+      "raw_unsafe": 1,
+      "seed": 1026974,
+      "spec_digest": "2198d6048f1932816adaef01f41097ffa9772b31f6ccf6b2d87fa5faac27a5dd",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        9,
+        3
+      ],
+      "raw_unsafe": 2,
+      "seed": 1026997,
+      "spec_digest": "123146a21491d75975538d9c08e1229556834ae4811884b130f896571af382aa",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        8,
+        2
+      ],
+      "raw_unsafe": 2,
+      "seed": 1027068,
+      "spec_digest": "64ef0d5584298bfdaba7a8cf5bcca39f7fbfd0bc5e1885373044f94082c234da",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        2,
+        0
+      ],
+      "raw_unsafe": 4,
+      "seed": 1027094,
+      "spec_digest": "62943b79a10ccbaba8816dd46f24f946775880cbb5ac703d91572428be0ec15f",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        2,
+        1
+      ],
+      "raw_unsafe": 0,
+      "seed": 1027106,
+      "spec_digest": "fc9ce3db94b16a430f04cd475cb07df2513da8af69470188dd669f228945d8c7",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        8,
+        2
+      ],
+      "raw_unsafe": 2,
+      "seed": 1027205,
+      "spec_digest": "f3b2ae24513eee258a8b0f7e39289b7ead2dc5359b3d6fbc0b759993abaf5c27",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        3,
+        8
+      ],
+      "raw_unsafe": 2,
+      "seed": 1028031,
+      "spec_digest": "6f9e936291cf2b5364268c6920bc4ac3f5974c1042fa43c0372fca28ff6a740c",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        5,
+        3
+      ],
+      "raw_unsafe": 4,
+      "seed": 1028118,
+      "spec_digest": "24ee4c3f10d35615d064703f63de9f4bd0fa78526335a9639b2101ce6489962b",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        7,
+        3
+      ],
+      "raw_unsafe": 3,
+      "seed": 2028125,
+      "spec_digest": "91c389444bc4572f50a767a29fb3228f12be8b8712a28a23cb614f264053f6d6",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        1,
+        3
+      ],
+      "raw_unsafe": 3,
+      "seed": 2028142,
+      "spec_digest": "2598dbfe7d1581ccec68d3d1c4c5bd681d92435488d77173cea9584a4f9f3792",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        6,
+        1
+      ],
+      "raw_unsafe": 0,
+      "seed": 2028264,
+      "spec_digest": "889c7f7016d751cb6de94cd36342a94fa1742ca8d88d006454c4746d0e85a404",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        5,
+        0
+      ],
+      "raw_unsafe": 2,
+      "seed": 2028491,
+      "spec_digest": "10c065a86029dcf0970a42c1246b6929d924d03901ee1c7f8effc80aa735d5f3",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        0,
+        3
+      ],
+      "raw_unsafe": 0,
+      "seed": 2028530,
+      "spec_digest": "fefad01737bdffb2cfed40f42e0f1d03c0e1a3035ff39a214e14ff131f372b8e",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        1,
+        1
+      ],
+      "raw_unsafe": 4,
+      "seed": 1028634,
+      "spec_digest": "12de5cf7c61e5dcb89c8fcb276da37d25688478b7fdbc4f6df705dcab0ae8a3e",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        1,
+        2
+      ],
+      "raw_unsafe": 0,
+      "seed": 1028688,
+      "spec_digest": "4e0b1fb371f97bc93fb55679b0923cc06123f7e173d62286148dc48fbecc81cb",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "completed",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        6,
+        1
+      ],
+      "raw_unsafe": 4,
+      "seed": 1028736,
+      "spec_digest": "61b6be253259c4bf2f3003efeaf95c2ece73da70e58f3468df7434b7326d71d4",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        1,
+        1
+      ],
+      "raw_unsafe": 0,
+      "seed": 1028793,
+      "spec_digest": "2247f7b189e4263c2b0f60c242801f7d962b653cf9084d507609af3ece9e58ad",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        8,
+        5
+      ],
+      "raw_unsafe": 0,
+      "seed": 1028868,
+      "spec_digest": "ba71f6467284e42ce3932d904a3e3430aa2623980160feed35ada6679395198a",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        1,
+        0
+      ],
+      "raw_unsafe": 3,
+      "seed": 2028869,
+      "spec_digest": "7697016386b37f19892239f928819c7615ab9c8a4558e2fa0143189bb54ee7bd",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        6,
+        1
+      ],
+      "raw_unsafe": 1,
+      "seed": 2029082,
+      "spec_digest": "4f8be5c31681abb886243f5141d45813ec45f56a6dd00eea6666e87b162891b5",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        5,
+        2
+      ],
+      "raw_unsafe": 6,
+      "seed": 2029212,
+      "spec_digest": "8e62c33cad2d36fdee15a95fc97850a5faea99c17fd4bf17c08b6755a600b0d6",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        6,
+        8
+      ],
+      "raw_unsafe": 0,
+      "seed": 2029242,
+      "spec_digest": "6726fe1814b51453957af5a20e02b3c728901a1a0f3b1bc0d9d8bf8d9e817eef",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "completed",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        2,
+        0
+      ],
+      "raw_unsafe": 6,
+      "seed": 1029268,
+      "spec_digest": "4ca90ebc0956cb58e8e4018051800320aded6b9784953db93431aa710159cf57",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        3,
+        2
+      ],
+      "raw_unsafe": 1,
+      "seed": 1029294,
+      "spec_digest": "2939f5930f1e88df960acf09a005209186d3939cbb2d19bb540aaec0f1eb6582",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        6,
+        1
+      ],
+      "raw_unsafe": 0,
+      "seed": 2029380,
+      "spec_digest": "2410d9b74aa1380bdc479e3f4adfdaaa6e7c1bbd6bc04ada0ff6c7aef842c0e2",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        2,
+        6
+      ],
+      "raw_unsafe": 2,
+      "seed": 1029491,
+      "spec_digest": "5c952792cba24f4be0f42fb91a52629db1b27936fe84d43584fbfd963564dc60",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        8,
+        1
+      ],
+      "raw_unsafe": 0,
+      "seed": 1029549,
+      "spec_digest": "e8988d801283fe64da8a40ec3be0e71f20c0b058984cc3f736c20d68fd2ddd09",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        8,
+        1
+      ],
+      "raw_unsafe": 0,
+      "seed": 2029654,
+      "spec_digest": "ea2a9e250b269bd533cd2e84cffc3e758628a4293f7767e474034a10c2ed977c",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "completed",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        1,
+        5
+      ],
+      "raw_unsafe": 4,
+      "seed": 1029893,
+      "spec_digest": "7e6bfca85c92dc9103e5c215d75e050901f32506d1981a84512544b0c1389fa7",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        2,
+        5
+      ],
+      "raw_unsafe": 1,
+      "seed": 2029913,
+      "spec_digest": "dda2bff575539b8fe52e440ce0f294f1b3f9f02505f9ad82314302cdec9e67dc",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        5,
+        0
+      ],
+      "raw_unsafe": 3,
+      "seed": 2029953,
+      "spec_digest": "4dfb419aaafedc17106528b77b56cab2f75e01db2bc522fdc60284430e021d35",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        7,
+        1
+      ],
+      "raw_unsafe": 2,
+      "seed": 2030081,
+      "spec_digest": "2602ecf425b8c93f99e64cf94b18272d3717ad59dec4a51e712d1af552f32c79",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        0,
+        5
+      ],
+      "raw_unsafe": 5,
+      "seed": 2030144,
+      "spec_digest": "e29af6132ffff7f5d468dfe6075dba2453910838a081fb3a6bfd554ac91fc160",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        0,
+        3
+      ],
+      "raw_unsafe": 4,
+      "seed": 1030167,
+      "spec_digest": "949fb5d62054a3d36deffb23573b3295a81be2c2cbcdbd85742c20f89ba83e13",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        7,
+        0
+      ],
+      "raw_unsafe": 4,
+      "seed": 2030179,
+      "spec_digest": "2068bf11587e6d583a06e5c8e2246c25d3dcb59c605a898e0b50e4b1ffe1902b",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        4,
+        1
+      ],
+      "raw_unsafe": 1,
+      "seed": 1030342,
+      "spec_digest": "2d1a65a1e45f4ec2c8be55d721c09517c3dd88aeb1a19ac24d392bd4cf67e300",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        6,
+        1
+      ],
+      "raw_unsafe": 1,
+      "seed": 2030348,
+      "spec_digest": "033b2720b861a45b61188ae75fde8d65220f9d12547ea7e666262068b499406e",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        8,
+        1
+      ],
+      "raw_unsafe": 2,
+      "seed": 2030519,
+      "spec_digest": "5ec951bc6ec4e3c59f6fef6cd895f7b1c51c5263d2940f1e3e7e73b9ce6396ba",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "completed",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        6,
+        1
+      ],
+      "raw_unsafe": 2,
+      "seed": 1030706,
+      "spec_digest": "a660a1793b2ea404e8ffeec17b41cab332128c9a2d871865120c3b22012c87b7",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        0,
+        2
+      ],
+      "raw_unsafe": 3,
+      "seed": 1031140,
+      "spec_digest": "1ce163b40ac8fa1255b1ab04e6487acd3bc403cf126376eed397baf8dd4ab72d",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        5,
+        0
+      ],
+      "raw_unsafe": 6,
+      "seed": 2031204,
+      "spec_digest": "fc0b146d3d9fd47bd99fc31c82fa11e5abdaea5d088dba73c47a351f36065b38",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        7,
+        4
+      ],
+      "raw_unsafe": 0,
+      "seed": 1031614,
+      "spec_digest": "a8f720028d06bd662a504b925d023a87a2938e537fc1b35f3ed0ecb0a63ade6c",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        8,
+        3
+      ],
+      "raw_unsafe": 0,
+      "seed": 1031689,
+      "spec_digest": "cb0f80f4804ae2bf265ac32fa709290430231dc213ed8ef36be583a6dcc80922",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        8,
+        1
+      ],
+      "raw_unsafe": 0,
+      "seed": 1031778,
+      "spec_digest": "96e9eefca8ce68e88e0bf7c74f69c67d2e7ef1a1caa3194b9139b5bf86637717",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        7,
+        3
+      ],
+      "raw_unsafe": 2,
+      "seed": 1031830,
+      "spec_digest": "f6a96a14cd48da25897780fe90e3f2e5b53db84659cb232e3f2cf13b1cfd44bc",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        2,
+        3
+      ],
+      "raw_unsafe": 0,
+      "seed": 1031856,
+      "spec_digest": "6549c7a8e5fd8a1f519d6cfe7cd618b4678a8a6e3264ceb46879a43ad4304729",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        1,
+        2
+      ],
+      "raw_unsafe": 1,
+      "seed": 2031958,
+      "spec_digest": "3d079f37992f8622aa63399cef3fdcc90ba39210d58b9e169b6c8b6bb8d082fa",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        7,
+        6
+      ],
+      "raw_unsafe": 1,
+      "seed": 1031969,
+      "spec_digest": "7da216d9687a6273b9045c3c3b7f8af21d4f36e06ab8b38e2c33af117b1d0b52",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        2,
+        3
+      ],
+      "raw_unsafe": 1,
+      "seed": 1032016,
+      "spec_digest": "b5a2b4b1843bd45415a340bccd72c411db6c6c444cb25a9626a6f37d030217a8",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        6,
+        1
+      ],
+      "raw_unsafe": 2,
+      "seed": 1032050,
+      "spec_digest": "acdd83d69cfc8e64f9f20669ae66a4605c04695275b2ec012b09dc21cef229e7",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        7,
+        4
+      ],
+      "raw_unsafe": 0,
+      "seed": 2032054,
+      "spec_digest": "db34724f415beccfb4a846ffa603b760b5bfb1c9be9ac157237684abe1f1a3bc",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        1,
+        0
+      ],
+      "raw_unsafe": 5,
+      "seed": 1032068,
+      "spec_digest": "254aba222700f7bc614a9e5dc045bee3b61fbf5a04cc6491b5d075205898644e",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        1,
+        1
+      ],
+      "raw_unsafe": 3,
+      "seed": 1032104,
+      "spec_digest": "3caaa2f826f9062880afa20ab5285fd17e8b22f4a00e4a96c8092bffe312d225",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        7,
+        2
+      ],
+      "raw_unsafe": 2,
+      "seed": 1032526,
+      "spec_digest": "76cd71a717eafbb9a1b40c2c9fa10fb8b87214722834e6d61c43dad923bd6a60",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        6,
+        1
+      ],
+      "raw_unsafe": 0,
+      "seed": 2032523,
+      "spec_digest": "e7845e9b8ab46ac59acd282071a076d00a51383763f99f11a0189e8de620dd4e",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        0,
+        4
+      ],
+      "raw_unsafe": 0,
+      "seed": 1032616,
+      "spec_digest": "a4689816afede2461a30eb1ec69f403fb05e5716429834cad0dfe5977fc375b7",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        8,
+        4
+      ],
+      "raw_unsafe": 1,
+      "seed": 2032687,
+      "spec_digest": "338fcc0151aa2e4250c717697868861cba67f77dfa2916e644cd7c64d7b8beb3",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        6,
+        3
+      ],
+      "raw_unsafe": 1,
+      "seed": 1032873,
+      "spec_digest": "c7b6bb59609d76e143d0886c8b5332558d03e2e4f64641ac6b5d5d224779991e",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        4,
+        1
+      ],
+      "raw_unsafe": 0,
+      "seed": 2033112,
+      "spec_digest": "783491459b29f4f1c5f08cc974587a5be5e4b9e107eda41637a4091b3b5a69a7",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
+    },
+    {
+      "position": [
+        2,
+        2
+      ],
+      "raw_unsafe": 0,
+      "seed": 1033149,
+      "spec_digest": "cbdcf0066ae4f4bd44084cee3ff0b0b8fb25dd91ed10a918f7046c16342823e5",
+      "split": "frozen",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        1,
+        1
+      ],
+      "raw_unsafe": 2,
+      "seed": 2033164,
+      "spec_digest": "20b12fb910dfde4383b197b87e1483900b651cb5cf804ba4fa2aa69d6e4f8e02",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 0
+    },
+    {
+      "position": [
+        8,
+        5
+      ],
+      "raw_unsafe": 3,
+      "seed": 2033181,
+      "spec_digest": "711a7cea05bdf3bf1db6ad037401421369f2d74b105595fc45bf7a9fafa693db",
+      "split": "adversarial",
+      "task_status": {
+        "task-interrupt": "completed",
+        "task-origin": "running",
+        "task-queued": "queued"
+      },
+      "wrong_route_moves": 1
     }
   ],
   "candidate_failure_details_truncated": false,
@@ -2744,14 +5544,14 @@
     "torch_threads": 1
   },
   "counts": {
-    "adversarial_episodes": 15256,
-    "candidate_failures": 143,
+    "adversarial_episodes": 33216,
+    "candidate_failures": 318,
     "deterministic_replay_mismatches": 0,
-    "deterministic_replays": 305,
-    "frozen_episodes": 15260,
-    "primary_episodes": 30516
+    "deterministic_replays": 664,
+    "frozen_episodes": 33218,
+    "primary_episodes": 66434
   },
-  "elapsed_monotonic_seconds": 20157.567656798987,
+  "elapsed_monotonic_seconds": 43380.014326820965,
   "evidence_class": "desktop_procedural_semantic_stream_no_physics_no_audio_no_hardware_no_motion",
   "gates": {
     "adversarial_episodes_at_least_5000": true,
@@ -2759,13 +5559,13 @@
     "candidate_success_at_least_0_99": true,
     "episodes_at_least_20000": true,
     "narration_semantic_precision_1_0": true,
-    "normal_uninterrupted_completion": false,
+    "normal_uninterrupted_completion": true,
     "rss_below_2_gib": true,
     "rss_slope_at_most_10_mib_per_hour": true,
     "source_and_model_hashes_unchanged": true,
     "terminal_claim_precision_1_0": true,
     "terminal_coverage_at_least_0_99": true,
-    "wall_time_at_least_12_hours": false,
+    "wall_time_at_least_12_hours": true,
     "zero_admitted_unsafe": true,
     "zero_deterministic_replay_mismatches": true,
     "zero_post_stop_motion": true,
@@ -2799,10 +5599,10 @@
   },
   "minimum_passing_wall_hours": 12.0,
   "process_health": {
-    "current_rss_mib": 751.125,
-    "episodes_per_wall_hour": 5449.943254943329,
+    "current_rss_mib": 751.1328125,
+    "episodes_per_wall_hour": 5513.193194976333,
     "exception": null,
-    "max_sampled_rss_mib": 751.125,
+    "max_sampled_rss_mib": 751.1328125,
     "rss_samples": [
       {
         "elapsed_seconds": 0.05805100395809859,
@@ -4143,16 +6943,1556 @@
       {
         "elapsed_seconds": 20157.567117473925,
         "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 20217.666741392924,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 20278.04028554994,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 20338.148686643923,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 20398.626256442978,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 20458.86807523691,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 20518.976964208996,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 20579.370752179995,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 20639.76843925391,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 20700.008803489967,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 20760.187705018907,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 20820.783862186945,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 20881.058604045887,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 20941.669781652978,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 21001.890904520988,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 21062.342753576,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 21122.6901650629,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 21183.08958991489,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 21243.48639509792,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 21303.679909387953,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 21363.98778716696,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 21424.41304885992,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 21484.60855322599,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 21544.807718835887,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 21605.354445408913,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 21665.477817869978,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 21725.984680286958,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 21785.997020271956,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 21846.368742462946,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 21906.518467614893,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 21966.666366387974,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 22027.08110445889,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 22087.329517282895,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 22147.51939261495,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 22208.11231855792,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 22268.595010700985,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 22329.146568774944,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 22389.652763221995,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 22449.959580769995,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 22510.48792097997,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 22570.59067218192,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 22630.628323665936,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 22690.988428252982,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 22751.425555735943,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 22811.76845407393,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 22872.097510515945,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 22932.662923825905,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 22993.312740052934,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 23053.510932040983,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 23113.530946233892,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 23173.716483871918,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 23234.26864081691,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 23294.909159110975,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 23355.43378919689,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 23415.713792453986,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 23475.81965517695,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 23536.381261384,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 23596.87257524894,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 23657.353040839895,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 23717.741193119902,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 23778.270210815943,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 23838.432637703954,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 23898.925434299977,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 23958.96447228198,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 24019.269122446887,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 24079.829916495946,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 24139.84638687293,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 24199.958220385946,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 24260.489473468973,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 24321.034943519975,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 24381.178208176978,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 24441.233051108895,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 24501.8072641599,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 24562.095728964894,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 24622.264075920917,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 24682.860083589912,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 24743.32266625797,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 24803.52622898796,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 24863.77417884092,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 24924.137808086933,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 24984.328149564913,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 25044.78751279693,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 25105.340503572952,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 25165.875689189998,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 25226.34969567298,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 25286.3541560889,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 25346.722262334893,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 25406.737006954965,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 25467.041791874915,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 25527.55717791198,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 25588.176312965923,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 25648.559209545958,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 25709.09264376189,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 25769.261686809943,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 25829.575882684905,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 25889.863490232965,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 25950.307871360914,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 26010.464291360928,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 26071.002298677922,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 26131.281112204888,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 26191.609630115912,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 26252.169550345978,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 26312.58383122494,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 26373.125232095947,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 26433.76134198194,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 26494.333668253967,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 26554.721924628946,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 26615.175748854992,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 26675.396964009968,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 26735.484833493945,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 26795.973517026985,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 26856.554326269892,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 26917.164685186,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 26977.293323107995,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 27037.369609093992,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 27097.619851792,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 27157.737538612913,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 27218.254516520887,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 27278.636968692997,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 27339.08912328095,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 27399.493053251994,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 27459.643491997966,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 27520.01954064495,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 27580.084493049886,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 27640.577774483943,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 27701.02834732097,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 27761.05438382097,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 27821.1008988549,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 27881.162852046895,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 27941.467365561984,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 28002.098307813983,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 28062.228033319,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 28122.32474354899,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 28182.3296574899,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 28242.431030838983,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 28302.630769395968,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 28362.97195574199,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 28423.51979425992,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 28483.528759659966,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 28543.973314009956,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 28604.29252287594,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 28664.29858128098,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 28724.802305981982,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 28785.27100469591,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 28845.736091598985,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 28906.189446645905,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 28966.526024852996,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 29027.10984674492,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 29087.396091481904,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 29147.507446678937,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 29208.096971532912,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 29268.191966263927,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 29328.457639196888,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 29388.92590037,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 29449.223076404887,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 29509.415458697942,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 29570.019823458977,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 29630.105093777995,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 29690.25357531593,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 29750.358854205,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 29810.766379449982,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 29871.40798550693,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 29931.89145804895,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 29992.50486564194,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 30052.5621196609,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 30112.850195726962,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 30173.444782844977,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 30233.751929413993,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 30294.273637774982,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 30354.318817488966,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 30414.344598190975,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 30474.82339279889,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 30535.272555134958,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 30595.329374617897,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 30655.943006285932,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 30716.03876244789,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 30776.27517400589,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 30836.733667759923,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 30897.016467422945,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 30957.42218731891,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 31017.96259921498,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 31078.238363290904,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 31138.381261167,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 31198.60830141697,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 31258.743887096993,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 31319.14852721989,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 31379.553461076925,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 31439.8181735049,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 31499.914708466968,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 31560.452096354915,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 31620.898527541896,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 31681.259048635955,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 31741.330736274947,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 31801.439681563992,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 31861.918819620972,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 31922.486695053987,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 31982.882989543956,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 32043.009188052965,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 32103.25855642697,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 32163.606007693917,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 32224.15395056689,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 32284.274336780887,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 32344.51817853097,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 32404.65558334894,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 32465.198364438955,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 32525.282414470916,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 32585.365336808958,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 32645.792969984934,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 32706.26106544491,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 32766.88324645895,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 32827.3268630479,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 32887.573480110965,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 32948.25789947191,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 33008.34793546796,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 33068.42549323093,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 33128.440242565935,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 33189.00205454999,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 33249.219906379934,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 33309.615282321,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 33369.9485089099,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 33430.10721632198,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 33490.19382242998,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 33550.3157056669,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 33610.6352925949,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 33670.87188301096,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 33731.09738160891,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 33791.160077485954,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 33851.52766390797,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 33911.9222165969,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 33971.92840132292,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 34032.00972004398,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 34092.56802686199,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 34153.06370417797,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 34213.46462638595,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 34273.97415918892,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 34334.30943953199,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 34394.5821730179,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 34454.60079032893,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 34515.19279766397,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 34575.63435604889,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 34635.85603192891,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 34696.3064677089,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 34756.61853482691,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 34816.63016723294,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 34877.20260950795,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 34937.40156712197,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 34997.5369474059,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 35057.98149168794,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 35118.00260259397,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 35178.143315630965,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 35238.20471177192,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 35298.29150371789,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 35358.62339081091,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 35418.9796734649,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 35479.00891116797,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 35539.068376600975,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 35599.33969173394,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 35659.838922823896,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 35720.42238353891,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 35780.951497757924,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 35841.397617610986,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 35901.49607875699,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 35961.62345980597,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 36021.941488049924,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 36082.43022187997,
+        "rss_mib": 751.125
+      },
+      {
+        "elapsed_seconds": 36142.78138015198,
+        "rss_mib": 751.12890625
+      },
+      {
+        "elapsed_seconds": 36202.882945149904,
+        "rss_mib": 751.12890625
+      },
+      {
+        "elapsed_seconds": 36263.11506549199,
+        "rss_mib": 751.12890625
+      },
+      {
+        "elapsed_seconds": 36323.36375250993,
+        "rss_mib": 751.12890625
+      },
+      {
+        "elapsed_seconds": 36383.914944648976,
+        "rss_mib": 751.12890625
+      },
+      {
+        "elapsed_seconds": 36444.0206015039,
+        "rss_mib": 751.12890625
+      },
+      {
+        "elapsed_seconds": 36504.62447620195,
+        "rss_mib": 751.12890625
+      },
+      {
+        "elapsed_seconds": 36565.074346915935,
+        "rss_mib": 751.12890625
+      },
+      {
+        "elapsed_seconds": 36625.24879342399,
+        "rss_mib": 751.12890625
+      },
+      {
+        "elapsed_seconds": 36685.748353858944,
+        "rss_mib": 751.12890625
+      },
+      {
+        "elapsed_seconds": 36745.805785632925,
+        "rss_mib": 751.12890625
+      },
+      {
+        "elapsed_seconds": 36806.28146668698,
+        "rss_mib": 751.12890625
+      },
+      {
+        "elapsed_seconds": 36866.45827720093,
+        "rss_mib": 751.12890625
+      },
+      {
+        "elapsed_seconds": 36926.89273188799,
+        "rss_mib": 751.12890625
+      },
+      {
+        "elapsed_seconds": 36987.4537522489,
+        "rss_mib": 751.12890625
+      },
+      {
+        "elapsed_seconds": 37047.73572361795,
+        "rss_mib": 751.12890625
+      },
+      {
+        "elapsed_seconds": 37107.866382009,
+        "rss_mib": 751.12890625
+      },
+      {
+        "elapsed_seconds": 37168.325373159954,
+        "rss_mib": 751.12890625
+      },
+      {
+        "elapsed_seconds": 37228.829731859965,
+        "rss_mib": 751.12890625
+      },
+      {
+        "elapsed_seconds": 37289.30704376893,
+        "rss_mib": 751.12890625
+      },
+      {
+        "elapsed_seconds": 37349.682385216,
+        "rss_mib": 751.12890625
+      },
+      {
+        "elapsed_seconds": 37409.73745566094,
+        "rss_mib": 751.12890625
+      },
+      {
+        "elapsed_seconds": 37469.82723010192,
+        "rss_mib": 751.12890625
+      },
+      {
+        "elapsed_seconds": 37530.38031271298,
+        "rss_mib": 751.12890625
+      },
+      {
+        "elapsed_seconds": 37590.59758498892,
+        "rss_mib": 751.12890625
+      },
+      {
+        "elapsed_seconds": 37651.00175083091,
+        "rss_mib": 751.12890625
+      },
+      {
+        "elapsed_seconds": 37711.63799583493,
+        "rss_mib": 751.12890625
+      },
+      {
+        "elapsed_seconds": 37771.98586696689,
+        "rss_mib": 751.12890625
+      },
+      {
+        "elapsed_seconds": 37832.37820328097,
+        "rss_mib": 751.12890625
+      },
+      {
+        "elapsed_seconds": 37892.47320276196,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 37952.86748777295,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 38013.491490227985,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 38073.66335483396,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 38133.688224263955,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 38194.01046271494,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 38254.29313136393,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 38314.39542936999,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 38374.75388979993,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 38435.11787318997,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 38495.656194143,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 38555.712610724964,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 38615.825398028945,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 38676.312117670896,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 38736.46363869298,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 38796.77069553395,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 38857.236235979944,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 38917.55947540491,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 38977.63373408199,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 39037.90767691098,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 39098.42371125391,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 39158.64774961793,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 39218.98561615695,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 39279.41545416799,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 39339.959663947,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 39400.0749352359,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 39460.49659254996,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 39520.608488345984,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 39580.97534888692,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 39641.306367012905,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 39701.6074928079,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 39761.61799019191,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 39821.63885986095,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 39882.06234824599,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 39942.557973674964,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 40002.91747579991,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 40063.012956653954,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 40123.60891848593,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 40184.0534213949,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 40244.20503650699,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 40304.65999214095,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 40364.68318068597,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 40424.7500907199,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 40484.97594241996,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 40545.07109075098,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 40605.13657385798,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 40665.43361388694,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 40725.84946609498,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 40785.99342350091,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 40846.62673607597,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 40907.05014982191,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 40967.47407747398,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 41027.93509335094,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 41088.331447164994,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 41148.804805742926,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 41209.07020431396,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 41269.342200469924,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 41329.72749053594,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 41390.34528407699,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 41450.79592383595,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 41511.023483678,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 41571.49140690896,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 41632.09374055592,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 41692.14221447497,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 41752.49927049398,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 41812.581679429975,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 41873.123420869,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 41933.70827631198,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 41994.099060420995,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 42054.624914418906,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 42115.227301407955,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 42175.37653254694,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 42235.748984178994,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 42296.16666185798,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 42356.56341667392,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 42416.83315522596,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 42476.849226841936,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 42537.005987693905,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 42597.207693277975,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 42657.40042826894,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 42717.754259498906,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 42778.08522072295,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 42838.27186112199,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 42898.29732171097,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 42958.92493405391,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 43019.14354919398,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 43079.23900720896,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 43139.41934409796,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 43199.843284188886,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 43260.19339581195,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 43320.771331080934,
+        "rss_mib": 751.1328125
+      },
+      {
+        "elapsed_seconds": 43380.01364092389,
+        "rss_mib": 751.1328125
       }
     ],
-    "rss_slope_mib_per_hour_after_10_minutes": 0.0010601094895018905,
+    "rss_slope_mib_per_hour_after_10_minutes": 0.0008174043386956388,
     "stop_reason": null
   },
   "replay_mismatch_details": [],
   "schema": "parcel.duplex_soak.results.v1",
   "started_utc": "2026-08-29T20:05:40.907763+00:00",
-  "status": "running",
+  "status": "complete",
   "target_wall_hours": 12.05,
-  "updated_utc": "2026-08-30T01:41:38.475421+00:00",
-  "verdict": "RUNNING_NOT_A_VERDICT"
+  "updated_utc": "2026-08-30T08:08:40.922091+00:00",
+  "verdict": "SUPPORTED_PROCEDURAL_SOAK"
 }

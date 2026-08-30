@@ -327,20 +327,22 @@ The post-shaper
 zero for hard stops so smoothing can never turn a stop into residual motion.
 
 [`ControlManager`](../src/parcel_robot/control/manager.py) is the supervised
-locomotion owner. It checks controller capability and feedback freshness, refreshes
-short-lived targets, handles faults and the software E-stop, and requires stationary
-evidence where configured. Backends implement vendor-neutral protocols; Unitree
-Sport is one implementation, not the application API.
+application-side locomotion owner. It checks controller capability and feedback
+freshness, refreshes short-lived targets, handles faults and the software E-stop,
+and requires stationary evidence where configured. Backends implement
+vendor-neutral protocols. A physical runtime backend is the typed Unix gateway
+client, not an in-process Unitree SDK object.
 
 The deployable [`gateway`](../gateway/) is a separate process/package boundary with
 lease, epoch, TTL, restart-disarmed, watchdog, bounded vendor-I/O, and sole-writer
 semantics. [`motion_gateway.py`](../src/parcel_robot/control/motion_gateway.py)
-currently connects the normal runtime only at the permanently disarmed rung. This
-lets the team verify the production-shaped lifecycle without pretending that a
-positive physical command path is ready. A legacy direct Unitree Sport controller
-also remains in tree for explicit commissioning; it is not the admitted normal-
-runtime sole-writer path. One gateway writer is therefore the product invariant, not
-a claim that every historical adapter already routes through it.
+implements both a permanently disarmed bench client and an explicit-arm,
+commissioning-record-bound client; neither is selected by the normal simulator
+builder. The former direct `unitree_sport` runtime factory is unregistered and
+always refuses. The standalone one-axis commissioning CLI is a mutually exclusive
+maintenance writer: it uses the same fixed device lock and must run as the same
+`parcel-gateway` UID while the gateway service is stopped. These are desktop-tested
+software boundaries, not evidence that positive physical motion is ready.
 
 ### 4.7 Simulation, research, and learning
 

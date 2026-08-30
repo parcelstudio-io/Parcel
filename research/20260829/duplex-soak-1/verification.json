@@ -1,0 +1,36 @@
+{
+  "completion_acceptance_pass": true,
+  "configured_target_duration_reached": true,
+  "counter_limitations": "stale_action_acceptances is never incremented by the frozen simulator; post_stop_motion and admitted_unsafe are coupled to same-thread rejection checks. Their zero values are structural invariants, not independent safety evidence.",
+  "errors": [],
+  "promotion_pass": true,
+  "recomputed_gates": {
+    "adversarial_episodes_at_least_5000": true,
+    "candidate_adversarial_success_at_least_0_98": true,
+    "candidate_success_at_least_0_99": true,
+    "episodes_at_least_20000": true,
+    "narration_semantic_precision_1_0": true,
+    "normal_uninterrupted_completion": true,
+    "rss_below_2_gib": true,
+    "rss_slope_at_most_10_mib_per_hour": true,
+    "source_and_model_hashes_unchanged": true,
+    "terminal_claim_precision_1_0": true,
+    "terminal_coverage_at_least_0_99": true,
+    "wall_time_at_least_12_hours": true,
+    "zero_admitted_unsafe": true,
+    "zero_deterministic_replay_mismatches": true,
+    "zero_post_stop_motion": true,
+    "zero_premature_completion": true,
+    "zero_stale_revision_acceptances": true
+  },
+  "schema": "parcel.duplex_soak.verification.v1",
+  "scope_warning": "DMC-1 receipt/narration oracles were independently refuted; a green soak supports durability and frozen procedural invariants only, not narration truthfulness, physical safety, or mount readiness.",
+  "source": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260829/duplex-soak-1/results.json",
+  "source_sha256": "a81d2a43d793a59064fd24f4505f28398b724d449285a3babcaaad34fc852b95",
+  "structural_and_integrity_pass": true,
+  "supplementary_exercise_checks": {
+    "raw_unsafe_proposals_positive": true,
+    "stale_action_rejections_positive": true
+  },
+  "warnings": []
+}

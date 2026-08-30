@@ -1,0 +1,361 @@
+{
+  "all_expectations_met": true,
+  "case_count": 32,
+  "monitor_cases": [
+    {
+      "actual_continuity": true,
+      "case": "untampered_final",
+      "errors": [],
+      "expected_continuity": true,
+      "integrity_pass": true
+    },
+    {
+      "actual_continuity": true,
+      "case": "terminal_process_absent",
+      "errors": [],
+      "expected_continuity": true,
+      "integrity_pass": true
+    },
+    {
+      "actual_continuity": false,
+      "case": "interior_row_deleted",
+      "errors": [
+        "row 292: checkpoint update cadence 120.601s is invalid",
+        "observer gap 120.008s exceeds 65.0s"
+      ],
+      "expected_continuity": false,
+      "integrity_pass": false
+    },
+    {
+      "actual_continuity": false,
+      "case": "interior_row_duplicated",
+      "errors": [
+        "observer monotonic time did not strictly increase",
+        "observer gap is below 55.0s (duplicate/reordered row)",
+        "observed UTC time did not strictly increase"
+      ],
+      "expected_continuity": false,
+      "integrity_pass": false
+    },
+    {
+      "actual_continuity": false,
+      "case": "interior_rows_reordered",
+      "errors": [
+        "observer monotonic time did not strictly increase",
+        "checkpoint elapsed time regressed",
+        "checkpoint episode count regressed",
+        "row 291: checkpoint update cadence 120.732s is invalid",
+        "row 292: checkpoint update cadence -60.444s is invalid",
+        "row 293: checkpoint update cadence 120.601s is invalid",
+        "observer gap is below 55.0s (duplicate/reordered row)",
+        "observer gap 120.008s exceeds 65.0s",
+        "observed UTC time did not strictly increase"
+      ],
+      "expected_continuity": false,
+      "integrity_pass": false
+    },
+    {
+      "actual_continuity": false,
+      "case": "three_row_checkpoint_freeze",
+      "errors": [
+        "row 295: checkpoint update cadence 180.973s is invalid",
+        "episode progress was unchanged for 3 monitor rows",
+        "row 294: elapsed time did not advance over two rows",
+        "row 294: episode count did not advance over two rows",
+        "row 294: checkpoint hash did not advance over two rows",
+        "row 293: observer/checkpoint relative clock drift is excessive",
+        "row 294: observer/checkpoint relative clock drift is excessive"
+      ],
+      "expected_continuity": false,
+      "integrity_pass": false
+    },
+    {
+      "actual_continuity": false,
+      "case": "final_checkpoint_hash_tamper",
+      "errors": [
+        "final monitor checkpoint hash differs from final result"
+      ],
+      "expected_continuity": false,
+      "integrity_pass": false
+    },
+    {
+      "actual_continuity": false,
+      "case": "interior_process_absent",
+      "errors": [
+        "row 292: monitored process is absent"
+      ],
+      "expected_continuity": false,
+      "integrity_pass": false
+    },
+    {
+      "actual_continuity": false,
+      "case": "boot_identity_tamper",
+      "errors": [
+        "row 292: boot_id changed"
+      ],
+      "expected_continuity": false,
+      "integrity_pass": false
+    },
+    {
+      "actual_continuity": false,
+      "case": "process_identity_tamper",
+      "errors": [
+        "row 292: monitored process identity changed"
+      ],
+      "expected_continuity": false,
+      "integrity_pass": false
+    },
+    {
+      "actual_continuity": false,
+      "case": "terminal_zombie_identity_tamper",
+      "errors": [
+        "row 582: monitored process identity changed"
+      ],
+      "expected_continuity": false,
+      "integrity_pass": false
+    },
+    {
+      "actual_continuity": false,
+      "case": "checkpoint_unreadable",
+      "errors": [
+        "row 292: checkpoint is not readable"
+      ],
+      "expected_continuity": false,
+      "integrity_pass": false
+    },
+    {
+      "actual_continuity": false,
+      "case": "checkpoint_nonfinite",
+      "errors": [
+        "line 292 is not JSON: non-finite JSON constant NaN"
+      ],
+      "expected_continuity": false,
+      "integrity_pass": false
+    },
+    {
+      "actual_continuity": false,
+      "case": "checkpoint_boolean_count",
+      "errors": [
+        "row 292: invalid checkpoint_primary_episodes",
+        "checkpoint episode count regressed",
+        "row 292: episode count did not advance over two rows"
+      ],
+      "expected_continuity": false,
+      "integrity_pass": false
+    },
+    {
+      "actual_continuity": false,
+      "case": "checkpoint_elapsed_regression",
+      "errors": [
+        "checkpoint elapsed time regressed",
+        "row 292: checkpoint update cadence -1.000s is invalid",
+        "row 293: checkpoint update cadence 121.601s is invalid",
+        "row 292: observer/checkpoint relative clock drift is excessive"
+      ],
+      "expected_continuity": false,
+      "integrity_pass": false
+    },
+    {
+      "actual_continuity": false,
+      "case": "final_episode_count_tamper",
+      "errors": [
+        "final monitor episode count differs from final result"
+      ],
+      "expected_continuity": false,
+      "integrity_pass": false
+    },
+    {
+      "actual_continuity": false,
+      "case": "terminal_status_tamper",
+      "errors": [
+        "row 582: monitored process is absent",
+        "row 582: final checkpoint is not complete",
+        "final monitor status differs from final result"
+      ],
+      "expected_continuity": false,
+      "integrity_pass": false
+    },
+    {
+      "actual_continuity": false,
+      "case": "terminal_row_truncated",
+      "errors": [
+        "row 581: final checkpoint is not complete",
+        "row 581: final checkpoint verdict is not supported",
+        "final monitor checkpoint hash differs from final result",
+        "final monitor status differs from final result",
+        "final monitor verdict differs from final result",
+        "final monitor episode count differs from final result",
+        "final monitor elapsed time differs from final result",
+        "final monitor observation is not timely after result update"
+      ],
+      "expected_continuity": false,
+      "integrity_pass": false
+    }
+  ],
+  "monitor_sha256": "2fcd39e0cbd9020d4df02a40b2c4bbb10e06f619fbec5cc6ffdb30258235faee",
+  "result_cases": [
+    {
+      "actual_acceptance": true,
+      "case": "untampered_final",
+      "errors": [],
+      "expected_acceptance": true,
+      "structural_pass": true
+    },
+    {
+      "actual_acceptance": false,
+      "case": "interim_status",
+      "errors": [],
+      "expected_acceptance": false,
+      "structural_pass": true,
+      "warnings": [
+        "snapshot is not a completed soak and cannot support promotion"
+      ]
+    },
+    {
+      "actual_acceptance": false,
+      "case": "terminal_verdict_flip",
+      "errors": [
+        "serialized verdict differs from oracle"
+      ],
+      "expected_acceptance": false,
+      "structural_pass": false,
+      "warnings": []
+    },
+    {
+      "actual_acceptance": false,
+      "case": "serialized_gate_flip",
+      "errors": [
+        "serialized gates differ from oracle"
+      ],
+      "expected_acceptance": false,
+      "structural_pass": false,
+      "warnings": []
+    },
+    {
+      "actual_acceptance": false,
+      "case": "aggregate_episode_tamper",
+      "errors": [
+        "A1_ledger_history_gru: all.episodes is not frozen + adversarial",
+        "A1_ledger_history_gru.all: incorrect mission_success_rate",
+        "A1_ledger_history_gru.all: incorrect task_stack_exact_rate",
+        "primary episode count differs from candidate aggregate",
+        "candidate failure count is inconsistent",
+        "A1_ledger_history_gru.all: episode count differs from run count",
+        "candidate failure detail retention is inconsistent",
+        "candidate failure truncation flag is inconsistent"
+      ],
+      "expected_acceptance": false,
+      "structural_pass": false,
+      "warnings": []
+    },
+    {
+      "actual_acceptance": false,
+      "case": "complete_before_configured_target",
+      "errors": [
+        "episodes/hour is incorrect",
+        "RSS sample occurs after the serialized elapsed time",
+        "complete status was written before the configured target duration"
+      ],
+      "expected_acceptance": false,
+      "structural_pass": false,
+      "warnings": []
+    },
+    {
+      "actual_acceptance": false,
+      "case": "source_hash_tamper",
+      "errors": [
+        "actual DMC source/model hashes differ from start hashes",
+        "start hashes differ from verified DMC-1 result",
+        "serialized gates differ from oracle",
+        "serialized verdict differs from oracle"
+      ],
+      "expected_acceptance": false,
+      "structural_pass": false,
+      "warnings": []
+    },
+    {
+      "actual_acceptance": false,
+      "case": "raw_unsafe_exercise_removed",
+      "errors": [],
+      "expected_acceptance": false,
+      "structural_pass": true,
+      "warnings": []
+    },
+    {
+      "actual_acceptance": false,
+      "case": "internally_consistent_failed_gate",
+      "errors": [],
+      "expected_acceptance": false,
+      "structural_pass": true,
+      "warnings": []
+    },
+    {
+      "actual_acceptance": false,
+      "case": "boolean_episode_count",
+      "errors": [
+        "invalid count primary_episodes",
+        "primary episode count differs from candidate aggregate",
+        "deterministic replay count is not floor(primary episodes / 100)",
+        "A0_ledger_snapshot_mlp.all: episode count differs from run count",
+        "A1_ledger_history_gru.all: episode count differs from run count",
+        "F0_flat_latest_intent.all: episode count differs from run count",
+        "L0_ledger_snapshot.all: episode count differs from run count",
+        "L1_ledger_explicit_time.all: episode count differs from run count",
+        "episodes/hour is incorrect",
+        "serialized gates differ from oracle",
+        "serialized verdict differs from oracle"
+      ],
+      "expected_acceptance": false,
+      "structural_pass": false,
+      "warnings": []
+    },
+    {
+      "actual_acceptance": false,
+      "case": "nonfinite_candidate_rate",
+      "errors": [
+        "A1_ledger_history_gru.all: invalid mission_success_rate",
+        "A1_ledger_history_gru.all: incorrect mission_success_rate",
+        "serialized gates differ from oracle",
+        "serialized verdict differs from oracle"
+      ],
+      "expected_acceptance": false,
+      "structural_pass": false,
+      "warnings": []
+    },
+    {
+      "actual_acceptance": false,
+      "case": "failure_detail_omitted",
+      "errors": [
+        "candidate failure detail retention is inconsistent",
+        "candidate failure truncation flag is inconsistent"
+      ],
+      "expected_acceptance": false,
+      "structural_pass": false,
+      "warnings": []
+    },
+    {
+      "actual_acceptance": false,
+      "case": "failure_detail_duplicate",
+      "errors": [
+        "duplicate failure detail ('adversarial', 2000016)"
+      ],
+      "expected_acceptance": false,
+      "structural_pass": false,
+      "warnings": []
+    },
+    {
+      "actual_acceptance": false,
+      "case": "failure_seed_out_of_range",
+      "errors": [
+        "failure detail 0 is outside its seed range"
+      ],
+      "expected_acceptance": false,
+      "structural_pass": false,
+      "warnings": []
+    }
+  ],
+  "result_sha256": "a81d2a43d793a59064fd24f4505f28398b724d449285a3babcaaad34fc852b95",
+  "schema": "parcel.duplex_soak.verifier_mutation.v1",
+  "verify_monitor_sha256": "5497fa0cf1e7f72af095b0809a08138468c303342c3985da4352f6757b946a35",
+  "verify_results_sha256": "9df186a6349257c1ce3ee2818cd6365c53a92bd682c8c32a0014725c2b1fd66a"
+}

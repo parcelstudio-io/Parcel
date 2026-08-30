@@ -316,7 +316,7 @@ def test_runtime_adapter_dispatches_scan_and_search_entity():
     assert calls["scan_behavior"] == [()]
     assert calls["search_entity"] == [("lamppost",)]
 
-    # Verifier: terminal failed nav with reason completes skill_completed.
+    # Verifier: terminal navigation failure cannot fabricate skill_completed.
     done = adapter.poll(
         SemanticRuntimeState(
             snapshot_id="snap",
@@ -326,7 +326,8 @@ def test_runtime_adapter_dispatches_scan_and_search_entity():
         )
     )
     assert done
-    assert done[0].status == "succeeded"
+    assert all(result.status == "failed" for result in done)
+    assert all(result.verified_facts == () for result in done)
 
 
 def _fresh_snapshot():

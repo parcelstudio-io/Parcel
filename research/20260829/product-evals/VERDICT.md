@@ -19,8 +19,13 @@ elevators, or close pedestrian operation.
 2. Current follow behavior misses two of nine scripted follow cases. In DSP-2,
    S2 and S3 each contacted in 25/145 episodes and all four registered
    safety/liveness hypotheses were refuted.
-3. Four of nine software acoustic gates fail before any real room, microphone,
-   loudspeaker, echo cancellation, owner voice, or Starlink variability is added.
+3. Corrected acoustic v2 passes 6 gates, fails 3, and marks 2 not measured. Four
+   of 13 endpoint cases are invalid, virtual-audible acknowledgement p50 is
+   0.790 s, and isolated acoustic STOP plus physical motion sync remain
+   unmeasured. A two-run 1,560-cell direct sensitivity study found 0/30 declared
+   settings pass and failed corrected-rig parity, so it nominates no production
+   threshold. No real room, mounted microphone/loudspeaker, AEC, owner voice, or
+   Starlink variability has been tested.
 4. Historical conversation responses are semantically mixed/poor. MB-1 hosted Q
    completed 120/120 scenarios but failed every absolute gate: grounding
    0.6120–0.7274, coverage 0.2283–0.2883, 99/225 acknowledgments, 11–27/165
@@ -29,12 +34,33 @@ elevators, or close pedestrian operation.
 5. DMC-4's source-level owner-authored journal and journal-only authenticated
    bridge pass their frozen transaction gates. The normal runtime now drains
    the journal into bounded, process-local, non-actuating Model-B frames, but
-   does not bind them to a persisted cursor, live speech epoch, provider, or
-   audio path. The retained old-path LIT-1 traces
+   those frames only reach a local queue. They preserve and drain-revalidate
+   available authority lineage, but the lane does not bind them to persisted
+   executive/outbox/read/provider-ack state, an independently authenticated
+   live speech epoch, provider, or audio path. Transition freshness also starts
+   at poll rather than commit. The retained old-path LIT-1 traces
    expose the consequence directly: five failed bench terminals produced five
    “I've reached the bench” claims.
 6. The positive embodied-plan result is four supported frozen kinematic cases.  It
    is an integration smoke test, not a generalization or physical-safety result.
+7. Model A has no qualified learned artifact or production binding. The normal
+   launcher neither injects nor arms a commissioned physical manager, normal
+   observations carry simulation provenance, and `Go2Backend` rejects motion.
+8. DSOAK-1's retained artifact self-reports 12.050004 desktop wall-clock hours
+   and 66,434 procedural episodes; all 17 gate predicates pass post-run
+   aggregate checks and it records 664 sampled replays / zero mismatches. That
+   is only partially corroborated process-durability evidence: the unsigned
+   monitor began 2.365 h late, strict process/temporal provenance is absent,
+   the narration oracle is refuted, key safety zeroes are coupled, and
+   deterministic L0 still outperformed learned A1 (66,433 vs 66,116 successes).
+9. The August 30 commit tier is green, but the complete extended nightly tier
+   is red. Six degraded-pose arms missed frozen success floors, while the slow
+   selection exposed literal/scene, navigation, pedestrian-evaluator, and
+   wheel-environment findings. Bounded remediation cleared the literal/scene,
+   wheel, and lamppost cases; the repeated slow selection is 1 failed / 74
+   passed / 8 skipped / 3 expected failures / 1 unexpected pass, with only the
+   unchanged 0.875-vs-0.90 person-cell pin red. This cannot erase the
+   degraded-pose capability result or authorize motion.
 
 ## Promotion gates that must close
 
@@ -46,8 +72,11 @@ elevators, or close pedestrian operation.
   false arrivals and zero contacts, across multiple layouts and seeds.
 - Implement moving-owner tracking/re-identification and formation control without
   oracle identity or ground-truth semantics.
-- Pass deterministic acoustic gates with physical mic/speaker/AEC replay and real
-  barge-in, then test Starlink loss/jitter and offline fallback.
+- Use corrected acoustic v2 without fitting its discovery corpus: build a frozen
+  human/room/AEC holdout, repair semantic endpointing and persistent-stream
+  audible latency, and add isolated STOP channels plus actual motion observation.
+  Then pass mounted mic/speaker/AEC, real
+  barge-in, Starlink loss/jitter, and offline-fallback tests.
 - Run payload-randomized Go2 dynamics, sim-to-sim policy transfer, gateway fault
   injection, hardware-in-loop timing, stationary hardware checks, and tethered
   stop-distance characterization.

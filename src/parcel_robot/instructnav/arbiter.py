@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 import os
+import threading
 import time
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
@@ -97,24 +98,36 @@ class ProposerBus:
     _proposers: dict[str, Callable[..., SE2Goal | None]] = field(default_factory=dict)
     _latest: dict[str, SE2Goal] = field(default_factory=dict)
     _committed: CommittedRevisions = field(default_factory=CommittedRevisions)
+    _lock: threading.RLock = field(
+        default_factory=threading.RLock,
+        repr=False,
+        compare=False,
+    )
 
     def register(self, source: str, proposer: Callable[..., SE2Goal | None]) -> None:
         if not source:
             raise ValueError("source must be non-empty")
-        self._proposers[source] = proposer
+        with self._lock:
+            self._proposers[source] = proposer
 
     def publish(self, goal: SE2Goal) -> None:
         # Fail closed: a proposal older than the committed revision for its task
         # is never buffered, so it can never be handed to the arbiter -- this
         # also closes the window where an old-revision proposal is re-published
         # after a flush.
-        if self._committed.is_stale(task_id=goal.task_id, plan_revision=goal.plan_revision):
-            return
-        self._latest[goal.source] = goal
+        with self._lock:
+            if self._committed.is_stale(
+                task_id=goal.task_id,
+                plan_revision=goal.plan_revision,
+            ):
+                return
+            self._latest[goal.source] = goal
 
     def poll(self, *, now_s: float, context: Mapping[str, Any] | None = None) -> tuple[SE2Goal, ...]:
         ctx = dict(context or {})
-        for source, proposer in self._proposers.items():
+        with self._lock:
+            proposers = tuple(self._proposers.items())
+        for source, proposer in proposers:
             try:
                 goal = proposer(now_s=now_s, **ctx)
             except TypeError:
@@ -149,10 +162,9 @@ class ProposerBus:
                     task_id=goal.task_id,
                     plan_revision=goal.plan_revision,
                 )
-            if self._committed.is_stale(task_id=goal.task_id, plan_revision=goal.plan_revision):
-                continue
-            self._latest[source] = goal
-        return tuple(self._latest.values())
+            self.publish(goal)
+        with self._lock:
+            return tuple(self._latest.values())
 
     def commit_revision(self, *, task_id: str, plan_revision: int) -> int:
         """Commit a revision for a task and flush its now-stale buffered goals.
@@ -163,15 +175,20 @@ class ProposerBus:
         which it survives the correction.
         """
 
-        committed = self._committed.commit(task_id=task_id, plan_revision=plan_revision)
-        self._latest = {
-            source: goal
-            for source, goal in self._latest.items()
-            if not self._committed.is_stale(
-                task_id=goal.task_id, plan_revision=goal.plan_revision
+        with self._lock:
+            committed = self._committed.commit(
+                task_id=task_id,
+                plan_revision=plan_revision,
             )
-        }
-        return committed
+            self._latest = {
+                source: goal
+                for source, goal in self._latest.items()
+                if not self._committed.is_stale(
+                    task_id=goal.task_id,
+                    plan_revision=goal.plan_revision,
+                )
+            }
+            return committed
 
     def flush_task(self, task_id: str) -> int:
         """Drop this task's buffered proposals WITHOUT touching the revision ledger.
@@ -199,20 +216,43 @@ class ProposerBus:
         """
 
         key = str(task_id)
-        dropped = [source for source, goal in self._latest.items() if str(goal.task_id) == key]
-        for source in dropped:
-            del self._latest[source]
-        return len(dropped)
+        with self._lock:
+            dropped = [
+                source
+                for source, goal in self._latest.items()
+                if str(goal.task_id) == key
+            ]
+            for source in dropped:
+                del self._latest[source]
+            return len(dropped)
 
     def committed_revision(self, task_id: str = "") -> int:
-        return self._committed.committed(task_id)
+        with self._lock:
+            return self._committed.committed(task_id)
 
     def snapshot(self) -> dict[str, Any]:
-        return {
-            "sources": sorted(self._proposers),
-            "latest": {key: goal.as_dict() for key, goal in sorted(self._latest.items())},
-            "committed_revisions": self._committed.snapshot(),
-        }
+        with self._lock:
+            return {
+                "sources": sorted(self._proposers),
+                "latest": {
+                    key: goal.as_dict() for key, goal in sorted(self._latest.items())
+                },
+                "committed_revisions": self._committed.snapshot(),
+            }
+
+    def revision_transaction_acquire(self) -> None:
+        self._lock.acquire()
+
+    def revision_transaction_release(self) -> None:
+        self._lock.release()
+
+    def revision_transaction_snapshot(self) -> object:
+        return (dict(self._latest), self._committed.snapshot())
+
+    def revision_transaction_restore(self, state: object) -> None:
+        latest, committed = state  # type: ignore[misc]
+        self._latest = dict(latest)
+        self._committed.restore(dict(committed))
 
 
 class GoalArbiter:
@@ -233,6 +273,7 @@ class GoalArbiter:
         arbitration_log: bool | None = None,
         episode_id: str = "unset",
     ) -> None:
+        self._lock = threading.RLock()
         self._lethal = lethal_cost or (lambda _x, _y: False)
         self._active_plan_step: str | None = None
         self._committed = CommittedRevisions()
@@ -250,23 +291,28 @@ class GoalArbiter:
 
     @property
     def arbitration_log_enabled(self) -> bool:
-        return self._arbitration_log_enabled
+        with self._lock:
+            return self._arbitration_log_enabled
 
     @property
     def last_arbitration_log(self) -> ArbitrationLogRecordV1 | None:
-        return self._last_arbitration_log
+        with self._lock:
+            return self._last_arbitration_log
 
     @property
     def last_counterfactual_report(self) -> CounterfactualReportV1 | None:
-        return self._last_counterfactual_report
+        with self._lock:
+            return self._last_counterfactual_report
 
     def set_plan_step(self, plan_step_id: str | None) -> None:
-        self._active_plan_step = plan_step_id
+        with self._lock:
+            self._active_plan_step = plan_step_id
 
     def set_episode_id(self, episode_id: str) -> None:
         if not episode_id or not str(episode_id).strip():
             raise ValueError("episode_id must be non-empty")
-        self._episode_id = str(episode_id)
+        with self._lock:
+            self._episode_id = str(episode_id)
 
     def commit_revision(self, *, task_id: str, plan_revision: int) -> int:
         """Commit a revision for a task so older proposals can never win.
@@ -276,7 +322,8 @@ class GoalArbiter:
         :class:`ProposerBus` is what drops already-buffered stale goals.
         """
 
-        return self._committed.commit(task_id=task_id, plan_revision=plan_revision)
+        with self._lock:
+            return self._committed.commit(task_id=task_id, plan_revision=plan_revision)
 
     def flush_task(self, task_id: str) -> int:
         """Revision-neutral counterpart of :meth:`ProposerBus.flush_task`.
@@ -300,7 +347,20 @@ class GoalArbiter:
         return 0
 
     def committed_revision(self, task_id: str = "") -> int:
-        return self._committed.committed(task_id)
+        with self._lock:
+            return self._committed.committed(task_id)
+
+    def revision_transaction_acquire(self) -> None:
+        self._lock.acquire()
+
+    def revision_transaction_release(self) -> None:
+        self._lock.release()
+
+    def revision_transaction_snapshot(self) -> object:
+        return self._committed.snapshot()
+
+    def revision_transaction_restore(self, state: object) -> None:
+        self._committed.restore(dict(state))  # type: ignore[arg-type]
 
     def report_counterfactual(
         self,
@@ -312,15 +372,16 @@ class GoalArbiter:
         :attr:`last_arbitration_log`.  Oracle labels never affect selection.
         """
 
-        record = self._last_arbitration_log
-        if record is None:
-            raise RuntimeError(
-                "no arbitration log; enable arbitration_log=True or "
-                f"{ARBITRATION_LOG_ENV}=1 before resolve"
-            )
-        report = counterfactual_report(record, oracle_success=oracle_success)
-        self._last_counterfactual_report = report
-        return report
+        with self._lock:
+            record = self._last_arbitration_log
+            if record is None:
+                raise RuntimeError(
+                    "no arbitration log; enable arbitration_log=True or "
+                    f"{ARBITRATION_LOG_ENV}=1 before resolve"
+                )
+            report = counterfactual_report(record, oracle_success=oracle_success)
+            self._last_counterfactual_report = report
+            return report
 
     def _veto_reason(self, goal: SE2Goal, now_s: float) -> str:
         if self._committed.is_stale(
@@ -390,6 +451,15 @@ class GoalArbiter:
         return record
 
     def resolve(
+        self,
+        goals: Sequence[SE2Goal],
+        *,
+        now_s: float,
+    ) -> SE2Goal | None:
+        with self._lock:
+            return self._resolve_locked(goals, now_s=now_s)
+
+    def _resolve_locked(
         self,
         goals: Sequence[SE2Goal],
         *,

@@ -260,6 +260,82 @@ def test_failed_runtime_state_never_fabricates_success_fact(
     assert result.verified_facts == ()
 
 
+@pytest.mark.parametrize("skill", ("ScanBehavior", "SearchEntity"))
+@pytest.mark.parametrize(
+    ("navigation_state", "navigation_reason"),
+    (
+        ("arrived", "collision_contact"),
+        ("stale", ""),
+        ("failed", "semantic_target_unreachable"),
+    ),
+    ids=("collision_reason", "stale_state", "unreachable_reason"),
+)
+def test_instructnav_failure_never_fabricates_skill_completion(
+    skill: str,
+    navigation_state: str,
+    navigation_reason: str,
+) -> None:
+    adapter = SemanticTaskRuntimeAdapter(
+        navigate=lambda _directive: None,
+        follow_formation=lambda _relation, _distance: None,
+        spatial_behavior=lambda _intent: None,
+        hold=lambda: None,
+        vocalize=lambda _text: None,
+        scan_behavior=lambda: None,
+        search_entity=lambda _query: None,
+    )
+    request = _request(
+        skill,
+        {} if skill == "ScanBehavior" else {"query": "lamppost"},
+        "skill_completed",
+    )
+    adapter.dispatch(request, now=62.0)
+
+    result = adapter.poll(
+        SemanticRuntimeState(
+            "snapshot-instructnav-failure",
+            navigation_state=navigation_state,
+            navigation_reason=navigation_reason,
+        ),
+        now=63.0,
+    )[0]
+
+    assert result.status == "failed"
+    assert result.verified_facts == ()
+    assert adapter.active() == ()
+
+
+@pytest.mark.parametrize("skill", ("ScanBehavior", "SearchEntity"))
+def test_instructnav_requires_an_unambiguous_arrived_terminal(skill: str) -> None:
+    adapter = SemanticTaskRuntimeAdapter(
+        navigate=lambda _directive: None,
+        follow_formation=lambda _relation, _distance: None,
+        spatial_behavior=lambda _intent: None,
+        hold=lambda: None,
+        vocalize=lambda _text: None,
+        scan_behavior=lambda: None,
+        search_entity=lambda _query: None,
+    )
+    request = _request(
+        skill,
+        {} if skill == "ScanBehavior" else {"query": "lamppost"},
+        "skill_completed",
+    )
+    adapter.dispatch(request, now=64.0)
+
+    result = adapter.poll(
+        SemanticRuntimeState(
+            "snapshot-instructnav-arrived",
+            navigation_state="arrived",
+            navigation_reason="semantic_arrival_verified",
+        ),
+        now=65.0,
+    )[0]
+
+    assert result.status == "succeeded"
+    assert result.verified_facts[0].fact == "skill_completed"
+
+
 def test_admitted_schema_is_a_defensive_runtime_skill_subset() -> None:
     source = {
         "$defs": {

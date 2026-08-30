@@ -8,6 +8,9 @@ simulator socket, and the default persistent memory database were not touched.
 
 - Acoustic-loop evaluator and regression tests: **15 passed**.
 - All acoustic/duplex-related tests: **124 passed in 4.90 s**.
+- Additive PortAudio drain-abort and post-open playback-clock selection:
+  **86 passed with 2 expected warnings**. This is source regression evidence;
+  the later v1 audit keeps mounted/audio capability red.
 - Duplex transaction v2 product-seam tests: **2 passed in 0.41 s**.
 - Task executive plus companion-state authority tests: **63 passed**.
 - Companion relationship/dynamic/Realtime prompt contracts: **71 passed in
@@ -33,6 +36,39 @@ simulator socket, and the default persistent memory database were not touched.
   a process-local observer into normal runtime and passed a focused **26-test**
   selection; neither result wires a provider, audio, a live session key/epoch,
   a persistent cursor, or separate-child resume lineage.
+
+## Post-Sol-Ultra bounded regressions — 2026-08-30
+
+These overlapping guarded selections close source defects found by the fresh
+read-only review; they do not change the hardware evidence tier:
+
+- process-local revision exception atomicity, including deferred checkpoint and
+  after-step rollback, plus navigation recovery failure mapping: **70 passed**;
+- deployment graph/profile and checkout-provenance direct selection:
+  **98 passed**; broader related selection: **145 passed**;
+- complete available Model-B lineage and drain-time expiry: **9 passed**;
+- committed terminal-geometry identity on the one-shot pose retry:
+  **14 passed**; and
+- mandatory gateway `--disarmed` assertion: **8 passed, 1 skipped**.
+- combined changed-surface integration selection: **125 passed, 4 skipped**.
+
+The first revision transaction compensation was not crash-durable, distributed,
+or isolated from concurrent proposal publication/arbitration. A second
+independent review found that gap, plus service lifecycle/environment precedence
+and valid Model-B lifecycle defects. The postfix panels passed **33** service
+tests, **14** Model-B/oracle tests, and **14** revision/concurrency tests. One
+combined selection spanning those surfaces passed **91/91**. Revision commit is
+now thread-isolated inside one process, but remains non-crash-durable and
+non-distributed; checkout provenance is start/end identity rather than atomic
+execution attestation; and the systemd graph has not run on an Orin.
+
+A third independent read-only audit then found four residuals: the older motion-
+seam parity test did not understand the late environment wrapper, target
+activation was not fail-loud for core services, broader valid Model-B histories
+still false-latched, and shared sinks could be acquired in opposite executive
+registration orders. The exact guarded remediation panel passed **19/19**.
+Shared sinks now use a process-wide object-identity lock order; this still does
+not provide crash or distributed durability.
 
 ## Final hardening shards
 
@@ -71,3 +107,52 @@ This clean rerun removes the database-contamination failures but does not erase 
 transient navigation stall observation.  Capability conclusions therefore use the
 fresh standalone evaluation artifacts in this directory rather than pytest pass
 counts.
+
+## August 30 extended nightly and remediation
+
+The guarded 6,785.5-second extended nightly completed. Its default selection
+passed 11,262 with 23 skips and 5 expected failures, and mutation testing killed
+7/7 injected defects. The gate remained hard red because all six pose-drift arms
+missed their frozen success floors. The initial slow selection returned 4 failed,
+68 passed, 8 skipped, 3 expected failures, 1 unexpected pass, and 3 wheel-fixture
+setup errors.
+
+After evidence-bounded fixes to retired-literal ownership, held-out-name hygiene,
+Python-3.14 wheel installation, and one-shot alternate terminal-pose recovery:
+
+- affected focused selection: **152 passed, 4 skipped, 2 warnings in 88.79 s**;
+- live `sit next to the lamppost` E2E: **passed twice**, in 79.89 s and 81.74 s;
+- post-remediation slow marker selection: **1 failed, 74 passed, 8 skipped,
+  11,293 deselected, 3 expected failures, 1 unexpected pass, 2 warnings in
+  2,007.26 s**.
+
+The sole slow failure is the unchanged undeclared-bystander deadlock pin:
+`veto_fraction=0.875` versus `>=0.9`. The trace is deterministic, remains a
+deadlock, and has zero collisions; the evaluator was not weakened after seeing
+the result. The complete audit is
+[`../NIGHTLY_REMEDIATION_AUDIT.md`](../NIGHTLY_REMEDIATION_AUDIT.md).
+
+The pre-postfix guarded commit tier on the then-current documentation tree passed every hard
+row in **269.3 s**. Coverage collected 11,380 tests: 11,293 commit and 87 slow,
+with no orphan or overlap. Its default phase returned 11,253 parallel passes,
+22 skips, and 5 expected failures, followed by 12 serial passes and 1 skip. The
+Ruff ratchet remained 72 baseline / 72 current / 0 new. The stopping-envelope
+row remains report-only and explicitly unmeasured.
+
+After the independent postfix work, the guarded commit tier again passed every
+hard row in **274.0 s**. Coverage collected **11,417 tests: 11,330 commit and 87
+slow**, with no orphan or overlap. The default phase returned **11,290 parallel
+passes, 22 skips, and 5 expected failures**, followed by **12 serial passes and
+1 skip**. Ruff remained 72 baseline / 72 current / 0 new; release parity checked
+106 assets; the stopping envelope remained explicitly unmeasured. This run's
+start/finish HEAD and index matched, but its checkout content identity did not:
+concurrent Claude work wrote the shared root during the gate. All hard rows are
+green, but this particular report is not an unchanged-checkout attestation; a
+quiet-tree repeat is required for that narrower provenance claim.
+
+The quiet repeat then passed every hard row in **280.3 s** with the same
+**11,417 = 11,330 non-slow + 87 slow** partition, default-suite results, and
+72/72/0 Ruff ratchet. Its checkout identity was byte-identical at start and
+finish (`f8518f4283f8…`), with HEAD and the complete index unchanged. This is
+start/end Git-visible content identity—not execution, environment, ignored-file,
+or hardware attestation—and the extended nightly result remains red.

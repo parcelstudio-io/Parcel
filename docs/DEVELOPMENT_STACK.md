@@ -14,9 +14,9 @@ AI outside the final motor-safety boundary.
 > whisper.cpp server was stopped during the recheck. An XVF3800 USB device
 > enumerates, but the product has no opened native PortAudio capture/playback
 > stream, commissioned AEC/DoA path or through-air result. Presence is not
-> operation. The normal robot composition remains MuJoCo; the Unitree adapter in
-> the diagram is an available commissioning component, not a commissioned
-> physical runtime.
+> operation. The normal robot composition remains MuJoCo. The physical branch in
+> the diagram is an implemented, desktop-tested gateway seam, not a commissioned
+> robot runtime.
 
 Read the [documentation index](README.md) and current
 [engineering handbook](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md) before setup.
@@ -51,7 +51,13 @@ browser text  and/or  MicrophoneVoiceLoop (VAD → STT)
  S-curve handoff → typed final stop disposition → ControlManager
               |
               v
-        SimulatorBackend (MuJoCo) / Unitree Sport
+        SimulatorBackend (MuJoCo) / typed Unix gateway client
+                                      |
+                                      v
+                         parcel-gateway (sole SDK writer)
+                                      |
+                                      v
+                               Unitree Sport
 ```
 
 See the current [engineering handbook](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md)

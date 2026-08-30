@@ -1,0 +1,2958 @@
+{
+  "card": "W6 VALUE-CHANGES-MEASURED-1",
+  "design": "research/20260830/value-changes-1/DESIGN.md (FROZEN 2026-08-30 06:43 EDT)",
+  "evidence_tier": "desktop-sim",
+  "physical_motion": "NO-GO (unchanged)",
+  "hosted_spend_usd": 0,
+  "product_edit": false,
+  "arms": {
+    "A0ref": "door OFF, planner 1.0223 m \u2014 the repo config path, untouched",
+    "off_disc": "door OFF, planner 1.0223 m \u2014 scratch tree (baseline)",
+    "on_disc": "door ON,  planner 1.0223 m \u2014 V1 alone",
+    "off_full": "door OFF, planner 1.12 m   \u2014 V2 alone",
+    "on_full": "door ON,  planner 1.12 m   \u2014 V1 + V2"
+  },
+  "arm_facts": {
+    "A0ref": {
+      "config_path": "/home/jaewoo-jang/.cache/parcel-0e/wb/w6/configs/navigation/default.yaml",
+      "held_stall_release": false,
+      "planner_inflation_radius_m": 1.022296,
+      "planner_gate_clearance_m": 1.12,
+      "planner_gate_lateral_clearance_m": 1.022296,
+      "planner_effective_hard_margin_m": 0.1,
+      "planner_comfort_radius_m": 0.42,
+      "planner_comfort_cost_enabled": false,
+      "navigator_brake_obstacle_stop_m": 0.8,
+      "narrowest_routable_corridor_m": 2.044591,
+      "arm": "A0ref",
+      "asserted": true
+    },
+    "off_disc": {
+      "config_path": "/home/jaewoo-jang/.cache/parcel-0e/w6/ng1/navcfg/off_disc/default.yaml",
+      "held_stall_release": false,
+      "planner_inflation_radius_m": 1.022296,
+      "planner_gate_clearance_m": 1.12,
+      "planner_gate_lateral_clearance_m": 1.022296,
+      "planner_effective_hard_margin_m": 0.1,
+      "planner_comfort_radius_m": 0.42,
+      "planner_comfort_cost_enabled": false,
+      "navigator_brake_obstacle_stop_m": 0.8,
+      "narrowest_routable_corridor_m": 2.044591,
+      "arm": "off_disc",
+      "asserted": true
+    },
+    "on_disc": {
+      "config_path": "/home/jaewoo-jang/.cache/parcel-0e/w6/ng1/navcfg/on_disc/default.yaml",
+      "held_stall_release": true,
+      "planner_inflation_radius_m": 1.022296,
+      "planner_gate_clearance_m": 1.12,
+      "planner_gate_lateral_clearance_m": 1.022296,
+      "planner_effective_hard_margin_m": 0.1,
+      "planner_comfort_radius_m": 0.42,
+      "planner_comfort_cost_enabled": false,
+      "navigator_brake_obstacle_stop_m": 0.8,
+      "narrowest_routable_corridor_m": 2.044591,
+      "arm": "on_disc",
+      "asserted": true
+    },
+    "off_full": {
+      "config_path": "/home/jaewoo-jang/.cache/parcel-0e/w6/ng1/navcfg/off_full/default.yaml",
+      "held_stall_release": false,
+      "planner_inflation_radius_m": 1.12,
+      "planner_gate_clearance_m": 1.12,
+      "planner_gate_lateral_clearance_m": 1.022296,
+      "planner_effective_hard_margin_m": 0.8,
+      "planner_comfort_radius_m": 1.12,
+      "planner_comfort_cost_enabled": false,
+      "navigator_brake_obstacle_stop_m": 0.8,
+      "narrowest_routable_corridor_m": 2.24,
+      "arm": "off_full",
+      "asserted": true
+    },
+    "on_full": {
+      "config_path": "/home/jaewoo-jang/.cache/parcel-0e/w6/ng1/navcfg/on_full/default.yaml",
+      "held_stall_release": true,
+      "planner_inflation_radius_m": 1.12,
+      "planner_gate_clearance_m": 1.12,
+      "planner_gate_lateral_clearance_m": 1.022296,
+      "planner_effective_hard_margin_m": 0.8,
+      "planner_comfort_radius_m": 1.12,
+      "planner_comfort_cost_enabled": false,
+      "navigator_brake_obstacle_stop_m": 0.8,
+      "narrowest_routable_corridor_m": 2.24,
+      "arm": "on_full",
+      "asserted": true
+    }
+  },
+  "run_provenance": {
+    "workers": 16,
+    "cpus": 192,
+    "argv": [
+      "--stage",
+      "ng1",
+      "--workers",
+      "16"
+    ],
+    "repo": "/home/jaewoo-jang/.cache/parcel-0e/wb/w6"
+  },
+  "host_start": {
+    "loadavg": [
+      2.85107421875,
+      2.5068359375,
+      2.125
+    ],
+    "cpus": 192,
+    "gpu": "2025 MiB, 32760 MiB, 34 %",
+    "utc": "2026-08-30T10:47:20Z"
+  },
+  "host_end": {
+    "loadavg": [
+      7.1904296875,
+      16.34130859375,
+      12.2607421875
+    ],
+    "cpus": 192,
+    "gpu": "2004 MiB, 32760 MiB, 33 %",
+    "utc": "2026-08-30T10:59:52Z"
+  },
+  "ng1_wall_s": {
+    "A0ref": 751.3,
+    "off_disc": 751.3,
+    "on_disc": 751.3,
+    "off_full": 751.3,
+    "on_full": 751.3
+  },
+  "plumbing_control": {
+    "claim": "off_disc (scratch config tree at the commissioned values) reproduces A0ref (the repo config path) byte-identically on all 530 rows",
+    "rows_compared": 530,
+    "byte_identical": true,
+    "minival_digest_identical": true,
+    "panel_identical": true,
+    "licensed": true
+  },
+  "ng1": {
+    "A0ref": {
+      "all": {
+        "episodes": 530,
+        "strict_success": 365,
+        "strict_success_any_instance": 367,
+        "settled_success": 360,
+        "settled": 362,
+        "arrived_verified": 314,
+        "band_entry": 379,
+        "band_entry_any_instance": 383,
+        "false_arrival": 1,
+        "wrong_instance": 16,
+        "reason_histogram": {
+          "arrived": 2,
+          "arrived_verified": 314,
+          "navigation_no_progress": 67,
+          "semantic_arrival_verification_failed": 45,
+          "semantic_target_ambiguous": 2,
+          "semantic_target_unreachable": 100
+        },
+        "navigation_no_progress": 67,
+        "stall_non_poi_by_goal_source": 53,
+        "stall_poi_by_goal_source": 14,
+        "stall_non_crosswalk_target": 30,
+        "semantic_target_unreachable": 100,
+        "collisions_total": 0,
+        "episodes_with_collision": 0,
+        "episodes_below_stop_band": 2,
+        "episodes_below_stop_band_ids": [
+          "frozen:planter:5",
+          "gen:880007:bench:1"
+        ],
+        "min_clearance_min_m": 0.6275,
+        "steps_total": 157743,
+        "steps_median": 182.5,
+        "planned_without_terminal_reason": 0,
+        "goal_source_histogram": {
+          "known_poi": 16,
+          "semantic_search": 514
+        }
+      },
+      "generated": {
+        "episodes": 450,
+        "strict_success": 343,
+        "strict_success_any_instance": 345,
+        "settled_success": 339,
+        "settled": 341,
+        "arrived_verified": 295,
+        "band_entry": 355,
+        "band_entry_any_instance": 358,
+        "false_arrival": 0,
+        "wrong_instance": 0,
+        "reason_histogram": {
+          "arrived_verified": 295,
+          "navigation_no_progress": 49,
+          "semantic_arrival_verification_failed": 43,
+          "semantic_target_ambiguous": 1,
+          "semantic_target_unreachable": 62
+        },
+        "navigation_no_progress": 49,
+        "stall_non_poi_by_goal_source": 49,
+        "stall_poi_by_goal_source": 0,
+        "stall_non_crosswalk_target": 26,
+        "semantic_target_unreachable": 62,
+        "collisions_total": 0,
+        "episodes_with_collision": 0,
+        "episodes_below_stop_band": 1,
+        "episodes_below_stop_band_ids": [
+          "gen:880007:bench:1"
+        ],
+        "min_clearance_min_m": 0.6275,
+        "steps_total": 128094,
+        "steps_median": 173.0,
+        "planned_without_terminal_reason": 0,
+        "goal_source_histogram": {
+          "semantic_search": 450
+        }
+      },
+      "frozen": {
+        "episodes": 80,
+        "strict_success": 22,
+        "strict_success_any_instance": 22,
+        "settled_success": 21,
+        "settled": 21,
+        "arrived_verified": 19,
+        "band_entry": 24,
+        "band_entry_any_instance": 25,
+        "false_arrival": 1,
+        "wrong_instance": 16,
+        "reason_histogram": {
+          "arrived": 2,
+          "arrived_verified": 19,
+          "navigation_no_progress": 18,
+          "semantic_arrival_verification_failed": 2,
+          "semantic_target_ambiguous": 1,
+          "semantic_target_unreachable": 38
+        },
+        "navigation_no_progress": 18,
+        "stall_non_poi_by_goal_source": 4,
+        "stall_poi_by_goal_source": 14,
+        "stall_non_crosswalk_target": 4,
+        "semantic_target_unreachable": 38,
+        "collisions_total": 0,
+        "episodes_with_collision": 0,
+        "episodes_below_stop_band": 1,
+        "episodes_below_stop_band_ids": [
+          "frozen:planter:5"
+        ],
+        "min_clearance_min_m": 0.6315,
+        "steps_total": 29649,
+        "steps_median": 441.0,
+        "planned_without_terminal_reason": 0,
+        "goal_source_histogram": {
+          "known_poi": 16,
+          "semantic_search": 64
+        }
+      }
+    },
+    "off_disc": {
+      "all": {
+        "episodes": 530,
+        "strict_success": 365,
+        "strict_success_any_instance": 367,
+        "settled_success": 360,
+        "settled": 362,
+        "arrived_verified": 314,
+        "band_entry": 379,
+        "band_entry_any_instance": 383,
+        "false_arrival": 1,
+        "wrong_instance": 16,
+        "reason_histogram": {
+          "arrived": 2,
+          "arrived_verified": 314,
+          "navigation_no_progress": 67,
+          "semantic_arrival_verification_failed": 45,
+          "semantic_target_ambiguous": 2,
+          "semantic_target_unreachable": 100
+        },
+        "navigation_no_progress": 67,
+        "stall_non_poi_by_goal_source": 53,
+        "stall_poi_by_goal_source": 14,
+        "stall_non_crosswalk_target": 30,
+        "semantic_target_unreachable": 100,
+        "collisions_total": 0,
+        "episodes_with_collision": 0,
+        "episodes_below_stop_band": 2,
+        "episodes_below_stop_band_ids": [
+          "frozen:planter:5",
+          "gen:880007:bench:1"
+        ],
+        "min_clearance_min_m": 0.6275,
+        "steps_total": 157743,
+        "steps_median": 182.5,
+        "planned_without_terminal_reason": 0,
+        "goal_source_histogram": {
+          "known_poi": 16,
+          "semantic_search": 514
+        }
+      },
+      "generated": {
+        "episodes": 450,
+        "strict_success": 343,
+        "strict_success_any_instance": 345,
+        "settled_success": 339,
+        "settled": 341,
+        "arrived_verified": 295,
+        "band_entry": 355,
+        "band_entry_any_instance": 358,
+        "false_arrival": 0,
+        "wrong_instance": 0,
+        "reason_histogram": {
+          "arrived_verified": 295,
+          "navigation_no_progress": 49,
+          "semantic_arrival_verification_failed": 43,
+          "semantic_target_ambiguous": 1,
+          "semantic_target_unreachable": 62
+        },
+        "navigation_no_progress": 49,
+        "stall_non_poi_by_goal_source": 49,
+        "stall_poi_by_goal_source": 0,
+        "stall_non_crosswalk_target": 26,
+        "semantic_target_unreachable": 62,
+        "collisions_total": 0,
+        "episodes_with_collision": 0,
+        "episodes_below_stop_band": 1,
+        "episodes_below_stop_band_ids": [
+          "gen:880007:bench:1"
+        ],
+        "min_clearance_min_m": 0.6275,
+        "steps_total": 128094,
+        "steps_median": 173.0,
+        "planned_without_terminal_reason": 0,
+        "goal_source_histogram": {
+          "semantic_search": 450
+        }
+      },
+      "frozen": {
+        "episodes": 80,
+        "strict_success": 22,
+        "strict_success_any_instance": 22,
+        "settled_success": 21,
+        "settled": 21,
+        "arrived_verified": 19,
+        "band_entry": 24,
+        "band_entry_any_instance": 25,
+        "false_arrival": 1,
+        "wrong_instance": 16,
+        "reason_histogram": {
+          "arrived": 2,
+          "arrived_verified": 19,
+          "navigation_no_progress": 18,
+          "semantic_arrival_verification_failed": 2,
+          "semantic_target_ambiguous": 1,
+          "semantic_target_unreachable": 38
+        },
+        "navigation_no_progress": 18,
+        "stall_non_poi_by_goal_source": 4,
+        "stall_poi_by_goal_source": 14,
+        "stall_non_crosswalk_target": 4,
+        "semantic_target_unreachable": 38,
+        "collisions_total": 0,
+        "episodes_with_collision": 0,
+        "episodes_below_stop_band": 1,
+        "episodes_below_stop_band_ids": [
+          "frozen:planter:5"
+        ],
+        "min_clearance_min_m": 0.6315,
+        "steps_total": 29649,
+        "steps_median": 441.0,
+        "planned_without_terminal_reason": 0,
+        "goal_source_histogram": {
+          "known_poi": 16,
+          "semantic_search": 64
+        }
+      }
+    },
+    "on_disc": {
+      "all": {
+        "episodes": 530,
+        "strict_success": 365,
+        "strict_success_any_instance": 372,
+        "settled_success": 360,
+        "settled": 367,
+        "arrived_verified": 319,
+        "band_entry": 383,
+        "band_entry_any_instance": 392,
+        "false_arrival": 1,
+        "wrong_instance": 16,
+        "reason_histogram": {
+          "arrived": 2,
+          "arrived_verified": 319,
+          "navigation_no_progress": 27,
+          "semantic_arrival_verification_failed": 46,
+          "semantic_target_ambiguous": 2,
+          "semantic_target_unreachable": 134
+        },
+        "navigation_no_progress": 27,
+        "stall_non_poi_by_goal_source": 13,
+        "stall_poi_by_goal_source": 14,
+        "stall_non_crosswalk_target": 13,
+        "semantic_target_unreachable": 134,
+        "collisions_total": 0,
+        "episodes_with_collision": 0,
+        "episodes_below_stop_band": 2,
+        "episodes_below_stop_band_ids": [
+          "frozen:planter:5",
+          "gen:880007:bench:1"
+        ],
+        "min_clearance_min_m": 0.6275,
+        "steps_total": 162903,
+        "steps_median": 182.5,
+        "planned_without_terminal_reason": 0,
+        "goal_source_histogram": {
+          "known_poi": 16,
+          "semantic_search": 514
+        }
+      },
+      "generated": {
+        "episodes": 450,
+        "strict_success": 343,
+        "strict_success_any_instance": 350,
+        "settled_success": 339,
+        "settled": 346,
+        "arrived_verified": 300,
+        "band_entry": 359,
+        "band_entry_any_instance": 367,
+        "false_arrival": 0,
+        "wrong_instance": 0,
+        "reason_histogram": {
+          "arrived_verified": 300,
+          "navigation_no_progress": 10,
+          "semantic_arrival_verification_failed": 44,
+          "semantic_target_ambiguous": 1,
+          "semantic_target_unreachable": 95
+        },
+        "navigation_no_progress": 10,
+        "stall_non_poi_by_goal_source": 10,
+        "stall_poi_by_goal_source": 0,
+        "stall_non_crosswalk_target": 10,
+        "semantic_target_unreachable": 95,
+        "collisions_total": 0,
+        "episodes_with_collision": 0,
+        "episodes_below_stop_band": 1,
+        "episodes_below_stop_band_ids": [
+          "gen:880007:bench:1"
+        ],
+        "min_clearance_min_m": 0.6275,
+        "steps_total": 133170,
+        "steps_median": 173.0,
+        "planned_without_terminal_reason": 0,
+        "goal_source_histogram": {
+          "semantic_search": 450
+        }
+      },
+      "frozen": {
+        "episodes": 80,
+        "strict_success": 22,
+        "strict_success_any_instance": 22,
+        "settled_success": 21,
+        "settled": 21,
+        "arrived_verified": 19,
+        "band_entry": 24,
+        "band_entry_any_instance": 25,
+        "false_arrival": 1,
+        "wrong_instance": 16,
+        "reason_histogram": {
+          "arrived": 2,
+          "arrived_verified": 19,
+          "navigation_no_progress": 17,
+          "semantic_arrival_verification_failed": 2,
+          "semantic_target_ambiguous": 1,
+          "semantic_target_unreachable": 39
+        },
+        "navigation_no_progress": 17,
+        "stall_non_poi_by_goal_source": 3,
+        "stall_poi_by_goal_source": 14,
+        "stall_non_crosswalk_target": 3,
+        "semantic_target_unreachable": 39,
+        "collisions_total": 0,
+        "episodes_with_collision": 0,
+        "episodes_below_stop_band": 1,
+        "episodes_below_stop_band_ids": [
+          "frozen:planter:5"
+        ],
+        "min_clearance_min_m": 0.6315,
+        "steps_total": 29733,
+        "steps_median": 441.0,
+        "planned_without_terminal_reason": 0,
+        "goal_source_histogram": {
+          "known_poi": 16,
+          "semantic_search": 64
+        }
+      }
+    },
+    "off_full": {
+      "all": {
+        "episodes": 530,
+        "strict_success": 376,
+        "strict_success_any_instance": 385,
+        "settled_success": 365,
+        "settled": 374,
+        "arrived_verified": 326,
+        "band_entry": 389,
+        "band_entry_any_instance": 400,
+        "false_arrival": 1,
+        "wrong_instance": 16,
+        "reason_histogram": {
+          "arrived": 1,
+          "arrived_verified": 326,
+          "navigation_no_progress": 48,
+          "semantic_arrival_verification_failed": 44,
+          "semantic_target_ambiguous": 2,
+          "semantic_target_unreachable": 109
+        },
+        "navigation_no_progress": 48,
+        "stall_non_poi_by_goal_source": 33,
+        "stall_poi_by_goal_source": 15,
+        "stall_non_crosswalk_target": 19,
+        "semantic_target_unreachable": 109,
+        "collisions_total": 0,
+        "episodes_with_collision": 0,
+        "episodes_below_stop_band": 5,
+        "episodes_below_stop_band_ids": [
+          "frozen:planter:5",
+          "gen:880003:bench:0",
+          "gen:880007:bench:1",
+          "gen:880011:bench:1",
+          "gen:880018:bench:1"
+        ],
+        "min_clearance_min_m": 0.5837,
+        "steps_total": 152459,
+        "steps_median": 186.0,
+        "planned_without_terminal_reason": 0,
+        "goal_source_histogram": {
+          "known_poi": 16,
+          "semantic_search": 514
+        }
+      },
+      "generated": {
+        "episodes": 450,
+        "strict_success": 351,
+        "strict_success_any_instance": 359,
+        "settled_success": 346,
+        "settled": 354,
+        "arrived_verified": 307,
+        "band_entry": 361,
+        "band_entry_any_instance": 370,
+        "false_arrival": 0,
+        "wrong_instance": 0,
+        "reason_histogram": {
+          "arrived_verified": 307,
+          "navigation_no_progress": 32,
+          "semantic_arrival_verification_failed": 44,
+          "semantic_target_ambiguous": 1,
+          "semantic_target_unreachable": 66
+        },
+        "navigation_no_progress": 32,
+        "stall_non_poi_by_goal_source": 32,
+        "stall_poi_by_goal_source": 0,
+        "stall_non_crosswalk_target": 18,
+        "semantic_target_unreachable": 66,
+        "collisions_total": 0,
+        "episodes_with_collision": 0,
+        "episodes_below_stop_band": 4,
+        "episodes_below_stop_band_ids": [
+          "gen:880003:bench:0",
+          "gen:880007:bench:1",
+          "gen:880011:bench:1",
+          "gen:880018:bench:1"
+        ],
+        "min_clearance_min_m": 0.5837,
+        "steps_total": 120506,
+        "steps_median": 175.0,
+        "planned_without_terminal_reason": 0,
+        "goal_source_histogram": {
+          "semantic_search": 450
+        }
+      },
+      "frozen": {
+        "episodes": 80,
+        "strict_success": 25,
+        "strict_success_any_instance": 26,
+        "settled_success": 19,
+        "settled": 20,
+        "arrived_verified": 19,
+        "band_entry": 28,
+        "band_entry_any_instance": 30,
+        "false_arrival": 1,
+        "wrong_instance": 16,
+        "reason_histogram": {
+          "arrived": 1,
+          "arrived_verified": 19,
+          "navigation_no_progress": 16,
+          "semantic_target_ambiguous": 1,
+          "semantic_target_unreachable": 43
+        },
+        "navigation_no_progress": 16,
+        "stall_non_poi_by_goal_source": 1,
+        "stall_poi_by_goal_source": 15,
+        "stall_non_crosswalk_target": 1,
+        "semantic_target_unreachable": 43,
+        "collisions_total": 0,
+        "episodes_with_collision": 0,
+        "episodes_below_stop_band": 1,
+        "episodes_below_stop_band_ids": [
+          "frozen:planter:5"
+        ],
+        "min_clearance_min_m": 0.6315,
+        "steps_total": 31953,
+        "steps_median": 441.0,
+        "planned_without_terminal_reason": 0,
+        "goal_source_histogram": {
+          "known_poi": 16,
+          "semantic_search": 64
+        }
+      }
+    },
+    "on_full": {
+      "all": {
+        "episodes": 530,
+        "strict_success": 375,
+        "strict_success_any_instance": 394,
+        "settled_success": 364,
+        "settled": 383,
+        "arrived_verified": 335,
+        "band_entry": 392,
+        "band_entry_any_instance": 412,
+        "false_arrival": 1,
+        "wrong_instance": 16,
+        "reason_histogram": {
+          "arrived": 1,
+          "arrived_verified": 335,
+          "navigation_no_progress": 17,
+          "semantic_arrival_verification_failed": 44,
+          "semantic_target_ambiguous": 2,
+          "semantic_target_unreachable": 131
+        },
+        "navigation_no_progress": 17,
+        "stall_non_poi_by_goal_source": 2,
+        "stall_poi_by_goal_source": 15,
+        "stall_non_crosswalk_target": 2,
+        "semantic_target_unreachable": 131,
+        "collisions_total": 0,
+        "episodes_with_collision": 0,
+        "episodes_below_stop_band": 4,
+        "episodes_below_stop_band_ids": [
+          "frozen:planter:5",
+          "gen:880003:bench:0",
+          "gen:880007:bench:1",
+          "gen:880011:bench:1"
+        ],
+        "min_clearance_min_m": 0.5837,
+        "steps_total": 155830,
+        "steps_median": 186.0,
+        "planned_without_terminal_reason": 0,
+        "goal_source_histogram": {
+          "known_poi": 16,
+          "semantic_search": 514
+        }
+      },
+      "generated": {
+        "episodes": 450,
+        "strict_success": 350,
+        "strict_success_any_instance": 368,
+        "settled_success": 345,
+        "settled": 363,
+        "arrived_verified": 316,
+        "band_entry": 364,
+        "band_entry_any_instance": 382,
+        "false_arrival": 0,
+        "wrong_instance": 0,
+        "reason_histogram": {
+          "arrived_verified": 316,
+          "navigation_no_progress": 2,
+          "semantic_arrival_verification_failed": 44,
+          "semantic_target_ambiguous": 1,
+          "semantic_target_unreachable": 87
+        },
+        "navigation_no_progress": 2,
+        "stall_non_poi_by_goal_source": 2,
+        "stall_poi_by_goal_source": 0,
+        "stall_non_crosswalk_target": 2,
+        "semantic_target_unreachable": 87,
+        "collisions_total": 0,
+        "episodes_with_collision": 0,
+        "episodes_below_stop_band": 3,
+        "episodes_below_stop_band_ids": [
+          "gen:880003:bench:0",
+          "gen:880007:bench:1",
+          "gen:880011:bench:1"
+        ],
+        "min_clearance_min_m": 0.5837,
+        "steps_total": 123725,
+        "steps_median": 175.0,
+        "planned_without_terminal_reason": 0,
+        "goal_source_histogram": {
+          "semantic_search": 450
+        }
+      },
+      "frozen": {
+        "episodes": 80,
+        "strict_success": 25,
+        "strict_success_any_instance": 26,
+        "settled_success": 19,
+        "settled": 20,
+        "arrived_verified": 19,
+        "band_entry": 28,
+        "band_entry_any_instance": 30,
+        "false_arrival": 1,
+        "wrong_instance": 16,
+        "reason_histogram": {
+          "arrived": 1,
+          "arrived_verified": 19,
+          "navigation_no_progress": 15,
+          "semantic_target_ambiguous": 1,
+          "semantic_target_unreachable": 44
+        },
+        "navigation_no_progress": 15,
+        "stall_non_poi_by_goal_source": 0,
+        "stall_poi_by_goal_source": 15,
+        "stall_non_crosswalk_target": 0,
+        "semantic_target_unreachable": 44,
+        "collisions_total": 0,
+        "episodes_with_collision": 0,
+        "episodes_below_stop_band": 1,
+        "episodes_below_stop_band_ids": [
+          "frozen:planter:5"
+        ],
+        "min_clearance_min_m": 0.6315,
+        "steps_total": 32105,
+        "steps_median": 441.0,
+        "planned_without_terminal_reason": 0,
+        "goal_source_histogram": {
+          "known_poi": 16,
+          "semantic_search": 64
+        }
+      }
+    }
+  },
+  "ng1_vs_baseline": {
+    "A0ref": {
+      "all": {
+        "rows_changed_full_row": 0,
+        "rows_identical": 530,
+        "rows_changed_reason_only_count": 0,
+        "reason_transitions": {},
+        "strict_regressions": [],
+        "strict_gains": [],
+        "settled_regressions": [],
+        "settled_gains": [],
+        "changed_episode_ids": []
+      },
+      "generated": {
+        "rows_changed_full_row": 0,
+        "rows_identical": 450,
+        "rows_changed_reason_only_count": 0,
+        "reason_transitions": {},
+        "strict_regressions": [],
+        "strict_gains": [],
+        "settled_regressions": [],
+        "settled_gains": [],
+        "changed_episode_ids": []
+      },
+      "frozen": {
+        "rows_changed_full_row": 0,
+        "rows_identical": 80,
+        "rows_changed_reason_only_count": 0,
+        "reason_transitions": {},
+        "strict_regressions": [],
+        "strict_gains": [],
+        "settled_regressions": [],
+        "settled_gains": [],
+        "changed_episode_ids": []
+      }
+    },
+    "on_disc": {
+      "all": {
+        "rows_changed_full_row": 48,
+        "rows_identical": 482,
+        "rows_changed_reason_only_count": 41,
+        "reason_transitions": {
+          "navigation_no_progress -> semantic_target_unreachable": 33,
+          "navigation_no_progress -> arrived_verified": 6,
+          "arrived_verified -> semantic_target_unreachable": 1,
+          "navigation_no_progress -> semantic_arrival_verification_failed": 1
+        },
+        "strict_regressions": [
+          "gen:880007:crosswalk:1",
+          "gen:880016:crosswalk:0"
+        ],
+        "strict_gains": [
+          "gen:880009:sidewalk:1",
+          "gen:880014:crosswalk:0"
+        ],
+        "settled_regressions": [
+          "gen:880007:crosswalk:1",
+          "gen:880016:crosswalk:0"
+        ],
+        "settled_gains": [
+          "gen:880009:sidewalk:1",
+          "gen:880014:crosswalk:0"
+        ],
+        "changed_episode_ids": [
+          "frozen:lamppost:10",
+          "gen:880000:crosswalk:0",
+          "gen:880000:lamppost:1",
+          "gen:880000:planter:2",
+          "gen:880002:crosswalk:0",
+          "gen:880002:crosswalk:1",
+          "gen:880002:crosswalk:2",
+          "gen:880004:crosswalk:1",
+          "gen:880004:lamppost:2",
+          "gen:880005:bench:0",
+          "gen:880006:crosswalk:2",
+          "gen:880006:planter:0",
+          "gen:880006:planter:1",
+          "gen:880007:crosswalk:0",
+          "gen:880007:crosswalk:1",
+          "gen:880007:crosswalk:2",
+          "gen:880009:lamppost:2",
+          "gen:880009:sidewalk:1",
+          "gen:880010:crosswalk:1",
+          "gen:880010:planter:1",
+          "gen:880012:planter:2",
+          "gen:880013:crosswalk:2",
+          "gen:880014:crosswalk:0",
+          "gen:880014:crosswalk:1",
+          "gen:880015:lamppost:1",
+          "gen:880016:crosswalk:0",
+          "gen:880018:bench:1",
+          "gen:880018:crosswalk:0",
+          "gen:880018:planter:1",
+          "gen:880019:crosswalk:0",
+          "gen:880019:crosswalk:1",
+          "gen:880019:planter:1",
+          "gen:880020:crosswalk:0",
+          "gen:880020:crosswalk:2",
+          "gen:880020:planter:1",
+          "gen:880022:lamppost:0",
+          "gen:880022:planter:2",
+          "gen:880023:crosswalk:1",
+          "gen:880023:lamppost:0",
+          "gen:880024:bench:1",
+          "gen:880024:lamppost:1",
+          "gen:880025:lamppost:1",
+          "gen:880026:crosswalk:2",
+          "gen:880026:planter:0",
+          "gen:880027:crosswalk:0",
+          "gen:880028:crosswalk:1",
+          "gen:880028:crosswalk:2",
+          "gen:880029:planter:1"
+        ]
+      },
+      "generated": {
+        "rows_changed_full_row": 47,
+        "rows_identical": 403,
+        "rows_changed_reason_only_count": 40,
+        "reason_transitions": {
+          "navigation_no_progress -> semantic_target_unreachable": 32,
+          "navigation_no_progress -> arrived_verified": 6,
+          "arrived_verified -> semantic_target_unreachable": 1,
+          "navigation_no_progress -> semantic_arrival_verification_failed": 1
+        },
+        "strict_regressions": [
+          "gen:880007:crosswalk:1",
+          "gen:880016:crosswalk:0"
+        ],
+        "strict_gains": [
+          "gen:880009:sidewalk:1",
+          "gen:880014:crosswalk:0"
+        ],
+        "settled_regressions": [
+          "gen:880007:crosswalk:1",
+          "gen:880016:crosswalk:0"
+        ],
+        "settled_gains": [
+          "gen:880009:sidewalk:1",
+          "gen:880014:crosswalk:0"
+        ],
+        "changed_episode_ids": [
+          "gen:880000:crosswalk:0",
+          "gen:880000:lamppost:1",
+          "gen:880000:planter:2",
+          "gen:880002:crosswalk:0",
+          "gen:880002:crosswalk:1",
+          "gen:880002:crosswalk:2",
+          "gen:880004:crosswalk:1",
+          "gen:880004:lamppost:2",
+          "gen:880005:bench:0",
+          "gen:880006:crosswalk:2",
+          "gen:880006:planter:0",
+          "gen:880006:planter:1",
+          "gen:880007:crosswalk:0",
+          "gen:880007:crosswalk:1",
+          "gen:880007:crosswalk:2",
+          "gen:880009:lamppost:2",
+          "gen:880009:sidewalk:1",
+          "gen:880010:crosswalk:1",
+          "gen:880010:planter:1",
+          "gen:880012:planter:2",
+          "gen:880013:crosswalk:2",
+          "gen:880014:crosswalk:0",
+          "gen:880014:crosswalk:1",
+          "gen:880015:lamppost:1",
+          "gen:880016:crosswalk:0",
+          "gen:880018:bench:1",
+          "gen:880018:crosswalk:0",
+          "gen:880018:planter:1",
+          "gen:880019:crosswalk:0",
+          "gen:880019:crosswalk:1",
+          "gen:880019:planter:1",
+          "gen:880020:crosswalk:0",
+          "gen:880020:crosswalk:2",
+          "gen:880020:planter:1",
+          "gen:880022:lamppost:0",
+          "gen:880022:planter:2",
+          "gen:880023:crosswalk:1",
+          "gen:880023:lamppost:0",
+          "gen:880024:bench:1",
+          "gen:880024:lamppost:1",
+          "gen:880025:lamppost:1",
+          "gen:880026:crosswalk:2",
+          "gen:880026:planter:0",
+          "gen:880027:crosswalk:0",
+          "gen:880028:crosswalk:1",
+          "gen:880028:crosswalk:2",
+          "gen:880029:planter:1"
+        ]
+      },
+      "frozen": {
+        "rows_changed_full_row": 1,
+        "rows_identical": 79,
+        "rows_changed_reason_only_count": 1,
+        "reason_transitions": {
+          "navigation_no_progress -> semantic_target_unreachable": 1
+        },
+        "strict_regressions": [],
+        "strict_gains": [],
+        "settled_regressions": [],
+        "settled_gains": [],
+        "changed_episode_ids": [
+          "frozen:lamppost:10"
+        ]
+      }
+    },
+    "off_full": {
+      "all": {
+        "rows_changed_full_row": 132,
+        "rows_identical": 398,
+        "rows_changed_reason_only_count": 43,
+        "reason_transitions": {
+          "navigation_no_progress -> arrived_verified": 11,
+          "navigation_no_progress -> semantic_target_unreachable": 9,
+          "semantic_target_unreachable -> arrived_verified": 9,
+          "arrived_verified -> semantic_target_unreachable": 7,
+          "semantic_arrival_verification_failed -> semantic_target_unreachable": 3,
+          "arrived -> navigation_no_progress": 1,
+          "arrived_verified -> semantic_arrival_verification_failed": 1,
+          "navigation_no_progress -> semantic_arrival_verification_failed": 1,
+          "semantic_target_unreachable -> navigation_no_progress": 1
+        },
+        "strict_regressions": [
+          "frozen:bench:7",
+          "frozen:planter:10",
+          "frozen:sidewalk:10",
+          "frozen:sidewalk:6",
+          "gen:880000:bench:0",
+          "gen:880001:sidewalk:2",
+          "gen:880005:lamppost:1",
+          "gen:880007:sidewalk:1",
+          "gen:880014:sidewalk:1",
+          "gen:880023:crosswalk:0"
+        ],
+        "strict_gains": [
+          "frozen:crosswalk:10",
+          "frozen:crosswalk:15",
+          "frozen:crosswalk:3",
+          "frozen:crosswalk:4",
+          "frozen:crosswalk:7",
+          "frozen:lamppost:15",
+          "frozen:lamppost:6",
+          "gen:880001:planter:0",
+          "gen:880002:bench:1",
+          "gen:880002:crosswalk:0",
+          "gen:880003:bench:0",
+          "gen:880004:crosswalk:1",
+          "gen:880005:bench:0",
+          "gen:880008:bench:0",
+          "gen:880009:sidewalk:1",
+          "gen:880015:lamppost:1",
+          "gen:880023:bench:0",
+          "gen:880025:lamppost:1",
+          "gen:880026:bench:0",
+          "gen:880028:bench:1",
+          "gen:880029:bench:0"
+        ],
+        "settled_regressions": [
+          "frozen:bench:7",
+          "frozen:planter:10",
+          "frozen:sidewalk:10",
+          "frozen:sidewalk:6",
+          "gen:880000:bench:0",
+          "gen:880001:sidewalk:2",
+          "gen:880005:lamppost:1",
+          "gen:880007:sidewalk:1",
+          "gen:880014:sidewalk:1",
+          "gen:880023:crosswalk:0",
+          "gen:880023:sidewalk:0"
+        ],
+        "settled_gains": [
+          "frozen:lamppost:15",
+          "frozen:lamppost:6",
+          "gen:880001:planter:0",
+          "gen:880002:bench:1",
+          "gen:880002:crosswalk:0",
+          "gen:880003:bench:0",
+          "gen:880004:crosswalk:1",
+          "gen:880005:bench:0",
+          "gen:880008:bench:0",
+          "gen:880009:sidewalk:1",
+          "gen:880015:lamppost:1",
+          "gen:880023:bench:0",
+          "gen:880025:lamppost:1",
+          "gen:880026:bench:0",
+          "gen:880028:bench:1",
+          "gen:880029:bench:0"
+        ],
+        "changed_episode_ids": [
+          "frozen:bench:7",
+          "frozen:crosswalk:0",
+          "frozen:crosswalk:10",
+          "frozen:crosswalk:14",
+          "frozen:crosswalk:15",
+          "frozen:crosswalk:3",
+          "frozen:crosswalk:4",
+          "frozen:crosswalk:7",
+          "frozen:crosswalk:9",
+          "frozen:lamppost:0",
+          "frozen:lamppost:1",
+          "frozen:lamppost:10",
+          "frozen:lamppost:15",
+          "frozen:lamppost:2",
+          "frozen:lamppost:4",
+          "frozen:lamppost:5",
+          "frozen:lamppost:6",
+          "frozen:lamppost:7",
+          "frozen:lamppost:9",
+          "frozen:planter:10",
+          "frozen:planter:11",
+          "frozen:planter:14",
+          "frozen:planter:15",
+          "frozen:planter:2",
+          "frozen:planter:6",
+          "frozen:planter:9",
+          "frozen:sidewalk:1",
+          "frozen:sidewalk:10",
+          "frozen:sidewalk:11",
+          "frozen:sidewalk:12",
+          "frozen:sidewalk:13",
+          "frozen:sidewalk:14",
+          "frozen:sidewalk:3",
+          "frozen:sidewalk:6",
+          "gen:880000:bench:0",
+          "gen:880000:crosswalk:1",
+          "gen:880000:lamppost:0",
+          "gen:880001:planter:0",
+          "gen:880001:planter:1",
+          "gen:880001:sidewalk:2",
+          "gen:880002:bench:1",
+          "gen:880002:crosswalk:0",
+          "gen:880002:crosswalk:1",
+          "gen:880002:crosswalk:2",
+          "gen:880002:planter:0",
+          "gen:880002:planter:1",
+          "gen:880003:bench:0",
+          "gen:880003:crosswalk:2",
+          "gen:880003:lamppost:0",
+          "gen:880003:planter:0",
+          "gen:880004:bench:0",
+          "gen:880004:crosswalk:1",
+          "gen:880004:crosswalk:2",
+          "gen:880004:lamppost:2",
+          "gen:880005:bench:0",
+          "gen:880005:lamppost:1",
+          "gen:880005:lamppost:2",
+          "gen:880005:planter:2",
+          "gen:880006:crosswalk:2",
+          "gen:880006:planter:0",
+          "gen:880007:lamppost:2",
+          "gen:880007:planter:0",
+          "gen:880007:sidewalk:1",
+          "gen:880008:bench:0",
+          "gen:880008:crosswalk:0",
+          "gen:880008:crosswalk:1",
+          "gen:880009:bench:1",
+          "gen:880009:lamppost:2",
+          "gen:880009:sidewalk:1",
+          "gen:880010:bench:0",
+          "gen:880010:bench:2",
+          "gen:880010:planter:1",
+          "gen:880011:bench:1",
+          "gen:880012:bench:0",
+          "gen:880012:bench:1",
+          "gen:880012:crosswalk:0",
+          "gen:880012:crosswalk:1",
+          "gen:880013:crosswalk:0",
+          "gen:880013:crosswalk:1",
+          "gen:880013:crosswalk:2",
+          "gen:880014:bench:0",
+          "gen:880014:bench:2",
+          "gen:880014:crosswalk:1",
+          "gen:880014:sidewalk:1",
+          "gen:880014:sidewalk:2",
+          "gen:880015:lamppost:1",
+          "gen:880016:crosswalk:0",
+          "gen:880017:bench:0",
+          "gen:880017:crosswalk:2",
+          "gen:880017:lamppost:1",
+          "gen:880018:bench:0",
+          "gen:880018:bench:1",
+          "gen:880018:crosswalk:0",
+          "gen:880018:lamppost:0",
+          "gen:880018:lamppost:2",
+          "gen:880018:planter:1",
+          "gen:880018:sidewalk:0",
+          "gen:880019:bench:1",
+          "gen:880019:crosswalk:1",
+          "gen:880020:crosswalk:0",
+          "gen:880020:crosswalk:2",
+          "gen:880020:lamppost:0",
+          "gen:880021:bench:0",
+          "gen:880021:bench:1",
+          "gen:880021:bench:2",
+          "gen:880023:bench:0",
+          "gen:880023:bench:2",
+          "gen:880023:crosswalk:0",
+          "gen:880023:lamppost:0",
+          "gen:880023:sidewalk:0",
+          "gen:880024:bench:1",
+          "gen:880024:lamppost:2",
+          "gen:880024:sidewalk:0",
+          "gen:880025:bench:0",
+          "gen:880025:crosswalk:2",
+          "gen:880025:lamppost:0",
+          "gen:880025:lamppost:1",
+          "gen:880026:bench:0",
+          "gen:880026:bench:2",
+          "gen:880026:crosswalk:2",
+          "gen:880026:planter:0",
+          "gen:880026:planter:2",
+          "gen:880027:bench:0",
+          "gen:880027:bench:2",
+          "gen:880027:crosswalk:0",
+          "gen:880028:bench:1",
+          "gen:880028:crosswalk:2",
+          "gen:880028:planter:0",
+          "gen:880029:bench:0",
+          "gen:880029:crosswalk:1",
+          "gen:880029:planter:1",
+          "gen:880029:planter:2"
+        ]
+      },
+      "generated": {
+        "rows_changed_full_row": 98,
+        "rows_identical": 352,
+        "rows_changed_reason_only_count": 35,
+        "reason_transitions": {
+          "navigation_no_progress -> arrived_verified": 9,
+          "semantic_target_unreachable -> arrived_verified": 9,
+          "navigation_no_progress -> semantic_target_unreachable": 8,
+          "arrived_verified -> semantic_target_unreachable": 5,
+          "arrived_verified -> semantic_arrival_verification_failed": 1,
+          "navigation_no_progress -> semantic_arrival_verification_failed": 1,
+          "semantic_arrival_verification_failed -> semantic_target_unreachable": 1,
+          "semantic_target_unreachable -> navigation_no_progress": 1
+        },
+        "strict_regressions": [
+          "gen:880000:bench:0",
+          "gen:880001:sidewalk:2",
+          "gen:880005:lamppost:1",
+          "gen:880007:sidewalk:1",
+          "gen:880014:sidewalk:1",
+          "gen:880023:crosswalk:0"
+        ],
+        "strict_gains": [
+          "gen:880001:planter:0",
+          "gen:880002:bench:1",
+          "gen:880002:crosswalk:0",
+          "gen:880003:bench:0",
+          "gen:880004:crosswalk:1",
+          "gen:880005:bench:0",
+          "gen:880008:bench:0",
+          "gen:880009:sidewalk:1",
+          "gen:880015:lamppost:1",
+          "gen:880023:bench:0",
+          "gen:880025:lamppost:1",
+          "gen:880026:bench:0",
+          "gen:880028:bench:1",
+          "gen:880029:bench:0"
+        ],
+        "settled_regressions": [
+          "gen:880000:bench:0",
+          "gen:880001:sidewalk:2",
+          "gen:880005:lamppost:1",
+          "gen:880007:sidewalk:1",
+          "gen:880014:sidewalk:1",
+          "gen:880023:crosswalk:0",
+          "gen:880023:sidewalk:0"
+        ],
+        "settled_gains": [
+          "gen:880001:planter:0",
+          "gen:880002:bench:1",
+          "gen:880002:crosswalk:0",
+          "gen:880003:bench:0",
+          "gen:880004:crosswalk:1",
+          "gen:880005:bench:0",
+          "gen:880008:bench:0",
+          "gen:880009:sidewalk:1",
+          "gen:880015:lamppost:1",
+          "gen:880023:bench:0",
+          "gen:880025:lamppost:1",
+          "gen:880026:bench:0",
+          "gen:880028:bench:1",
+          "gen:880029:bench:0"
+        ],
+        "changed_episode_ids": [
+          "gen:880000:bench:0",
+          "gen:880000:crosswalk:1",
+          "gen:880000:lamppost:0",
+          "gen:880001:planter:0",
+          "gen:880001:planter:1",
+          "gen:880001:sidewalk:2",
+          "gen:880002:bench:1",
+          "gen:880002:crosswalk:0",
+          "gen:880002:crosswalk:1",
+          "gen:880002:crosswalk:2",
+          "gen:880002:planter:0",
+          "gen:880002:planter:1",
+          "gen:880003:bench:0",
+          "gen:880003:crosswalk:2",
+          "gen:880003:lamppost:0",
+          "gen:880003:planter:0",
+          "gen:880004:bench:0",
+          "gen:880004:crosswalk:1",
+          "gen:880004:crosswalk:2",
+          "gen:880004:lamppost:2",
+          "gen:880005:bench:0",
+          "gen:880005:lamppost:1",
+          "gen:880005:lamppost:2",
+          "gen:880005:planter:2",
+          "gen:880006:crosswalk:2",
+          "gen:880006:planter:0",
+          "gen:880007:lamppost:2",
+          "gen:880007:planter:0",
+          "gen:880007:sidewalk:1",
+          "gen:880008:bench:0",
+          "gen:880008:crosswalk:0",
+          "gen:880008:crosswalk:1",
+          "gen:880009:bench:1",
+          "gen:880009:lamppost:2",
+          "gen:880009:sidewalk:1",
+          "gen:880010:bench:0",
+          "gen:880010:bench:2",
+          "gen:880010:planter:1",
+          "gen:880011:bench:1",
+          "gen:880012:bench:0",
+          "gen:880012:bench:1",
+          "gen:880012:crosswalk:0",
+          "gen:880012:crosswalk:1",
+          "gen:880013:crosswalk:0",
+          "gen:880013:crosswalk:1",
+          "gen:880013:crosswalk:2",
+          "gen:880014:bench:0",
+          "gen:880014:bench:2",
+          "gen:880014:crosswalk:1",
+          "gen:880014:sidewalk:1",
+          "gen:880014:sidewalk:2",
+          "gen:880015:lamppost:1",
+          "gen:880016:crosswalk:0",
+          "gen:880017:bench:0",
+          "gen:880017:crosswalk:2",
+          "gen:880017:lamppost:1",
+          "gen:880018:bench:0",
+          "gen:880018:bench:1",
+          "gen:880018:crosswalk:0",
+          "gen:880018:lamppost:0",
+          "gen:880018:lamppost:2",
+          "gen:880018:planter:1",
+          "gen:880018:sidewalk:0",
+          "gen:880019:bench:1",
+          "gen:880019:crosswalk:1",
+          "gen:880020:crosswalk:0",
+          "gen:880020:crosswalk:2",
+          "gen:880020:lamppost:0",
+          "gen:880021:bench:0",
+          "gen:880021:bench:1",
+          "gen:880021:bench:2",
+          "gen:880023:bench:0",
+          "gen:880023:bench:2",
+          "gen:880023:crosswalk:0",
+          "gen:880023:lamppost:0",
+          "gen:880023:sidewalk:0",
+          "gen:880024:bench:1",
+          "gen:880024:lamppost:2",
+          "gen:880024:sidewalk:0",
+          "gen:880025:bench:0",
+          "gen:880025:crosswalk:2",
+          "gen:880025:lamppost:0",
+          "gen:880025:lamppost:1",
+          "gen:880026:bench:0",
+          "gen:880026:bench:2",
+          "gen:880026:crosswalk:2",
+          "gen:880026:planter:0",
+          "gen:880026:planter:2",
+          "gen:880027:bench:0",
+          "gen:880027:bench:2",
+          "gen:880027:crosswalk:0",
+          "gen:880028:bench:1",
+          "gen:880028:crosswalk:2",
+          "gen:880028:planter:0",
+          "gen:880029:bench:0",
+          "gen:880029:crosswalk:1",
+          "gen:880029:planter:1",
+          "gen:880029:planter:2"
+        ]
+      },
+      "frozen": {
+        "rows_changed_full_row": 34,
+        "rows_identical": 46,
+        "rows_changed_reason_only_count": 8,
+        "reason_transitions": {
+          "arrived_verified -> semantic_target_unreachable": 2,
+          "navigation_no_progress -> arrived_verified": 2,
+          "semantic_arrival_verification_failed -> semantic_target_unreachable": 2,
+          "arrived -> navigation_no_progress": 1,
+          "navigation_no_progress -> semantic_target_unreachable": 1
+        },
+        "strict_regressions": [
+          "frozen:bench:7",
+          "frozen:planter:10",
+          "frozen:sidewalk:10",
+          "frozen:sidewalk:6"
+        ],
+        "strict_gains": [
+          "frozen:crosswalk:10",
+          "frozen:crosswalk:15",
+          "frozen:crosswalk:3",
+          "frozen:crosswalk:4",
+          "frozen:crosswalk:7",
+          "frozen:lamppost:15",
+          "frozen:lamppost:6"
+        ],
+        "settled_regressions": [
+          "frozen:bench:7",
+          "frozen:planter:10",
+          "frozen:sidewalk:10",
+          "frozen:sidewalk:6"
+        ],
+        "settled_gains": [
+          "frozen:lamppost:15",
+          "frozen:lamppost:6"
+        ],
+        "changed_episode_ids": [
+          "frozen:bench:7",
+          "frozen:crosswalk:0",
+          "frozen:crosswalk:10",
+          "frozen:crosswalk:14",
+          "frozen:crosswalk:15",
+          "frozen:crosswalk:3",
+          "frozen:crosswalk:4",
+          "frozen:crosswalk:7",
+          "frozen:crosswalk:9",
+          "frozen:lamppost:0",
+          "frozen:lamppost:1",
+          "frozen:lamppost:10",
+          "frozen:lamppost:15",
+          "frozen:lamppost:2",
+          "frozen:lamppost:4",
+          "frozen:lamppost:5",
+          "frozen:lamppost:6",
+          "frozen:lamppost:7",
+          "frozen:lamppost:9",
+          "frozen:planter:10",
+          "frozen:planter:11",
+          "frozen:planter:14",
+          "frozen:planter:15",
+          "frozen:planter:2",
+          "frozen:planter:6",
+          "frozen:planter:9",
+          "frozen:sidewalk:1",
+          "frozen:sidewalk:10",
+          "frozen:sidewalk:11",
+          "frozen:sidewalk:12",
+          "frozen:sidewalk:13",
+          "frozen:sidewalk:14",
+          "frozen:sidewalk:3",
+          "frozen:sidewalk:6"
+        ]
+      }
+    },
+    "on_full": {
+      "all": {
+        "rows_changed_full_row": 150,
+        "rows_identical": 380,
+        "rows_changed_reason_only_count": 73,
+        "reason_transitions": {
+          "navigation_no_progress -> semantic_target_unreachable": 31,
+          "navigation_no_progress -> arrived_verified": 19,
+          "semantic_target_unreachable -> arrived_verified": 10,
+          "arrived_verified -> semantic_target_unreachable": 7,
+          "semantic_arrival_verification_failed -> semantic_target_unreachable": 3,
+          "arrived -> navigation_no_progress": 1,
+          "arrived_verified -> semantic_arrival_verification_failed": 1,
+          "navigation_no_progress -> semantic_arrival_verification_failed": 1
+        },
+        "strict_regressions": [
+          "frozen:bench:7",
+          "frozen:planter:10",
+          "frozen:sidewalk:10",
+          "frozen:sidewalk:6",
+          "gen:880000:bench:0",
+          "gen:880001:sidewalk:2",
+          "gen:880005:lamppost:1",
+          "gen:880007:crosswalk:1",
+          "gen:880007:sidewalk:1",
+          "gen:880014:sidewalk:1",
+          "gen:880023:crosswalk:0"
+        ],
+        "strict_gains": [
+          "frozen:crosswalk:10",
+          "frozen:crosswalk:15",
+          "frozen:crosswalk:3",
+          "frozen:crosswalk:4",
+          "frozen:crosswalk:7",
+          "frozen:lamppost:15",
+          "frozen:lamppost:6",
+          "gen:880001:planter:0",
+          "gen:880002:bench:1",
+          "gen:880003:bench:0",
+          "gen:880004:crosswalk:1",
+          "gen:880005:bench:0",
+          "gen:880008:bench:0",
+          "gen:880009:sidewalk:1",
+          "gen:880014:crosswalk:0",
+          "gen:880015:lamppost:1",
+          "gen:880023:bench:0",
+          "gen:880025:lamppost:1",
+          "gen:880026:bench:0",
+          "gen:880028:bench:1",
+          "gen:880029:bench:0"
+        ],
+        "settled_regressions": [
+          "frozen:bench:7",
+          "frozen:planter:10",
+          "frozen:sidewalk:10",
+          "frozen:sidewalk:6",
+          "gen:880000:bench:0",
+          "gen:880001:sidewalk:2",
+          "gen:880005:lamppost:1",
+          "gen:880007:crosswalk:1",
+          "gen:880007:sidewalk:1",
+          "gen:880014:sidewalk:1",
+          "gen:880023:crosswalk:0",
+          "gen:880023:sidewalk:0"
+        ],
+        "settled_gains": [
+          "frozen:lamppost:15",
+          "frozen:lamppost:6",
+          "gen:880001:planter:0",
+          "gen:880002:bench:1",
+          "gen:880003:bench:0",
+          "gen:880004:crosswalk:1",
+          "gen:880005:bench:0",
+          "gen:880008:bench:0",
+          "gen:880009:sidewalk:1",
+          "gen:880014:crosswalk:0",
+          "gen:880015:lamppost:1",
+          "gen:880023:bench:0",
+          "gen:880025:lamppost:1",
+          "gen:880026:bench:0",
+          "gen:880028:bench:1",
+          "gen:880029:bench:0"
+        ],
+        "changed_episode_ids": [
+          "frozen:bench:7",
+          "frozen:crosswalk:0",
+          "frozen:crosswalk:10",
+          "frozen:crosswalk:14",
+          "frozen:crosswalk:15",
+          "frozen:crosswalk:3",
+          "frozen:crosswalk:4",
+          "frozen:crosswalk:7",
+          "frozen:crosswalk:9",
+          "frozen:lamppost:0",
+          "frozen:lamppost:1",
+          "frozen:lamppost:10",
+          "frozen:lamppost:15",
+          "frozen:lamppost:2",
+          "frozen:lamppost:4",
+          "frozen:lamppost:5",
+          "frozen:lamppost:6",
+          "frozen:lamppost:7",
+          "frozen:lamppost:9",
+          "frozen:planter:10",
+          "frozen:planter:11",
+          "frozen:planter:14",
+          "frozen:planter:15",
+          "frozen:planter:2",
+          "frozen:planter:6",
+          "frozen:planter:9",
+          "frozen:sidewalk:1",
+          "frozen:sidewalk:10",
+          "frozen:sidewalk:11",
+          "frozen:sidewalk:12",
+          "frozen:sidewalk:13",
+          "frozen:sidewalk:14",
+          "frozen:sidewalk:3",
+          "frozen:sidewalk:6",
+          "gen:880000:bench:0",
+          "gen:880000:crosswalk:0",
+          "gen:880000:crosswalk:1",
+          "gen:880000:lamppost:0",
+          "gen:880000:lamppost:1",
+          "gen:880000:planter:2",
+          "gen:880001:planter:0",
+          "gen:880001:planter:1",
+          "gen:880001:sidewalk:2",
+          "gen:880002:bench:1",
+          "gen:880002:crosswalk:0",
+          "gen:880002:crosswalk:1",
+          "gen:880002:crosswalk:2",
+          "gen:880002:planter:0",
+          "gen:880002:planter:1",
+          "gen:880003:bench:0",
+          "gen:880003:crosswalk:2",
+          "gen:880003:lamppost:0",
+          "gen:880003:planter:0",
+          "gen:880004:bench:0",
+          "gen:880004:crosswalk:1",
+          "gen:880004:crosswalk:2",
+          "gen:880004:lamppost:2",
+          "gen:880005:bench:0",
+          "gen:880005:lamppost:1",
+          "gen:880005:lamppost:2",
+          "gen:880005:planter:2",
+          "gen:880006:crosswalk:2",
+          "gen:880006:planter:0",
+          "gen:880006:planter:1",
+          "gen:880007:crosswalk:0",
+          "gen:880007:crosswalk:1",
+          "gen:880007:crosswalk:2",
+          "gen:880007:lamppost:2",
+          "gen:880007:planter:0",
+          "gen:880007:sidewalk:1",
+          "gen:880008:bench:0",
+          "gen:880008:crosswalk:0",
+          "gen:880008:crosswalk:1",
+          "gen:880009:bench:1",
+          "gen:880009:lamppost:2",
+          "gen:880009:sidewalk:1",
+          "gen:880010:bench:0",
+          "gen:880010:bench:2",
+          "gen:880010:crosswalk:1",
+          "gen:880010:planter:1",
+          "gen:880011:bench:1",
+          "gen:880012:bench:0",
+          "gen:880012:bench:1",
+          "gen:880012:crosswalk:0",
+          "gen:880012:crosswalk:1",
+          "gen:880012:planter:2",
+          "gen:880013:crosswalk:0",
+          "gen:880013:crosswalk:1",
+          "gen:880013:crosswalk:2",
+          "gen:880014:bench:0",
+          "gen:880014:bench:2",
+          "gen:880014:crosswalk:0",
+          "gen:880014:crosswalk:1",
+          "gen:880014:sidewalk:1",
+          "gen:880014:sidewalk:2",
+          "gen:880015:lamppost:1",
+          "gen:880016:crosswalk:0",
+          "gen:880017:bench:0",
+          "gen:880017:crosswalk:2",
+          "gen:880017:lamppost:1",
+          "gen:880018:bench:0",
+          "gen:880018:bench:1",
+          "gen:880018:crosswalk:0",
+          "gen:880018:lamppost:0",
+          "gen:880018:lamppost:2",
+          "gen:880018:planter:1",
+          "gen:880018:sidewalk:0",
+          "gen:880019:bench:1",
+          "gen:880019:crosswalk:0",
+          "gen:880019:crosswalk:1",
+          "gen:880019:planter:1",
+          "gen:880020:crosswalk:0",
+          "gen:880020:crosswalk:2",
+          "gen:880020:lamppost:0",
+          "gen:880020:planter:1",
+          "gen:880021:bench:0",
+          "gen:880021:bench:1",
+          "gen:880021:bench:2",
+          "gen:880022:lamppost:0",
+          "gen:880022:planter:2",
+          "gen:880023:bench:0",
+          "gen:880023:bench:2",
+          "gen:880023:crosswalk:0",
+          "gen:880023:crosswalk:1",
+          "gen:880023:lamppost:0",
+          "gen:880023:sidewalk:0",
+          "gen:880024:bench:1",
+          "gen:880024:lamppost:1",
+          "gen:880024:lamppost:2",
+          "gen:880024:sidewalk:0",
+          "gen:880025:bench:0",
+          "gen:880025:crosswalk:2",
+          "gen:880025:lamppost:0",
+          "gen:880025:lamppost:1",
+          "gen:880026:bench:0",
+          "gen:880026:bench:2",
+          "gen:880026:crosswalk:2",
+          "gen:880026:planter:0",
+          "gen:880026:planter:2",
+          "gen:880027:bench:0",
+          "gen:880027:bench:2",
+          "gen:880027:crosswalk:0",
+          "gen:880028:bench:1",
+          "gen:880028:crosswalk:1",
+          "gen:880028:crosswalk:2",
+          "gen:880028:planter:0",
+          "gen:880029:bench:0",
+          "gen:880029:crosswalk:1",
+          "gen:880029:planter:1",
+          "gen:880029:planter:2"
+        ]
+      },
+      "generated": {
+        "rows_changed_full_row": 116,
+        "rows_identical": 334,
+        "rows_changed_reason_only_count": 64,
+        "reason_transitions": {
+          "navigation_no_progress -> semantic_target_unreachable": 29,
+          "navigation_no_progress -> arrived_verified": 17,
+          "semantic_target_unreachable -> arrived_verified": 10,
+          "arrived_verified -> semantic_target_unreachable": 5,
+          "arrived_verified -> semantic_arrival_verification_failed": 1,
+          "navigation_no_progress -> semantic_arrival_verification_failed": 1,
+          "semantic_arrival_verification_failed -> semantic_target_unreachable": 1
+        },
+        "strict_regressions": [
+          "gen:880000:bench:0",
+          "gen:880001:sidewalk:2",
+          "gen:880005:lamppost:1",
+          "gen:880007:crosswalk:1",
+          "gen:880007:sidewalk:1",
+          "gen:880014:sidewalk:1",
+          "gen:880023:crosswalk:0"
+        ],
+        "strict_gains": [
+          "gen:880001:planter:0",
+          "gen:880002:bench:1",
+          "gen:880003:bench:0",
+          "gen:880004:crosswalk:1",
+          "gen:880005:bench:0",
+          "gen:880008:bench:0",
+          "gen:880009:sidewalk:1",
+          "gen:880014:crosswalk:0",
+          "gen:880015:lamppost:1",
+          "gen:880023:bench:0",
+          "gen:880025:lamppost:1",
+          "gen:880026:bench:0",
+          "gen:880028:bench:1",
+          "gen:880029:bench:0"
+        ],
+        "settled_regressions": [
+          "gen:880000:bench:0",
+          "gen:880001:sidewalk:2",
+          "gen:880005:lamppost:1",
+          "gen:880007:crosswalk:1",
+          "gen:880007:sidewalk:1",
+          "gen:880014:sidewalk:1",
+          "gen:880023:crosswalk:0",
+          "gen:880023:sidewalk:0"
+        ],
+        "settled_gains": [
+          "gen:880001:planter:0",
+          "gen:880002:bench:1",
+          "gen:880003:bench:0",
+          "gen:880004:crosswalk:1",
+          "gen:880005:bench:0",
+          "gen:880008:bench:0",
+          "gen:880009:sidewalk:1",
+          "gen:880014:crosswalk:0",
+          "gen:880015:lamppost:1",
+          "gen:880023:bench:0",
+          "gen:880025:lamppost:1",
+          "gen:880026:bench:0",
+          "gen:880028:bench:1",
+          "gen:880029:bench:0"
+        ],
+        "changed_episode_ids": [
+          "gen:880000:bench:0",
+          "gen:880000:crosswalk:0",
+          "gen:880000:crosswalk:1",
+          "gen:880000:lamppost:0",
+          "gen:880000:lamppost:1",
+          "gen:880000:planter:2",
+          "gen:880001:planter:0",
+          "gen:880001:planter:1",
+          "gen:880001:sidewalk:2",
+          "gen:880002:bench:1",
+          "gen:880002:crosswalk:0",
+          "gen:880002:crosswalk:1",
+          "gen:880002:crosswalk:2",
+          "gen:880002:planter:0",
+          "gen:880002:planter:1",
+          "gen:880003:bench:0",
+          "gen:880003:crosswalk:2",
+          "gen:880003:lamppost:0",
+          "gen:880003:planter:0",
+          "gen:880004:bench:0",
+          "gen:880004:crosswalk:1",
+          "gen:880004:crosswalk:2",
+          "gen:880004:lamppost:2",
+          "gen:880005:bench:0",
+          "gen:880005:lamppost:1",
+          "gen:880005:lamppost:2",
+          "gen:880005:planter:2",
+          "gen:880006:crosswalk:2",
+          "gen:880006:planter:0",
+          "gen:880006:planter:1",
+          "gen:880007:crosswalk:0",
+          "gen:880007:crosswalk:1",
+          "gen:880007:crosswalk:2",
+          "gen:880007:lamppost:2",
+          "gen:880007:planter:0",
+          "gen:880007:sidewalk:1",
+          "gen:880008:bench:0",
+          "gen:880008:crosswalk:0",
+          "gen:880008:crosswalk:1",
+          "gen:880009:bench:1",
+          "gen:880009:lamppost:2",
+          "gen:880009:sidewalk:1",
+          "gen:880010:bench:0",
+          "gen:880010:bench:2",
+          "gen:880010:crosswalk:1",
+          "gen:880010:planter:1",
+          "gen:880011:bench:1",
+          "gen:880012:bench:0",
+          "gen:880012:bench:1",
+          "gen:880012:crosswalk:0",
+          "gen:880012:crosswalk:1",
+          "gen:880012:planter:2",
+          "gen:880013:crosswalk:0",
+          "gen:880013:crosswalk:1",
+          "gen:880013:crosswalk:2",
+          "gen:880014:bench:0",
+          "gen:880014:bench:2",
+          "gen:880014:crosswalk:0",
+          "gen:880014:crosswalk:1",
+          "gen:880014:sidewalk:1",
+          "gen:880014:sidewalk:2",
+          "gen:880015:lamppost:1",
+          "gen:880016:crosswalk:0",
+          "gen:880017:bench:0",
+          "gen:880017:crosswalk:2",
+          "gen:880017:lamppost:1",
+          "gen:880018:bench:0",
+          "gen:880018:bench:1",
+          "gen:880018:crosswalk:0",
+          "gen:880018:lamppost:0",
+          "gen:880018:lamppost:2",
+          "gen:880018:planter:1",
+          "gen:880018:sidewalk:0",
+          "gen:880019:bench:1",
+          "gen:880019:crosswalk:0",
+          "gen:880019:crosswalk:1",
+          "gen:880019:planter:1",
+          "gen:880020:crosswalk:0",
+          "gen:880020:crosswalk:2",
+          "gen:880020:lamppost:0",
+          "gen:880020:planter:1",
+          "gen:880021:bench:0",
+          "gen:880021:bench:1",
+          "gen:880021:bench:2",
+          "gen:880022:lamppost:0",
+          "gen:880022:planter:2",
+          "gen:880023:bench:0",
+          "gen:880023:bench:2",
+          "gen:880023:crosswalk:0",
+          "gen:880023:crosswalk:1",
+          "gen:880023:lamppost:0",
+          "gen:880023:sidewalk:0",
+          "gen:880024:bench:1",
+          "gen:880024:lamppost:1",
+          "gen:880024:lamppost:2",
+          "gen:880024:sidewalk:0",
+          "gen:880025:bench:0",
+          "gen:880025:crosswalk:2",
+          "gen:880025:lamppost:0",
+          "gen:880025:lamppost:1",
+          "gen:880026:bench:0",
+          "gen:880026:bench:2",
+          "gen:880026:crosswalk:2",
+          "gen:880026:planter:0",
+          "gen:880026:planter:2",
+          "gen:880027:bench:0",
+          "gen:880027:bench:2",
+          "gen:880027:crosswalk:0",
+          "gen:880028:bench:1",
+          "gen:880028:crosswalk:1",
+          "gen:880028:crosswalk:2",
+          "gen:880028:planter:0",
+          "gen:880029:bench:0",
+          "gen:880029:crosswalk:1",
+          "gen:880029:planter:1",
+          "gen:880029:planter:2"
+        ]
+      },
+      "frozen": {
+        "rows_changed_full_row": 34,
+        "rows_identical": 46,
+        "rows_changed_reason_only_count": 9,
+        "reason_transitions": {
+          "arrived_verified -> semantic_target_unreachable": 2,
+          "navigation_no_progress -> arrived_verified": 2,
+          "navigation_no_progress -> semantic_target_unreachable": 2,
+          "semantic_arrival_verification_failed -> semantic_target_unreachable": 2,
+          "arrived -> navigation_no_progress": 1
+        },
+        "strict_regressions": [
+          "frozen:bench:7",
+          "frozen:planter:10",
+          "frozen:sidewalk:10",
+          "frozen:sidewalk:6"
+        ],
+        "strict_gains": [
+          "frozen:crosswalk:10",
+          "frozen:crosswalk:15",
+          "frozen:crosswalk:3",
+          "frozen:crosswalk:4",
+          "frozen:crosswalk:7",
+          "frozen:lamppost:15",
+          "frozen:lamppost:6"
+        ],
+        "settled_regressions": [
+          "frozen:bench:7",
+          "frozen:planter:10",
+          "frozen:sidewalk:10",
+          "frozen:sidewalk:6"
+        ],
+        "settled_gains": [
+          "frozen:lamppost:15",
+          "frozen:lamppost:6"
+        ],
+        "changed_episode_ids": [
+          "frozen:bench:7",
+          "frozen:crosswalk:0",
+          "frozen:crosswalk:10",
+          "frozen:crosswalk:14",
+          "frozen:crosswalk:15",
+          "frozen:crosswalk:3",
+          "frozen:crosswalk:4",
+          "frozen:crosswalk:7",
+          "frozen:crosswalk:9",
+          "frozen:lamppost:0",
+          "frozen:lamppost:1",
+          "frozen:lamppost:10",
+          "frozen:lamppost:15",
+          "frozen:lamppost:2",
+          "frozen:lamppost:4",
+          "frozen:lamppost:5",
+          "frozen:lamppost:6",
+          "frozen:lamppost:7",
+          "frozen:lamppost:9",
+          "frozen:planter:10",
+          "frozen:planter:11",
+          "frozen:planter:14",
+          "frozen:planter:15",
+          "frozen:planter:2",
+          "frozen:planter:6",
+          "frozen:planter:9",
+          "frozen:sidewalk:1",
+          "frozen:sidewalk:10",
+          "frozen:sidewalk:11",
+          "frozen:sidewalk:12",
+          "frozen:sidewalk:13",
+          "frozen:sidewalk:14",
+          "frozen:sidewalk:3",
+          "frozen:sidewalk:6"
+        ]
+      }
+    }
+  },
+  "minival": {
+    "A0ref": {
+      "report_digest": "021b67ab73c4e7be647aba1a17e20a193ebf23b826a18d5b0990e296e5708496",
+      "matches_HEAD_021b67ab": true,
+      "episode_digest": "4113607b92c734dfdd46004b6e77baf6575fc2a1c493e5d9dc5a12c6c5490222",
+      "sr": 0.2,
+      "sr_frozen_rule": 0.12,
+      "spl": 0.15325925214230984,
+      "mean_dtg_m": 8.362383384071064,
+      "collision_total": 0,
+      "authority_histogram": {
+        "agreement": 20,
+        "authority_disagreement": 5,
+        "false_arrival": 0,
+        "tolerated_boundary": 0,
+        "unknown": 0
+      },
+      "failure_histogram": {
+        "control_error": 0,
+        "false_arrival": 0,
+        "grounding_error": 7,
+        "none": 5,
+        "planning_error": 3,
+        "refusal": 6,
+        "search_error": 0,
+        "termination": 4
+      },
+      "moves_vs_A0ref": {
+        "moved_row_count": 0,
+        "moved_rows": []
+      },
+      "wall_s": 21.0
+    },
+    "off_disc": {
+      "report_digest": "021b67ab73c4e7be647aba1a17e20a193ebf23b826a18d5b0990e296e5708496",
+      "matches_HEAD_021b67ab": true,
+      "episode_digest": "4113607b92c734dfdd46004b6e77baf6575fc2a1c493e5d9dc5a12c6c5490222",
+      "sr": 0.2,
+      "sr_frozen_rule": 0.12,
+      "spl": 0.15325925214230984,
+      "mean_dtg_m": 8.362383384071064,
+      "collision_total": 0,
+      "authority_histogram": {
+        "agreement": 20,
+        "authority_disagreement": 5,
+        "false_arrival": 0,
+        "tolerated_boundary": 0,
+        "unknown": 0
+      },
+      "failure_histogram": {
+        "control_error": 0,
+        "false_arrival": 0,
+        "grounding_error": 7,
+        "none": 5,
+        "planning_error": 3,
+        "refusal": 6,
+        "search_error": 0,
+        "termination": 4
+      },
+      "moves_vs_A0ref": {
+        "moved_row_count": 0,
+        "moved_rows": []
+      },
+      "wall_s": 20.6
+    },
+    "on_disc": {
+      "report_digest": "021b67ab73c4e7be647aba1a17e20a193ebf23b826a18d5b0990e296e5708496",
+      "matches_HEAD_021b67ab": true,
+      "episode_digest": "4113607b92c734dfdd46004b6e77baf6575fc2a1c493e5d9dc5a12c6c5490222",
+      "sr": 0.2,
+      "sr_frozen_rule": 0.12,
+      "spl": 0.15325925214230984,
+      "mean_dtg_m": 8.362383384071064,
+      "collision_total": 0,
+      "authority_histogram": {
+        "agreement": 20,
+        "authority_disagreement": 5,
+        "false_arrival": 0,
+        "tolerated_boundary": 0,
+        "unknown": 0
+      },
+      "failure_histogram": {
+        "control_error": 0,
+        "false_arrival": 0,
+        "grounding_error": 7,
+        "none": 5,
+        "planning_error": 3,
+        "refusal": 6,
+        "search_error": 0,
+        "termination": 4
+      },
+      "moves_vs_A0ref": {
+        "moved_row_count": 0,
+        "moved_rows": []
+      },
+      "wall_s": 20.7
+    },
+    "off_full": {
+      "report_digest": "5e49ef1921fdabd46b6192391b22905cc08d8f0bfd1259cc6b0f00cdd1d31e3d",
+      "matches_HEAD_021b67ab": false,
+      "episode_digest": "4113607b92c734dfdd46004b6e77baf6575fc2a1c493e5d9dc5a12c6c5490222",
+      "sr": 0.2,
+      "sr_frozen_rule": 0.12,
+      "spl": 0.15325925214230984,
+      "mean_dtg_m": 8.361943766071287,
+      "collision_total": 0,
+      "authority_histogram": {
+        "agreement": 20,
+        "authority_disagreement": 5,
+        "false_arrival": 0,
+        "tolerated_boundary": 0,
+        "unknown": 0
+      },
+      "failure_histogram": {
+        "control_error": 0,
+        "false_arrival": 0,
+        "grounding_error": 7,
+        "none": 5,
+        "planning_error": 3,
+        "refusal": 6,
+        "search_error": 0,
+        "termination": 4
+      },
+      "moves_vs_A0ref": {
+        "moved_row_count": 3,
+        "moved_rows": [
+          {
+            "episode_id": "nav-object_relative-D-15-61f68ad6",
+            "family": "object_relative",
+            "tier": "D",
+            "frozen_rule_success": [
+              false,
+              false
+            ],
+            "success": [
+              false,
+              false
+            ],
+            "failure": [
+              "grounding_error",
+              "grounding_error"
+            ],
+            "reason": [
+              "semantic_target_unreachable",
+              "semantic_target_unreachable"
+            ],
+            "authority_category": [
+              "agreement",
+              "agreement"
+            ],
+            "distance_to_goal_m": [
+              4.159133608383351,
+              4.148143158388901
+            ],
+            "trace_len": [
+              83,
+              79
+            ],
+            "final_xy": [
+              [
+                0.4617,
+                0.413
+              ],
+              [
+                0.4409,
+                0.3961
+              ]
+            ],
+            "verdict_moved": false
+          },
+          {
+            "episode_id": "nav-region_goal-A-00-1c735162",
+            "family": "region_goal",
+            "tier": "A",
+            "frozen_rule_success": [
+              false,
+              false
+            ],
+            "success": [
+              true,
+              true
+            ],
+            "failure": [
+              "none",
+              "none"
+            ],
+            "reason": [
+              "arrived_verified",
+              "arrived_verified"
+            ],
+            "authority_category": [
+              "agreement",
+              "agreement"
+            ],
+            "distance_to_goal_m": [
+              0.0,
+              0.0
+            ],
+            "trace_len": [
+              101,
+              102
+            ],
+            "final_xy": [
+              [
+                1.4075,
+                2.5245
+              ],
+              [
+                1.408,
+                2.5268
+              ]
+            ],
+            "verdict_moved": false
+          },
+          {
+            "episode_id": "nav-region_goal-D-15-1b8b2361",
+            "family": "region_goal",
+            "tier": "D",
+            "frozen_rule_success": [
+              false,
+              false
+            ],
+            "success": [
+              false,
+              false
+            ],
+            "failure": [
+              "grounding_error",
+              "grounding_error"
+            ],
+            "reason": [
+              "navigation_step_limit_inside_goal",
+              "navigation_step_limit_inside_goal"
+            ],
+            "authority_category": [
+              "authority_disagreement",
+              "authority_disagreement"
+            ],
+            "distance_to_goal_m": [
+              0.0,
+              0.0
+            ],
+            "trace_len": [
+              200,
+              200
+            ],
+            "final_xy": [
+              [
+                2.8113,
+                0.7495
+              ],
+              [
+                2.7728,
+                0.9005
+              ]
+            ],
+            "verdict_moved": false
+          }
+        ]
+      },
+      "wall_s": 20.6
+    },
+    "on_full": {
+      "report_digest": "5e49ef1921fdabd46b6192391b22905cc08d8f0bfd1259cc6b0f00cdd1d31e3d",
+      "matches_HEAD_021b67ab": false,
+      "episode_digest": "4113607b92c734dfdd46004b6e77baf6575fc2a1c493e5d9dc5a12c6c5490222",
+      "sr": 0.2,
+      "sr_frozen_rule": 0.12,
+      "spl": 0.15325925214230984,
+      "mean_dtg_m": 8.361943766071287,
+      "collision_total": 0,
+      "authority_histogram": {
+        "agreement": 20,
+        "authority_disagreement": 5,
+        "false_arrival": 0,
+        "tolerated_boundary": 0,
+        "unknown": 0
+      },
+      "failure_histogram": {
+        "control_error": 0,
+        "false_arrival": 0,
+        "grounding_error": 7,
+        "none": 5,
+        "planning_error": 3,
+        "refusal": 6,
+        "search_error": 0,
+        "termination": 4
+      },
+      "moves_vs_A0ref": {
+        "moved_row_count": 3,
+        "moved_rows": [
+          {
+            "episode_id": "nav-object_relative-D-15-61f68ad6",
+            "family": "object_relative",
+            "tier": "D",
+            "frozen_rule_success": [
+              false,
+              false
+            ],
+            "success": [
+              false,
+              false
+            ],
+            "failure": [
+              "grounding_error",
+              "grounding_error"
+            ],
+            "reason": [
+              "semantic_target_unreachable",
+              "semantic_target_unreachable"
+            ],
+            "authority_category": [
+              "agreement",
+              "agreement"
+            ],
+            "distance_to_goal_m": [
+              4.159133608383351,
+              4.148143158388901
+            ],
+            "trace_len": [
+              83,
+              79
+            ],
+            "final_xy": [
+              [
+                0.4617,
+                0.413
+              ],
+              [
+                0.4409,
+                0.3961
+              ]
+            ],
+            "verdict_moved": false
+          },
+          {
+            "episode_id": "nav-region_goal-A-00-1c735162",
+            "family": "region_goal",
+            "tier": "A",
+            "frozen_rule_success": [
+              false,
+              false
+            ],
+            "success": [
+              true,
+              true
+            ],
+            "failure": [
+              "none",
+              "none"
+            ],
+            "reason": [
+              "arrived_verified",
+              "arrived_verified"
+            ],
+            "authority_category": [
+              "agreement",
+              "agreement"
+            ],
+            "distance_to_goal_m": [
+              0.0,
+              0.0
+            ],
+            "trace_len": [
+              101,
+              102
+            ],
+            "final_xy": [
+              [
+                1.4075,
+                2.5245
+              ],
+              [
+                1.408,
+                2.5268
+              ]
+            ],
+            "verdict_moved": false
+          },
+          {
+            "episode_id": "nav-region_goal-D-15-1b8b2361",
+            "family": "region_goal",
+            "tier": "D",
+            "frozen_rule_success": [
+              false,
+              false
+            ],
+            "success": [
+              false,
+              false
+            ],
+            "failure": [
+              "grounding_error",
+              "grounding_error"
+            ],
+            "reason": [
+              "navigation_step_limit_inside_goal",
+              "navigation_step_limit_inside_goal"
+            ],
+            "authority_category": [
+              "authority_disagreement",
+              "authority_disagreement"
+            ],
+            "distance_to_goal_m": [
+              0.0,
+              0.0
+            ],
+            "trace_len": [
+              200,
+              200
+            ],
+            "final_xy": [
+              [
+                2.8113,
+                0.7495
+              ],
+              [
+                2.7728,
+                0.9005
+              ]
+            ],
+            "verdict_moved": false
+          }
+        ]
+      },
+      "wall_s": 20.5
+    }
+  },
+  "panel": {
+    "A0ref": {
+      "generated_at": "20260830T104828Z",
+      "passed": true,
+      "survivors": [],
+      "equivalent_mutants": [],
+      "clean_authority": {
+        "agreement": 4,
+        "authority_disagreement": 1
+      },
+      "clean_mean_dtg_m": 0.3616797968250607,
+      "clean_collisions": 0,
+      "clean_successes": [
+        "nav-follow_owner-D-15-74a535dd",
+        "nav-object_goal-A-00-4caa923b",
+        "nav-region_goal-A-00-1c735162"
+      ],
+      "clean_failure_histogram": {
+        "none": 3,
+        "grounding_error": 2
+      },
+      "clean_checks": {
+        "zero_collisions": true,
+        "no_authority_disagreement": false,
+        "no_false_arrival": true,
+        "path_length_plausible": true
+      },
+      "mutants": {
+        "arrival_radius_x2": {
+          "verdict": "killed",
+          "kill_channels": 4,
+          "checks_reddened": [
+            "success_set_identical",
+            "mean_dtg_within_tolerance",
+            "failure_histogram_identical",
+            "final_poses_within_tolerance"
+          ]
+        },
+        "reactive_gate_disabled": {
+          "verdict": "killed",
+          "kill_channels": 2,
+          "checks_reddened": [
+            "success_set_identical",
+            "failure_histogram_identical"
+          ]
+        },
+        "pose_offset_0m5": {
+          "verdict": "killed",
+          "kill_channels": 1,
+          "checks_reddened": [
+            "final_poses_within_tolerance"
+          ]
+        },
+        "inverted_relation": {
+          "verdict": "killed",
+          "kill_channels": 4,
+          "checks_reddened": [
+            "success_set_identical",
+            "mean_dtg_within_tolerance",
+            "failure_histogram_identical",
+            "final_poses_within_tolerance"
+          ]
+        },
+        "dropped_detections": {
+          "verdict": "killed",
+          "kill_channels": 4,
+          "checks_reddened": [
+            "success_set_identical",
+            "mean_dtg_within_tolerance",
+            "failure_histogram_identical",
+            "final_poses_within_tolerance"
+          ]
+        },
+        "doubled_envelope": {
+          "verdict": "killed",
+          "kill_channels": 3,
+          "checks_reddened": [
+            "success_set_identical",
+            "failure_histogram_identical",
+            "final_poses_within_tolerance"
+          ]
+        },
+        "phantom_view_consistent": {
+          "verdict": "killed",
+          "kill_channels": 5,
+          "checks_reddened": [
+            "no_false_arrival",
+            "success_set_identical",
+            "mean_dtg_within_tolerance",
+            "failure_histogram_identical",
+            "final_poses_within_tolerance"
+          ]
+        }
+      },
+      "clean_episode_min_clearance_m": {
+        "nav-region_goal-A-00-1c735162": 0.8879283015838648,
+        "nav-region_goal-D-15-1b8b2361": 1.2804493814764855,
+        "nav-object_goal-A-00-4caa923b": 1.257306177078997,
+        "nav-object_relative-A-00-3efbba45": 1.3309833423600554,
+        "nav-follow_owner-D-15-74a535dd": 1.3050277006184698
+      },
+      "identical_to_reference_panel": true,
+      "clean_rows_moved": [],
+      "clean_rows_moved_count": 0
+    },
+    "off_disc": {
+      "generated_at": "20260830T104828Z",
+      "passed": true,
+      "survivors": [],
+      "equivalent_mutants": [],
+      "clean_authority": {
+        "agreement": 4,
+        "authority_disagreement": 1
+      },
+      "clean_mean_dtg_m": 0.3616797968250607,
+      "clean_collisions": 0,
+      "clean_successes": [
+        "nav-follow_owner-D-15-74a535dd",
+        "nav-object_goal-A-00-4caa923b",
+        "nav-region_goal-A-00-1c735162"
+      ],
+      "clean_failure_histogram": {
+        "none": 3,
+        "grounding_error": 2
+      },
+      "clean_checks": {
+        "zero_collisions": true,
+        "no_authority_disagreement": false,
+        "no_false_arrival": true,
+        "path_length_plausible": true
+      },
+      "mutants": {
+        "arrival_radius_x2": {
+          "verdict": "killed",
+          "kill_channels": 4,
+          "checks_reddened": [
+            "success_set_identical",
+            "mean_dtg_within_tolerance",
+            "failure_histogram_identical",
+            "final_poses_within_tolerance"
+          ]
+        },
+        "reactive_gate_disabled": {
+          "verdict": "killed",
+          "kill_channels": 2,
+          "checks_reddened": [
+            "success_set_identical",
+            "failure_histogram_identical"
+          ]
+        },
+        "pose_offset_0m5": {
+          "verdict": "killed",
+          "kill_channels": 1,
+          "checks_reddened": [
+            "final_poses_within_tolerance"
+          ]
+        },
+        "inverted_relation": {
+          "verdict": "killed",
+          "kill_channels": 4,
+          "checks_reddened": [
+            "success_set_identical",
+            "mean_dtg_within_tolerance",
+            "failure_histogram_identical",
+            "final_poses_within_tolerance"
+          ]
+        },
+        "dropped_detections": {
+          "verdict": "killed",
+          "kill_channels": 4,
+          "checks_reddened": [
+            "success_set_identical",
+            "mean_dtg_within_tolerance",
+            "failure_histogram_identical",
+            "final_poses_within_tolerance"
+          ]
+        },
+        "doubled_envelope": {
+          "verdict": "killed",
+          "kill_channels": 3,
+          "checks_reddened": [
+            "success_set_identical",
+            "failure_histogram_identical",
+            "final_poses_within_tolerance"
+          ]
+        },
+        "phantom_view_consistent": {
+          "verdict": "killed",
+          "kill_channels": 5,
+          "checks_reddened": [
+            "no_false_arrival",
+            "success_set_identical",
+            "mean_dtg_within_tolerance",
+            "failure_histogram_identical",
+            "final_poses_within_tolerance"
+          ]
+        }
+      },
+      "clean_episode_min_clearance_m": {
+        "nav-region_goal-A-00-1c735162": 0.8879283015838648,
+        "nav-region_goal-D-15-1b8b2361": 1.2804493814764855,
+        "nav-object_goal-A-00-4caa923b": 1.257306177078997,
+        "nav-object_relative-A-00-3efbba45": 1.3309833423600554,
+        "nav-follow_owner-D-15-74a535dd": 1.3050277006184698
+      },
+      "identical_to_reference_panel": true,
+      "clean_rows_moved": [],
+      "clean_rows_moved_count": 0
+    },
+    "on_disc": {
+      "generated_at": "20260830T104828Z",
+      "passed": true,
+      "survivors": [],
+      "equivalent_mutants": [],
+      "clean_authority": {
+        "agreement": 4,
+        "authority_disagreement": 1
+      },
+      "clean_mean_dtg_m": 0.3616797968250607,
+      "clean_collisions": 0,
+      "clean_successes": [
+        "nav-follow_owner-D-15-74a535dd",
+        "nav-object_goal-A-00-4caa923b",
+        "nav-region_goal-A-00-1c735162"
+      ],
+      "clean_failure_histogram": {
+        "none": 3,
+        "grounding_error": 2
+      },
+      "clean_checks": {
+        "zero_collisions": true,
+        "no_authority_disagreement": false,
+        "no_false_arrival": true,
+        "path_length_plausible": true
+      },
+      "mutants": {
+        "arrival_radius_x2": {
+          "verdict": "killed",
+          "kill_channels": 4,
+          "checks_reddened": [
+            "success_set_identical",
+            "mean_dtg_within_tolerance",
+            "failure_histogram_identical",
+            "final_poses_within_tolerance"
+          ]
+        },
+        "reactive_gate_disabled": {
+          "verdict": "killed",
+          "kill_channels": 2,
+          "checks_reddened": [
+            "success_set_identical",
+            "failure_histogram_identical"
+          ]
+        },
+        "pose_offset_0m5": {
+          "verdict": "killed",
+          "kill_channels": 1,
+          "checks_reddened": [
+            "final_poses_within_tolerance"
+          ]
+        },
+        "inverted_relation": {
+          "verdict": "killed",
+          "kill_channels": 4,
+          "checks_reddened": [
+            "success_set_identical",
+            "mean_dtg_within_tolerance",
+            "failure_histogram_identical",
+            "final_poses_within_tolerance"
+          ]
+        },
+        "dropped_detections": {
+          "verdict": "killed",
+          "kill_channels": 4,
+          "checks_reddened": [
+            "success_set_identical",
+            "mean_dtg_within_tolerance",
+            "failure_histogram_identical",
+            "final_poses_within_tolerance"
+          ]
+        },
+        "doubled_envelope": {
+          "verdict": "killed",
+          "kill_channels": 3,
+          "checks_reddened": [
+            "success_set_identical",
+            "failure_histogram_identical",
+            "final_poses_within_tolerance"
+          ]
+        },
+        "phantom_view_consistent": {
+          "verdict": "killed",
+          "kill_channels": 5,
+          "checks_reddened": [
+            "no_false_arrival",
+            "success_set_identical",
+            "mean_dtg_within_tolerance",
+            "failure_histogram_identical",
+            "final_poses_within_tolerance"
+          ]
+        }
+      },
+      "clean_episode_min_clearance_m": {
+        "nav-region_goal-A-00-1c735162": 0.8879283015838648,
+        "nav-region_goal-D-15-1b8b2361": 1.2804493814764855,
+        "nav-object_goal-A-00-4caa923b": 1.257306177078997,
+        "nav-object_relative-A-00-3efbba45": 1.3309833423600554,
+        "nav-follow_owner-D-15-74a535dd": 1.3050277006184698
+      },
+      "identical_to_reference_panel": true,
+      "clean_rows_moved": [],
+      "clean_rows_moved_count": 0
+    },
+    "off_full": {
+      "generated_at": "20260830T104828Z",
+      "passed": true,
+      "survivors": [],
+      "equivalent_mutants": [],
+      "clean_authority": {
+        "agreement": 4,
+        "authority_disagreement": 1
+      },
+      "clean_mean_dtg_m": 0.3616797968250607,
+      "clean_collisions": 0,
+      "clean_successes": [
+        "nav-follow_owner-D-15-74a535dd",
+        "nav-object_goal-A-00-4caa923b",
+        "nav-region_goal-A-00-1c735162"
+      ],
+      "clean_failure_histogram": {
+        "none": 3,
+        "grounding_error": 2
+      },
+      "clean_checks": {
+        "zero_collisions": true,
+        "no_authority_disagreement": false,
+        "no_false_arrival": true,
+        "path_length_plausible": true
+      },
+      "mutants": {
+        "arrival_radius_x2": {
+          "verdict": "killed",
+          "kill_channels": 4,
+          "checks_reddened": [
+            "success_set_identical",
+            "mean_dtg_within_tolerance",
+            "failure_histogram_identical",
+            "final_poses_within_tolerance"
+          ]
+        },
+        "reactive_gate_disabled": {
+          "verdict": "killed",
+          "kill_channels": 3,
+          "checks_reddened": [
+            "success_set_identical",
+            "failure_histogram_identical",
+            "final_poses_within_tolerance"
+          ]
+        },
+        "pose_offset_0m5": {
+          "verdict": "killed",
+          "kill_channels": 1,
+          "checks_reddened": [
+            "final_poses_within_tolerance"
+          ]
+        },
+        "inverted_relation": {
+          "verdict": "killed",
+          "kill_channels": 4,
+          "checks_reddened": [
+            "success_set_identical",
+            "mean_dtg_within_tolerance",
+            "failure_histogram_identical",
+            "final_poses_within_tolerance"
+          ]
+        },
+        "dropped_detections": {
+          "verdict": "killed",
+          "kill_channels": 4,
+          "checks_reddened": [
+            "success_set_identical",
+            "mean_dtg_within_tolerance",
+            "failure_histogram_identical",
+            "final_poses_within_tolerance"
+          ]
+        },
+        "doubled_envelope": {
+          "verdict": "killed",
+          "kill_channels": 3,
+          "checks_reddened": [
+            "success_set_identical",
+            "failure_histogram_identical",
+            "final_poses_within_tolerance"
+          ]
+        },
+        "phantom_view_consistent": {
+          "verdict": "killed",
+          "kill_channels": 5,
+          "checks_reddened": [
+            "no_false_arrival",
+            "success_set_identical",
+            "mean_dtg_within_tolerance",
+            "failure_histogram_identical",
+            "final_poses_within_tolerance"
+          ]
+        }
+      },
+      "clean_episode_min_clearance_m": {
+        "nav-region_goal-A-00-1c735162": 0.8837733132531598,
+        "nav-region_goal-D-15-1b8b2361": 1.229591179664752,
+        "nav-object_goal-A-00-4caa923b": 1.257306177078997,
+        "nav-object_relative-A-00-3efbba45": 1.3309833423600554,
+        "nav-follow_owner-D-15-74a535dd": 1.3050277006184698
+      },
+      "identical_to_reference_panel": false,
+      "clean_rows_moved": [
+        {
+          "episode_id": "nav-region_goal-A-00-1c735162",
+          "success": [
+            true,
+            true
+          ],
+          "failure": [
+            "none",
+            "none"
+          ],
+          "min_clearance_m": [
+            0.8879283015838648,
+            0.8837733132531598
+          ],
+          "final_xy": [
+            [
+              1.4075377024165698,
+              2.524516784620974
+            ],
+            [
+              1.408045654581099,
+              2.5267748961201
+            ]
+          ],
+          "path_length_m": [
+            3.052254492031539,
+            3.054228396320467
+          ]
+        },
+        {
+          "episode_id": "nav-region_goal-D-15-1b8b2361",
+          "success": [
+            false,
+            false
+          ],
+          "failure": [
+            "grounding_error",
+            "grounding_error"
+          ],
+          "min_clearance_m": [
+            1.2804493814764855,
+            1.229591179664752
+          ],
+          "final_xy": [
+            [
+              2.811258189022409,
+              0.7495325028657687
+            ],
+            [
+              2.772757884139879,
+              0.9004765575894085
+            ]
+          ],
+          "path_length_m": [
+            3.294544892235044,
+            3.2935824551742185
+          ]
+        }
+      ],
+      "clean_rows_moved_count": 2
+    },
+    "on_full": {
+      "generated_at": "20260830T104828Z",
+      "passed": true,
+      "survivors": [],
+      "equivalent_mutants": [],
+      "clean_authority": {
+        "agreement": 4,
+        "authority_disagreement": 1
+      },
+      "clean_mean_dtg_m": 0.3616797968250607,
+      "clean_collisions": 0,
+      "clean_successes": [
+        "nav-follow_owner-D-15-74a535dd",
+        "nav-object_goal-A-00-4caa923b",
+        "nav-region_goal-A-00-1c735162"
+      ],
+      "clean_failure_histogram": {
+        "none": 3,
+        "grounding_error": 2
+      },
+      "clean_checks": {
+        "zero_collisions": true,
+        "no_authority_disagreement": false,
+        "no_false_arrival": true,
+        "path_length_plausible": true
+      },
+      "mutants": {
+        "arrival_radius_x2": {
+          "verdict": "killed",
+          "kill_channels": 4,
+          "checks_reddened": [
+            "success_set_identical",
+            "mean_dtg_within_tolerance",
+            "failure_histogram_identical",
+            "final_poses_within_tolerance"
+          ]
+        },
+        "reactive_gate_disabled": {
+          "verdict": "killed",
+          "kill_channels": 3,
+          "checks_reddened": [
+            "success_set_identical",
+            "failure_histogram_identical",
+            "final_poses_within_tolerance"
+          ]
+        },
+        "pose_offset_0m5": {
+          "verdict": "killed",
+          "kill_channels": 1,
+          "checks_reddened": [
+            "final_poses_within_tolerance"
+          ]
+        },
+        "inverted_relation": {
+          "verdict": "killed",
+          "kill_channels": 4,
+          "checks_reddened": [
+            "success_set_identical",
+            "mean_dtg_within_tolerance",
+            "failure_histogram_identical",
+            "final_poses_within_tolerance"
+          ]
+        },
+        "dropped_detections": {
+          "verdict": "killed",
+          "kill_channels": 4,
+          "checks_reddened": [
+            "success_set_identical",
+            "mean_dtg_within_tolerance",
+            "failure_histogram_identical",
+            "final_poses_within_tolerance"
+          ]
+        },
+        "doubled_envelope": {
+          "verdict": "killed",
+          "kill_channels": 3,
+          "checks_reddened": [
+            "success_set_identical",
+            "failure_histogram_identical",
+            "final_poses_within_tolerance"
+          ]
+        },
+        "phantom_view_consistent": {
+          "verdict": "killed",
+          "kill_channels": 5,
+          "checks_reddened": [
+            "no_false_arrival",
+            "success_set_identical",
+            "mean_dtg_within_tolerance",
+            "failure_histogram_identical",
+            "final_poses_within_tolerance"
+          ]
+        }
+      },
+      "clean_episode_min_clearance_m": {
+        "nav-region_goal-A-00-1c735162": 0.8837733132531598,
+        "nav-region_goal-D-15-1b8b2361": 1.229591179664752,
+        "nav-object_goal-A-00-4caa923b": 1.257306177078997,
+        "nav-object_relative-A-00-3efbba45": 1.3309833423600554,
+        "nav-follow_owner-D-15-74a535dd": 1.3050277006184698
+      },
+      "identical_to_reference_panel": false,
+      "clean_rows_moved": [
+        {
+          "episode_id": "nav-region_goal-A-00-1c735162",
+          "success": [
+            true,
+            true
+          ],
+          "failure": [
+            "none",
+            "none"
+          ],
+          "min_clearance_m": [
+            0.8879283015838648,
+            0.8837733132531598
+          ],
+          "final_xy": [
+            [
+              1.4075377024165698,
+              2.524516784620974
+            ],
+            [
+              1.408045654581099,
+              2.5267748961201
+            ]
+          ],
+          "path_length_m": [
+            3.052254492031539,
+            3.054228396320467
+          ]
+        },
+        {
+          "episode_id": "nav-region_goal-D-15-1b8b2361",
+          "success": [
+            false,
+            false
+          ],
+          "failure": [
+            "grounding_error",
+            "grounding_error"
+          ],
+          "min_clearance_m": [
+            1.2804493814764855,
+            1.229591179664752
+          ],
+          "final_xy": [
+            [
+              2.811258189022409,
+              0.7495325028657687
+            ],
+            [
+              2.772757884139879,
+              0.9004765575894085
+            ]
+          ],
+          "path_length_m": [
+            3.294544892235044,
+            3.2935824551742185
+          ]
+        }
+      ],
+      "clean_rows_moved_count": 2
+    }
+  }
+}

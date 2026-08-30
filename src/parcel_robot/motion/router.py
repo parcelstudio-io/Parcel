@@ -176,8 +176,10 @@ class MotionRouter:
         return f"Motion backend set to {name}"
 
     def walk(self, command: VelocityCommand) -> str:
-        # The hook is the runtime arbitration/safety gate. A live Sport backend
-        # must never receive a command that the central authority later rejects.
+        # The hook is the runtime arbitration/safety gate. No live backend may
+        # receive a command that the central authority later rejects; physical
+        # delivery still goes only through ControlManager and the sole-writer
+        # gateway.
         if self.on_command is not None:
             self.on_command(command)
         return self.backend.start(command)

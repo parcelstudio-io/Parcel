@@ -19,7 +19,7 @@ SOURCE_MANIFEST_PATH = HERE / "source_manifest.json"
 STATUS_BY_DISPOSITION = {
     "task_queued": "accepted",
     "replacement_activated": "replanned",
-    "replacement_deferred": "replanned",
+    "replacement_deferred": "progress",
     "replacement_activated_at_checkpoint": "replanned",
     "replacement_activated_after_step": "replanned",
     "step_dispatched": "started",

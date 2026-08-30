@@ -415,8 +415,8 @@ the simulator path; the Unitree HAL and capture tools are parallel foundations.
 | Expression/attention | Dialogue expression is subordinate to locomotion. Committed P2-B adds opt-in affect/initiative and owner-event plumbing. | Social behavior is partly shadow/software-only; owner events remain simulator-derived and labels are not identity gates. |
 | Audio | Local/hosted turn authority remains deterministic; Wave 3 commits the clocked-duplex XVF3800 gateway and authenticated mic-arm route. | AEC, ego-noise, speaker authentication, through-transducer latency/cutoff and on-dog audio remain uncommissioned. |
 | Dual-stream research | The D0 TEXT+ACT frame path is shadow/logging telemetry and has no action authority. | Correct staging boundary; synchronous logging still needs removal from the semantic caller. |
-| Safety/control | The normal velocity path has priority/TTL arbitration, input-health and reactive collision/person/TTC gates, two shaping stages, post-shaper hard/proximity-stop reassertion, and a sole `ControlManager` velocity writer. Pose/trajectory activities first stop locomotion, then call separate backend methods through activity/E-stop gates rather than the velocity safety chain. | Strong velocity-control design, but physical effect authority is split and no independent native gateway exists. |
-| Physical bring-up | Wave 3 commits observe-only Go2/replay, Mid-360 scan evidence, stopping models/records, an EDU Plus overlay and box-day artifacts. Canonical axes/frame/modes remain deliberately uncommissioned. | The carrier is still simulator-shaped; pose/process/config/gate gaps remain; no native sole-writer gateway, synchronized sensor spine or commissioned motion exists. |
+| Safety/control | The normal velocity path has priority/TTL arbitration, input-health and reactive collision/person/TTC gates, two shaping stages, post-shaper hard/proximity-stop reassertion, and a sole application-side `ControlManager`. The deployable gateway is the sole autonomous vendor writer and is protected by the same fixed device lock as commissioning. A distinct-UID, stop-only `parcel-safety` principal now observes the gateway and can latch STOP without acquiring or commanding motion. Pose/trajectory activities first stop locomotion, then call separate backend methods through activity/E-stop gates rather than the velocity safety chain. | Strong desktop-tested software control boundaries, but physical effect authority is incomplete; the gateway/safety pair has not run on the target, local/remote physical stop inputs are not connected, and a physically independent E-stop remains absent. |
+| Physical bring-up | Wave 3 commits observe-only Go2/replay, Mid-360 scan evidence, stopping models/records, an EDU Plus overlay and box-day artifacts. The later gateway seam adds an explicit commissioned Unix client, Unitree SDK2 port and mutual-exclusion lock. Canonical axes/frame/modes remain deliberately uncommissioned. | The carrier is still simulator-shaped; pose/process/config/gate gaps remain; no synchronized sensor spine, target-qualified gateway or commissioned motion exists. |
 | Deployment | Wave 3 commits Python/Jetson locks, aarch64 workflow/gate machinery and static Orin nftables/service/install artifacts; the profile-selectable builder can construct Go2 observe-only. | Nothing has executed on the Orin; product/vendor process ownership, real DDS/interface/clock/service order, provider imports, firewall apply/reboot/rollback and resource soak remain open. |
 | Memory/personalization | Conversation SQLite is active. Committed P2-A adds consented owner facts, deterministic store/refuse/forget policy and full-ledger replay; tiered, route and semantic memories remain separate. | Stronger privacy seam, not proven long-horizon personalization. Hosted model-selected storage, distiller scheduling and derived-data deletion need evidence. |
 | Observability | Turn latency, component metrics, ledgers, duplex records, and recent transcript-origin logging exist as separate surfaces. | Broad instrumentation without one causal trace. |
@@ -585,7 +585,7 @@ deployment contract.
 | Safety thresholds are duplicated across planner and runtime. | A planner-valid route can be executor-impossible and diagnoses are ambiguous. | Derive all planning envelopes from one immutable `RobotProfile x SpeedRegime x SafetyEnvelope`; keep the final gate independent. |
 | Recoverable HOLD/proximity/missing-scan policies may preserve yaw, while a latched input-health fault is exact zero at finalization; a no-provider pose fallback can still report healthy zero-covariance state. | The boundary between permitted inspection rotation and full stop, plus terminal pose truth, remains under-specified for physical use. | Resolve each input-class/pose policy explicitly, then freeze exact dispositions with property tests. |
 | Grid-invalid scan and malformed prediction have permissive internal fallbacks. Grid scan validity is stricter than reactive scan presence, so stub translation is not always suppressed. | Malformed calibration or prediction can leave more motion than the failed component can justify. | Make safety-relevant components return typed degraded/HOLD states under one calibrated evidence contract; retain downstream gates as independent defense. |
-| The native physical gateway does not exist. | The observe-only Go2 backend correctly refuses motion, while Python Sport/commissioning writers remain prospective credential paths. | Bench the smallest co-located C++20 governor/sole-writer, atomically strip Python product credentials at cutover, and prove restart-disarmed TTL/epoch/second-writer/stop behavior before autonomous motion. |
+| The deployable gateway exists, but only at the desktop-tested software seam. | The old direct runtime Sport factory is retired and always refuses. The autonomous gateway and supervised commissioning CLI share one fixed writer lock and cannot coexist, but neither path has run on the Go2/Orin and a packaged same-UID maintenance procedure is still missing. | Qualify the existing sole-writer seam on the target with restart-disarmed TTL/epoch/second-writer/stop evidence and an independent stop. Move the smallest timing-critical governor/vendor shim to C++20 only if target measurements require it; do not create a second writer during migration. |
 | Shared llama.cpp serving has one active cancellation handle. | Conversation, planning, and summarization can cancel or starve each other. | Add an inference broker with role-scoped queues, deadlines, cancellation, and overload policy. |
 | Tiered memory is disabled and fragmented from task/spatial memory. | The companion lacks durable reference, commitment, place, and failure continuity. | Introduce governed working, episodic, profile, and spatial memory stores. |
 | The reaction arbiter's selected output is recorded but not enacted. | “Social reaction” evidence can be mistaken for product behavior. | Wire it only to bounded voice/attention/expression adapters or label it shadow-only. |
@@ -704,7 +704,7 @@ marketing TRL:
 | --- | ---: | --- |
 | Deterministic task contracts/executive | L3 | Broad tests and simulated execution; consequential-action lifecycles and recovery remain split |
 | Local grid navigation and semantic mission logic | L3 | Strong MuJoCo/replay coverage but a known semantic-arrival red, oracle perception and no physical localization |
-| Velocity safety/control supervision | L3 | Property/fault/simulator evidence and software stopping-envelope records; no physically measured envelope, commissioned native gateway or hardware independent-stop campaign |
+| Velocity safety/control supervision | L3 | Property/fault/simulator evidence and software stopping-envelope records; no physically measured envelope, target-qualified gateway or hardware independent-stop campaign |
 | Hosted conversational lane | L2 | Implemented and launcher-selectable, but disabled in an unconfigured checkout; cloud/network/privacy dependency and no through-air physical campaign |
 | Local acoustic lane | L2 experimental | Piper/endpointing plus the committed XVF3800 clocked-duplex gateway and authenticated mic-arm route exist; on-dog capture, AEC and through-air latency/cutoff remain uncommissioned |
 | MuJoCo camera ingress | L2 experimental | Normal simulator attachment exists; not physical observation evidence |
@@ -1279,10 +1279,14 @@ The system must settle the open physical-policy decisions before commissioning:
 - exactly which faults latch and which evidence clears them;
 - how UI focus/blur commands interact with an admitted autonomous mission.
 
-#### Native sole-writer gateway
+#### Sole-writer gateway (native target; Python seam today)
 
-The gateway is a small native process with one robot-network credential and one
-vendor command writer. It owns:
+The target gateway is a small isolated process with one robot-network credential
+and one vendor command writer. The current deployable implementation is a separate
+Python distribution with the frozen Unix contract, fixed writer lock, SDK2 port,
+TTL/watchdog and restart-disarmed state; it is desktop-tested and has not run on
+the Orin or Go2. A later native implementation must preserve the same contract and
+must replace, never coexist with, that writer. The gateway owns:
 
 - boot epoch and restart-disarmed state;
 - explicit arm/disarm and capability manifest;
@@ -1492,7 +1496,7 @@ systems overhead inside the semantic application.
 | OBS-MIN physical observation | Separate read-only Unitree vendor-state and bounded LiDAR ingest; publish one immutable `NavigationSnapshotV2` | Runtime consumes per-source receipt/epoch/frame evidence; replay/fakes stay nonphysical; no device I/O or dual-carrier side channel on the tick |
 | PR-1 delivery readiness | Freeze firmware/SDK, sensor/compute/mount/network/power BOM, vendor acceptance window, operator and hazard plan for the ordered EDU Plus | Signed box-day checklist, independent stop/tether and lab ready; first interaction is read-only capture |
 | TARGET-1 mount/Orin evidence | Capture D455/Mid-360/XVF3800 and prove installed aarch64 providers, DDS/interface/clock/service order, firewall apply/reboot/rollback | Retained target artifacts with device identity, rates, loss/age, service topology and rollback; still no autonomous motion |
-| GW-1 native command substrate | Bench the co-located C++20 final governor/sole-writer; atomically strip Python product credentials at cutover | Restart-disarmed TTL/epoch/second-writer/kill fault campaign plus independent stop; no autonomous body command yet |
+| GW-1 target command qualification | Run the existing co-located sole-writer seam on the Orin, preserve the fixed device lock and same-UID commissioning exclusion, and move only measured timing-critical code to C++20 without overlapping writers | Restart-disarmed TTL/epoch/second-writer/kill fault campaign plus independent stop; no autonomous body command yet |
 | LOC-1 localization and low-speed commission | Time-sync/calibrate sensors, provide `map→odom→base_link`, commission axes/frame/modes and stopping | Tethered one-axis then bounded velocity tests; ATE/RPE/health/dropout evidence; measured p50/p95/p99 stops and independent stop |
 | PV-1 physical perception shadow | Wire RGB-D, detector/map/owner tracker without motion authority | Physical precision/recall, position error, owner/stranger ROC, ID switches, duplicate/name error, freshness and restart metrics pass frozen thresholds |
 | AU-1 supervised mobility | Point-goal then semantic navigation in a bounded indoor ODD | Repeated multi-room missions, localization-loss recovery, dynamic-person course and terminal witness with zero unresolved hard event |
@@ -1530,10 +1534,11 @@ manufacture closure.
 
 **Physical authority:**
 
-- Freeze the gateway and observation contracts at design/replay level after import
-  and composition boundaries are healthy.
-- Implement `RobotGatewayV1`, bounded IPC, restart-disarmed state, lease/TTL,
-  stop/stationary witness, and a capability-admitting physical launcher.
+- Freeze the implemented gateway contract after import, socket, fixed-lock and
+  composition boundaries are healthy; separately freeze the observation contract.
+- Package and target-qualify the existing bounded IPC, restart-disarmed state,
+  lease/TTL and stop/stationary witness, then implement a capability-admitting
+  physical launcher. A desktop-tested factory is not that launcher.
 - Implement and commission `GatewayActionV1` for any physical posture/gesture kept
   in scope, or make those capabilities fail closed as unsupported.
 - Revoke robot-network credentials/vendor command access from legacy ROS,
@@ -4488,8 +4493,11 @@ Current mapping:
 
 - `RobotRuntime` owns most orchestration and consumes a required `SimulatorBackend`.
 - `ControlManager` already models lifecycle, watchdog, state freshness and stop retries.
-- the Unitree Sport source/controller and commissioning CLI exist but are not composed
-  into a physical product entry point;
+- the commissioned Unix client and gateway Unitree source/controller form the only
+  autonomous vendor path; the former direct runtime factory always refuses, and the
+  separate commissioning CLI shares the same fixed lock while the gateway is stopped;
+- no target launcher composes that path with synchronized physical observations or an
+  independent stop-only service;
 - the committed opt-in `perception_daemon` provides a bounded out-of-process inference seam;
 - the committed physical camera classes are isolated components, while the normal runtime
   camera constructor remains MuJoCo EGL;
@@ -4587,10 +4595,11 @@ motor/controller thermal limits can reduce locomotion capability; battery temper
 changes available power. Thermal faults should appear in telemetry and capability
 admission. A 60-second benchmark cannot establish a 45-minute walk.
 
-### M.5 The native sole-writer gateway contract
+### M.5 The sole-writer gateway contract
 
-The gateway should expose a small, versioned local protocol rather than the vendor SDK
-directly. One candidate command is:
+The gateway exposes a small, versioned local protocol rather than the vendor SDK
+directly. The current V1 wire types implement the velocity/stop subset; this fuller
+design remains the target contract:
 
 ```text
 VelocityLeaseCommand
@@ -4624,12 +4633,17 @@ channel. Startup should refuse if another owner exists or the interface/domain/f
 does not match the commissioning manifest. Shutdown and client death converge to stop;
 automatic reconnect creates a new epoch and requires re-arming.
 
-Parcel's `control/factory.py` is already conservative: Unitree construction requires a
-lease, commissioned axes/frame and nonempty allowed modes. `CommissionedStateSource`
-adds physical origin, epoch and ordering checks. The missing integration is to use that
-wrapper in the normal physical gateway and feed the resulting evidence to a backend-
-neutral runtime. Lowering `core/input_health.py` from PHYSICAL to UNKNOWN would bypass
-the assurance rather than integrate hardware.
+Parcel's `control/factory.py` now hard-retires direct in-process Unitree construction.
+Its `motion_gateway_commissioned` factory builds only the runtime-side Unix client and
+state source; the gateway alone constructs the SDK2 port after taking the fixed device
+lock. `CommissionedStateSource` adds physical origin, epoch and ordering checks. The
+source-level `parcel-safety` process is a distinct-UID, stop-only Unix client with
+state freshness/consistency checks and a latch; it remains desktop/fake evidence and
+cannot replace a physical stop when the gateway, Orin, or shared power path fails. The
+missing integration is a target launcher that binds these paths to synchronized physical
+evidence, reviewed local/remote inputs, and physically independent stop authority.
+Lowering `core/input_health.py` from PHYSICAL to UNKNOWN would bypass the assurance
+rather than integrate hardware.
 
 ### M.6 Detailed Unitree commissioning ladder
 
@@ -4691,7 +4705,9 @@ and calibration identities match.
 The existing `unitree_control.py` commissioning CLI belongs to the early ladder. Its
 very low configured speeds and human review/apply sequence are appropriate. It is not
 the product runtime, and a successful CLI observation should not be described as an
-autonomous integration result.
+autonomous integration result. Armed `run` is mutually exclusive with the gateway:
+stop runtime and gateway, run it under the same `parcel-gateway` UID that owns the
+fixed `0600` lock, and wait for process exit before restarting the disarmed gateway.
 
 ### M.7 Independent stop and hazard controls
 

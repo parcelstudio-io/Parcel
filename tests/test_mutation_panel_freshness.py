@@ -5,7 +5,8 @@ the RETIRED v2 set, where its strongest check (``no_false_arrival``) was silentl
 disabled because the v2 clean run itself contained a false arrival — a surviving
 mutant would have been missed on exactly the code path v3 changed. These tests
 make that class of rot loud: the committed payload AND a live run must both be on
-the newest frozen ``vN`` episode set, pass 6/6, and keep ``no_false_arrival``
+the newest frozen ``vN`` episode set, kill every seeded defect, and keep
+``no_false_arrival`` plus direct reactive-gate coverage live
 live (green on the clean run AND actually reddened by a mutant, not merely
 absent). When a v4 is frozen, ``_CURRENT_FROZEN_EPISODE_SET`` advances on its own
 and both tests fail until ``scripts/mutation_panel.py`` is bumped with it.
@@ -56,12 +57,26 @@ _MINIMUM_KILLED = 6
 
 
 def _assert_panel_payload_is_current_and_sensitive(payload: dict) -> None:
+    from scripts.mutation_panel import (
+        PANEL_EPISODE_IDS,
+        PANEL_MATRIX_DIGEST,
+        PANEL_MATRIX_PER_FAMILY,
+        PANEL_MATRIX_SEED,
+    )
+
     assert payload["episode_set_version"] == _CURRENT_FROZEN_EPISODE_SET, (
         "mutation panel certifies "
         f"{payload['episode_set_version']!r} but the current frozen baseline is "
         f"{_CURRENT_FROZEN_EPISODE_SET!r} — bump scripts/mutation_panel.py"
     )
     assert payload["passed"] is True
+    assert payload["coverage_matrix_seed"] == PANEL_MATRIX_SEED
+    assert payload["coverage_matrix_per_family"] == PANEL_MATRIX_PER_FAMILY
+    assert payload["coverage_matrix_digest"] == PANEL_MATRIX_DIGEST
+    assert payload["episode_ids"] == list(PANEL_EPISODE_IDS), (
+        "mutation-panel episode identity/order drifted; the simulator's seeded "
+        "scan RNG is deterministic for a campaign but is not reset per episode"
+    )
     killed = [m for m in payload["mutants"] if m["verdict"] == "killed"]
     assert len(killed) == len(payload["mutants"]) >= _MINIMUM_KILLED, (
         f"expected every mutant killed and at least {_MINIMUM_KILLED} of them, "
@@ -80,6 +95,16 @@ def _assert_panel_payload_is_current_and_sensitive(payload: dict) -> None:
     assert any(
         "no_false_arrival" in mutant["checks_reddened"] for mutant in payload["mutants"]
     ), "no_false_arrival is green on the clean run but no mutant exercises it"
+    assert payload["clean_checks"]["reactive_gate_exercised"] is True
+    clean_coverage = payload["clean_run"]["reactive_gate_coverage"]
+    assert clean_coverage["changed_nonzero"] > 0
+    reactive = next(
+        mutant for mutant in payload["mutants"]
+        if mutant["mutation"] == "reactive_gate_disabled"
+    )
+    assert reactive["verdict"] == "killed"
+    assert "reactive_gate_exercised" in reactive["checks_reddened"]
+    assert reactive["run"]["reactive_gate_coverage"]["changed_nonzero"] == 0
 
 
 @pytest.mark.slow  # card P0-E: mutation-panel freshness is a nightly evidence ratchet
@@ -218,14 +243,14 @@ def test_mutation_panel_runs_on_the_current_frozen_set_live() -> None:
         clean_safety_fields(committed_payload),
         clean_safety_fields(payload),
         str(committed_payload.get("episode_set_provenance", "")),
-        live_survivors=payload["survivors"],
+        live_survivors=[*payload["survivors"], *payload["equivalent_mutants"]],
     )
     assert problem is None, problem
     _assert_panel_payload_is_current_and_sensitive(payload)
 
 
-#: Clean-run checks that a re-freeze may NEVER trade away. The panel's four
-#: absolute checks are not equal: ``no_authority_disagreement`` is the one-way
+#: Clean-run checks that a re-freeze may NEVER trade away. The panel's outcome
+#: checks are not equal: ``no_authority_disagreement`` is the one-way
 #: ``scorer ⇒ system`` invariant (instrument 5), which a *conservative* system
 #: refusal reddens without anything unsafe having happened, so a recorded
 #: re-run may carry it red as long as it says so. The other three are floors —
@@ -235,6 +260,7 @@ _UNDISABLEABLE_CLEAN_CHECKS: tuple[str, ...] = (
     "zero_collisions",
     "no_false_arrival",
     "path_length_plausible",
+    "reactive_gate_exercised",
 )
 
 
@@ -303,16 +329,27 @@ _DECLARATION = (
 
 
 def _fields(**checks: bool) -> dict:
-    """A ``clean_safety_fields``-shaped payload with the four absolute checks."""
+    """A ``clean_safety_fields``-shaped payload with every clean floor."""
 
     base = {
         "zero_collisions": True,
         "no_authority_disagreement": True,
         "no_false_arrival": True,
         "path_length_plausible": True,
+        "reactive_gate_exercised": True,
     }
     base.update(checks)
-    return {"collisions": 0, "authority": {"agreement": 5}, "clean_checks": base}
+    return {
+        "collisions": 0,
+        "authority": {"agreement": 5},
+        "clean_checks": base,
+        "reactive_gate_coverage": {
+            "calls": 1,
+            "requested_nonzero": 1,
+            "changed_nonzero": 1,
+            "translation_zeroed": 0,
+        },
+    }
 
 
 def test_freshness_message_is_silent_when_the_artifact_still_reproduces() -> None:

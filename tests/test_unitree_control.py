@@ -154,8 +154,31 @@ class _FakeObserver:
         self.closed += 1
 
 
+class _FakeWriterLock:
+    """No-filesystem authority seam for commissioning CLI unit tests."""
+
+    def __init__(self, *, required: bool) -> None:
+        assert required is True
+        self.held = False
+        self.retained_until_process_exit = False
+        self.closed = 0
+
+    def acquire(self) -> None:
+        self.held = True
+
+    def retain_until_process_exit(self) -> None:
+        assert self.held
+        self.retained_until_process_exit = True
+
+    def close(self) -> None:
+        self.closed += 1
+        if not self.retained_until_process_exit:
+            self.held = False
+
+
 def _install(monkeypatch, *, session=None, observer=None):
     monkeypatch.setattr(unitree_control, "ConfigStore", lambda _: _FakeStore())
+    monkeypatch.setattr(unitree_control, "UnitreeWriterLockV1", _FakeWriterLock)
     if session is not None:
         monkeypatch.setattr(
             unitree_control,
@@ -309,6 +332,88 @@ def test_run_can_commission_a_single_named_axis(tmp_path, monkeypatch) -> None:
     _install(monkeypatch, session=session)
     unitree_control.main(_run_args(tmp_path, "--arm", "--axis", "vyaw"))
     assert [step[0] for step in session.steps] == [CommissioningAxis.VYAW]
+
+
+def test_run_refuses_writer_contention_before_config_or_session_construction(
+    tmp_path, monkeypatch, capsys
+) -> None:
+    reached: list[str] = []
+
+    class RefusingLock:
+        def __init__(self, *, required: bool) -> None:
+            assert required is True
+
+        def acquire(self) -> None:
+            reached.append("lock")
+            raise FileExistsError("seeded gateway holder")
+
+    monkeypatch.setattr(unitree_control, "UnitreeWriterLockV1", RefusingLock)
+    monkeypatch.setattr(
+        unitree_control,
+        "ConfigStore",
+        lambda _path: reached.append("config") or pytest.fail("config reached"),
+    )
+    monkeypatch.setattr(
+        unitree_control,
+        "build_unitree_sport_commissioning_session",
+        lambda *_args, **_kwargs: reached.append("builder") or pytest.fail("builder reached"),
+    )
+
+    assert unitree_control.main(_run_args(tmp_path, "--arm")) == 1
+    assert reached == ["lock"]
+    assert "writer authority unavailable" in capsys.readouterr().out
+
+
+def test_run_holds_and_retains_writer_authority_through_record_save(
+    tmp_path, monkeypatch
+) -> None:
+    events: list[str] = []
+    lock = _FakeWriterLock(required=True)
+    session = _FakeSession()
+
+    monkeypatch.setattr(unitree_control, "UnitreeWriterLockV1", lambda **_kwargs: lock)
+    monkeypatch.setattr(
+        unitree_control,
+        "ConfigStore",
+        lambda _path: events.append("config") or _FakeStore(),
+    )
+
+    def build(*_args, **kwargs):
+        assert lock.held
+        assert kwargs["writer_authority"] is lock
+        events.append("builder")
+        return session
+
+    monkeypatch.setattr(unitree_control, "build_unitree_sport_commissioning_session", build)
+    original_start = session.start
+    original_record = session.record
+
+    def start() -> None:
+        assert lock.held
+        events.append("start")
+        original_start()
+
+    def record(**kwargs):
+        assert lock.held
+        events.append("record")
+        return original_record(**kwargs)
+
+    session.start = start  # type: ignore[method-assign]
+    session.record = record  # type: ignore[method-assign]
+    original_save = CommissioningRecordV1.save
+
+    def save(record, path):
+        assert lock.held
+        events.append("save")
+        return original_save(record, path)
+
+    monkeypatch.setattr(CommissioningRecordV1, "save", save)
+
+    assert unitree_control.main(_run_args(tmp_path, "--arm", "--axis", "vx")) == 0
+    assert events == ["config", "builder", "start", "record", "save"]
+    assert lock.retained_until_process_exit is True
+    assert lock.held is True
+    assert lock.closed == 1
 
 
 # ----------------------------------------------------------------- observing

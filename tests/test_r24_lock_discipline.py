@@ -71,8 +71,8 @@ from parcel_robot.runtime_channels import NavigationChannel
 REPO = pathlib.Path(__file__).resolve().parents[1]
 RUNTIME_PATH = REPO / "src" / "parcel_robot" / "runtime.py"
 
-#: The seven locks ``RobotRuntime.__init__`` constructs. Named explicitly
-#: rather than discovered so that an EIGHTH lock added without a card is itself
+#: The runtime locks ``RobotRuntime.__init__`` constructs. Named explicitly
+#: rather than discovered so that another lock added without a card is itself
 #: a finding: ``test_the_lock_roster_is_complete`` fails until it is listed
 #: here with an owner and an order.
 #:
@@ -103,6 +103,7 @@ RUNTIME_LOCKS: tuple[str, ...] = (
     "_transcript_lock",
     "_camera_stream_lock",
     "_p1b_map_lock",
+    "_audio_effect_lock",
 )
 
 #: The three hosted motion doors §Arch-1 names. Each must hold ``_agent_lock``
@@ -182,7 +183,13 @@ NAVIGATOR_MUTATIONS: frozenset[tuple[str, str]] = frozenset(
 #:   the camera's own lock is held.
 PINNED_LOCK_ORDER: frozenset[tuple[str, str]] = frozenset(
     {
+        # Acoustic playback events are serialized with begin/barge-in at their
+        # effect boundary. The callback can reach the ordinary event/state
+        # sink, and close invalidates that binding before joining the sink.
+        # No runtime path takes _close_lock or _audio_effect_lock in reverse.
+        ("_audio_effect_lock", "_lock"),
         ("_agent_lock", "_lock"),
+        ("_close_lock", "_audio_effect_lock"),
         ("_close_lock", "_command_lock"),
         ("_close_lock", "_lock"),
         ("_close_lock", "_p1b_map_lock"),
@@ -222,12 +229,16 @@ CALLBACK_LOCK_ORDER: frozenset[tuple[str, str]] = frozenset(
 #: names the runtime locks that handler takes, which is what a reviewer needs
 #: in order to answer "may I hold a lock across this collaborator call?".
 #: ``keyword -> (runtime method, locks that method can reach)``, exactly as
-#: ``RobotRuntime.__init__`` wires them. FOUR of the seventeen reach
+#: ``RobotRuntime.__init__`` wires them. The roster is the authority for which
+#: handlers reach each lock.
 #: ``_command_lock`` — those are the ones a critical section must not span
 #: without already holding it, and ``on_stop`` is the one that was spanned.
 REENTRY_CALLBACKS: dict[str, tuple[str, tuple[str, ...]]] = {
     "on_alarm": ("_realtime_pump_alarm", ("_lock",)),
-    "on_chunk_start": ("_audio_chunk_started", ("_lock",)),
+    "on_write_attempt": (
+        "_audio_write_attempt",
+        ("_audio_effect_lock", "_lock"),
+    ),
     "on_command": ("_voice_motion", ("_command_lock", "_lock")),
     "on_dispatch": ("_realtime_thinking_pose", ()),
     "on_error": ("_voice_error", ("_lock",)),

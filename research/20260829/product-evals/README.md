@@ -9,7 +9,9 @@ The controlling result is **motion-enabled physical deployment: NO-GO**.  The
 strongest positive result is that the typed executive/runtime path works on four
 supported frozen headless cases.  The strongest negative results are 27.2% success
 on the fresh 125-episode NAV_INSTRUCT suite, unsafe contacts in the separately
-reproduced dynamic-social study, and four failed null-sink acoustic gates.
+reproduced dynamic-social study, six failed pose-drift floors, and corrected
+acoustic v2 endpoint/acknowledgement failures. The acoustic v1 audit remains as
+historical measurement-debugging evidence, not the current capability result.
 
 ## Contents
 
@@ -24,25 +26,30 @@ reproduced dynamic-social study, and four failed null-sink acoustic gates.
 - `conversation/duplex-v1/` — scripted text duplex timing and interruption checks.
 - `conversation/acoustic-loop-full*.json` — three full null-sink acoustic runs after
   fixing a negative-offset evaluator crash.
+- `../ACOUSTIC_LOOP_V1_AUDIT.md` — additive measurement audit and direct
+  drain-time PortAudio abort hardening; it does not rewrite the historical runs.
 - `conversation/realtime-corpus-quality.json` — historical captured Realtime corpus
   plus machine checks and an unblinded report-only semantic review.
 - `conversation/personal-convo-fixture.json` — deterministic reference fixture, not a
   hosted-model quality measurement.
 - `RESULTS.md` — exact measurements and reproducibility notes.
 - `VERDICT.md` — controlling readiness interpretation.
-- `summary.json` — compact machine-readable index.
+- `summary.json` — compact machine-readable v2 index including corrected
+  acoustic, DSOAK scope, and current commit/nightly state.
 - `TEST_RUNS.md` — guarded test commands and outcomes.
+- `../POST_ULTRA_REMEDIATION.md` — bounded source dispositions from the fresh
+  read-only Ultra review; the physical and capability blockers remain open.
 
 ## Interpretation rules
 
 1. A frozen fixture can establish contract/integration behavior only within that
    fixture; it cannot establish language or navigation generalization.
-2. A null-sink audio run can test software timing and teardown, not room acoustics,
-   microphone/loudspeaker behavior, echo cancellation, or mounted audio.
+2. A null-sink audio run is useful only when its clocks, rates, and channels are
+   valid. It still cannot establish room acoustics, microphone/loudspeaker
+   behavior, echo cancellation, audible presentation, or mounted audio.
 3. Zero collisions in a small scripted or kinematic corpus is a count, not a safety
    rate.
 4. Historical captured model output does not establish the quality of the model that
    would be deployed today.
 5. Simulator evidence does not waive the staged gateway, stationary, tethered, and
    physical stop-distance promotion ladder.
-

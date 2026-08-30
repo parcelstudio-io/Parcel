@@ -23,7 +23,7 @@ those doors.
     deadline has passed.
 ``stop``
     the explicit stop, returning the gateway's own stop report.
-``state`` / ``last_stop_report``
+``state`` / ``state_v2`` / ``last_stop_report``
     typed observation.
 ``reconnect``
     drop the connection and open a new one.  **Always lands DISARMED**, and
@@ -31,7 +31,7 @@ those doors.
 
 There is no ``send``, no ``request``, no ``receive``, no ``send_raw`` and no
 way to hand this class a message object: typed results only
-(:class:`MotionStateV1`) in, typed results out.  It lives in the product
+(:class:`MotionStateV1` / :class:`MotionStateV2`) in, typed results out.  It lives in the product
 distribution and imports the frozen wire contract and stdlib and nothing else
 — no ``gateway.core``, no ``gateway.ports``, no ``gateway.writer``, no vendor
 SDK, no fake — so a runtime caller physically cannot reach the vendor except by
@@ -75,10 +75,14 @@ from parcel_robot.bridge.protocol import (
     GatewayAckDispositionV1,
     GatewayAckV1,
     GatewayAcquireV1,
+    GatewayBodyKindV1,
     GatewayCommandV1,
+    GatewayHashesV1,
     GatewayHelloV1,
     GatewayStateQueryV1,
+    GatewayStateQueryV2,
     GatewayStateV1,
+    GatewayStateV2,
     GatewayStopReportV1,
     GatewayStopV1,
     decode_gateway_message,
@@ -205,6 +209,99 @@ class MotionStateV1:
         return self.phase == "latched"
 
 
+@dataclass(frozen=True)
+class MotionStateV2(MotionStateV1):
+    """Gateway state with bounded raw Sport and LowState observability."""
+
+    body_kind: GatewayBodyKindV1
+    telemetry_valid: bool
+    vendor_position_m: tuple[float, float, float]
+    vendor_rpy_rad: tuple[float, float, float]
+    mode: int
+    error_code: int
+    source_time_s: float | None
+    sport_foot_force_raw: tuple[int, int, int, int]
+    feedback_integrity_ok: bool | None
+    feedback_integrity_reason: str
+    commissioned_soc_ok: bool | None
+    commissioned_soc_reason: str
+    low_state_valid: bool
+    low_state_sequence: int
+    low_state_age_ms: float | None
+    low_state_tick: int | None
+    battery_soc_percent: int | None
+    power_v: float | None
+    power_a: float | None
+    max_motor_temperature_raw: int | None
+    motor_lost_max_raw: int | None
+    foot_force_est_raw: tuple[int, int, int, int] | None
+    imu_temperature_raw: int | None
+    temperature_ntc_raw: tuple[int, int] | None
+    bms_status: int | None
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.body_kind, GatewayBodyKindV1):
+            raise TypeError("body_kind must be a GatewayBodyKindV1")
+        if not isinstance(self.telemetry_valid, bool):
+            raise TypeError("telemetry_valid must be a boolean")
+        if (
+            isinstance(self.error_code, bool)
+            or not isinstance(self.error_code, int)
+            or not 0 <= self.error_code < 2**32
+        ):
+            raise ValueError("MotionStateV2.error_code must be an unsigned 32-bit integer")
+        if self.feedback_integrity_ok is not None and not isinstance(
+            self.feedback_integrity_ok,
+            bool,
+        ):
+            raise TypeError("feedback_integrity_ok must be boolean or None")
+        if (
+            not isinstance(self.feedback_integrity_reason, str)
+            or not self.feedback_integrity_reason
+            or len(self.feedback_integrity_reason) > 160
+        ):
+            raise ValueError("feedback_integrity_reason must be a short string")
+        if self.feedback_integrity_ok is None and (
+            self.feedback_integrity_reason != "feedback_integrity_unavailable"
+        ):
+            raise ValueError("unavailable feedback integrity must carry its canonical reason")
+        if (
+            self.feedback_integrity_ok is not None
+            and self.feedback_integrity_reason == "feedback_integrity_unavailable"
+        ):
+            raise ValueError("available feedback integrity cannot carry the unavailable reason")
+        if self.feedback_integrity_ok is not None and self.feedback_integrity_ok is not (
+            self.feedback_integrity_reason == "ok"
+        ):
+            raise ValueError("feedback integrity verdict and reason disagree")
+        if self.commissioned_soc_ok is not None and not isinstance(
+            self.commissioned_soc_ok,
+            bool,
+        ):
+            raise TypeError("commissioned_soc_ok must be boolean or None")
+        if (
+            not isinstance(self.commissioned_soc_reason, str)
+            or not self.commissioned_soc_reason
+            or len(self.commissioned_soc_reason) > 160
+        ):
+            raise ValueError("commissioned_soc_reason must be a short string")
+        expected_soc_reason = {
+            True: "soc_above_commissioned_minimum",
+            False: "soc_at_or_below_commissioned_minimum",
+            None: "commissioned_soc_unavailable",
+        }[self.commissioned_soc_ok]
+        if self.commissioned_soc_reason != expected_soc_reason:
+            raise ValueError("commissioned SOC verdict and reason disagree")
+        if not isinstance(self.low_state_valid, bool):
+            raise TypeError("low_state_valid must be a boolean")
+        if self.low_state_valid is (self.commissioned_soc_ok is None):
+            raise ValueError("commissioned SOC availability must match LowState validity")
+        if self.telemetry_valid and self.feedback_integrity_ok is None:
+            raise ValueError("valid Sport telemetry requires a feedback integrity verdict")
+        if not self.telemetry_valid and self.feedback_integrity_ok is not None:
+            raise ValueError("invalid Sport telemetry requires unavailable feedback integrity")
+
+
 class MotionGatewayClientV1:
     """The one production path from a runtime caller to the body."""
 
@@ -214,10 +311,14 @@ class MotionGatewayClientV1:
         *,
         writer_id: str,
         timeout_s: float = 2.0,
+        expected_hashes: GatewayHashesV1 | None = None,
     ) -> None:
+        if expected_hashes is not None and not isinstance(expected_hashes, GatewayHashesV1):
+            raise TypeError("expected_hashes must be GatewayHashesV1 or None")
         self._socket_path = Path(socket_path)
         self._writer_id = writer_id
         self._timeout_s = float(timeout_s)
+        self._expected_hashes = expected_hashes
         self._connection: socket.socket | None = None
         self._hello: GatewayHelloV1 | None = None
         self._sequence = 0
@@ -235,10 +336,16 @@ class MotionGatewayClientV1:
         *,
         writer_id: str,
         timeout_s: float = 2.0,
+        expected_hashes: GatewayHashesV1 | None = None,
     ) -> MotionGatewayClientV1:
         """Open the connection and read the gateway's hello. Arms nothing."""
 
-        client = cls(socket_path, writer_id=writer_id, timeout_s=timeout_s)
+        client = cls(
+            socket_path,
+            writer_id=writer_id,
+            timeout_s=timeout_s,
+            expected_hashes=expected_hashes,
+        )
         client._open()
         return client
 
@@ -314,9 +421,7 @@ class MotionGatewayClientV1:
         self._sequence += 1
         response = self._exchange(GatewayStateQueryV1(sequence=self._sequence))
         if not isinstance(response, GatewayStateV1):
-            raise GatewayProtocolError(
-                f"state query answered with {type(response).__name__}"
-            )
+            raise GatewayProtocolError(f"state query answered with {type(response).__name__}")
         return MotionStateV1(
             boot_epoch=response.boot_epoch,
             phase=str(response.phase.value),
@@ -330,6 +435,53 @@ class MotionGatewayClientV1:
             stationary=response.stationary,
             last_stop_sequence=response.last_stop_sequence,
             last_stop_reason=response.last_stop_reason,
+        )
+
+    def state_v2(self) -> MotionStateV2:
+        """Read additive Sport telemetry. Sends no authority and cannot arm."""
+
+        self._sequence += 1
+        response = self._exchange(GatewayStateQueryV2(sequence=self._sequence))
+        if not isinstance(response, GatewayStateV2):
+            raise GatewayProtocolError(f"V2 state query answered with {type(response).__name__}")
+        return MotionStateV2(
+            boot_epoch=response.boot_epoch,
+            phase=str(response.phase.value),
+            state_sequence=response.state_sequence,
+            state_age_ms=response.state_age_ms,
+            lease_active=response.lease_active,
+            writer_id=response.writer_id,
+            vx_mps=response.vx_mps,
+            vy_mps=response.vy_mps,
+            vyaw_rad_s=response.vyaw_rad_s,
+            stationary=response.stationary,
+            last_stop_sequence=response.last_stop_sequence,
+            last_stop_reason=response.last_stop_reason,
+            body_kind=response.body_kind,
+            telemetry_valid=response.telemetry_valid,
+            vendor_position_m=response.vendor_position_m,
+            vendor_rpy_rad=response.vendor_rpy_rad,
+            mode=response.mode,
+            error_code=response.error_code,
+            source_time_s=response.source_time_s,
+            sport_foot_force_raw=response.sport_foot_force_raw,
+            feedback_integrity_ok=response.feedback_integrity_ok,
+            feedback_integrity_reason=response.feedback_integrity_reason,
+            commissioned_soc_ok=response.commissioned_soc_ok,
+            commissioned_soc_reason=response.commissioned_soc_reason,
+            low_state_valid=response.low_state_valid,
+            low_state_sequence=response.low_state_sequence,
+            low_state_age_ms=response.low_state_age_ms,
+            low_state_tick=response.low_state_tick,
+            battery_soc_percent=response.battery_soc_percent,
+            power_v=response.power_v,
+            power_a=response.power_a,
+            max_motor_temperature_raw=response.max_motor_temperature_raw,
+            motor_lost_max_raw=response.motor_lost_max_raw,
+            foot_force_est_raw=response.foot_force_est_raw,
+            imu_temperature_raw=response.imu_temperature_raw,
+            temperature_ntc_raw=response.temperature_ntc_raw,
+            bms_status=response.bms_status,
         )
 
     def last_stop_report(self) -> StopResultV1 | None:
@@ -449,9 +601,7 @@ class MotionGatewayClientV1:
         )
         response = self._exchange(request)
         if not isinstance(response, GatewayStopReportV1):
-            raise GatewayProtocolError(
-                f"stop answered with {type(response).__name__}"
-            )
+            raise GatewayProtocolError(f"stop answered with {type(response).__name__}")
         # A stop always ends authority, whatever it reports.
         self._disarm_locally()
         result = StopResultV1(
@@ -483,6 +633,12 @@ class MotionGatewayClientV1:
         if not isinstance(hello, GatewayHelloV1):
             self._drop_connection()
             raise GatewayProtocolError("the gateway did not open with GatewayHelloV1")
+        if self._expected_hashes is not None and hello.required_hashes != self._expected_hashes:
+            self._disarm_locally()
+            self._drop_connection()
+            raise GatewayProtocolError(
+                "gateway hello compatibility hashes do not match commissioning"
+            )
         if self._hello is not None and hello.boot_epoch != self._hello.boot_epoch:
             # A new boot epoch is a restart.  The per-boot sequence fence is
             # new too, but continuing to count is always safe: the fence only
@@ -531,9 +687,7 @@ class MotionGatewayClientV1:
     ) -> GatewayAckV1:
         response = self._exchange(request)
         if not isinstance(response, GatewayAckV1):
-            raise GatewayProtocolError(
-                f"{request.kind} answered with {type(response).__name__}"
-            )
+            raise GatewayProtocolError(f"{request.kind} answered with {type(response).__name__}")
         if response.acknowledged_sequence != request.sequence:
             raise GatewayProtocolError(
                 "the gateway acknowledged a different sequence than was sent"
@@ -542,7 +696,13 @@ class MotionGatewayClientV1:
 
     def _exchange(
         self,
-        request: GatewayAcquireV1 | GatewayCommandV1 | GatewayStopV1 | GatewayStateQueryV1,
+        request: (
+            GatewayAcquireV1
+            | GatewayCommandV1
+            | GatewayStopV1
+            | GatewayStateQueryV1
+            | GatewayStateQueryV2
+        ),
     ) -> object:
         """The single private send/receive. Nothing public reaches the wire."""
 

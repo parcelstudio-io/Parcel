@@ -179,7 +179,7 @@ Under the honest reading of the fix's intent — *the table must not answer wher
 
 **If the verifier prefers it elsewhere:** the whole seam is `publish_scene_semantics(regions, objects, scene=...)`. Moving the call into `HeadlessCityWorld.__init__` (C2's file) or into `runtime.py` is a one-line move with no change to this card's rows; the venue simply has to publish before it parses.
 
-**Blast radius of the publication.** A venue that publishes a scene declaring `crosswalk` instances more than 0.32 m from `(3.5, −0.6)` now refuses `crosswalk_a` in `parse`. That is: NAV-GEN-1's generated scenes (the point of the card), `city_block_b.xml` if a world is ever built on it, and nothing else in the tree — the demo block admits, and cafe/bookstore/park are `class_not_modelled` everywhere. `PlaceGrounder.ground` itself is untouched, so every direct-grounder test (`test_c3_cutover.py:409`, `test_superlative_directives.py:195`) is unaffected by construction.
+**Blast radius of the publication.** A venue that publishes a scene declaring `crosswalk` instances more than 0.32 m from `(3.5, −0.6)` now refuses `crosswalk_a` in `parse`. That is: NAV-GEN-1's generated scenes (the point of the card), the alternate held-out validation scene if a world is ever built on it, and nothing else in the tree — the demo block admits, and cafe/bookstore/park are `class_not_modelled` everywhere. `PlaceGrounder.ground` itself is untouched, so every direct-grounder test (`test_c3_cutover.py:409`, `test_superlative_directives.py:195`) is unaffected by construction.
 
 ---
 
