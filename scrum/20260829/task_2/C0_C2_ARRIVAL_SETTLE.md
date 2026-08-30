@@ -26,3 +26,11 @@ Three harnesses disagree about "arrived": the executive says `failed` where the 
 
 ## Does not prove
 Physical arrival, camera/LiDAR perception, or the N45 lamppost class matrix beyond the rows named.
+
+## Amendment A1 (21:5x, parcel-fb's second lens — binding; no acceptance bar moves)
+
+**C0 direction constraint.** The D-15 trajectory itself changed: the v4 frozen row is `[1.89994 m, agreement, grounding_error]` (`bridge_v3_v4.py:320`), the committed 08:47 panel had dtg 2.069 agreement, the live clean run has dtg 0.000 with the SYSTEM refusing. The navigator now reaches the region and the owner's hardened two-phase terminal contract refuses the claim. Under (a) the executor's FIRST job is to name WHICH refusal fires on D-15 (owner-loss? co-visibility with the stationary human? target-facing pose blocked?) and whether it is the deliberate hardening a379bf4's provenance describes. **If it is deliberate, (a) = weakening the contract = off the table → (b).** "Make the system verdict honest" is never implemented as "claim arrival past a refusal designed to fire".
+
+**C0(b) is gate-satisfiable but has a cost that must be written.** `run_panel` `passed = not survivors` (`mutation_panel.py:76`); the freshness test asserts passed / all-killed / no_false_arrival only; ci_gate's hard-safety reads collisions + no_false_arrival + live-reproduction equality (`ci_gate.py:2065-2100`); no committed mutant is killed ONLY through `no_authority_disagreement`. BUT a red check on the clean run is EXCLUDED as a kill channel for every mutant (`mutation_panel.py:33`) — (b) permanently disables `no_authority_disagreement` as a kill channel: the exact silent-disable rot the freshness docstring describes for `no_false_arrival` in v2. If (b): the provenance note must say "`no_authority_disagreement` disabled as a kill channel from this re-run; re-armed when D-15 agrees again", and the close adds a freshness assertion that records that disable explicitly.
+
+**C2.** `arrived_verified` authority stays with the system side; fixing the false `failed` receipt must never become "claim arrival when the receipt is missing" — **missing receipt = not arrived**. The settle window is observation only: it must not touch the A3 latch or A6 stop semantics and never issues a hold command.

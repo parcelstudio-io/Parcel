@@ -362,7 +362,29 @@ def test_A_learned_map_with_nothing_installed_answers_empty_not_oracle() -> None
 # --------------------------------------------------------------------------
 
 
-def test_B3_oracle_keeps_the_poi_table_and_its_known_poi_grounding() -> None:
+@pytest.fixture
+def demo_scene_loaded():
+    """Card C1/F1 — the POI table answers only on the scene it was surveyed on.
+
+    ``demo_pois.yaml`` declares ``scene_id: parcel_city_block``; with no scene
+    loaded the table is refused (``poi_refused = "no_scene"``). B3's subject IS
+    the second oracle under the ORACLE source, so it loads the table's own
+    scene the product way — through ``extract_city_semantics``, the loader that
+    publishes the scene's identity — and keeps asserting ``known_poi``.
+    """
+
+    import mujoco
+
+    from parcel_robot.navigation.poi_admission import clear_scene_instances
+    from parcel_robot.perception.city_semantics import extract_city_semantics
+    from parcel_robot.simulation.headless_city import DEFAULT_CITY_SCENE
+
+    extract_city_semantics(mujoco.MjModel.from_xml_path(str(DEFAULT_CITY_SCENE)))
+    yield
+    clear_scene_instances()
+
+
+def test_B3_oracle_keeps_the_poi_table_and_its_known_poi_grounding(demo_scene_loaded) -> None:
     navigator = DirectiveNavigator.from_config()
     try:
         assert navigator.grounder.enabled

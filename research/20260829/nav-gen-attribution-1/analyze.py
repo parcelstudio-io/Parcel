@@ -405,6 +405,20 @@ def markdown(out: dict) -> str:
                         "sensitivity_if_navigation_no_progress_counted")):
         L.append(f"| {label} | {a[key]} | {aa[key]} | {ax[key]} |")
 
+    L.append("\n### 5.4 False arrivals — distance to the goal, commissioned arm\n")
+    fa = out["false_arrival_dtg_A0"]
+    L.append("| quantity | value |")
+    L.append("|---|---|")
+    for label, key in (("false arrivals (n)", "n"),
+                       ("min DTG (m)", "min_m"),
+                       ("median DTG (m), interpolated (`statistics.median`)",
+                        "median_interpolated_m"),
+                       ("median DTG (m), upper-middle order statistic `dtg[n//2]`",
+                        "median_upper_order_statistic_m"),
+                       ("worst DTG (m)", "max_m")):
+        L.append(f"| {label} | {fa[key]} |")
+    L.append(f"| by target | {', '.join(f'`{t}` x{k}' for t, k in fa['per_target'])} |")
+
     L.append("\n### 6.1 Frozen demo block, per target (commissioned arm, 16 episodes each)\n")
     L.append("| target | band entry | rate | 95 % CI | strict | MA-1 published probe | delta vs MA-1 | "
              "within +-0.15 of MA-1 | DESIGN's quoted value | within +-0.15 of DESIGN |")
@@ -418,6 +432,19 @@ def markdown(out: dict) -> str:
                  f"{'yes' if row['within_0_15_of_ma1'] else 'NO'} | "
                  f"{row['design_reference'] if row['design_reference'] is not None else '--'} | "
                  f"{'yes' if row['within_0_15_of_design_reference'] else ('NO' if row['design_reference'] is not None else '--')} |")
+
+    L.append("\n### 6.2 Frozen block vs generated block (commissioned arm, one predicate)\n")
+    fb = out["frozen_block_summary_A0"]
+    L.append("| block | episodes | strict success | rate | 95 % Wilson CI |")
+    L.append("|---|---|---|---|---|")
+    L.append(f"| frozen demo block | {fb['frozen_episodes']} | {fb['frozen_strict_success']} | "
+             f"**{fb['frozen_strict_rate']:.4f}** | "
+             f"[{fb['frozen_strict_ci95'][0]:.4f}, {fb['frozen_strict_ci95'][1]:.4f}] |")
+    L.append(f"| generated block | {fb['generated_episodes']} | {fb['generated_strict_success']} | "
+             f"**{fb['generated_strict_rate']:.4f}** | "
+             f"[{fb['generated_strict_ci95'][0]:.4f}, {fb['generated_strict_ci95'][1]:.4f}] |")
+    L.append(f"| generated - frozen (points) | -- | -- | "
+             f"**{fb['generated_minus_frozen_points']:+.2f}** | -- |")
 
     L.append("\n### 7.1 Per target, generated block, commissioned arm\n")
     L.append("| target | strict | rate | 95 % CI | band entry | top failure reasons |")
@@ -466,6 +493,28 @@ def markdown(out: dict) -> str:
                        ("median steps", "median_steps"),
                        ("MA-1 held-out teacher SR", "ma1_teacher_sr_held")):
         L.append(f"| {label} | {m[key]} |")
+
+    p = out["run_provenance"]
+    L.append("\n### 8.1 Host and run provenance (rendered, never typed)\n")
+    L.append("| when | loadavg (1/5/15) | cpus | GPU (used / total, util) | UTC |")
+    L.append("|---|---|---|---|---|")
+    for label, key in (("sweep A start", "sweepA_start"), ("sweep A end", "sweepA_end"),
+                       ("sweep B start", "sweepB_start"), ("sweep B end", "sweepB_end")):
+        row = p["host"][key]
+        if row is None:
+            L.append(f"| {label} | not recorded | -- | -- | -- |")
+            continue
+        L.append(f"| {label} | {row['loadavg_str']} | {row['cpus']} | {row['gpu']} | "
+                 f"{row['utc']} |")
+    L.append("")
+    L.append("| quantity | value |")
+    L.append("|---|---|")
+    L.append(f"| sweep A wall (s) | {p['wall_s']['sweepA']} |")
+    L.append(f"| sweep B wall (s) | {p['wall_s']['sweepB']} |")
+    L.append(f"| workers | {p['workers'] if p['workers'] is not None else 'not recorded'} |")
+    L.append(f"| BLAS threads per worker | "
+             f"{p['blas_threads_per_worker'] or 'not recorded'} |")
+    L.append(f"| provenance note | {p['workers_note']} |")
     return "\n".join(L)
 
 
@@ -482,6 +531,182 @@ def scene_facts_summary(data, arm="A0") -> dict:
     }
 
 
+def false_arrival_dtg(data, arm: str = "A0") -> dict:
+    """The false-arrival distance-to-goal distribution, WITH ITS CONVENTION.
+
+    RESULTS.md quoted "median 3.25 m, worst 7.17 m" and neither number was in
+    ``results.json`` (VERDICT §5.3).  3.25 m is the UPPER-MIDDLE order statistic
+    of an even-length sample; the interpolated median (``statistics.median``,
+    the mean of the two middle values) is 3.17 m.  Both are rendered and the
+    convention is named, because "median" alone does not pick one.
+    """
+
+    gen, _ = split(data[arm]["rows"])
+    fails = [r for r in gen if not r["strict_success"]]
+    dtg = sorted(float(r["dtg_m"]) for r in fails if r.get("false_arrival"))
+    n = len(dtg)
+    if not n:
+        return {"arm": arm, "n": 0}
+    upper = dtg[n // 2]
+    lower = dtg[(n - 1) // 2]
+    per_target = collections.Counter(
+        r["target"] for r in fails if r.get("false_arrival")
+    ).most_common()
+    return {
+        "arm": arm,
+        "n": n,
+        "min_m": round(dtg[0], 4),
+        "median_interpolated_m": round((lower + upper) / 2.0, 4),
+        "median_upper_order_statistic_m": round(upper, 4),
+        "median_lower_order_statistic_m": round(lower, 4),
+        "max_m": round(dtg[-1], 4),
+        "per_target": per_target,
+        "convention_note": (
+            "median_interpolated_m is statistics.median (mean of the two middle "
+            "values of an even sample); median_upper_order_statistic_m is "
+            f"dtg[n//2] with n = {n}. RESULTS.md quotes the interpolated median "
+            "and names the convention beside it."
+        ),
+    }
+
+
+def frozen_block_summary(data, arm: str = "A0") -> dict:
+    """The frozen demo block as ONE rate, and the generated block beside it.
+
+    RESULTS.md 6 compares "0.6511 generated vs 0.2750 frozen"; the 0.2750 was
+    the only one of the pair not in ``results.json`` (the per-target rows were,
+    the aggregate was not).
+    """
+
+    gen, frz = split(data[arm]["rows"])
+    ks, ns, cis = rate(frz, "strict_success")
+    kb, _nb, cib = rate(frz, "band_entry")
+    kg, ng, cig = rate(gen, "strict_success")
+    return {
+        "arm": arm,
+        "frozen_episodes": ns,
+        "frozen_strict_success": ks,
+        "frozen_strict_rate": cis[0],
+        "frozen_strict_ci95": [cis[1], cis[2]],
+        "frozen_band_entry": kb,
+        "frozen_band_entry_rate": cib[0],
+        "generated_episodes": ng,
+        "generated_strict_success": kg,
+        "generated_strict_rate": cig[0],
+        "generated_strict_ci95": [cig[1], cig[2]],
+        "generated_minus_frozen_points": round((cig[0] - cis[0]) * 100.0, 2),
+        "note": (
+            "one recipe, one predicate: the generated block comes out EASIER "
+            "than the frozen demo block, which is what refutes H-NG1c's "
+            "conclusion (RESULTS 6)."
+        ),
+    }
+
+
+def run_provenance(index: dict, idx_a: dict) -> dict:
+    """The host and worker rows, under names that say which sweep they are.
+
+    ``index.json`` belongs to whichever sweep finished LAST (sweep B), so its
+    ``host_start`` / ``host_end`` are sweep B's — which is how RESULTS.md came
+    to print sweep A's start as ``3.06 / 2.97 / 2.72`` (a number that is in no
+    artifact at all) while ``results.json`` held ``12.94 / 23.51 / 16.13``
+    (VERDICT §5.3).  Every snapshot is rendered here with the sweep named.
+    """
+
+    def snap(source: dict | None, key: str) -> dict | None:
+        row = (source or {}).get(key)
+        if not row:
+            return None
+        load = [round(float(v), 2) for v in row.get("loadavg") or []]
+        return {
+            "loadavg_1_5_15": load,
+            "loadavg_str": " / ".join(f"{v:.2f}" for v in load),
+            "cpus": row.get("cpus"),
+            "gpu": row.get("gpu"),
+            "utc": row.get("utc"),
+        }
+
+    prov = dict(index.get("run_provenance") or {})
+    prov_a = dict(idx_a.get("run_provenance") or {})
+    workers = prov.get("workers", prov_a.get("workers"))
+    return {
+        "host": {
+            "sweepA_start": snap(idx_a, "host_start"),
+            "sweepA_end": snap(idx_a, "host_end"),
+            "sweepB_start": snap(index, "host_start"),
+            "sweepB_end": snap(index, "host_end"),
+        },
+        "wall_s": {
+            "sweepA": max(
+                [float(v.get("wall_s") or 0.0) for v in (idx_a.get("arms") or {}).values()],
+                default=None,
+            ),
+            "sweepB": max(
+                [float(v.get("wall_s") or 0.0) for v in (index.get("arms") or {}).values()],
+                default=None,
+            ),
+        },
+        "workers": workers,
+        "workers_sweepA": prov_a.get("workers"),
+        "workers_sweepB": prov.get("workers"),
+        "blas_threads_per_worker": prov.get(
+            "blas_threads_per_worker", prov_a.get("blas_threads_per_worker")
+        ),
+        "argv_sweepA": prov_a.get("argv"),
+        "argv_sweepB": prov.get("argv"),
+        "workers_note": (
+            "recorded by run.py"
+            if workers is not None
+            else "NOT RECORDED by the run that produced these rows — run.py "
+            "records it from this commit on, and RESULTS.md says 'not recorded' "
+            "rather than repeating one of the three hand-typed values (24/32/40)"
+        ),
+    }
+
+
+def live_planner_facts(row: dict) -> dict:
+    """Card C3, schema hygiene — give a PRE-A2 arm-facts row the LIVE inflation.
+
+    The A0-A4 rows were written before ``run.py.planner_facts`` learned that
+    ``DirectiveNavigator._create_navigator`` commissions the grid planner with
+    ``map_gate_clearance_m = safety.stop_distance_m``. They therefore carry
+    ``planner_inflation_radius_m: 0.42`` beside ``map_gate_clearance_m: null``
+    (the *config file's* inflation), while only the B rows carry
+    ``LIVE_planner_inflation_radius_m``. Read literally the two contradict the
+    finding they are evidence for (VERDICT 5.2, "gate ring", caveat 1).
+
+    Nothing is re-typed: the live fields are recomputed from the two numbers the
+    stale row already records, through the same product functions ``run.py``
+    uses, and the original keys are kept beside them under a schema note.
+    """
+
+    if "LIVE_planner_inflation_radius_m" in row or "nav_safety_stop_distance_m" not in row:
+        return row
+    from parcel_robot.navigation.grid_navigator import _planner_coupling_ring_m
+    from parcel_robot.navigation.grid_planner import GridPlannerConfig
+
+    margin = float(row["map_safety_margin_m"])
+    ring = _planner_coupling_ring_m(float(row["nav_safety_stop_distance_m"]), hard_margin_m=margin)
+    # resolution / grid size do not enter ``inflation_radius_m``; these are the
+    # shipped ``grid.yaml`` values, exactly as ``run.py.Arm.inflation_m`` uses.
+    live = GridPlannerConfig(resolution_m=0.10, grid_size_cells=161,
+                             safety_margin_m=margin, gate_clearance_m=ring)
+    return {
+        **row,
+        "config_only_inflation_radius_m": row.get("planner_inflation_radius_m"),
+        "map_gate_clearance_m_in_model_file": row.get("map_gate_clearance_m"),
+        "live_planner_gate_ring_m": round(ring, 6),
+        "live_planner_gate_lateral_m": round(live.gate_lateral_clearance_m, 6),
+        "LIVE_planner_inflation_radius_m": round(live.inflation_radius_m, 6),
+        "live_narrowest_routable_corridor_m": round(2 * live.inflation_radius_m, 6),
+        "schema_note": (
+            "planner_inflation_radius_m / map_gate_clearance_m are the CONFIG "
+            "FILE's numbers (pre-A2 schema); the planner the rows were produced "
+            "by inflates LIVE_planner_inflation_radius_m"
+        ),
+    }
+
+
 def main() -> None:
     data = load()
     if not data:
@@ -493,7 +718,7 @@ def main() -> None:
              if (RAW / "index_sweepA.json").is_file() else {})
     facts = dict(idx_a.get("arm_config_facts") or {})
     facts.update(index.get("arm_config_facts") or {})
-    index["arm_config_facts"] = facts
+    index["arm_config_facts"] = {n: live_planner_facts(v) for n, v in facts.items()}
     index.setdefault("determinism", idx_a.get("determinism"))
     if idx_a.get("determinism"):
         index["determinism"] = idx_a["determinism"]
@@ -521,6 +746,9 @@ def main() -> None:
         "H_NG1a_all_arms": {name: h_ng1a(split(d["rows"])[0]) for name, d in data.items()},
         "H_NG1b": h_ng1b(data),
         "H_NG1c": h_ng1c(data),
+        "false_arrival_dtg_A0": false_arrival_dtg(data),
+        "frozen_block_summary_A0": frozen_block_summary(data),
+        "run_provenance": run_provenance(index, idx_a),
         "ma1_reconciliation": ma1_reconciliation(data),
         "per_target_generated_A0": per_target(data),
         "goal_clearance_vs_outcome_A0": scene_correlation(data),
@@ -536,7 +764,8 @@ def main() -> None:
     print(json.dumps({k: out[k] for k in
                       ("H_NG1a", "H_NG1a_any_instance_oracle",
                        "H_NG1a_excluding_crosswalk", "H_NG1b", "H_NG1c",
-                       "ma1_reconciliation",
+                       "false_arrival_dtg_A0", "frozen_block_summary_A0",
+                       "run_provenance", "ma1_reconciliation",
                        "per_target_generated_A0", "goal_clearance_vs_outcome_A0",
                        "unreachable_diagnosis_A0",
                        "plumbing_control_A0_vs_A0c_identical", "determinism")},

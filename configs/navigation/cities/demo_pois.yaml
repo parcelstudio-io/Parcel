@@ -1,8 +1,27 @@
 # Demo semantic map for language directives. Coordinates are meters in the
 # navigation frame (MetaUrban / local map). Expand when a real city map is wired.
+#
+# `scene_id` (card C1 / POI-ORACLE-1, follow-up F1) — THE SCENE THESE
+# COORDINATES ARE FACTS ABOUT. Every position below was surveyed on one scene:
+# `crosswalk_a` is "kept inside the compact MuJoCo city block" (see its own note
+# at the bottom of this file). The value is that scene's own identity, the MJCF
+# `<mujoco model="...">` name of `src/parcel_robot/scenes/city_block.xml`.
+#
+# `navigation.poi_admission` admits a POI from this table ONLY while the loaded
+# scene's id equals this one; on any other scene, and when no scene is loaded at
+# all, `DirectiveNavigator.parse` refuses the table and the semantic ladder runs
+# (`mission.metadata['poi_refused'] = "scene_mismatch:<loaded>/<declared>"` or
+# `"no_scene"`). NAV-GEN-1 measured why: on 30 generated scenes this table
+# answered "go to the crosswalk" 90/90 times with this block's coordinate, and
+# 42 of those episodes declared arrival in no crosswalk at all.
+#
+# A table with no `scene_id` can never match a loaded scene — it is refused
+# everywhere. Move these coordinates to another scene and you must change this
+# key with them.
 
 version: 1
 frame: city_map_v0
+scene_id: parcel_city_block
 
 pois:
   - id: coffee_42nd

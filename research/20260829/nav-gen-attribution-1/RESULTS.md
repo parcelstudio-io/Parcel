@@ -30,7 +30,9 @@ Three facts drive all of it, and each is measured, not inferred:
 3. **The largest single failure class is a hardcoded lookup table.** All 84
    grounding failures resolved `crosswalk_a` — a `demo_pois.yaml` row at
    `[3.5, -0.6]` that exists in no generated scene — producing **42 false
-   arrivals** (`status = arrived`, median 3.25 m from any crosswalk). Excluding
+   arrivals** (`status = arrived`, median 3.17 m from any crosswalk —
+   `statistics.median` over n = 42; the upper-middle order statistic `dtg[n//2]`
+   is 3.25 m; `results.json` -> `false_arrival_dtg_A0`). Excluding
    `crosswalk`, grounding failures are **0** and H-NG1a's clause 1 passes at
    **0.7808** (section 5).
 
@@ -51,19 +53,36 @@ Three facts drive all of it, and each is measured, not inferred:
 * **The NAV evals' held-out scene is never loaded and never named.** No frozen
   episode set or digest is read or moved.
 * **A foreign live session shares this host** (`research/20260829/model-b-contract-2/run.py`
-  with `--threads 32`, seen at 20:28 local). Worker count was cut from 32 to 24
-  and every worker pinned to one BLAS thread accordingly.
+  with `--threads 32`, seen at 20:28 local). Workers were pinned to one BLAS
+  thread each so the pool would stay under the 48-thread ceiling. **The worker
+  COUNT the recorded sweeps ran with is not in any artifact** — the first draft
+  of this file quoted 24 here, 40 in section 8 and 40 in `README.md`'s reproduce
+  block, and none of the three can be checked. `run.py` now writes
+  `run_provenance.workers` into `raw/index.json`, and `results.json` ->
+  `run_provenance.workers` reads `null` with `workers_note` saying so for these
+  rows (card C7).
 
-### Host at start
+### Host
 
-| when | loadavg (1/5/15) | cpus | GPU (used / total, util) |
-|---|---|---|---|
-| sweep A start, 2026-08-30T00:38:xxZ | 3.06 / 2.97 / 2.72 | 192 | 2145 / 32760 MiB, 21 % |
-| sweep A end, 2026-08-30T00:52:07Z | 3.95 / 12.86 / 17.14 | 192 | 2031 / 32760 MiB, 25 % |
-| sweep B end, 2026-08-30T00:57:42Z | 15.04 / 23.44 / 21.07 | 192 | 2026 / 32760 MiB, 41 % |
+Rendered by `analyze.py` from `raw/index*.json`; the table is `tables.md` 8.1
+verbatim, so no load average here is typed by hand.
 
-Every snapshot is also in `results.json` under `host_start` / `host_end` /
-`host_start_sweepA` / `host_end_sweepA`, recorded by `run.py` itself.
+| when | loadavg (1/5/15) | cpus | GPU (used / total, util) | UTC |
+|---|---|---|---|---|
+| sweep A start | 12.94 / 23.51 / 16.13 | 192 | 2058 MiB, 32760 MiB, 25 % | 2026-08-30T00:38:51Z |
+| sweep A end | 3.95 / 12.86 / 17.14 | 192 | 2031 MiB, 32760 MiB, 25 % | 2026-08-30T00:52:07Z |
+| sweep B start | 2.91 / 10.08 / 15.73 | 192 | 2030 MiB, 32760 MiB, 27 % | 2026-08-30T00:53:45Z |
+| sweep B end | 15.04 / 23.44 / 21.07 | 192 | 2026 MiB, 32760 MiB, 41 % | 2026-08-30T00:57:42Z |
+
+The first draft of this table printed sweep A's start as `3.06 / 2.97 / 2.72`
+with GPU `2145 MiB` — a snapshot that appears in **no** artifact; the recorded
+one is the `12.94 / 23.51 / 16.13` row above (`raw/index_sweepA.json` ->
+`host_start`, written by `run.py` at 00:38:51Z). Corrected under card C7.
+
+Every snapshot is in `results.json` under `run_provenance.host`
+(`sweepA_start` / `sweepA_end` / `sweepB_start` / `sweepB_end`); the older,
+ambiguous `host_start` / `host_end` keys are kept and are **sweep B's**, because
+`index.json` belongs to whichever sweep finished last.
 
 ## 1. The episode set
 
@@ -394,7 +413,9 @@ for an end-to-end demo". `PlaceGrounder` fires *before* semantic search, so
 own `crosswalk` region (polygon around `[-0.35, -0.06] .. [1.15, 1.92]` on seed
 880000). The mission then drives to the table's point and declares success:
 **42 of the 90 crosswalk episodes are FALSE ARRIVALS** — `status = arrived`
-with the body in no crosswalk at all, median DTG 3.25 m, worst 7.17 m. The
+with the body in no crosswalk at all, median DTG 3.17 m (`statistics.median`,
+n = 42; upper-middle order statistic 3.25 m), worst 7.17 m — `results.json` ->
+`false_arrival_dtg_A0`. The
 other 42 stall out as `navigation_no_progress` on the way to the wrong place.
 
 This is exactly the second-oracle hazard `configs/navigation/default.yaml`
@@ -447,9 +468,10 @@ FROZEN and is not moved here, so both comparisons are reported:
 finding here.** H-NG1c reasoned that reproducing the frozen block would make
 "the generated scenes' 4.5 % a geometry effect". The frozen block reproduces —
 and the generated scenes come out **easier, not harder**: 0.6511 strict success
-on 450 generated episodes against 0.2750 on 80 frozen-block episodes with the
-identical recipe. On this corpus the generated geometry is not what makes the
-navigator fail.
+on 450 generated episodes against 0.2750 (22/80) on the frozen-block episodes
+with the identical recipe — +37.61 points, `results.json` ->
+`frozen_block_summary_A0`, `tables.md` 6.2. On this corpus the generated
+geometry is not what makes the navigator fail.
 
 ## 7. Supporting rows
 
@@ -547,8 +569,8 @@ gives **150/200 = 0.750** on MA-1's held geometry against this probe's 0.651
 [0.606, 0.694] — different episodes and a different target mix, uninvestigated.
 
 Section 6's conclusion is unaffected: it rests on this probe's own
-frozen-block-vs-generated comparison (0.2750 vs 0.6511, one recipe, one
-predicate), not on MA-1's number.
+frozen-block-vs-generated comparison (0.2750 = 22/80 vs 0.6511 = 293/450, one
+recipe, one predicate; `frozen_block_summary_A0`), not on MA-1's number.
 
 ## 8. Determinism, host, and cost
 
@@ -560,14 +582,16 @@ predicate), not on MA-1's number.
   stream is never drawn from at all.
 * **Plumbing control: PROVED.** A0 (the repo config file) and A0c (a scratch
   copy at the commissioned value) are identical row for row.
-* **Scale.** Sweep A: 6 arms x 530 episodes = 3 180 episodes, 530 s wall on 40
-  workers. A0 repeat: 530 episodes. Sweep B: 4 arms x 450 = 1 800 episodes,
-  237 s. Total **5 510 episodes**.
-* **Host.** Sweep A start `loadavg 3.06 / 2.97 / 2.72`, GPU 2 145 / 32 760 MiB
-  at 21 %; sweep A end `3.95 / 12.86 / 17.14`, GPU 2 031 MiB at 25 %; sweep B
-  end `15.04 / 23.44 / 21.07`, GPU 2 026 MiB at 41 %. 192 CPUs; 40 workers
-  pinned to one BLAS thread each. A foreign session (`model-b-contract-2`,
-  `--threads 32`) shared the host for part of the run.
+* **Scale.** Sweep A: 6 arms x 530 episodes = 3 180 episodes, 530.4 s wall.
+  A0 repeat: 530 episodes. Sweep B: 4 arms x 450 = 1 800 episodes, 236.6 s.
+  Total **5 510 episodes**. (`results.json` -> `run_provenance.wall_s`.)
+* **Host.** The four snapshots are the table in section 0 and `tables.md` 8.1,
+  rendered from the artifacts: sweep A `12.94 / 23.51 / 16.13` -> `3.95 / 12.86
+  / 17.14`; sweep B `2.91 / 10.08 / 15.73` -> `15.04 / 23.44 / 21.07`. 192 CPUs;
+  each worker pinned to one BLAS thread. **The worker count is not recorded in
+  any artifact of these runs** (see section 0); `run.py` records it from now on.
+  A foreign session (`model-b-contract-2`, `--threads 32`) shared the host for
+  part of the run.
 * **Cost: $0.** No GPU work, no hosted call, no model server, no token spend.
 
 ## 9. What this does NOT prove

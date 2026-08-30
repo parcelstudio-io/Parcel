@@ -19,7 +19,7 @@ sockets, no subprocess simulator, no hosted call, **$0**.
 | `plumbing_check.py` | reads the inflation off the LIVE `DirectiveNavigator` per arm — the evidence behind `RESULTS.md` 2.1 |
 | `RESULTS.md` | what was run, the numbers, each DESIGN bar quoted and met / not met |
 | `results.json` | machine-readable rows behind `RESULTS.md` |
-| `tables.md` | the RESULTS tables as `analyze.py` renders them — no number in `RESULTS.md` is typed by hand |
+| `tables.md` | the RESULTS tables as `analyze.py` renders them — no number in `RESULTS.md` is typed by hand (re-established under card C7: the false-arrival DTG distribution, the frozen-block aggregate and the host/worker provenance are rendered in 5.4 / 6.2 / 8.1) |
 
 Raw per-episode rows and the scene manifest live in this executor's scratch
 (`~/.cache/parcel-0e/ng1/raw/`), not in the repo.
@@ -34,7 +34,9 @@ env -u TMPDIR OPENBLAS_NUM_THREADS=32 .parcel/bin/python \
   research/20260829/nav-gen-attribution-1/run.py --stage prepare
 
 # 2. the headline run: sweep A (6 arms x 530 episodes) + sweep B (4 arms x 450)
-#    + the A0 repeat that proves determinism. ~13 min on 40 workers.
+#    + the A0 repeat that proves determinism. Wall on this host: 530.4 s
+#    (sweep A) + 236.6 s (sweep B); pick --workers for the free thread budget
+#    (the recorded run's count was never written down -- see RESULTS.md 0).
 env -u TMPDIR OPENBLAS_NUM_THREADS=32 .parcel/bin/python \
   research/20260829/nav-gen-attribution-1/run.py --all --seed 20260829 \
   --workers 40 --determinism
@@ -65,8 +67,12 @@ inside each work unit.
 
 ## Host discipline
 
-`TMPDIR` unset; workers pinned to one BLAS thread each (`--workers 24` costs 24
-threads, under the 48-thread ceiling); a foreign session shares this host, so
+`TMPDIR` unset; workers pinned to one BLAS thread each (`--workers N` costs N
+threads; keep N under the 48-thread ceiling when a peer session shares the
+host); `run.py` records the count it ran with in `raw/index.json` ->
+`run_provenance` and `analyze.py` renders it, because the recorded sweeps left
+it unrecorded and three different values were typed into the prose (card C7);
+a foreign session shares this host, so
 `uptime` and `nvidia-smi` are recorded at start and end of the run in
 `results.json`. Nothing under `src/`, `evals/`, `configs/`, `tests/` or any
 other research folder is written; `git` is read-only; the owner's `:8080` /

@@ -31,6 +31,36 @@ POIS = REPO / "configs" / "navigation" / "cities" / "demo_pois.yaml"
 MODELS = REPO / "configs" / "navigation" / "models"
 
 
+@pytest.fixture(scope="module")
+def demo_scene_loaded():
+    """Card C1/F1 — the POI table answers only while ITS OWN scene is loaded.
+
+    ``demo_pois.yaml`` declares ``scene_id: parcel_city_block`` and
+    ``navigation.poi_admission`` admits a POI only while the loaded scene is
+    that one; with no scene loaded at all the table is refused
+    (``poi_refused = "no_scene"``), which is the point of the card — a robot
+    that has loaded no map must not be answered by a demo lookup table.
+
+    The tests below are about the controller, not about grounding: they need a
+    POI GOAL to drive toward. So they load the demo block THE PRODUCT WAY,
+    through ``extract_city_semantics`` — the loader every venue (headless
+    world, NAV_INSTRUCT runner, sim adapter, viewer) goes through, and the
+    place that publishes the scene's identity — rather than poking the
+    published-scene seam directly.
+    """
+
+    import mujoco
+
+    from parcel_robot.navigation.poi_admission import clear_scene_instances
+    from parcel_robot.perception.city_semantics import extract_city_semantics
+    from parcel_robot.simulation.headless_city import DEFAULT_CITY_SCENE
+
+    extract_city_semantics(mujoco.MjModel.from_xml_path(str(DEFAULT_CITY_SCENE)))
+    yield
+    clear_scene_instances()
+
+
+
 @pytest.mark.parametrize(
     ("transcript", "directive", "query", "kind", "relation"),
     [
@@ -105,7 +135,7 @@ def test_ground_coffee_42nd():
     assert goal.x == pytest.approx(42.0)
 
 
-def test_directive_navigator_stub_aligns_then_moves_toward_goal():
+def test_directive_navigator_stub_aligns_then_moves_toward_goal(demo_scene_loaded):
     nav = DirectiveNavigator.from_config(NAV_CFG)
     mission = nav.start("go to the coffee shop at 42nd street")
     assert mission.goal.poi_id == "coffee_42nd"
@@ -122,7 +152,7 @@ def test_directive_navigator_stub_aligns_then_moves_toward_goal():
     nav.close()
 
 
-def test_directive_navigator_turns_away_from_close_obstacle():
+def test_directive_navigator_turns_away_from_close_obstacle(demo_scene_loaded):
     nav = DirectiveNavigator.from_config(NAV_CFG)
     nav.start("go to the crosswalk")
     command = nav.step(
@@ -141,7 +171,7 @@ def test_directive_navigator_turns_away_from_close_obstacle():
 
 
 @pytest.mark.parametrize("clearance", [None, 1.5])
-def test_stub_exits_avoidance_without_a_bearing_when_obstacle_clears(clearance):
+def test_stub_exits_avoidance_without_a_bearing_when_obstacle_clears(clearance, demo_scene_loaded):
     nav = DirectiveNavigator.from_config(NAV_CFG)
     nav.start("go to the crosswalk")
     avoiding = nav.step(
@@ -168,7 +198,9 @@ def test_stub_exits_avoidance_without_a_bearing_when_obstacle_clears(clearance):
     nav.close()
 
 
-def test_stub_latches_obstacle_identity_and_world_tangent_until_corridor_is_clear():
+def test_stub_latches_obstacle_identity_and_world_tangent_until_corridor_is_clear(
+    demo_scene_loaded,
+):
     # This test exercises the point-goal stub specifically; the production
     # default is now grid_v1, so select the stub explicitly.
     nav = DirectiveNavigator.from_config(NAV_CFG, model_id="stub_v0")
@@ -252,7 +284,9 @@ def test_stub_latches_obstacle_identity_and_world_tangent_until_corridor_is_clea
     nav.close()
 
 
-def test_stub_uses_full_lidar_to_make_bounded_progress_around_static_obstacle():
+def test_stub_uses_full_lidar_to_make_bounded_progress_around_static_obstacle(
+    demo_scene_loaded,
+):
     nav = DirectiveNavigator.from_config(NAV_CFG)
     mission = nav.start("go to the crosswalk")
     x = y = yaw = 0.0
@@ -487,7 +521,7 @@ def test_collision_policy_rejects_unknown_predictive_mode():
         CollisionPolicy(predictive_mode="crawl")
 
 
-def test_navigation_pipeline_preserves_intentional_lateral_motion():
+def test_navigation_pipeline_preserves_intentional_lateral_motion(demo_scene_loaded):
     class LateralNavigator:
         def reset(self, mission):
             mission.status = "running"
@@ -550,7 +584,7 @@ def test_unsupported_navigator_type_fails_closed():
         build_navigator(spec)
 
 
-def test_metaurban_env_stub_episode():
+def test_metaurban_env_stub_episode(demo_scene_loaded):
     env = MetaUrbanNavEnv(density_ped=0.5, density_obj=0.2, seed=1, max_episode_steps=50)
     obs, info = env.reset(options={"directive": "go to the coffee shop at 42nd street"})
     assert obs.shape == (8,)
@@ -566,7 +600,7 @@ def test_metaurban_env_stub_episode():
     env.close()
 
 
-def test_dog_navigate_api():
+def test_dog_navigate_api(demo_scene_loaded):
     dog = Dog.from_config(REPO / "configs" / "robot.yaml")
     models = dog.list_nav_models()
     assert any(m.id == "stub_v0" for m in models)
@@ -578,7 +612,7 @@ def test_dog_navigate_api():
     assert "align_goal" in cmd.note
 
 
-def test_stub_turns_in_place_for_goal_behind_robot():
+def test_stub_turns_in_place_for_goal_behind_robot(demo_scene_loaded):
     nav = DirectiveNavigator.from_config(NAV_CFG)
     nav.start("go to the crosswalk")
     command = nav.step(NavObservation(position=(8.0, 1.0, 0.0), heading_deg=0.0))

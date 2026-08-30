@@ -25,11 +25,35 @@ class PlaceGrounder:
     the operator emptied the YAML and an empty table because the source is
     ``learned_map`` are different facts, and a harness proving the cutover has
     to be able to tell them apart.
+
+    **Card C1 (POI-ORACLE-1), follow-up F1: this class answers the TABLE, not
+    the scene.** :meth:`ground` is deliberately unchanged — it still says what
+    the table says, which is what makes it testable on its own. Whether the
+    loaded scene lets that answer stand is a separate decision, taken one layer
+    up in :func:`parcel_robot.navigation.poi_admission.ground_admitted_poi`,
+    which ``DirectiveNavigator.parse`` calls in place of a bare ``ground``. On
+    NAV-GEN-1's 30 generated scenes the table answered "go to the crosswalk"
+    90/90 times with a coordinate that is a fact about the demo block and
+    nowhere else, 42 of them "arriving" in no crosswalk at all.
+
+    :attr:`scene_id` is what makes that decidable: the table's own declaration
+    of the scene its coordinates were surveyed on (``scene_id`` in the YAML).
+    An empty ``scene_id`` matches no loaded scene, so a table that does not say
+    where its places are is refused everywhere — the safe direction.
     """
 
-    def __init__(self, pois: list[dict[str, Any]], *, disabled_reason: str = ""):
+    def __init__(
+        self,
+        pois: list[dict[str, Any]],
+        *,
+        disabled_reason: str = "",
+        scene_id: str = "",
+    ):
         self.pois = pois
         self.disabled_reason = str(disabled_reason)
+        #: Card C1/F1 — the scene these coordinates are facts about. Empty
+        #: means "undeclared", which matches no loaded scene.
+        self.scene_id = str(scene_id)
 
     @property
     def enabled(self) -> bool:
@@ -40,7 +64,10 @@ class PlaceGrounder:
     @classmethod
     def from_yaml(cls, path: str | Path) -> PlaceGrounder:
         data = yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
-        return cls(list(data.get("pois") or []))
+        return cls(
+            list(data.get("pois") or []),
+            scene_id=str(data.get("scene_id") or ""),
+        )
 
     @classmethod
     def disabled(cls, reason: str) -> PlaceGrounder:

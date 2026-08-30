@@ -22,3 +22,10 @@ The whisperer cannot say "Sure, I'll check the sofa": `_diff` (`realtime/whisper
 
 ## Does not prove
 Hosted-model behaviour (no hosted calls on this card); the runtime hook (wave B).
+
+## Wave-B acceptance rows (added 22:1x from the second lens, parcel-6c; binding for the install card)
+
+1. The install at `runtime.py:3625` passes `mission = executive task_id` (revision-independent), lineage from the call site (`submit`→NEW, `replace`→REVISE, queue re-issue→QUEUE), `plan_digest = ValidatedPlan.plan_sha256`; never a goal label or any model-touched string.
+2. A deferred replacement (`replace()` → `accepted=True, disposition "defer"`) fires `plan_accepted` **on activation** (`replacement_activated`/`queued`), not at admission; the dropped-before-activation path fires nothing — both tested.
+3. A mission-independent ceiling on reroute forwards (≤ N/hour; N stated on the card with its $ denominator: 20 missions/day × ≤ 3 = ~$4.3/month) so a re-issue chain cannot walk around the per-mission cap.
+4. Follow-up A1 (wave A, in progress): undeliver rewinds to the last SHARED forward; sequence test `[S1, plan_accepted, S2] → undeliver S2 → clock == t1`.

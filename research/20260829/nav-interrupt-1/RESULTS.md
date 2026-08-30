@@ -298,3 +298,233 @@ HOLD rows (bare "actually"): [{"episode_id": "ni1-23-sidewalk-bench", "goal_amen
 
 Blind (n = 110): 0.827 [0.75, 0.89]; non-adversarial 0.914; adversarial 0.675; per class: revise 27/30, keep 28/30, queue 20/30, clarify 16/20. Post-hoc `classify_v2` 0.973 — reported separately, not the pre-registered number. sha256 of the blind set matches the frozen hash.
 
+---
+
+## Card C7 — the queue-cued re-issue, reproduced at the door and recorded honestly
+
+Written 2026-08-29 22:0x by the C7 executor (`scrum/20260829/task_2/C7_HARNESS_TRUTH.md`).
+Nothing above this line is re-measured: `episodes.jsonl`, `results.json`,
+`controls.jsonl`, `sequence_controls.jsonl` and `gold_blind.json` are untouched,
+and the H-NI1a/b/c numbers stand exactly as recorded. This section adds the
+reproduction of the **second live defect** named in `VERDICT_FABLE.md` item 2 —
+*"a held queue utterance re-issued verbatim is refused (the cue must be
+stripped)"* — and records where the workaround now lives.
+
+### What the product does with a queue cue (RED)
+
+One sim, the same `LiveSession.issue` door every leg of the tier uses, robot at
+rest:
+
+| | text that reached `handle_text` | reply | tasks admitted |
+|---|---|---|---|
+| **RED**, verbatim | `'after that, go to the owner'` | `'I did not understand that command'` | **0** |
+| **GREEN**, `strip_cue=True` | `'go to the owner'` | `"Okay—I'll follow you safely."` | **1** |
+
+`navigation_directive_from_text` does not strip a queue cue, so the router never
+reaches PlanIR admission at all and answers with the generic parse failure. The
+GREEN row carries `raw_text = 'after that, go to the owner'` and `cue_stripped = true`,
+so the record shows both the sentence the owner made and the sentence the
+product was given.
+
+**A recording gap this exposed, and closed.** `Utterance.metrics["refused"]`
+tests for `"couldn't admit"`, the *admission* refusal — so the RED row above
+reads `refused: false` on an utterance the product plainly refused. A second
+flag `not_understood` was ADDED (never widened, so no recorded number changes
+meaning): it reads **true** on the RED row and
+**false** on the GREEN one. Tier rows recorded
+before this section do not carry the field.
+
+### Where the workaround lives now
+
+The strip was previously inside `PlanQueue.hold_for_later` only — so the one
+push path that did *not* strip (`on_interrupt`'s `queue` branch) was a latent
+repeat of the same defect, and no leg record carried the spoken form. Now:
+
+* `harness.QUEUE_CUE_RE` / `harness.strip_queue_cue()` own the cue vocabulary,
+  at the ISSUE DOOR where the refusal happens. `queue_policy` imports them, so
+  the classifier and the door cannot disagree — the H-NI1c blind-set numbers are
+  byte-identical after the move (0.8273 overall; revise 0.900 / keep 0.9333 /
+  queue 0.6667 / clarify 0.800; non-adversarial 0.9143, adversarial 0.6750) and
+  `gold_blind.json`'s sha256 is unchanged (`c253df2f…`).
+* `LiveSession.issue(text, *, strip_cue=False)` strips only when asked, records
+  `raw_text` and `cue_stripped` on the `Utterance`, and is asked **only by the
+  re-issue leg**. A first utterance is never stripped: that would work around
+  the admission defect this tier exists to measure.
+* Every `Leg` now carries `raw_text` (what was held) and `cue_stripped` beside
+  `text` (what reached `handle_text`).
+* The re-issue leg issues the queue entry's **spoken** form and lets the door
+  strip it, so the pair is visible in the row rather than implied.
+
+### The re-issue row, re-run (`ni1-00-bench-come_here`, family `queue`, 138.7 s)
+
+Queue log:
+
+```
+hold_pre_runtime  spoken='after that, go to the owner'  will_issue='go to the owner'
+reissue           spoken='after that, go to the owner'  text='go to the owner'  terminal_state='failed'
+```
+
+Re-issue leg:
+
+| field | value |
+|---|---|
+| `raw_text` (held) | `'after that, go to the owner'` |
+| `text` (issued) | `'go to the owner'` |
+| `cue_stripped` | **true** |
+| reply | `"Okay—I'll follow you safely."` |
+| `admitted_work` | **true** |
+| task states | `['succeeded']` / `['owner_follow_verified']` |
+| `system_arrival` / `scorer_arrival` | **false** / **false** (agreement) |
+| DTG | 4.515 m |
+| SPL | 0.0 |
+
+**The re-issue ADMITS**, which is the bar this card carries: the cue-stripped
+directive reaches `handle_text`, a task is created, it goes `succeeded` with
+`owner_follow_verified`, and the record shows both the held and the issued form.
+
+**Arrival is not this card's bar and did not reproduce across reps.** The
+episode was run twice while the leg record was being completed (`ni1-00-bench-come_here`,
+seed 20260829): **2/2 admitted**, but the owner-follow band was held in one rep
+(`system_arrival`/`scorer_arrival` both true, DTG 0.228 m, SPL 1.0, 69.6 s) and
+not in the other (both false, DTG 4.515 m, follow state `following`, 138.7 s —
+the table above). `come_here` is an owner-anchored approach whose terminal is the
+formation band HELD, and H-NI1b already records the re-issue return rate as
+13/34 = 0.382 across the tier. Nothing here re-measures that: this is one episode
+of the queue family at one seed, run to check the door, and the 40-episode tier
+was **not** re-run (2–2.5 h with five peer executors on the host). Every rate
+above stays as recorded. Raw rows for this check are in the C7 executor's scratch
+(`~/.cache/parcel-0e/c7/ni1_door_red_green.json`,
+`~/.cache/parcel-0e/c7/ni1_reissue_rows.jsonl`).
+
+### What is still C6's, not this card's
+
+The FIRST live defect — an owner-referring amendment suspends goal 1 and cannot
+admit the replacement, parking the robot — is untouched here. The harness
+records it; it is not worked around.
+
+---
+
+## Card C7-F1 — the scorer follows the executive's committed instance
+
+Written 2026-08-29 23:4x by the C7 executor, after C2's executor found that
+sidewalk legs scored `false_arrival` at DTG ~4.98 m while the executive had
+committed and verified a **real second instance**. Nothing above this line is
+re-measured except where this section says so; `episodes.jsonl`,
+`controls.jsonl`, `sequence_controls.jsonl`, `results.json` and
+`gold_blind.json` are untouched (sha256 `c253df2f…` re-printed and unchanged).
+
+### The defect
+
+The static city holds two polygons labelled `sidewalk`:
+
+| instance | polygon (frozen eval table) |
+|---|---|
+| `sidewalk` (north, the generator's tier-A default) | y ∈ [2.4, 3.6] |
+| `sidewalk_south` | y ∈ [−3.6, −2.4] |
+
+`GoalSpec.region()` took a `committed` argument and **used it only for
+`object_near` goals**. The `region` branch called
+`_region_goal(self.plain, tier="A")`, which is hardcoded to the north polygon,
+and the `object_towards` branch was hardcoded to `lamp_post_1`. So a leg whose
+executive committed `sidewalk_south`, drove there and verified arrival was
+scored against a polygon ~4.98 m away and came out `false_arrival` —
+**the harness inventing a disagreement the robot did not have.**
+
+### The fix
+
+`GoalSpec.region_with_provenance(committed=…)` replaces the hardcoded lookup for
+**every** non-owner kind, under the same-label tie-break documented in
+`README.md` (`committed_instance` / `default_instance` /
+`default_instance_label_mismatch`). Two properties keep it honest:
+
+* **a committed instance is scored only if it carries the goal's own label** —
+  otherwise the default is scored and the mismatch is flagged, because scoring a
+  wrong-instance arrival against its own choice would let every such arrival
+  pass;
+* **the landmark table is pinned per goal kind** — region and `towards` goals
+  keep the generator's frozen `_LANDMARKS`, `near` goals keep
+  `derived_landmark_table()`, exactly as the recorded tier scored them. The two
+  tables disagree (north sidewalk [2.4, 3.6] vs [2.2, 4.2]; bench radius 0.700
+  vs 0.734), and unifying them would move recorded numbers for a reason that has
+  nothing to do with this defect.
+
+Every leg now records `region_provenance`: the raw committed id, the instance
+scored, the table it came from, the sibling same-label instances, and the rule
+that fired.
+
+### Re-scored offline — every recorded leg, old scorer vs new
+
+The fix is a pure function of (goal, end pose, `system_arrival`, committed id),
+all of which the recorded rows already carry, so all **82 non-owner legs** in
+`controls.jsonl` + `sequence_controls.jsonl` + `episodes.jsonl` were re-scored
+without a simulator:
+
+| authority category | before | after |
+|---|---|---|
+| `agreement` | 63 | **69** |
+| `false_arrival` | **6** | **0** |
+| `authority_disagreement` | 13 | 13 |
+
+Sidewalk legs only (n = 18): `false_arrival` **6 → 0**,
+`agreement` 12 → 18.
+
+All six flips are the same shape — the executive committed `sidewalk_south`,
+the body stood in it, and the new scorer agrees:
+
+| leg | committed | old | new |
+|---|---|---|---|
+| `ni1-09-bench-sidewalk`:`amended_goal` | `sidewalk_south` | false_arrival (DTG 4.981 m) | **agreement** (DTG 0.0 m) |
+| `ni1-10-bench-sidewalk`:`amended_goal` | `sidewalk_south` | false_arrival (DTG 4.982 m) | **agreement** (DTG 0.0 m) |
+| `ni1-11-bench-sidewalk`:`reissue` | `sidewalk_south` | false_arrival (DTG 4.981 m) | **agreement** (DTG 0.0 m) |
+| `ni1-20-sidewalk-bench`:`reissue` | `sidewalk_south` | false_arrival (DTG 4.984 m) | **agreement** (DTG 0.0 m) |
+| `ni1-36-towards_lamppost-sidewalk`:`amended_goal` | `sidewalk_south` | false_arrival (DTG 4.978 m) | **agreement** (DTG 0.0 m) |
+| `ni1-37-towards_lamppost-sidewalk`:`reissue` | `sidewalk_south` | false_arrival (DTG 4.975 m) | **agreement** (DTG 0.0 m) |
+
+**One further leg moves, and it is not a sidewalk leg.**
+`ni1-29-towards_lamppost-bench`'s re-issue committed `lamp_post_2` while the
+`object_towards` branch was hardcoded to `lamp_post_1`: its DTG goes 0.310 →
+8.261 m. The category is `agreement` before and after (the system said not
+arrived and so does the scorer), so no rate moves — but the old 0.310 m was
+distance to a lamppost the robot had not been sent to, and it is corrected here
+rather than left standing.
+
+Three further legs differ by ≤ 0.001 m. That is **not** the fix: the recorded
+rows store `end` rounded to 3 dp while their DTG was computed from the
+full-precision pose, so an offline re-score from the stored pose lands a
+millimetre away. No category and no bar is affected.
+
+### Re-run live — the six legs that commit `sidewalk_south`
+
+The from-rest sidewalk controls only ever commit the **default** (north)
+instance, so they cannot exercise the fix at all; the faithful subset is the six
+tier episodes whose sidewalk leg commits `sidewalk_south` (tier offsets 9, 10,
+11, 20, 36, 37). Run from a pinned scratch export of the tier
+(sha256 `23466d5f…`, byte-identical to `interrupt_tier_v1.json`), on this card's
+own socket root `~/.cache/parcel-0e/c7/ni1f1/`, `PARCEL_MEMORY_PATH` into the
+same scratch, each sim under `systemd-run --user --scope -p MemoryMax=12G -p
+MemorySwapMax=0` and torn down by `run.Sessions`; output to
+`~/.cache/parcel-0e/c7/f1_sidewalk_legs.jsonl`, never the recorded
+`episodes.jsonl`.
+
+| episode | leg | committed | scored | rule | system / scorer | category | DTG (m) |
+|---|---|---|---|---|---|---|---|
+| `ni1-09-bench-sidewalk` | `amended_goal` | `sidewalk_south` | `sidewalk_south` | `committed_instance` | true / true | **agreement** | 0.0 |
+| `ni1-10-bench-sidewalk` | `amended_goal` | `sidewalk_south` | `sidewalk_south` | `committed_instance` | true / true | **agreement** | 0.0 |
+| `ni1-11-bench-sidewalk` | `reissue` | `sidewalk_south` | `sidewalk_south` | `committed_instance` | true / true | **agreement** | 0.0 |
+| `ni1-20-sidewalk-bench` | `reissue` | `sidewalk_south` | `sidewalk_south` | `committed_instance` | true / true | **agreement** | 0.0 |
+| `ni1-36-towards_lamppost-sidewalk` | `amended_goal` | `sidewalk_south` | `sidewalk_south` | `committed_instance` | true / true | **agreement** | 0.0 |
+| `ni1-37-towards_lamppost-sidewalk` | `reissue` | `sidewalk_south` | `sidewalk_south` | `committed_instance` | true / true | **agreement** | 0.0 |
+
+Live result on the sidewalk legs: {'agreement': 6} — **`false_arrival` on these
+legs goes 6 → 0**, and every row names the polygon it was scored
+against.
+
+### What this does NOT change
+
+H-NI1a (admission), H-NI1b (return rate, path ratio) and H-NI1c (the blind
+classifier) are all unchanged: the classifier was not touched
+(`gold_blind.json` sha256 `c253df2f…`), and admission/return are counted from
+task receipts, not from the arrival region. What moves is the
+**authority-disagreement tally**, and only its `false_arrival` half — the
+13 `authority_disagreement` legs (11 bench system-failed-but-arrived, plus
+others) are untouched by this fix and remain a product finding.

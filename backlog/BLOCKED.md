@@ -764,3 +764,88 @@ navigation integration.
   reverse fallback reaches the gateway.
 - **Does not prove:** directional B6 policy, rotation, dynamic people, owner following,
   semantic arrival, recovery, geofence/drop-off, or full first-ODD navigation.
+
+## B32 — One arrival authority: the K0 region must be the region the terminal contract will accept · **OWNER E3 DECISION**
+
+**Opened:** 2026-08-30 by card C0/C2 + follow-up F1 (FIX-SUBSTRATE-1,
+`scrum/20260829/task_2/`). External unblock: **the owner's E3 ruling**, because
+every honest fix moves frozen NAV_INSTRUCT evidence. Nothing here is a wave-A
+edit and nothing here may be done by an executor.
+
+**One root cause, measured on two independent harnesses:** *the K0 arrival
+authority certifies regions the system's own terminal predicate does not
+accept.* Two pairs, same shape.
+
+- **Pair 1 — point vs region (C0, `nav-region_goal-D-15-1b8b2361`).** **No
+  terminal-contract refusal fires.** The episode is `go to the crosswalk`. The
+  scorer certifies the crosswalk **polygon**
+  `[[2.35,−0.4],[3.85,−0.4],[3.85,2.0],[2.35,2.0]]`; the system targets the POI
+  **point** `crosswalk_a` `(3.5, −0.6)`, which lies **0.2 m OUTSIDE that
+  polygon**. The body ends at `(2.8113, 0.7495)` — **already inside the
+  polygon** — while `apply_reactive_safety` returns zero with `meta='stopped'`
+  on **105/200 ticks**, holding it **1.5151 m** from the point against the POI
+  path's **1.50 m** arrive radius: a **15 mm** miss, then
+  `navigation_step_limit_inside_goal`. A goal-**REPRESENTATION** mismatch, the
+  C1 family on the demo block. Bisected to `a379bf4`; the owner's uncommitted
+  `grid_planner.py` only nudges the same stall to 1.4996 m — crossing the same
+  radius by **0.4 mm** — so it is not a fix.
+- **Pair 2 — band vs support polygon (C2, the 10–11 NAV-INT-1 bench legs).**
+  Attributed per leg by refusal branch, not by label: **11/11** decide on
+  **`outside_support_polygon`** (0 ticks of co-visibility,
+  `target_not_resighted`, `outside_arrival_region` or
+  `surface_clearance_out_of_band`). `bench_1` sits at `(−2.5, 3.045)`; the K0
+  `near` band the scorer certifies is a bare annulus `r ∈ [1.8538, 2.0538]`,
+  while the terminal contract also requires the support polygon (the north
+  sidewalk `y ∈ [2.2, 4.2]`) with `terminal_support_clearance_m = 0.32`, i.e.
+  `y ∈ [2.520, 3.880]`. The two are **never intersected**: **77.26 %** of the
+  region the scorer certifies is ground the contract will never stand on
+  (400 000 samples over the annulus). Every leg parks at **(−0.68, 2.28)** —
+  1.9786 m from the bench, **inside the band**, and **0.244 m short** of
+  standable ground.
+
+- **Why C1 does not close pair 1.** Scene-identity C1 keeps D-15 on
+  `known_poi`, so the POI point stays the system's target and the knife-edge
+  survives. At wave scale on NAV-GEN-1 A0: **90/90** crosswalk episodes are
+  `goal_source: known_poi`, **90/90** commit **no K0 arrival region at all**,
+  **0/90** reach `arrived_verified`.
+- **The durable fix, and why it is the owner's.** C2's "one arrival authority"
+  carried to its conclusion, for both pairs: **a `known_poi` whose class is a
+  region must be judged by the region band, not the 1.5 m point radius**, and
+  **the `near` band must be intersected with the support polygon**. Both change
+  what `arrival_goal_region_for_relation` / `object_near_goal_region` commit —
+  and `_matrix_digest` hashes `ep.as_dict()`, of which **45 of the 125** v4
+  matrix episodes embed `band_m` verbatim, with
+  `tests/test_k0_arrival_authority.py::test_semantics_and_eval_object_goal_regions_agree`
+  pinning generator ≡ city-semantics ≡ pipeline. So `e7c302dd…` **moves**:
+  **E3 decision, owner only.** The alternative — dropping the support-surface
+  check — would let the dog announce "I'm at the bench" while standing in the
+  road, and is refused.
+- **Blocked on:** the owner's E3 ruling on moving those frozen rows, plus the
+  attribution/re-freeze record that ruling requires.
+- **Then execute:** ground region-class POIs to the region band; intersect the
+  `near` band with the support polygon; re-run the NAV_INSTRUCT frozen sets and
+  the mutation panel under the attribution/re-freeze policy; re-run NAV-GEN-1
+  A0 and the NAV-INT-1 tier, reporting `strict` / `settled` / `arrived_verified`
+  and the authority-disagreement tally before and after.
+- **Coupled second half — the mutation panel cannot simply be re-armed.** C0's
+  recorded re-run declared `no_authority_disagreement disabled as a kill channel
+  … re-armed when D-15 agrees again`. The integrator then measured
+  (AUDIT_C0_C2 §4) that with the owner's uncommitted `grid_planner.py` the
+  reactive gate is called **101/88/51/62/0** times across the five panel
+  episodes and zeroes a non-zero request **0** times — so
+  `reactive_gate_disabled` becomes a **SURVIVOR**. "D-15 agrees again" and "the
+  gate never fires" are the **same event**. Landing that diff therefore
+  requires **BOTH** withdrawing the disable **AND** re-choosing panel episodes
+  on which the gate binds; the episode selection is frozen evidence, so that
+  half is an owner E3 decision too. **The panel committed by C0(b) is valid
+  only on trees WITHOUT that diff.**
+- **Exit evidence:** D-15 agrees because the system and the scorer judge the
+  same region (not because a 0.4 mm nudge crossed a radius); NAV-INT-1 bench
+  `system_failed_but_arrived` reaches 0/29 because the certified band is
+  standable, not because a refusal was weakened; the panel passes with
+  `no_authority_disagreement` live as a kill channel and
+  `reactive_gate_disabled` killed on episodes where the gate binds; NAV_INSTRUCT
+  digests moved with written attribution.
+- **Does not prove:** physical arrival, camera/LiDAR perception, the sidewalk
+  wrong-instance scoring in `nav-interrupt-1/harness.py` (that is C7's, a
+  harness defect, not this one), or anything about the Go2.

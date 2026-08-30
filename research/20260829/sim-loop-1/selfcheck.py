@@ -14,6 +14,10 @@ to see whether they hold:
 * **L9** — the turn predicate fires on three consecutive 100 ms samples with
   ``|vyaw| > 0.1`` and a falling heading error, and does not fire otherwise.
 * **L4** — the name scan is a POSITIVE allowlist and redacts what is not on it.
+* **L7 / MB-1 M7 (card C7)** — the post-terminal offer is TYPED BY THE RECEIPT:
+  only ``task_succeeded`` may carry an arrival phrase; a failed / blocked /
+  cancelled / missing terminal opens with that receipt's own kind and drops the
+  scripted arrival sentence, keeping the capability refusal and the offer.
 
 Run: ``.parcel/bin/python research/20260829/sim-loop-1/selfcheck.py``
 Exit code 0 = every claim held; 1 = at least one did not (and it says which).
@@ -120,6 +124,56 @@ def check_l7_confirm_rule() -> None:
         check(f"{text!r} with offer_open={offer_open} → {want}", got == want, why)
 
 
+def check_receipt_typed_offer() -> None:
+    """Card C7 — the harness may not say "arrived" without an accepted terminal.
+
+    All five recorded base runs emitted "I've reached the bench." on a
+    ``task_failed`` receipt, from deterministic harness code.  These rows are
+    the guard against that, settled without a simulator.
+    """
+
+    print("C7 — the post-terminal offer is typed by the receipt (L7 / MB-1 M7)")
+    scripted = (
+        "I've reached the bench. I can't check whether your keys are there — I "
+        "have no camera, so I can't look for objects. Do you want me to head "
+        "back to the lamppost?"
+    )
+
+    def receipt(kind: str, detail: str) -> S.Receipt:
+        return S.Receipt(t=1.0, kind=kind, source="executive", task_id="t1",
+                         action=kind, state="", plan_revision=1, last_detail=detail)
+
+    ok = S.offer_for_terminal(scripted, receipt("task_succeeded", "arrived"), goal="bench")
+    check("an ACCEPTED terminal keeps the scripted line verbatim",
+          ok["text"] == scripted and ok["arrival_phrase_allowed"] and not ok["rewritten"])
+
+    for kind, detail in (("task_failed", "semantic_target_unreachable"),
+                         ("task_cancelled", "cancelled_by_owner"),
+                         ("cancelled_at_checkpoint", "cancelled_at_checkpoint")):
+        row = S.offer_for_terminal(scripted, receipt(kind, detail), goal="bench")
+        status = S._status_for(kind)
+        check(f"{kind}: no arrival phrase survives",
+              not S._ARRIVAL_CLAIM_RE.search(row["text"]), row["text"][:70])
+        check(f"{kind}: the receipt's own kind and detail are spoken",
+              kind in row["text"] and detail in row["text"] and status in row["text"])
+        check(f"{kind}: the capability refusal and the offer are kept",
+              "no camera" in row["text"] and "Do you want me" in row["text"])
+        check(f"{kind}: the scripted arrival sentence is recorded as dropped",
+              row["dropped_sentences"] == ["I've reached the bench."])
+
+    none_row = S.offer_for_terminal(scripted, None, goal="bench")
+    check("no terminal receipt at all: still no arrival phrase",
+          not S._ARRIVAL_CLAIM_RE.search(none_row["text"])
+          and "no terminal receipt" in none_row["text"], none_row["text"][:70])
+
+    check("every terminal kind maps into the wave's fact set",
+          {S._status_for(k) for k in S.TERMINAL_KINDS} <= set(S.FACTS),
+          str(sorted({S._status_for(k) for k in S.TERMINAL_KINDS})))
+    check("exactly one terminal kind may say arrived",
+          S.ACCEPTED_TERMINAL_KIND == "task_succeeded"
+          and S._status_for(S.ACCEPTED_TERMINAL_KIND) == "completed")
+
+
 def check_l9_turn_predicate() -> None:
     print("L9 — the turn predicate")
 
@@ -187,6 +241,8 @@ def main() -> int:
     check_l9_turn_predicate()
     print()
     check_l4_name_scan()
+    print()
+    check_receipt_typed_offer()
     print()
     check_vocabulary()
     print()

@@ -31,9 +31,17 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
+HERE = Path(__file__).resolve().parent
 REPO = Path(__file__).resolve().parents[3]
-if str(REPO) not in sys.path:
-    sys.path.insert(0, str(REPO))
+for _extra in (str(HERE), str(REPO)):
+    if _extra not in sys.path:
+        sys.path.insert(0, _extra)
+
+# The cue vocabulary and the stripper live at the ISSUE DOOR (``harness.py``),
+# because that is where a queue-cued re-issue is refused by the product.  One
+# definition, imported here, so the classifier and the door cannot disagree.
+from harness import QUEUE_CUE_RE as _QUEUE_CUE
+from harness import strip_queue_cue as _strip_queue_cue
 
 from evals.nav_instruct.scene_truth import derived_landmark_table
 from parcel_robot.brain.router import DeterministicIntentRouter
@@ -62,14 +70,12 @@ LABELS = (REVISE, KEEP, QUEUE, CLARIFY)
 #: ("after that, go to the bench" → compound_physical_request; "after that head
 #: to the sidewalk" → conversation_only; "when you finish, …" →
 #: ambiguous_physical_request), which is itself part of the H-NI1c finding.
-_QUEUE_CUE = re.compile(
-    r"\b(?:after\s+that|after\s+this|after\s+you(?:'re| are)?\s+done|"
-    r"after\s+you\s+finish(?:ed)?|when\s+you(?:'re| are)?\s+done|"
-    r"when\s+you\s+finish(?:ed)?|once\s+you(?:'re| are)?\s+done|"
-    r"once\s+you\s+finish(?:ed)?|afterwards?|and\s+then|,\s*then\b|^then\b|"
-    r"next\s+(?:go|head)\b)",
-    re.IGNORECASE,
-)
+#:
+#: The pattern itself MOVED to ``harness.QUEUE_CUE_RE`` (card C7) and is
+#: imported above, unchanged character for character: the ISSUE DOOR needs the
+#: same vocabulary to strip a cue off a re-issue, and two copies would be two
+#: opinions.  ``_QUEUE_CUE`` below is that object; the classifier's behaviour is
+#: byte-identical to the recorded run (verified against the frozen blind set).
 
 #: Confirmations / acknowledgements: the "keep" half that IS addressed to the
 #: robot but asks for no plan change.
@@ -154,12 +160,6 @@ def _destination_of(text: str, *, cue_present: bool) -> tuple[str | None, str]:
     if named:
         return named[0], "place"
     return None, "unknown_place"
-
-
-def _strip_queue_cue(text: str) -> str:
-    residual = _QUEUE_CUE.sub(" ", text, count=1)
-    residual = re.sub(r"^[\s,;:]+", "", residual)
-    return " ".join(residual.split())
 
 
 def classify(
@@ -333,12 +333,21 @@ class PlanQueue:
             )
             return
         if decision.label == QUEUE:
-            self.entries.append(QueueEntry(goal_key, text, t, "queued"))
+            # The cue comes OFF here for the same measured reason
+            # ``hold_for_later`` strips it: the entry's ``text`` is what will be
+            # issued, and the product refuses a queue-cued directive.  The
+            # spoken form is kept beside it (card C7).
+            residual = _strip_queue_cue(text) or text
+            self.entries.append(
+                QueueEntry(goal_key, residual, t, "queued", spoken=text)
+            )
             self._note(
                 "queue",
                 classifier_label=decision.label,
                 classifier_reason=decision.reason,
                 queued=goal_key,
+                spoken=text,
+                will_issue=residual,
                 t=round(t, 3),
             )
             return

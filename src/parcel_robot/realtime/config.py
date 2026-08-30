@@ -98,6 +98,10 @@ ALLOWED_KEYS = frozenset(
         # all, which renders the identical ``session.update`` this repo has sent
         # since 2026-08-18 (pre-registered row T1/T2, seeded).
         "turn_detection",
+        # Card C5 (SPEECH-ACTS-1) — the receipt-typed utterance contract.
+        # Absent means OFF, and OFF is byte-identical narration: the lane keeps
+        # sending whatever text its caller composed.
+        "speech_acts",
     }
 )
 
@@ -116,6 +120,13 @@ TURN_DETECTION_ALLOWED_KEYS = frozenset(
         "create_response",
     }
 )
+
+#: Card C5 (SPEECH-ACTS-1). The nested ``speech_acts:`` block. One key today
+#: and the same refusal discipline as every other block here — a typo'd
+#: ``enabled: ture`` that silently read as false would hide the switch that
+#: decides whether the robot's own sentences come from a contract or from a
+#: model, which is exactly the thing an operator must be able to see.
+SPEECH_ACTS_ALLOWED_KEYS = frozenset({"enabled"})
 
 #: The nested ``whisperer:`` block — the owner's cost knob (card R11, owner
 #: directive 2026-08-20). Same refusal discipline as the outer schema.
@@ -651,6 +662,38 @@ class VoiceIdentityConfig:
 
 
 @dataclass(frozen=True)
+class SpeechActsConfig:
+    """Does the lane narrate from the receipt-typed contract? (card C5).
+
+    WHAT THE SWITCH ACTUALLY SWITCHES
+    ---------------------------------
+    OFF (the default, and the meaning of an absent block): nothing changes.
+    ``narrate_event`` sends the sentence its caller composed, exactly as it has
+    since card R4-lite, and :mod:`parcel_robot.realtime.speech_acts` is inert
+    product code with tests and no callers.
+
+    ON: a receipt is mapped to a typed speech act, the act is rendered by its
+    one template, and THAT is the sentence that goes up — the facts come from
+    the contract instead of from a model's reading of a prompt.
+
+    DEFAULT OFF, AND WHY THAT IS NOT TIMIDITY
+    -----------------------------------------
+    MB-2 measured the contract at grounding 1.000 / coverage 0.9688 / 0 invented
+    actions against a hosted model's 0.61-0.73 with 45 invented-action flags, so
+    the evidence points one way. What it did NOT measure is a human preferring
+    the result: its naturalness row is UNMEASURED (the judge picked whichever
+    option was shown first, p = 0.002). A switch that changes every sentence the
+    robot says about itself, on evidence that is decisive about facts and silent
+    about whether it is pleasant to live with, is a switch the owner flips.
+    """
+
+    enabled: bool = False
+
+    def as_dict(self) -> dict[str, object]:
+        return {"enabled": self.enabled}
+
+
+@dataclass(frozen=True)
 class RealtimeConfig:
     """The lane's entire configuration surface."""
 
@@ -714,6 +757,10 @@ class RealtimeConfig:
     #: reads the call as a mutable default (RUF009). Same shape of fix, and the
     #: same reason, as the one card GATE-0 applies at ``protocol.py:415``.
     turn_detection: TurnDetection = field(default_factory=TurnDetection)
+    #: Card C5. Narrate from the receipt-typed contract rather than from
+    #: whatever text the caller composed. Default OFF; see
+    #: :class:`SpeechActsConfig` for what OFF means on the wire (nothing).
+    speech_acts: SpeechActsConfig = SpeechActsConfig()
     source: str = "absent"
 
     @property
@@ -773,6 +820,15 @@ class RealtimeConfig:
             # operator reading /api/state can see the endpointing the session is
             # actually running under rather than inferring it from the yaml.
             "turn_detection": self.turn_detection.as_dict(),
+            # Card C5 DELIBERATELY DOES NOT RENDER ``speech_acts`` HERE.
+            # ``/api/state``'s key set is a pre-registered row of card TURN-1
+            # ("+1 key, 0 changed", tests/test_turn1_endpointing.py:302) which
+            # this card does not own and may not re-pin. Nothing reads the flag
+            # in wave A, so a key in the panel's JSON would report a switch that
+            # cannot be flipped while churning a frozen row to say it. The
+            # WAVE-B install — the one that makes the flag mean something — adds
+            # the row here and re-pins TURN-1's assertion with its reviewer,
+            # because an operator must be able to see a live switch.
             "source": self.source,
         }
 
@@ -1609,6 +1665,31 @@ def _voice_non_negative(mapping: Mapping[str, Any], key: str, default: float) ->
     return number
 
 
+def speech_acts_config_from_mapping(
+    mapping: Mapping[str, Any] | None,
+) -> SpeechActsConfig:
+    """Validate the nested ``speech_acts:`` block. Absent ⇒ the contract is OFF."""
+
+    if mapping is None:
+        return SpeechActsConfig()
+    if not isinstance(mapping, Mapping):
+        raise RealtimeConfigError(
+            f"realtime.speech_acts must be a mapping, got {type(mapping).__name__}"
+        )
+    unknown = sorted(str(key) for key in mapping if str(key) not in SPEECH_ACTS_ALLOWED_KEYS)
+    if unknown:
+        raise RealtimeConfigError(
+            f"unknown realtime.speech_acts key(s): {', '.join(unknown)}; "
+            f"allowed: {', '.join(sorted(SPEECH_ACTS_ALLOWED_KEYS))}"
+        )
+    enabled = mapping.get("enabled", False)
+    if not isinstance(enabled, bool):
+        raise RealtimeConfigError(
+            f"realtime.speech_acts.enabled must be a boolean, got {enabled!r}"
+        )
+    return SpeechActsConfig(enabled=enabled)
+
+
 def realtime_config_from_mapping(
     mapping: Mapping[str, Any] | None,
     *,
@@ -1646,6 +1727,7 @@ def realtime_config_from_mapping(
         capture=capture_config_from_mapping(mapping.get("capture")),
         voice_identity=voice_identity_config_from_mapping(mapping.get("voice_identity")),
         turn_detection=turn_detection_from_mapping(mapping.get("turn_detection")),
+        speech_acts=speech_acts_config_from_mapping(mapping.get("speech_acts")),
         source=source,
     )
 
@@ -1710,6 +1792,7 @@ __all__ = [
     "PROACTIVE_MOTION_REFUSED",
     "REALTIME_CONFIG_ENV",
     "REALTIME_CONFIG_RELATIVE",
+    "SPEECH_ACTS_ALLOWED_KEYS",
     "TURN_DETECTION_ALLOWED_KEYS",
     "UNKNOWN_PLACE_ASK",
     "UNKNOWN_PLACE_REFUSE",
@@ -1720,6 +1803,7 @@ __all__ = [
     "OwnerEventsConfig",
     "RealtimeConfig",
     "RealtimeConfigError",
+    "SpeechActsConfig",
     "TurnDetection",
     "VoiceIdentityConfig",
     "WhispererConfig",
@@ -1731,6 +1815,7 @@ __all__ = [
     "realtime_config_from_mapping",
     "resolve_capture_dir",
     "resolve_realtime_config_path",
+    "speech_acts_config_from_mapping",
     "turn_detection_from_mapping",
     "voice_identity_config_from_mapping",
     "whisperer_config_from_mapping",

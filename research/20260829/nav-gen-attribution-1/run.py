@@ -373,6 +373,23 @@ def run_unit(args) -> dict:
         # run() returns at the stop, so no settle window is observable here.
         # See RESULTS.md 7.3a.
         row["strict_success"] = bool(inside_strict and row["terminal_stopped"])
+        # Card C2 (ARRIVAL-SETTLE-1) — the ONLY change to this file. The
+        # harness now keeps OBSERVING for `DEFAULT_SETTLE_FRAMES` after the
+        # terminal frame, so MA-1's gold predicate ("inside the band with the
+        # body still for 5 frames") is finally observable here; the terminal
+        # frame itself is snapshotted BEFORE that window, so `strict_success`
+        # above and every column beside it are the numbers they always were.
+        # `settled_success` is the like-for-like partner: same truth band, the
+        # settle instead of the one frame. `goal_source` closes VERDICT §5.2's
+        # caveat that "raw rows do not log goal_source".
+        row["settled"] = bool(r.settled)
+        row["settle_frames_observed"] = int(r.settle_frames_observed)
+        row["inside_arrival_region"] = r.inside_arrival_region
+        row["arrived_verified"] = bool(r.arrived_verified)
+        row["goal_source"] = r.goal_source
+        row["poi_refused"] = r.poi_refused
+        row["arrival_not_verified_reason"] = r.arrival_not_verified_reason
+        row["settled_success"] = bool(inside_strict and r.settled)
         # The fairer oracle: ANY scene entity carrying the requested label.
         row["strict_success_any_instance"] = bool(inside_any and row["terminal_stopped"])
         # A mission that declared success while the body is in no instance's
@@ -477,7 +494,23 @@ def main() -> None:
     if a.stage == "facts":
         return
 
-    index = {"seed": a.seed, "host_start": host_start, "arms": {}, "arm_config_facts": facts}
+    # RUN PROVENANCE.  ``--workers`` was quoted three different ways in the
+    # first RESULTS.md (24 / 32 / 40) because no artifact carried it; it is
+    # recorded here so ``analyze.py`` can render it instead of a reader typing
+    # one in.  ``blas_threads_per_worker`` is the environment the run was
+    # launched with, not a request.
+    index = {
+        "seed": a.seed,
+        "host_start": host_start,
+        "arms": {},
+        "arm_config_facts": facts,
+        "run_provenance": {
+            "workers": a.workers,
+            "blas_threads_per_worker": os.environ.get("OPENBLAS_NUM_THREADS"),
+            "cpus": host_start.get("cpus"),
+            "argv": list(sys.argv[1:]),
+        },
+    }
     units = []
     for arm in arms:
         units += arm_units(arm, cfgs[arm.name])

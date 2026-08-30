@@ -23,3 +23,7 @@
 
 ## Does not prove
 Anything off-oracle or physical; the residual ~10-point MA-1-vs-NAV-GEN-1 difference (different episodes) is out of scope.
+
+## Amendment A1 (21:5x, parcel-fb's second lens — binding; tightens, does not loosen)
+
+Candidate (b) "the watchdog counting brake-held ticks as no-progress" carries a real hazard: NAV-ACCEPT found the R3 silent stall ALIVE; exempting brake-held ticks can trade a loud `navigation_no_progress` for a robot that sits blocked forever with `status=planned`. Any exemption needs a **hard tick cap and its own terminal reason** (e.g. `brake_held_timeout`). **GREEN row added:** no episode ends with `status=planned` and no terminal reason (scan all 450 + 80 rows). Halving is a bar the fix must earn from attribution, not from loosening the watchdog.

@@ -25,3 +25,11 @@ Make the POI arm scene-aware without moving frozen evidence:
 
 ## Does not prove
 Off-oracle grounding (learned map / camera), physical arrival, or anything about the other three POI classes beyond the same admission rule.
+
+## Amendment A1 (21:5x, parcel-fb's second lens)
+
+- **No config changes on this card** (the board row's `configs/navigation/default.yaml` entry is read-only context; `semantic_source`, `pois_path` untouched).
+- "crosswalk strict ≥ 0.60" measures the semantic ladder, not the fix: if it comes in under, **record it, do not tune the ladder**; the fix's own rows are `crosswalk_a` 0/90 and false arrivals 0/90.
+
+## Wave-B row (from Sol's review, 02:xx)
+- Pass the loaded world/map identity explicitly into each `DirectiveNavigator` (constructor/`from_config` argument from the composition root) so admission does not depend on the process-scoped published scene; the published scene remains the fallback for harnesses.

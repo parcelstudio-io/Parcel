@@ -22,6 +22,10 @@ from typing import Any
 import mujoco
 
 from parcel_robot.instructnav.scoring import object_near_envelope_m, object_near_goal_region
+from parcel_robot.navigation.poi_admission import (
+    publish_scene_semantics,
+    scene_id_from_model,
+)
 from parcel_robot.perception.scene_semantics import scene_semantics
 
 _SCENE = scene_semantics()
@@ -130,6 +134,14 @@ def extract_city_semantics(
                 "metadata": metadata,
             }
         )
+    # Card C1 (POI-ORACLE-1), follow-up F1. The loaded scene publishes ITSELF —
+    # its MJCF `model` name and what it declares — so `navigation.poi_admission`
+    # can refuse the demo POI table on any scene but the one it was surveyed on.
+    # This is the one place that holds both the compiled model (the identity)
+    # and the specs, and every venue passes through it before it builds a
+    # navigator, which is what makes the answer available in `parse`, before the
+    # first observation exists.
+    publish_scene_semantics(regions, objects, scene_id=scene_id_from_model(model))
     return regions, objects
 
 

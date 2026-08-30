@@ -61,6 +61,17 @@ n = 157 strict failures of 450 episodes.
 | false arrivals | 0.2675 | 0.271 | 0.0 |
 | sensitivity: + `navigation_no_progress` | 0.7261 | 0.7355 | 0.9589 |
 
+### 5.4 False arrivals — distance to the goal, commissioned arm
+
+| quantity | value |
+|---|---|
+| false arrivals (n) | 42 |
+| min DTG (m) | 0.6287 |
+| median DTG (m), interpolated (`statistics.median`) | 3.1722 |
+| median DTG (m), upper-middle order statistic `dtg[n//2]` | 3.2492 |
+| worst DTG (m) | 7.169 |
+| by target | `crosswalk` x42 |
+
 ### 6.1 Frozen demo block, per target (commissioned arm, 16 episodes each)
 
 | target | band entry | rate | 95 % CI | strict | MA-1 published probe | delta vs MA-1 | within +-0.15 of MA-1 | DESIGN's quoted value | within +-0.15 of DESIGN |
@@ -70,6 +81,14 @@ n = 157 strict failures of 450 episodes.
 | `planter` | 2/16 | **0.1250** | [0.035, 0.360] | 0.0625 | 0.06 | +0.0650 | yes | -- | -- |
 | `sidewalk` | 13/16 | **0.8125** | [0.570, 0.934] | 0.8125 | 0.75 | +0.0625 | yes | 0.75 | yes |
 | `crosswalk` | 1/16 | **0.0625** | [0.011, 0.283] | 0.0625 | 0.12 | -0.0575 | yes | -- | -- |
+
+### 6.2 Frozen block vs generated block (commissioned arm, one predicate)
+
+| block | episodes | strict success | rate | 95 % Wilson CI |
+|---|---|---|---|---|
+| frozen demo block | 80 | 22 | **0.2750** | [0.1892, 0.3814] |
+| generated block | 450 | 293 | **0.6511** | [0.6060, 0.6937] |
+| generated - frozen (points) | -- | -- | **+37.61** | -- |
 
 ### 7.1 Per target, generated block, commissioned arm
 
@@ -111,3 +130,20 @@ n = 157 strict failures of 450 episodes.
 | band entry within MA-1's 420-frame per-goal budget | 0.6778 |
 | median steps | 170 |
 | MA-1 held-out teacher SR | 0.045 |
+
+### 8.1 Host and run provenance (rendered, never typed)
+
+| when | loadavg (1/5/15) | cpus | GPU (used / total, util) | UTC |
+|---|---|---|---|---|
+| sweep A start | 12.94 / 23.51 / 16.13 | 192 | 2058 MiB, 32760 MiB, 25 % | 2026-08-30T00:38:51Z |
+| sweep A end | 3.95 / 12.86 / 17.14 | 192 | 2031 MiB, 32760 MiB, 25 % | 2026-08-30T00:52:07Z |
+| sweep B start | 2.91 / 10.08 / 15.73 | 192 | 2030 MiB, 32760 MiB, 27 % | 2026-08-30T00:53:45Z |
+| sweep B end | 15.04 / 23.44 / 21.07 | 192 | 2026 MiB, 32760 MiB, 41 % | 2026-08-30T00:57:42Z |
+
+| quantity | value |
+|---|---|
+| sweep A wall (s) | 530.4 |
+| sweep B wall (s) | 236.6 |
+| workers | not recorded |
+| BLAS threads per worker | not recorded |
+| provenance note | NOT RECORDED by the run that produced these rows — run.py records it from this commit on, and RESULTS.md says 'not recorded' rather than repeating one of the three hand-typed values (24/32/40) |

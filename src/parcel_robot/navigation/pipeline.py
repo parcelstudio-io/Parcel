@@ -11,6 +11,7 @@ import yaml
 
 from parcel_robot.geometry import ROBOT_FOOTPRINT_RADIUS_M
 
+from . import stall_attribution as stall
 from .approach import (
     point_in_polygon,
     point_in_polygon_with_clearance,
@@ -24,6 +25,7 @@ from .goals import (
     semantic_goal_from_directive,
 )
 from .grounder import PlaceGrounder
+from .poi_admission import ground_admitted_poi, poi_lookup_metadata
 from .registry import ModelRegistry
 from .search import ActiveSemanticSearch
 from .semantic_map import ObservationSemanticMap, SemanticCandidate, SemanticMap
@@ -525,6 +527,7 @@ class DirectiveNavigator:
         lock_on_verify_on_approach: bool = False,
         person_aware_nav: bool = False,
         route_memory: bool = False,
+        held_stall_release: bool = False,
         inside_probability_threshold: float | None = None,
         arrival_confidence_threshold: float | None = None,
     ):
@@ -725,6 +728,10 @@ class DirectiveNavigator:
             bool(route_memory) and _HAS_ROUTE_MEMORY and RouteMemoryPlaceHook is not None
         )
         self._route_memory = RouteMemoryPlaceHook() if self.route_memory else None
+        #: Card C3 / F1. Opt-in; flag-OFF the watchdog is byte-identical to HEAD
+        #: (``stall_attribution.held_release_due`` short-circuits before it reads
+        #: or writes anything). Enabling it moves frozen panel/minival rows.
+        self.held_stall_release = bool(held_stall_release)
         #: The chain memory last handed back, in travel order (RECORDED edges).
         self._route_memory_chain: tuple[Any, ...] = ()
         #: The interim navigation target. NOT the mission goal, never an arrival.
@@ -1017,6 +1024,12 @@ class DirectiveNavigator:
                     progress_config.get("max_semantic_replans", 2),
                 )
             ),
+            held_stall_release=bool(
+                overrides.get(
+                    "held_stall_release",
+                    progress_config.get("held_stall_release", False),
+                )
+            ),
             terminal_stop_timeout_steps=int(
                 overrides.get(
                     "terminal_stop_timeout_steps",
@@ -1138,20 +1151,20 @@ class DirectiveNavigator:
         if navigation_directive_is_blocked(directive):
             raise ValueError("negated or hypothetical navigation directive")
         try:
-            goal = self.grounder.ground(directive)
+            goal = ground_admitted_poi(self.grounder, directive)
             return Mission(
                 directive=directive,
                 goal=goal,
                 status="idle",
                 metadata={"goal_source": "known_poi"},
             )
-        except LookupError:
+        except LookupError as poi_error:
             semantic_goal = semantic_goal_from_directive(directive)
-            # Card C-3 REVISION 1. Off-oracle the POI arm is empty by
-            # construction; recording WHY makes "the mission reached the place
-            # through perception" a checkable claim rather than an inference
-            # from the absence of a known_poi tag.
-            poi_disabled = getattr(self.grounder, "disabled_reason", "")
+            # Card C-3 REVISION 1 (off-oracle the POI arm is empty by
+            # construction) and card C1/F1 (the loaded scene is not the scene
+            # the POI table was surveyed on). Recording WHY makes "the mission
+            # reached the place through perception" a checkable claim rather
+            # than an inference from the absence of a known_poi tag.
             return Mission(
                 directive=directive,
                 goal=None,
@@ -1159,11 +1172,7 @@ class DirectiveNavigator:
                 semantic_goal=semantic_goal,
                 metadata={
                     "goal_source": "semantic_search",
-                    **(
-                        {"poi_grounding_disabled": poi_disabled}
-                        if poi_disabled
-                        else {}
-                    ),
+                    **poi_lookup_metadata(self.grounder, poi_error),
                     "semantic_query": semantic_goal.query,
                     "resolution_state": "unresolved",
                     # Directive modifiers, recorded so the runtime and the
@@ -4618,26 +4627,15 @@ class DirectiveNavigator:
 
     def _progress_watchdog(self, observation: NavObservation) -> MidLevelCommand | None:
         assert self.mission is not None and self.mission.goal is not None
-        # MAP: the watchdog measures range to a world-frame goal. Bound to MAP
-        # rather than ODOM deliberately -- an ODOM-frame reading of a MAP goal
-        # would report drift as "no progress" and fail a mission that is in
-        # fact converging.
+        # MAP, not ODOM. The hysteresis, the person-yield clause and the stall
+        # taxonomy are card C3's leaf, ``navigation/stall_attribution``.
         robot_map = _pose_in(observation, MAP_FRAME)
-        distance = math.hypot(
-            self.mission.goal.x - robot_map.x,
-            self.mission.goal.y - robot_map.y,
-        )
-        if self._best_goal_distance_m is None or distance < self._best_goal_distance_m - 0.025:
+        distance = math.hypot(self.mission.goal.x - robot_map.x, self.mission.goal.y - robot_map.y)
+        if stall.goal_progress_made(self._best_goal_distance_m, distance):
             self._best_goal_distance_m = distance
             self._steps_without_progress = 0
             return None
-        # Yielding to a person is not a navigation stall — person-stop is the
-        # correct gate. Counting those ticks as "no progress" false-fails the
-        # N11 pedestrian case before yield-advance can use clear windows.
-        if (
-            observation.nearest_person_m is not None
-            and observation.nearest_person_m < self.collision.person_stop_m
-        ):
+        if stall.person_yield_holds(observation.nearest_person_m, self.collision.person_stop_m):
             return None
         self._steps_without_progress += 1
         if self._steps_without_progress < self.progress_timeout_steps:
@@ -4645,6 +4643,16 @@ class DirectiveNavigator:
 
         replans = int(self.mission.metadata.get("replan_count", 0))
         if self.mission.semantic_goal is not None and replans < self.max_semantic_replans:
+            if stall.held_release_due(
+                self.mission.metadata,
+                getattr(self._navigator, "last_route_status", None),
+                self._body_is_still,
+                enabled=self.held_stall_release,
+            ):
+                return self._release_unreachable_candidate(
+                    str(self.mission.metadata.get("candidate_id") or ""),
+                    note=stall.HELD_RELEASE_NOTE,
+                )
             return self._begin_semantic_replan(
                 replans,
                 note="semantic_replan_after_no_progress",

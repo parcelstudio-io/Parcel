@@ -56,7 +56,14 @@
       "planner_coupling_ring_m": 0.460141,
       "robot_radius_m": 0.32,
       "planner_inflation_radius_m": 0.42,
-      "nav_safety_stop_distance_m": 0.8
+      "nav_safety_stop_distance_m": 0.8,
+      "config_only_inflation_radius_m": 0.42,
+      "map_gate_clearance_m_in_model_file": null,
+      "live_planner_gate_ring_m": 1.12,
+      "live_planner_gate_lateral_m": 1.022296,
+      "LIVE_planner_inflation_radius_m": 1.022296,
+      "live_narrowest_routable_corridor_m": 2.044591,
+      "schema_note": "planner_inflation_radius_m / map_gate_clearance_m are the CONFIG FILE's numbers (pre-A2 schema); the planner the rows were produced by inflates LIVE_planner_inflation_radius_m"
     },
     "A0c": {
       "config_path": "/home/jaewoo-jang/.cache/parcel-0e/ng1/navcfg/A0c/default.yaml",
@@ -67,7 +74,14 @@
       "planner_coupling_ring_m": 0.460141,
       "robot_radius_m": 0.32,
       "planner_inflation_radius_m": 0.42,
-      "nav_safety_stop_distance_m": 0.8
+      "nav_safety_stop_distance_m": 0.8,
+      "config_only_inflation_radius_m": 0.42,
+      "map_gate_clearance_m_in_model_file": null,
+      "live_planner_gate_ring_m": 1.12,
+      "live_planner_gate_lateral_m": 1.022296,
+      "LIVE_planner_inflation_radius_m": 1.022296,
+      "live_narrowest_routable_corridor_m": 2.044591,
+      "schema_note": "planner_inflation_radius_m / map_gate_clearance_m are the CONFIG FILE's numbers (pre-A2 schema); the planner the rows were produced by inflates LIVE_planner_inflation_radius_m"
     },
     "A1": {
       "config_path": "/home/jaewoo-jang/.cache/parcel-0e/ng1/navcfg/A1/default.yaml",
@@ -78,7 +92,14 @@
       "planner_coupling_ring_m": 0.427274,
       "robot_radius_m": 0.32,
       "planner_inflation_radius_m": 0.39,
-      "nav_safety_stop_distance_m": 0.8
+      "nav_safety_stop_distance_m": 0.8,
+      "config_only_inflation_radius_m": 0.39,
+      "map_gate_clearance_m_in_model_file": null,
+      "live_planner_gate_ring_m": 1.12,
+      "live_planner_gate_lateral_m": 1.022296,
+      "LIVE_planner_inflation_radius_m": 1.022296,
+      "live_narrowest_routable_corridor_m": 2.044591,
+      "schema_note": "planner_inflation_radius_m / map_gate_clearance_m are the CONFIG FILE's numbers (pre-A2 schema); the planner the rows were produced by inflates LIVE_planner_inflation_radius_m"
     },
     "A2": {
       "config_path": "/home/jaewoo-jang/.cache/parcel-0e/ng1/navcfg/A2/default.yaml",
@@ -89,7 +110,14 @@
       "planner_coupling_ring_m": 0.405362,
       "robot_radius_m": 0.32,
       "planner_inflation_radius_m": 0.37,
-      "nav_safety_stop_distance_m": 0.8
+      "nav_safety_stop_distance_m": 0.8,
+      "config_only_inflation_radius_m": 0.37,
+      "map_gate_clearance_m_in_model_file": null,
+      "live_planner_gate_ring_m": 1.12,
+      "live_planner_gate_lateral_m": 1.022296,
+      "LIVE_planner_inflation_radius_m": 1.022296,
+      "live_narrowest_routable_corridor_m": 2.044591,
+      "schema_note": "planner_inflation_radius_m / map_gate_clearance_m are the CONFIG FILE's numbers (pre-A2 schema); the planner the rows were produced by inflates LIVE_planner_inflation_radius_m"
     },
     "A3": {
       "config_path": "/home/jaewoo-jang/.cache/parcel-0e/ng1/navcfg/A3/default.yaml",
@@ -100,7 +128,14 @@
       "planner_coupling_ring_m": 0.372495,
       "robot_radius_m": 0.32,
       "planner_inflation_radius_m": 0.34,
-      "nav_safety_stop_distance_m": 0.8
+      "nav_safety_stop_distance_m": 0.8,
+      "config_only_inflation_radius_m": 0.34,
+      "map_gate_clearance_m_in_model_file": null,
+      "live_planner_gate_ring_m": 1.12,
+      "live_planner_gate_lateral_m": 1.022296,
+      "LIVE_planner_inflation_radius_m": 1.022296,
+      "live_narrowest_routable_corridor_m": 2.044591,
+      "schema_note": "planner_inflation_radius_m / map_gate_clearance_m are the CONFIG FILE's numbers (pre-A2 schema); the planner the rows were produced by inflates LIVE_planner_inflation_radius_m"
     },
     "A4": {
       "config_path": "/home/jaewoo-jang/.cache/parcel-0e/ng1/navcfg/A4/default.yaml",
@@ -111,7 +146,14 @@
       "planner_coupling_ring_m": 0.350584,
       "robot_radius_m": 0.32,
       "planner_inflation_radius_m": 0.32,
-      "nav_safety_stop_distance_m": 0.8
+      "nav_safety_stop_distance_m": 0.8,
+      "config_only_inflation_radius_m": 0.32,
+      "map_gate_clearance_m_in_model_file": null,
+      "live_planner_gate_ring_m": 1.12,
+      "live_planner_gate_lateral_m": 1.022296,
+      "LIVE_planner_inflation_radius_m": 1.022296,
+      "live_narrowest_routable_corridor_m": 2.044591,
+      "schema_note": "planner_inflation_radius_m / map_gate_clearance_m are the CONFIG FILE's numbers (pre-A2 schema); the planner the rows were produced by inflates LIVE_planner_inflation_radius_m"
     },
     "B1": {
       "config_path": "/home/jaewoo-jang/.cache/parcel-0e/ng1/navcfg/B1/default.yaml",
@@ -3447,6 +3489,102 @@
     "bar_all_within_0_15_of_design_reference": false,
     "bar_all_within_0_15_of_ma1_published": true,
     "note": "MA-1 RESULTS.md 2 publishes sidewalk 0.75 / lamppost 0.44 / bench 0.19; NAV-GEN-1's frozen DESIGN quotes 0.75 / 0.6 / 0.0 for the same probe. Both comparisons are reported; the DESIGN criterion is not moved."
+  },
+  "false_arrival_dtg_A0": {
+    "arm": "A0",
+    "n": 42,
+    "min_m": 0.6287,
+    "median_interpolated_m": 3.1722,
+    "median_upper_order_statistic_m": 3.2492,
+    "median_lower_order_statistic_m": 3.0951,
+    "max_m": 7.169,
+    "per_target": [
+      [
+        "crosswalk",
+        42
+      ]
+    ],
+    "convention_note": "median_interpolated_m is statistics.median (mean of the two middle values of an even sample); median_upper_order_statistic_m is dtg[n//2] with n = 42. RESULTS.md quotes the interpolated median and names the convention beside it."
+  },
+  "frozen_block_summary_A0": {
+    "arm": "A0",
+    "frozen_episodes": 80,
+    "frozen_strict_success": 22,
+    "frozen_strict_rate": 0.275,
+    "frozen_strict_ci95": [
+      0.1892,
+      0.3814
+    ],
+    "frozen_band_entry": 24,
+    "frozen_band_entry_rate": 0.3,
+    "generated_episodes": 450,
+    "generated_strict_success": 293,
+    "generated_strict_rate": 0.6511,
+    "generated_strict_ci95": [
+      0.606,
+      0.6937
+    ],
+    "generated_minus_frozen_points": 37.61,
+    "note": "one recipe, one predicate: the generated block comes out EASIER than the frozen demo block, which is what refutes H-NG1c's conclusion (RESULTS 6)."
+  },
+  "run_provenance": {
+    "host": {
+      "sweepA_start": {
+        "loadavg_1_5_15": [
+          12.94,
+          23.51,
+          16.13
+        ],
+        "loadavg_str": "12.94 / 23.51 / 16.13",
+        "cpus": 192,
+        "gpu": "2058 MiB, 32760 MiB, 25 %",
+        "utc": "2026-08-30T00:38:51Z"
+      },
+      "sweepA_end": {
+        "loadavg_1_5_15": [
+          3.95,
+          12.86,
+          17.14
+        ],
+        "loadavg_str": "3.95 / 12.86 / 17.14",
+        "cpus": 192,
+        "gpu": "2031 MiB, 32760 MiB, 25 %",
+        "utc": "2026-08-30T00:52:07Z"
+      },
+      "sweepB_start": {
+        "loadavg_1_5_15": [
+          2.91,
+          10.08,
+          15.73
+        ],
+        "loadavg_str": "2.91 / 10.08 / 15.73",
+        "cpus": 192,
+        "gpu": "2030 MiB, 32760 MiB, 27 %",
+        "utc": "2026-08-30T00:53:45Z"
+      },
+      "sweepB_end": {
+        "loadavg_1_5_15": [
+          15.04,
+          23.44,
+          21.07
+        ],
+        "loadavg_str": "15.04 / 23.44 / 21.07",
+        "cpus": 192,
+        "gpu": "2026 MiB, 32760 MiB, 41 %",
+        "utc": "2026-08-30T00:57:42Z"
+      }
+    },
+    "wall_s": {
+      "sweepA": 530.4,
+      "sweepB": 236.6
+    },
+    "workers": null,
+    "workers_sweepA": null,
+    "workers_sweepB": null,
+    "blas_threads_per_worker": null,
+    "argv_sweepA": null,
+    "argv_sweepB": null,
+    "workers_note": "NOT RECORDED by the run that produced these rows \u2014 run.py records it from this commit on, and RESULTS.md says 'not recorded' rather than repeating one of the three hand-typed values (24/32/40)"
   },
   "ma1_reconciliation": {
     "A0": {

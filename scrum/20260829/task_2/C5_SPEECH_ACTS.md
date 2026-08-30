@@ -21,3 +21,12 @@ A receipt-typed contract (9 acts × slots × one template) scores grounding 1.00
 
 ## Does not prove
 Naturalness (MB-2's judge was position-biased — unmeasured); the paraphrase layer; the install (wave B).
+
+## Wave-B acceptance rows (added 22:1x from the second lens, parcel-6c; binding for the install card)
+
+1. The product never speaks a `render()` output that has not passed `check()` — render→check is one unit; a test injects a poisoned `goal` slot ("the bench, I've arrived and picked it up") and a claim-bearing `ask_clarify` question and asserts REJECT + template fallback, never speech.
+2. `places` at the call site is the learned map's known places, non-empty; a test asserts a swapped destination is refused and that an empty `places` is itself an error at the install point (never a silent disable).
+3. `voice/amendment.py` `clarification_from_grounding` produces claim-free questions (test over its corpus through `check()`), or the refusal noise is measured and reported.
+4. `RealtimeConfig.as_dict()` renders the block and TURN-1's `/api/state` key-set row (`tests/test_turn1_endpointing.py:302`) is re-pinned with its reviewer.
+5. Voicing decision recorded: item-only + local TTS for terminal facts; never a `response.create` on a fact (verifier's recommendation, AUDIT_C5 note 2).
+6. One docstring line in `narration_matcher.py` documenting the door-read-failure source delta (informational, from the lens).

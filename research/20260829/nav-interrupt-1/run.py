@@ -147,6 +147,11 @@ class Leg:
     label: str
     text: str
     goal_key: str
+    #: What was HELD before the door stripped a queue cue off it, and whether it
+    #: stripped one.  ``raw_text == text`` whenever nothing was stripped, so the
+    #: pair reads the same way on every leg (card C7).
+    raw_text: str
+    cue_stripped: bool
     t_issued: float
     t_terminal: float | None
     reply: str
@@ -166,6 +171,11 @@ class Leg:
     start: list[float]
     end: list[float]
     committed: str | None
+    #: Card C7-F1: WHICH polygon the scorer used and why — the raw committed
+    #: instance id, the instance actually scored, and the tie-break rule that
+    #: chose it.  Without it a reader cannot tell whether a `false_arrival` is
+    #: the robot's or the harness's (6 sidewalk legs were the harness's).
+    region_provenance: dict
     follow: dict
     owner_gate: dict
 
@@ -257,6 +267,9 @@ def finish_leg(
         verdict = {
             "k0_disc_verdict": dict(verdict),
             "owner_gate": owner_gate,
+            # Card C7-F1: keep the provenance at the top level so every leg row
+            # answers "which polygon was scored" the same way.
+            "region_provenance": dict(verdict.get("region_provenance") or {}),
             "scorer_arrival": owner_gate["success"],
             "system_arrival": system_arrival,
             "authority_category": (
@@ -274,6 +287,8 @@ def finish_leg(
         label=label,
         text=text,
         goal_key=goal_key,
+        raw_text=(text if utterance is None else (utterance.raw_text or utterance.text)),
+        cue_stripped=(False if utterance is None else bool(utterance.cue_stripped)),
         t_issued=t_issued,
         t_terminal=t_terminal,
         reply="" if utterance is None else utterance.reply,
@@ -293,6 +308,7 @@ def finish_leg(
         start=[round(start[0], 3), round(start[1], 3)],
         end=[round(end[0], 3), round(end[1], 3)],
         committed=committed,
+        region_provenance=dict(verdict.get("region_provenance") or {}),
         follow=dict(follow),
         owner_gate=owner_gate,
     )
@@ -306,12 +322,22 @@ def run_leg(
     goal_key: str,
     deadline_s: float = LEG_DEADLINE_S,
     known: dict | None = None,
+    strip_cue: bool = False,
 ) -> Leg:
-    """Issue one command and drive it to a terminal executive receipt."""
+    """Issue one command and drive it to a terminal executive receipt.
+
+    ``strip_cue`` is passed ONLY by the re-issue leg: a goal that was held or
+    queued under an "after that / when you're done" cue is refused by the
+    product if it is re-issued verbatim, so the door strips the cue and records
+    both forms (card C7).  A first utterance is never stripped.
+    """
 
     known = live.task_states() if known is None else known
     start = live.pose()
-    utterance = live.issue(text)
+    utterance = live.issue(text, strip_cue=strip_cue)
+    # ``Leg.text`` is what actually reached ``handle_text``; ``Leg.raw_text`` is
+    # what was held.  They differ only on a cue-stripped re-issue (card C7).
+    text = utterance.text
     H.wait_for_tasks(live, timeout_s=5.0)
     ids = H.goal_task_ids(live, known=known)
     deadline = time.monotonic() + 3.0
@@ -690,12 +716,17 @@ def run_interrupt_episode(live: H.LiveSession, episode: dict) -> dict:
     )
     leg3 = None
     if reissue is not None:
+        # The queue re-issues what the OWNER SAID; the door strips the cue the
+        # product cannot parse and records both forms on the leg (card C7).
+        # ``entry.text`` is the same residual as a fallback, so a queue entry
+        # that never carried a spoken form still issues correctly.
         leg3 = run_leg(
             live,
             label="reissue",
-            text=reissue.text,
+            text=(reissue.spoken or reissue.text),
             goal_key=reissue.goal_key,
             known=live.task_states(),
+            strip_cue=True,
         )
 
     samples = live.snapshot_samples()
@@ -773,6 +804,8 @@ def _observe_hold(live: H.LiveSession, ids1: set[str], *, t_from: float) -> Leg:
         label="hold",
         text="(hold: amend cue with no replacement goal)",
         goal_key="hold",
+        raw_text="(hold: amend cue with no replacement goal)",
+        cue_stripped=False,
         t_issued=t_from,
         t_terminal=live.now(),
         reply="",
@@ -792,6 +825,11 @@ def _observe_hold(live: H.LiveSession, ids1: set[str], *, t_from: float) -> Leg:
         start=[0.0, 0.0],
         end=[round(end[0], 3), round(end[1], 3)],
         committed=None,
+        region_provenance={
+            "goal_key": "hold",
+            "region_source": "not_scored",
+            "note": "a HOLD row observes the running goal; no arrival region is scored",
+        },
         follow={},
         owner_gate={},
     )

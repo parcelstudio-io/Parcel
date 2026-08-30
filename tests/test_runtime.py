@@ -1916,6 +1916,31 @@ def test_pose_review_rejects_non_mujoco_runtime(
         runtime.close()
 
 
+@pytest.fixture
+def demo_scene_loaded():
+    """Card C1/F1 — the POI table answers only on the scene it was surveyed on.
+
+    ``demo_pois.yaml`` declares ``scene_id: parcel_city_block``; with no scene
+    loaded the table is refused (``poi_refused = "no_scene"``), which is the
+    contract for a robot that has loaded no map. The case below drives to
+    ``crosswalk_a``'s coordinate through the product runtime, so it loads that
+    table's own scene THE PRODUCT WAY — through ``extract_city_semantics``, the
+    loader every venue goes through and the one that publishes the scene's
+    identity. The fake backend is left alone: it has no world and must not
+    pretend to have one.
+    """
+
+    import mujoco
+
+    from parcel_robot.navigation.poi_admission import clear_scene_instances
+    from parcel_robot.perception.city_semantics import extract_city_semantics
+    from parcel_robot.simulation.headless_city import DEFAULT_CITY_SCENE
+
+    extract_city_semantics(mujoco.MjModel.from_xml_path(str(DEFAULT_CITY_SCENE)))
+    yield
+    clear_scene_instances()
+
+
 @pytest.mark.parametrize(
     ("transcript", "reply_prefix", "expected_skill"),
     [
@@ -1926,6 +1951,7 @@ def test_pose_review_rejects_non_mujoco_runtime(
 def test_social_affect_action_defers_until_navigation_finishes(
     navigation_runtime_config: Path,
     audio_status: AudioDeviceStatus,
+    demo_scene_loaded,
     transcript: str,
     reply_prefix: str,
     expected_skill: str,

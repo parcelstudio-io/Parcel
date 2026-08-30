@@ -46,6 +46,7 @@ import contextlib
 import json
 import math
 import os
+import re
 import subprocess
 import sys
 import threading
@@ -621,9 +622,15 @@ class QueueRecord:
         }
 
 
-#: LIT-1's own minimal confirm→re-issue rule, shipped because
-#: ``model-b-narration-1/steer.py`` does not exist at run time.  LABELLED as
-#: harness logic; it is not a product seam and gains no authority.
+#: LIT-1's own minimal confirm→re-issue rule.  LABELLED as harness logic; it is
+#: not a product seam and gains no authority.
+#:
+#: (An earlier draft of this note said the rule was shipped "because
+#: ``model-b-narration-1/steer.py`` does not exist at run time".  It DOES exist
+#: and it WAS loaded in every recorded run — every ``steering_decision`` row
+#: carries MB-1's verdict in ``mb1_steer`` beside LIT-1's own.  The real reason
+#: LIT-1's rule is the authority is the one below: amendment L7 is binding on
+#: this experiment and fixes the semantics.  Corrected under card C7.)
 #:
 #: N1 (NAV-INT-1, binding): the shipped stack has no resume for a displaced
 #: goal — ``runtime._apply_goal_amend`` parks the amendable work as a
@@ -830,6 +837,103 @@ def _status_for(kind: str) -> str | None:
         "task_cancelled": "cancelled",
         "cancelled_at_checkpoint": "cancelled",
     }.get(kind)
+
+
+#: The receipt KINDS that END a task.  Exactly ONE of them is the ACCEPTED
+#: terminal (``task_succeeded``); it is the only receipt an arrival phrase may
+#: be grounded in (MB-1 M7, amendment L7).
+ACCEPTED_TERMINAL_KIND = "task_succeeded"
+TERMINAL_KINDS = frozenset(
+    {ACCEPTED_TERMINAL_KIND, "task_failed", "task_cancelled", "cancelled_at_checkpoint"}
+)
+
+#: Sentence-level arrival vocabulary.  Applied PER SENTENCE so an honest
+#: capability refusal ("I can't check ... I have no camera") and the offer
+#: question in the same paragraph survive when the arrival claim beside them
+#: does not.  It is deliberately a small closed set of first-person terminal
+#: claims: this is a harness guard against the harness's own scripted lines,
+#: not a general-purpose hallucination detector.
+_ARRIVAL_CLAIM_RE = re.compile(
+    r"\b(?:"
+    r"i(?:'ve|\s+have)\s+(?:reached|arrived|got\s+(?:to|there)|made\s+it)"
+    r"|i(?:'m|\s+am)\s+(?:at|here|there)\b"
+    r"|we(?:'re|\s+are)\s+(?:at|here|there)\b"
+    r"|arrived\s+at|reached\s+the|made\s+it\s+to"
+    r"|i(?:'ve|\s+have)\s+finished|i(?:'m|\s+am)\s+done"
+    r")",
+    re.IGNORECASE,
+)
+
+
+def _sentences(text: str) -> list[str]:
+    """Split on sentence enders, keeping the ender.  Empty parts dropped."""
+
+    return [part.strip() for part in re.split(r"(?<=[.!?])\s+", str(text)) if part.strip()]
+
+
+def offer_for_terminal(scripted: str, receipt: Receipt | None, *, goal: str = "") -> dict:
+    """Render the robot's post-terminal offer, TYPED BY THE RECEIPT.
+
+    The first build emitted the scenario's scripted ``offer_return``
+    unconditionally, so all five base runs said "I've reached the bench" on a
+    ``task_failed`` receipt (``VERDICT_FABLE.md`` finding 1; Sol's independent
+    audit found the same 5/5).  That is the exact false-terminal class the wave
+    exists to prevent, and it was produced by DETERMINISTIC harness code — which
+    is why the guard belongs here and not in a prompt.
+
+    The rule (amendment L7, MB-1 M7): an arrival phrase is grounded only in the
+    ACCEPTED terminal receipt.  On a failed / blocked / cancelled receipt — or
+    on no terminal receipt at all — the line OPENS with that receipt's own kind
+    and its detail, and every scripted sentence that claims an arrival is
+    dropped.  The scenario's remaining sentences are kept verbatim: a capability
+    refusal and an offer to go back are true whatever the terminal was.
+
+    The offer is opened either way, so the confirm -> re-issue rule (L7) still
+    has its referent and the RECEIPT-KIND SEQUENCE a run produces is unchanged.
+    This function only decides what is *said*.
+    """
+
+    kind = "" if receipt is None else str(receipt.kind)
+    status = _status_for(kind) or (kind or "no_terminal_receipt")
+    where = f" for the {goal}" if goal else ""
+    if kind == ACCEPTED_TERMINAL_KIND:
+        return {
+            "text": str(scripted),
+            "grounded_in": f"the accepted terminal receipt {kind} (MB-1 M7)",
+            "receipt_kind": kind,
+            "receipt_status": status,
+            "arrival_phrase_allowed": True,
+            "rewritten": False,
+            "dropped_sentences": [],
+        }
+    kept: list[str] = []
+    dropped: list[str] = []
+    for sentence in _sentences(scripted):
+        (dropped if _ARRIVAL_CLAIM_RE.search(sentence) else kept).append(sentence)
+    if receipt is None:
+        lead = (
+            f"My task executive recorded no terminal receipt{where}, so the trip "
+            "did not finish."
+        )
+    else:
+        lead = (
+            f"My task executive reports the task{where} as {status} "
+            f"(receipt: {receipt.kind}, detail: {receipt.last_detail}), so the "
+            "trip did not finish."
+        )
+    return {
+        "text": " ".join([lead, *kept]).strip(),
+        "grounded_in": (
+            f"the terminal receipt {kind or 'none'} ({status}); the scripted "
+            "arrival sentence(s) were dropped — only an accepted terminal may "
+            "say arrived (MB-1 M7 / L7)"
+        ),
+        "receipt_kind": kind,
+        "receipt_status": status,
+        "arrival_phrase_allowed": False,
+        "rewritten": True,
+        "dropped_sentences": dropped,
+    }
 
 
 def _rough_tokens(text: str) -> int:
@@ -1897,14 +2001,35 @@ class _TimelineState:
                     "narration_event", PROV_HARNESS, fact=fact, taken=False, note="no lane"
                 )
 
-    def _fact_for(self, receipt: Receipt) -> str:
-        """Only an ACCEPTED terminal receipt may say arrived/done (MB-1 M7)."""
+    def _last_terminal_receipt(self) -> Receipt | None:
+        """The LAST terminal receipt the tap recorded, or ``None``.
 
-        status = _status_for(receipt.kind) or receipt.kind
+        Read from the tap rather than from ``task_states()`` because the tap has
+        the executive's own word for what happened (``task_failed`` +
+        ``semantic_target_unreachable``), which is what the narration must say.
+        """
+
+        for receipt in reversed(self.tap.snapshot()):
+            if receipt.kind in TERMINAL_KINDS:
+                return receipt
+        return None
+
+    def _goal_label(self, receipt: Receipt | None) -> str:
+        """The grounded goal the plan queue bound to this receipt's task."""
+
+        if receipt is None:
+            return ""
         goal = ""
         for record in self.whisper.queue:
             if record.originating_task_id == receipt.task_id:
                 goal = record.grounded_goal
+        return goal
+
+    def _fact_for(self, receipt: Receipt) -> str:
+        """Only an ACCEPTED terminal receipt may say arrived/done (MB-1 M7)."""
+
+        status = _status_for(receipt.kind) or receipt.kind
+        goal = self._goal_label(receipt)
         where = f" for {goal}" if goal else ""
         if receipt.kind == "task_succeeded":
             return (
@@ -2053,16 +2178,34 @@ class _TimelineState:
                     # which logged the robot's own sentence as something the
                     # OWNER had said — and an owner turn the owner never took is
                     # the one thing a conversation log must never contain.
-                    offer = str(self.scenario["offer_return"])
+                    #
+                    # It is also TYPED BY THE RECEIPT: the scripted line is an
+                    # arrival claim, and an arrival claim is grounded only in the
+                    # accepted terminal.  On a failed / blocked / cancelled
+                    # receipt the line opens with that receipt's kind instead
+                    # (VERDICT_FABLE finding 1 / card C7).
+                    scripted = str(self.scenario["offer_return"])
+                    terminal = self._last_terminal_receipt()
+                    rendered = offer_for_terminal(
+                        scripted, terminal, goal=self._goal_label(terminal)
+                    )
+                    offer = str(rendered["text"])
                     self.whisper.offer_open = True
                     self.whisper.refresh(self.whisper_target)
                     self.log.write(
                         "voice_offer",
                         PROV_HARNESS,
                         text=offer,
+                        scripted_text=scripted,
                         step=step,
                         speaker="robot",
-                        grounded_in="the accepted terminal receipt (MB-1 M7)",
+                        grounded_in=rendered["grounded_in"],
+                        receipt_kind=rendered["receipt_kind"],
+                        receipt_status=rendered["receipt_status"],
+                        receipt_detail=("" if terminal is None else terminal.last_detail),
+                        arrival_phrase_allowed=rendered["arrival_phrase_allowed"],
+                        rewritten=rendered["rewritten"],
+                        dropped_sentences=rendered["dropped_sentences"],
                     )
                     if self.lane is not None:
                         self.lane.narrate(offer, verbatim=True)

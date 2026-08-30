@@ -51,10 +51,10 @@ traps teardown on every exit path.
 
 | file | what it is |
 |---|---|
-| `harness.py` | `LiveSession` — sim subprocess + runtime + a 50 Hz sampler; the interruption scheduler (`wait_for_trigger`), the receipt timeline (`Receipt`), and the differential arrival authority (`score_arrival`, `owner_arrival`), all copied from the e2e pattern rather than imported from it |
+| `harness.py` | `LiveSession` — sim subprocess + runtime + a 50 Hz sampler; the interruption scheduler (`wait_for_trigger`), the receipt timeline (`Receipt`), and the differential arrival authority (`score_arrival`, `owner_arrival`), all copied from the e2e pattern rather than imported from it. Also the ISSUE DOOR: `QUEUE_CUE_RE` / `strip_queue_cue()` and `issue(text, strip_cue=…)`, which records the raw and the issued form of every utterance (`raw_text`, `cue_stripped`) — see "the queue-cued re-issue" in `RESULTS.md` |
 | `gen_tier.py` | deterministic generator for the scenario tier (seed 20260829); `--check` fails if the JSON is stale |
 | `interrupt_tier_v1.json` | the ADDITIVE 40-episode tier (`frozen_baseline: false`) + 5 from-rest controls + 10 from-rest sequence controls. Families: amend-cue 14 / explicit-directive 14 / queue 8 / hold 4 (amendment N5) |
-| `queue_policy.py` | the harness-side plan-queue policy (H-NI1b) and the `{revise, keep, queue, clarify}` steering classifier (H-NI1c) |
+| `queue_policy.py` | the harness-side plan-queue policy (H-NI1b) and the `{revise, keep, queue, clarify}` steering classifier (H-NI1c). The queue-cue vocabulary is imported from `harness.py` so the classifier and the issue door cannot disagree about what a cue is |
 | `gold_blind.json` + `gold_blind.sha256` | the VERIFIER's blind 110-case set (amendment N7). **The H-NI1c bar reads on this file only**; the sha256 is checked at scoring time |
 | `gold.json` | the executor's own DEV set (60 pre-registered-shape cases + 30 supplementary). Reported for transparency; no bar reads on it |
 | `run.py` | the runner and the aggregation; writes `results.json` |
@@ -73,7 +73,7 @@ traps teardown on every exit path.
 | `admission` | H-NI1a. `held_pre_runtime: true` means the utterance never reached `handle_text` (amendment N9), so `admitted`/`latency_ms` are `null` BY POLICY, not by failure. `latency_ms` is the sampler-observed receipt; `inband_handle_text_ms` is the synchronous `handle_text` call |
 | `amended_goal` | the leg that ran after the interruption, with `label`: `amended_goal` (the interruption was admitted), `goal_1_continued` (it was refused, the original goal kept running), `goal_1_uninterrupted` (queue family, held), `hold` (bare-cue HOLD row) |
 | `switch_window` | amendment N6: cue − 2 s … cue + 10 s, sampled at 50 Hz. `min_clearance_m`, the sim's own collision flag, and the false-arrival test on goal 1 |
-| `reissue` | the plan-queue policy's re-issue leg (amendment N1) — a fresh task, never a resume |
+| `reissue` | the plan-queue policy's re-issue leg (amendment N1) — a fresh task, never a resume. Every leg carries `raw_text` (what was held) and `cue_stripped`; a re-issue goes through the door with the queue cue stripped, because the product refuses it verbatim |
 | `queue` | every policy decision, in order, with the classifier label beside the observed effect |
 | `oracle_path_m`, `path_ratio_oracle` | amendment N8's reference: start → interruption pose → goal 2 → goal 1, straight line |
 | `receipts` | the FULL executive receipt timeline, timestamped by the 50 Hz sampler |
@@ -83,6 +83,26 @@ Every leg carries BOTH arrival authorities (`system_arrival`, `scorer_arrival`)
 and their `authority_category`; `results.json → authority_disagreement` tallies
 the disagreement class per goal separately, because it reproduces from rest and
 is not an interruption effect.
+
+**Which instance a leg is scored against (`region_provenance`, card C7-F1).**
+The static city holds more than one instance of some labels — two `sidewalk`
+polygons (`sidewalk` north and `sidewalk_south`, ~4.98 m apart) and two
+lampposts. "Go to the sidewalk" names a LABEL, so either instance is a
+legitimate referent and the executive picks which. The scorer therefore follows
+the executive: every leg records `region_provenance` with the raw committed
+instance id, the instance actually scored, the landmark table it came from, the
+sibling instances that share the label, and the tie-break rule that fired —
+
+| `region_source` | when | scored |
+|---|---|---|
+| `committed_instance` | the executive committed an instance the scene knows, carrying this goal's label | that instance |
+| `default_instance` | nothing committed, or an id the scene table does not know | the generator's tier-A default |
+| `default_instance_label_mismatch` | an instance was committed but carries a **different** label | the default (a wrong-instance arrival must not be scored against its own choice) |
+| `owner_anchored` / `not_scored` | an approach (scored on the observed owner pose) / a HOLD row | — |
+
+Before C7-F1 the region branch ignored the commitment and always scored the
+north polygon, which turned **6 legs where the robot stood in `sidewalk_south`
+into `false_arrival` at DTG ~4.98 m**. See "Card C7-F1" in `RESULTS.md`.
 
 ## Host rules this experiment follows
 

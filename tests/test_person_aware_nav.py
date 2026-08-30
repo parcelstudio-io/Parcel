@@ -125,6 +125,32 @@ def _gate_verdict(speed_mps: float) -> tuple[VelocityCommand, str]:
 # ---------------------------------------------------------------------------
 
 
+
+@pytest.fixture
+def demo_scene_loaded():
+    """Card C1/F1 — ``_drive``'s directive is a POI, and a POI needs its scene.
+
+    ``DIRECTIVE`` is ``demo_pois.yaml``'s ``coffee_42nd``, and that table
+    declares ``scene_id: parcel_city_block``: with no scene loaded the table is
+    refused (``poi_refused = "no_scene"``) and ``_drive`` would measure a
+    goal-less search instead of the person cap. The two tests that drive load
+    the table's own scene THE PRODUCT WAY — through ``extract_city_semantics``,
+    the loader that publishes the scene's identity — and are otherwise
+    unchanged. Teardown forgets it so the file cannot leak a scene into the
+    next one.
+    """
+
+    import mujoco
+
+    from parcel_robot.navigation.poi_admission import clear_scene_instances
+    from parcel_robot.perception.city_semantics import extract_city_semantics
+    from parcel_robot.simulation.headless_city import DEFAULT_CITY_SCENE
+
+    extract_city_semantics(mujoco.MjModel.from_xml_path(str(DEFAULT_CITY_SCENE)))
+    yield
+    clear_scene_instances()
+
+
 def test_flag_defaults_off_everywhere() -> None:
     nav = DirectiveNavigator.from_config(NAV_CFG)
     try:
@@ -135,7 +161,7 @@ def test_flag_defaults_off_everywhere() -> None:
         nav.close()
 
 
-def test_flag_off_person_channel_changes_nothing() -> None:
+def test_flag_off_person_channel_changes_nothing(demo_scene_loaded) -> None:
     """Control arm: flag-off, declaring a person has no effect on any command."""
 
     with_person, nav_a = _drive(person_aware_nav=False, with_person=True)
@@ -154,7 +180,9 @@ def test_flag_off_person_channel_changes_nothing() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_flag_on_cap_lets_the_untouched_gate_approve_the_d15_geometry() -> None:
+def test_flag_on_cap_lets_the_untouched_gate_approve_the_d15_geometry(
+    demo_scene_loaded,
+) -> None:
     policy = ReactiveSafetyPolicy()
     clearance = D15_OWNER_CENTER_DISTANCE_M - policy.owner_collision_envelope_m
     limit = compliant_speed(clearance, policy=policy)

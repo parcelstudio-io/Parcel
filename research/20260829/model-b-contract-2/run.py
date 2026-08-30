@@ -569,8 +569,18 @@ def main(argv: list[str] | None = None) -> int:
     # -------------------------------------------------------------- arm T+P
     if want_tp:
         print("[mb2] arm T+P — local paraphrase, checker-gated")
-        log = CACHE / "llama-server-8093.log"
+        # ONE LOG PER RUN.  The first build wrote every run to
+        # ``llama-server-8093.log`` in mode "w", so a 2-scenario smoke run
+        # overwrote the 180-turn run's server log and no log of the headline run
+        # survives (VERDICT.md 6 item 2).  The name now carries the start time,
+        # the seed and the scenario count, so a smoke run lands on its own file
+        # and the headline run's log is never the one that is clobbered.
+        log = CACHE / (
+            f"llama-server-{LOCAL_PORT}-{time.strftime('%Y%m%dT%H%M%S')}"
+            f"-seed{args.seed}-n{len(corpus)}.log"
+        )
         process, note = start_local_server(log, threads=args.threads)
+        print(f"[mb2] llama-server log: {log}")
         print(f"[mb2] {note}")
         if process is None:
             _merge_into_results(
@@ -598,6 +608,7 @@ def main(argv: list[str] | None = None) -> int:
             tp_aggregate["tier"] = "replay"
             tp_aggregate["model"] = LOCAL_MODEL_NAME
             tp_aggregate["server"] = f"llama-server on :{LOCAL_PORT} (CPU build)"
+            tp_aggregate["server_log"] = str(log)
             tp_aggregate["prompt"] = PARAPHRASE_PROMPT.name
             tp_aggregate["temperature"] = PARAPHRASE_TEMPERATURE
             tp_aggregate["host_at_run"] = _host_row()

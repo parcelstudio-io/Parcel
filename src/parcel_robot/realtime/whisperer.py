@@ -89,6 +89,17 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field, replace
 from typing import Any
 
+# Card C4. The reroute class is fed from the navigator's own social-progress
+# vocabulary, and the binding is an IMPORT rather than a copied string: if that
+# enum is renamed or re-valued, this module follows it instead of quietly
+# speaking for a state that no longer exists. Nothing else in ``realtime``
+# reaches into ``navigation``; this is a two-name, no-cycle dependency on a
+# contracts module that imports only ``contracts`` and the standard library.
+from parcel_robot.navigation.social_progress_contracts import (
+    SocialBlockCauseV1,
+    SocialProgressStateV1,
+)
+
 from .config import (
     DEFAULT_WHISPERER_WINDOW_S,
     CuriosityConfig,
@@ -276,6 +287,47 @@ STIMULUS_KINDS: frozenset[str] = frozenset(CURIOSITY_KINDS - {KIND_IDLE_REMARK})
 KIND_OWNER_LEFT = "owner_left"
 # ======================================== END card CURIO-1 (the world classes)
 
+# ============================================ card C4: the plan-acceptance class
+#
+# WHY THIS CLASS EXISTS
+# ---------------------
+# MB-1 (``research/20260829/model-b-narration-1``) drove the shipped whisperer
+# over a 40-scenario receipt corpus and found that this robot cannot say "Sure,
+# I'll check the sofa". There was no class for a plan ACCEPTANCE at all: the
+# differ turns a ``nav_state`` change into :data:`KIND_NAV_TICK`, which is in the
+# never band (55 ``never_band`` suppressions over the corpus, and they are
+# exactly those events), and a ``nav_goal`` change produced nothing whatsoever.
+# Arm D's acknowledgements were ARRIVALS' ``critical_bypass`` forwards standing
+# in for an acknowledgement the product had never been given a way to make.
+#
+# WHY IT IS NOT A ``nav_goal`` BRANCH IN THE DIFFER
+# -------------------------------------------------
+# Because a string diff fires on the label, and the label changes for reasons
+# that are not an admission: a re-issue of the same goal, a re-grounding of the
+# same words, a navigator re-stating what it was already doing. That is the
+# ``nav_tick`` mistake with a longer period, and it is the shape MB-1's verdict
+# names. The only component that knows a plan was ADMITTED is the executive, and
+# it already says so in a typed answer (``brain.executive.ExecutiveSubmission``).
+# So this class has no differ branch and no detector of its own: it has a DOOR,
+# :meth:`Whisperer.note_plan_accepted`, which takes a
+# :class:`PlanAcceptedReceipt` — the executive's own fields, mirrored here so
+# this module keeps importing nothing from ``brain`` — and the runtime hands it
+# that answer at the one place the answer exists.
+#
+# ALWAYS BAND, NOT CRITICAL, OWN MIN-GAP
+# --------------------------------------
+# The critical set buys the right to spend past the owner's per-minute cap AND
+# past the month's ceiling. An acknowledgement is not worth that: if the cap is
+# already spent the owner has heard this robot twice inside the minute, and the
+# plan runs either way — the sentence is a courtesy, not a fact the owner cannot
+# do without. What it does get is its own spacing
+# (:data:`PLAN_ACCEPTED_MIN_GAP_S`), because it is the only class in this module
+# that ANSWERS something the owner said a moment ago, and the 15 s gap that
+# keeps unsolicited status quiet would hold that answer until it read as a robot
+# that had ignored them.
+KIND_PLAN_ACCEPTED = "plan_accepted"
+# ==================================== END card C4 (the plan-acceptance class) ==
+
 #: Never band — the telemetry the bench proved must never reach the session.
 KIND_NAV_TICK = "nav_tick"
 KIND_FOLLOW_TICK = "follow_tick"
@@ -335,6 +387,11 @@ ALWAYS_BAND: frozenset[str] = frozenset(
         # once, when it happens, and there is nothing for a scheduler to pace.
         # Not critical (see KIND_OWNER_LEFT).
         KIND_OWNER_LEFT,
+        # Card C4. An admission is an EDGE too — the executive said yes, once,
+        # to a plan — so it is banded here and not in the middle band, which is
+        # for classes that need a mechanism with a clock. It is deliberately not
+        # in CRITICAL_KINDS; see the class comment.
+        KIND_PLAN_ACCEPTED,
     }
 )
 
@@ -391,6 +448,39 @@ CRITICAL_KINDS: frozenset[str] = frozenset(
 #: budget is the owner's cost knob and only the critical set may spend past it.
 MIN_GAP_EXEMPT_KINDS: frozenset[str] = CRITICAL_KINDS | {KIND_MISSION_BLOCK_CLEAR}
 
+#: **Card C4.** Per-class overrides of ``whisperer.min_gap_s``. A class named
+#: here is spaced by ITS OWN number; every class not named here — which is the
+#: whole table above this card — reads the owner's config exactly as it always
+#: did, so this table is additive by construction.
+#:
+#: There is one entry, and the reason it is not a config key is that
+#: ``realtime/config.py`` is at its DEC-0 ceiling and this is not a knob an
+#: owner should have to find. ``min_gap_s`` (15 s shipped, 4 s in the prototype
+#: config) paces UNSOLICITED status so that a walking robot is not a talking
+#: appliance. :data:`KIND_PLAN_ACCEPTED` is the one class that answers something
+#: the owner just said, and MB-1's corpus prices the shared number exactly: an
+#: acceptance lands 2.8 s after the completion before it in the ``queued``
+#: family and 3.1 s after it in ``clean``, so the shared gap swallows every
+#: second acknowledgement in a two-goal trip. Two seconds is one conversational
+#: beat — long enough that a double-tap is still one sentence, short enough that
+#: the answer arrives while the question is still in the air.
+#:
+#: A class in here is spaced against ITS OWN last forward and does not advance
+#: the shared spacing clock the other classes read. That second half is not a
+#: detail — it is measured. MB-1's corpus, replayed with the acknowledgement
+#: holding the shared clock, loses **10/10 block reports and 10/10 clears**: the
+#: acknowledgement lands at t=0.3 and the 8 s block debounce elapses at t=13.5,
+#: inside the owner's 15 s, so "someone is standing in the way" is suppressed and
+#: the clear that follows can no longer prove its block was ever spoken. Trading
+#: a block report for a courtesy sentence is a strictly worse robot, and the
+#: shared clock is the owner's spacing for the robot's UNSOLICITED status —
+#: which an answer to something they just said is not.
+#:
+#: This is spacing only. ``max_updates_per_minute`` still decides
+#: affordability, and an acceptance obeys it like everything non-critical.
+PLAN_ACCEPTED_MIN_GAP_S = 2.0
+KIND_MIN_GAP_S: Mapping[str, float] = {KIND_PLAN_ACCEPTED: PLAN_ACCEPTED_MIN_GAP_S}
+
 # --------------------------------------------------------- rules (log values)
 RULE_ALWAYS_BAND = "always_band"
 RULE_CRITICAL_BYPASS = "critical_bypass"
@@ -433,6 +523,47 @@ RULE_CHATTER_SCHEDULED = "chatter_scheduled"
 #: being a statement about anything.
 RULE_CURIOSITY_DOOR_WRONG_CLASS = "curiosity_door_wrong_class"
 
+# ------------------------------------------------- card C4: the receipt rules
+#: The executive admitted a plan and this module said the sentence. The
+#: counterpart of :data:`RULE_ALWAYS_BAND` for the receipt door, named
+#: separately so a reader of the ledger can tell an ADMISSION apart from a state
+#: change that happened to land in the same band.
+RULE_PLAN_ADMITTED = "plan_admitted"
+#: The same task, admitted again with the same plan. This is the row that stops
+#: :data:`KIND_PLAN_ACCEPTED` from becoming ``nav_tick``: a re-issue is not
+#: news, it is the owner (or a retry) saying the same thing twice, and the robot
+#: acknowledging it twice is the chattiness this module exists to prevent. Keyed
+#: on the executive's own plan identity — the validated plan's SHA — and never
+#: on the goal LABEL, because two different plans can wear one label and one
+#: plan can be re-grounded into two.
+RULE_PLAN_REISSUE = "plan_reissue"
+#: The receipt says the executive did NOT accept (a rejected re-issue, a
+#: capacity refusal). Recorded rather than dropped, because "the robot said
+#: nothing when I asked" and "the executive turned my plan away" are different
+#: answers and the log is where they get told apart.
+RULE_PLAN_NOT_ADMITTED = "plan_not_admitted"
+#: A receipt with no task id or a lineage this module does not know. Fails
+#: closed, exactly like :data:`RULE_UNKNOWN_KIND` — and it fails closed by
+#: LOGGING rather than by raising, because this door is called from the
+#: executive's own admission path and narration is a nicety that must never take
+#: down a plan the owner asked for.
+RULE_PLAN_RECEIPT_INVALID = "plan_receipt_invalid"
+#: This mission has already spent its reroute allowance
+#: (:data:`REROUTE_PER_MISSION_CAP`). The bound on a CRITICAL class that would
+#: otherwise be able to spend past the owner's ceiling once per social-policy
+#: flap; see the constant for the arithmetic.
+RULE_REROUTE_MISSION_CAP = "reroute_mission_cap"
+#: A social-progress state that is not ``reroute`` was handed to the reroute
+#: door. The mirror of :data:`RULE_CURIOSITY_DOOR_WRONG_CLASS`: a door that will
+#: speak for any state it is handed is not a door.
+RULE_REROUTE_DOOR_WRONG_STATE = "reroute_door_wrong_state"
+#: :data:`KIND_PLAN_ACCEPTED` was handed to bare :meth:`Whisperer.offer` instead
+#: of to :meth:`Whisperer.note_plan_accepted`. Refused, for the reason
+#: :data:`RULE_MIDDLE_BAND_NEEDS_MECHANISM` refuses a block: the door is where
+#: the re-issue guard lives, and a class that can be spoken around its own guard
+#: does not have one.
+RULE_PLAN_ACCEPTED_NEEDS_RECEIPT = "plan_acceptance_requires_a_receipt"
+
 # ------------------------------------------------------------ tuning constants
 #: Card design point 2 / bench B2. A mission block must persist this long before
 #: it is worth a sentence; the flap rhythm in the real artifacts
@@ -456,6 +587,54 @@ WALK_CEILING_MPS = 1.9
 #: How many decision rows are kept for the panel and for the eval pack. The
 #: never band is offered on every digest tick, so this is a ring, not a journal.
 DECISION_LOG_MAX = 400
+
+# ---------------------------------- card C4: the KIND_REROUTE band, DECIDED
+#: **How many reroutes one mission may announce.**
+#:
+#: THE DECISION. :data:`KIND_REROUTE` was declared, banded ALWAYS, listed
+#: CRITICAL, given a HINT and exported — and never constructed by any product
+#: code (MB-1's verdict; parcel-6c verified it line by line at HEAD). Its first
+#: constructor therefore had to answer a band question before it wrote a line,
+#: because a CRITICAL class spends past the owner's per-minute cap AND past the
+#: month's ``monthly_budget_usd`` ceiling. It stays CRITICAL, and it is CAPPED.
+#:
+#: WHY IT STAYS CRITICAL. The bench's disqualifying counterexample is a reroute:
+#: "reroute at t=96 was silently dropped because a mission_clear forwarded at
+#: t=90 held the 15 s min-gap — G3 missed by both deterministic arms". The
+#: min-gap exemption that fixes that IS the critical set in this module
+#: (:data:`MIN_GAP_EXEMPT_KINDS`), and ``runtime._narrate_mission`` reads the
+#: same set for the monthly ceiling on purpose, so that "which facts outrank the
+#: owner's cost knob" has one answer here and not two lists that drift. Taking
+#: reroute out of the set to make it ordinary would re-open G3 and split that
+#: answer in two.
+#:
+#: WHY IT IS CAPPED, AND WHAT THE CAP COSTS. Every other critical class is an
+#: EDGE that happens at most a handful of times per trip. A reroute is not: it
+#: is fed from :attr:`SocialProgressStateV1.REROUTE`, which is a policy STATE
+#: the navigator can re-enter every time an alternate route becomes available,
+#: and the only thing between a flapping policy and the session is the 20 s
+#: critical dedup. Unbounded, that is a 10-minute trip announcing up to 30
+#: reroutes past the ceiling — at MB-1's measured ~$0.0024 per forwarded
+#: narration ($1.33 / 550 ledger rows), ~$0.07 a mission, or ~$43/month at 20
+#: missions a day: a quarter of ``hosted_budget.DEFAULT_ENVELOPE_USD``, spent
+#: entirely by the one path that is allowed to ignore the envelope. Three
+#: reroutes per mission bound that at ~$0.007 a mission (~$4.3/month at the same
+#: rate) while still admitting a real re-plan sequence — the first alternate
+#: route, one revision of it, and a last one — which is more than the one
+#: reroute per mission the bench corpus actually contains.
+#:
+#: The cap is per MISSION and resets when the mission does; over the cap the
+#: item is dropped with :data:`RULE_REROUTE_MISSION_CAP` and still logged. A
+#: reroute the lane's floor gate refuses gives its allowance back
+#: (:meth:`Whisperer.undeliver`), because a sentence nobody heard must not spend
+#: a mission's budget any more than it spends the owner's minute.
+REROUTE_PER_MISSION_CAP = 3
+
+#: How many tasks' plan identities the re-issue guard remembers. A bound, not a
+#: policy: the guard only ever needs the task the owner is talking about now and
+#: the handful behind it, and an unbounded dict on a process that runs for weeks
+#: is a leak with a good excuse.
+PLAN_ADMISSION_MEMORY = 32
 
 # ------------------------------------------- card R13: the watcher's own ledger
 #: Why a pace-watcher tick wrote no row. Every tick lands in exactly one of
@@ -507,6 +686,17 @@ HINTS: Mapping[str, str] = {
         "Tell the owner you stopped and why, then ask what they want to do instead."
     ),
     KIND_REROUTE: "Tell the owner you are taking a different way, and why.",
+    # Card C4. The whole point of the class is the FIRST four words of the
+    # answer, so the hint spends its second clause forbidding the three things
+    # the bench watched models do with an acceptance: repeat the owner's own
+    # sentence back at them, recite the plan as a list of steps, and slide from
+    # "I will go" into "I have gone".
+    KIND_PLAN_ACCEPTED: (
+        "Tell the owner you are getting on with what they just asked for, in one "
+        "short sentence. Do NOT read their own words back to them, do NOT list "
+        "the steps, and do NOT say or imply that you have arrived, looked at "
+        "anything or found anything."
+    ),
     KIND_REFUSAL: "Say the refusal out loud in your own words, with the reason.",
     KIND_MISSION_BLOCKED: (
         "Tell the owner what is in the way and that you are waiting for it to clear."
@@ -711,6 +901,179 @@ class StateEvent:
         return self.key or self.kind
 
 
+# ================================== card C4: the two receipts, and their facts
+#: How an admission is RELATED to what the robot was already doing. ``new`` and
+#: ``revise`` are what today's executive can distinguish — ``submit`` versus
+#: ``replace`` at the runtime's own call site — and ``queue`` is declared now,
+#: unused, because C6's plan queue is the card that produces it and a vocabulary
+#: that grows a value later is a vocabulary two components can disagree about in
+#: the meantime.
+LINEAGE_NEW = "new"
+LINEAGE_REVISE = "revise"
+LINEAGE_QUEUE = "queue"
+PLAN_LINEAGES: frozenset[str] = frozenset({LINEAGE_NEW, LINEAGE_REVISE, LINEAGE_QUEUE})
+
+#: One sentence of FACT per lineage. Templates, not a model: MB-2 measured a
+#: receipt-typed contract passing every fact gate the hosted model failed, and
+#: the reading it published is "the facts belong in the contract, not in the
+#: voice". The speech act is in :data:`HINTS`, outside the fact, as everywhere
+#: else in this module.
+PLAN_ACCEPTED_FACTS: Mapping[str, str] = {
+    LINEAGE_NEW: (
+        "The robot's task executive reports it has accepted a new goal from the "
+        "owner and will go to {goal}."
+    ),
+    LINEAGE_REVISE: (
+        "The robot's task executive reports it has accepted the owner's "
+        "correction and will go to {goal} instead of what it was doing."
+    ),
+    LINEAGE_QUEUE: (
+        "The robot's task executive reports it has queued {goal} to do after the "
+        "goal it is already carrying out."
+    ),
+}
+
+#: Why the route changed, as a clause. Keyed on
+#: :class:`SocialBlockCauseV1` VALUES rather than on strings of this module's
+#: own invention, and an unknown or absent cause falls through to no clause at
+#: all — the R21 discipline: a receipt that cannot name the reason says nothing
+#: about the reason rather than guessing one.
+REROUTE_CAUSE_PHRASES: Mapping[str, str] = {
+    SocialBlockCauseV1.TRUE_DYNAMIC_BLOCK.value: " because something is blocking the way it was going",
+    SocialBlockCauseV1.UNCERTAIN_OCCLUSION.value: " because it cannot see far enough along the way it was going",
+    SocialBlockCauseV1.RECIPROCAL_OSCILLATION.value: (
+        " because it and someone coming the other way kept stepping into each other"
+    ),
+}
+
+#: The one social-progress state this module's reroute door will speak for.
+SOCIAL_STATE_REROUTE = SocialProgressStateV1.REROUTE.value
+
+#: A goal label is grounded owner text, so it is bounded before it is composed
+#: into a sentence. Long enough for any place name the grounder admits, short
+#: enough that a pathological label cannot become the whole item.
+MAX_GOAL_LABEL_CHARS = 80
+
+
+@dataclass(frozen=True)
+class PlanAcceptedReceipt:
+    """The executive's admission answer, in this module's own vocabulary.
+
+    The fields MIRROR ``brain.executive.ExecutiveSubmission`` (``accepted``,
+    ``disposition``, ``task_id``, ``plan_revision``) and add the three things
+    that answer alone cannot carry: what the owner asked for
+    (:attr:`goal_label`), how it relates to what was already running
+    (:attr:`lineage`), and WHICH PLAN was admitted (:attr:`plan_digest`, the
+    validator's ``plan_sha256``). Mirrored rather than imported so that a leaf
+    of ``realtime`` does not take a dependency on ``brain``; the runtime builds
+    this at the one place both halves are in scope.
+
+    Nothing here raises. This object is constructed on the executive's own
+    admission path, and narration is a nicety that must never be able to take
+    down a plan the owner asked for — a malformed receipt is a LOGGED refusal at
+    the door (:data:`RULE_PLAN_RECEIPT_INVALID`), not an exception.
+    """
+
+    task_id: str
+    goal_label: str
+    plan_revision: int = 1
+    lineage: str = LINEAGE_NEW
+    accepted: bool = True
+    disposition: str = ""
+    #: The validated plan's SHA (``brain.validator.ValidatedPlan.plan_sha256``).
+    #: THE re-issue guard's identity: two admissions of the same task carrying
+    #: the same plan are one piece of news, whatever their revision numbers say.
+    plan_digest: str = ""
+    #: The executive's own id for this admission, when it has one. Defaults to
+    #: ``<task>:r<revision>``, which is what the transition ledger keys on.
+    receipt_id: str = ""
+
+    def plan_identity(self) -> str:
+        """What "the same plan" means. The SHA when there is one."""
+
+        return self.plan_digest or f"r{int(self.plan_revision)}"
+
+    def receipt_ref(self) -> str:
+        return self.receipt_id or f"{self.task_id}:r{int(self.plan_revision)}"
+
+
+@dataclass(frozen=True)
+class RerouteReceipt:
+    """One social-progress reroute, as the navigator's contract reports it.
+
+    :attr:`state` is passed rather than assumed: the door refuses anything that
+    is not :data:`SOCIAL_STATE_REROUTE`, which is only a guard worth having if
+    the caller has to say what it actually got.
+    """
+
+    #: What the trip is FOR — the goal label the reroute is a reroute of. Also
+    #: the identity the per-mission cap counts against.
+    mission: str
+    #: ``SocialProgressDecisionV1.state.value``.
+    state: str
+    #: ``SocialProgressDecisionV1.cause.value``; optional.
+    cause: str = ""
+    #: ``SocialProgressDecisionV1.blocker_id``; carried into the decision log's
+    #: detail and never into the sentence — a track id is not something to say
+    #: out loud.
+    blocker_id: str = ""
+
+
+def _goal_phrase(label: str) -> str:
+    clean = " ".join(str(label).split())[:MAX_GOAL_LABEL_CHARS]
+    # An empty label would leave a hole in the sentence, and a hole in the
+    # sentence is what the model fills in (``curiosity_event``'s lesson).
+    return _definite_phrase(clean) if clean else "the place the owner asked for"
+
+
+def plan_accepted_event(receipt: PlanAcceptedReceipt) -> StateEvent:
+    """One :data:`KIND_PLAN_ACCEPTED` event. Total: never raises."""
+
+    lineage = str(receipt.lineage)
+    template = PLAN_ACCEPTED_FACTS.get(lineage, PLAN_ACCEPTED_FACTS[LINEAGE_NEW])
+    return StateEvent(
+        kind=KIND_PLAN_ACCEPTED,
+        # The dedup identity is the PLAN, not the label: two different plans
+        # that ground to one label are two pieces of news, and one plan
+        # re-admitted under two labels is one.
+        key=f"plan_accepted:{receipt.task_id}:{receipt.plan_identity()}",
+        fact=template.format(goal=_goal_phrase(receipt.goal_label)),
+        detail={
+            "task_id": str(receipt.task_id),
+            "plan_revision": int(receipt.plan_revision),
+            "lineage": lineage,
+            "receipt_id": receipt.receipt_ref(),
+            "disposition": str(receipt.disposition),
+        },
+    )
+
+
+def reroute_event(receipt: RerouteReceipt) -> StateEvent:
+    """One :data:`KIND_REROUTE` event. Total: never raises."""
+
+    goal = _goal_phrase(receipt.mission)
+    cause = REROUTE_CAUSE_PHRASES.get(str(receipt.cause), "")
+    return StateEvent(
+        kind=KIND_REROUTE,
+        # Keyed on the MISSION: a second reroute on the same trip is the same
+        # news, and the 20 s critical dedup is what makes it one sentence.
+        key=f"reroute:{goal}",
+        fact=(
+            f"The robot's navigation system reports it is taking a different way "
+            f"to {goal}{cause}."
+        ),
+        detail={
+            "mission": goal,
+            "state": str(receipt.state),
+            "cause": str(receipt.cause),
+            "blocker_id": str(receipt.blocker_id),
+        },
+    )
+
+
+# ================================= END card C4 (the receipts and their facts) ==
+
+
 @dataclass(frozen=True)
 class WhispererDecision:
     """One forward or one suppression, with the rule that produced it.
@@ -836,9 +1199,20 @@ class Whisperer:
         self.forwarded_by_rule: dict[str, int] = {}
 
         self._previous: StateDigest | None = None
-        self._forwards: deque[float] = deque()
+        # Card C4 follow-up A1. Each entry is ``(at, kind)``. The timestamp is
+        # the budget (``_spent`` counts entries and evicts by age, exactly as
+        # before); the KIND is what lets ``undeliver`` rewind the SHARED spacing
+        # clock to the last forward that actually advanced it. Before C4 every
+        # entry advanced it and ``_forwards[-1]`` was always the right answer;
+        # an own-gap class breaks that assumption, so the assumption is now
+        # written into the deque instead of being inferred from it.
+        self._forwards: deque[tuple[float, str]] = deque()
         self._last_forward_at: float | None = None
         self._dedup: dict[str, float] = {}
+        # Card C4. The own-gap classes' spacing clocks (KIND_MIN_GAP_S). Kept
+        # apart from ``_last_forward_at`` so that a class with its own number
+        # neither reads nor writes the owner's shared one.
+        self._last_forward_by_kind: dict[str, float] = {}
         self._folded = 0
 
         # middle-band state machines. ``_block_open`` is THIS object's own view
@@ -858,6 +1232,17 @@ class Whisperer:
         self._pace_mismatch_open = False
         self._pace_unknown = False
         self._pace_unknown_since: float | None = None
+
+        # card C4. The re-issue guard's memory: task id -> the identity of the
+        # plan this object has already spoken for. Bounded (see
+        # PLAN_ADMISSION_MEMORY) and deliberately NOT keyed on the goal label.
+        self._plan_admitted: dict[str, str] = {}
+
+        # card C4. The reroute allowance, per mission. ``_reroute_mission`` is
+        # the trip the count belongs to; a different mission resets the count,
+        # which is what makes the cap per-mission rather than per-session.
+        self._reroute_mission = ""
+        self._reroute_spoken = 0
 
         # the watcher's own ledger (card R13). Cumulative for the session and
         # published in ``snapshot()``: a counter cannot be evicted by the ring,
@@ -954,6 +1339,96 @@ class Whisperer:
 
     # ============================== END card CURIO-1 (Whisperer door) ==========
 
+    # ==================================== card C4: the two receipt doors ======
+    def note_plan_accepted(
+        self, receipt: PlanAcceptedReceipt, *, now: float | None = None
+    ) -> WhispererDecision:
+        """The executive admitted a plan. Always logs; never raises.
+
+        THE ONLY way :data:`KIND_PLAN_ACCEPTED` is produced. There is no differ
+        branch and no detector, for the reason the class comment gives: the
+        executive is the only component that knows an admission happened, and a
+        ``nav_goal`` string diff would fire on re-issues, re-groundings and
+        restatements — ``nav_tick`` with a longer period.
+
+        Three refusals, all logged rather than raised, because this door is
+        called from the plan-admission path and a narration fault must never be
+        able to take down a plan the owner asked for:
+
+        * the receipt is malformed (no task, unknown lineage) —
+          :data:`RULE_PLAN_RECEIPT_INVALID`;
+        * the executive did not accept it — :data:`RULE_PLAN_NOT_ADMITTED`;
+        * it is the SAME plan for the SAME task as the last one admitted —
+          :data:`RULE_PLAN_REISSUE`, the acceptance bar this card is named for.
+
+        Past those it is priced exactly like every other always-band class: the
+        dedup window, its own :data:`PLAN_ACCEPTED_MIN_GAP_S`, and the owner's
+        ``max_updates_per_minute``. It is NOT in :data:`CRITICAL_KINDS`, so it
+        can neither spend past that cap nor past the month's ceiling.
+        """
+
+        at = self._clock() if now is None else float(now)
+        event = plan_accepted_event(receipt)
+        band = band_of(KIND_PLAN_ACCEPTED)
+        with self._lock:
+            task = str(receipt.task_id)
+            if not task or str(receipt.lineage) not in PLAN_LINEAGES:
+                return self._record(
+                    event, band=band, forwarded=False, rule=RULE_PLAN_RECEIPT_INVALID, at=at
+                )
+            if not receipt.accepted:
+                return self._record(
+                    event, band=band, forwarded=False, rule=RULE_PLAN_NOT_ADMITTED, at=at
+                )
+            identity = receipt.plan_identity()
+            if self._plan_admitted.get(task) == identity:
+                return self._record(
+                    event, band=band, forwarded=False, rule=RULE_PLAN_REISSUE, at=at
+                )
+            # Remembered BEFORE the pricing, and deliberately: the admission
+            # happened whether or not the owner's budget could afford the
+            # sentence, so a later identical receipt is still a re-issue.
+            self._plan_admitted[task] = identity
+            while len(self._plan_admitted) > PLAN_ADMISSION_MEMORY:
+                self._plan_admitted.pop(next(iter(self._plan_admitted)))
+            return self._forward(event, band=band, rule=RULE_PLAN_ADMITTED, at=at)
+
+    def note_reroute(
+        self, receipt: RerouteReceipt, *, now: float | None = None
+    ) -> WhispererDecision:
+        """The navigator is taking another way. Always logs; never raises.
+
+        :data:`KIND_REROUTE`'s first constructor, and the enforcement point for
+        the band decision recorded at :data:`REROUTE_PER_MISSION_CAP`: the class
+        stays CRITICAL — so the bench's G3 min-gap bug cannot come back and the
+        monthly-ceiling answer stays one list — and each mission may announce at
+        most :data:`REROUTE_PER_MISSION_CAP` of them. Over the cap, the item is
+        dropped and logged; it is never billed.
+        """
+
+        at = self._clock() if now is None else float(now)
+        event = reroute_event(receipt)
+        band = band_of(KIND_REROUTE)
+        with self._lock:
+            if str(receipt.state) != SOCIAL_STATE_REROUTE:
+                return self._record(
+                    event, band=band, forwarded=False, rule=RULE_REROUTE_DOOR_WRONG_STATE, at=at
+                )
+            mission = str(event.detail.get("mission", ""))
+            if mission != self._reroute_mission:
+                self._reroute_mission = mission
+                self._reroute_spoken = 0
+            if self._reroute_spoken >= REROUTE_PER_MISSION_CAP:
+                return self._record(
+                    event, band=band, forwarded=False, rule=RULE_REROUTE_MISSION_CAP, at=at
+                )
+            decision = self._forward(event, band=band, rule=RULE_ALWAYS_BAND, at=at)
+            if decision.forwarded:
+                self._reroute_spoken += 1
+            return decision
+
+    # ================================= END card C4 (the two receipt doors) ====
+
     def undeliver(self, decision: WhispererDecision) -> WhispererDecision | None:
         """The lane's floor gate refused something this object said to forward.
 
@@ -968,13 +1443,34 @@ class Whisperer:
         if not decision.forwarded:
             return None
         with self._lock:
-            if self._forwards and self._forwards[-1] == decision.at_s:
+            # A LATE undeliver — something else forwarded after this decision —
+            # matches nothing here and pops nothing, deliberately: the later
+            # forward has already taken the budget slot and advanced the clock,
+            # and there is no slot of this decision's to give back. Only the
+            # decision log records the refusal in that case. This is pre-C4
+            # behaviour and A1 does not change it; it is asserted by test now
+            # because it is the case the rewind below must not be reasoned about
+            # in isolation from.
+            if self._forwards and self._forwards[-1][0] == decision.at_s:
                 self._forwards.pop()
-                self._last_forward_at = self._forwards[-1] if self._forwards else None
+                if decision.kind in KIND_MIN_GAP_S:
+                    # Card C4. An own-gap class never advanced the shared clock,
+                    # so there is nothing to rewind there; what it did take was
+                    # its own spacing, and that is what comes back.
+                    self._last_forward_by_kind.pop(decision.kind, None)
+                else:
+                    self._last_forward_at = self._last_shared_forward_at()
             self._folded += int(decision.folded)
             if self._dedup.get(decision.key) == decision.at_s:
                 del self._dedup[decision.key]
             self.forwarded = max(0, self.forwarded - 1)
+            if decision.kind == KIND_REROUTE and self._reroute_spoken > 0:
+                # Card C4. The mission's reroute allowance is spent by a
+                # sentence the owner HEARS. This one was refused at the lane's
+                # floor, so it goes back with the budget slot and the dedup
+                # entry — otherwise a mission could be talked out of its whole
+                # allowance by a session that was never listening.
+                self._reroute_spoken -= 1
             rule = decision.rule
             self.forwarded_by_rule[rule] = max(0, self.forwarded_by_rule.get(rule, 1) - 1)
             return self._record(
@@ -996,6 +1492,14 @@ class Whisperer:
             return self._record(event, band=band, forwarded=False, rule=RULE_DISABLED, at=at)
         if band == BAND_NEVER:
             return self._record(event, band=band, forwarded=False, rule=RULE_NEVER_BAND, at=at)
+        if kind == KIND_PLAN_ACCEPTED:
+            # Card C4. The always band's only class with a door of its own. The
+            # guard that makes an acceptance different from a nav_goal string
+            # diff is in ``note_plan_accepted``; reaching the band table around
+            # it would put the string diff back, one caller at a time.
+            return self._record(
+                event, band=band, forwarded=False, rule=RULE_PLAN_ACCEPTED_NEEDS_RECEIPT, at=at
+            )
         if band == BAND_MIDDLE:
             # The middle band's own machines call ``_forward`` directly once they
             # have decided; an event that arrives here has not been through them,
@@ -1364,9 +1868,13 @@ class Whisperer:
         if last_seen is not None and (at - last_seen) < ttl:
             return self._record(event, band=band, forwarded=False, rule=RULE_DEDUP, at=at)
 
+        own_gap = kind in KIND_MIN_GAP_S
         if not critical:
-            gap = float(self.config.min_gap_s)
-            last = self._last_forward_at
+            # Card C4. A class with its own spacing reads its own clock; every
+            # other class reads the owner's knob against the shared one,
+            # exactly as before.
+            gap = float(KIND_MIN_GAP_S[kind]) if own_gap else float(self.config.min_gap_s)
+            last = self._last_forward_by_kind.get(kind) if own_gap else self._last_forward_at
             if (
                 kind not in MIN_GAP_EXEMPT_KINDS
                 and gap > 0.0
@@ -1382,8 +1890,13 @@ class Whisperer:
         folded = self._folded
         self._folded = 0
         self._dedup[key] = at
-        self._forwards.append(at)
-        self._last_forward_at = at
+        self._forwards.append((at, kind))
+        # Card C4. The budget is shared by every class (the owner's cost knob
+        # holds everything); the SPACING clock is not, for an own-gap class.
+        if own_gap:
+            self._last_forward_by_kind[kind] = at
+        else:
+            self._last_forward_at = at
         return self._record(
             event,
             band=band,
@@ -1392,6 +1905,29 @@ class Whisperer:
             at=at,
             folded=folded,
         )
+
+    def _last_shared_forward_at(self) -> float | None:
+        """The most recent forward that advanced the SHARED spacing clock.
+
+        Card C4 follow-up A1 (parcel-6c's second lens). ``undeliver`` used to
+        rewind to ``_forwards[-1]``, which was right while every forward
+        advanced the shared clock and became a DRIFT the moment one class
+        stopped: for ``[status@t1, plan_accepted@t2, status@t3]``, undelivering
+        the last one rewound the owner's spacing to t2 — a moment at which the
+        owner had been told nothing that the shared clock is about. The
+        direction was safe (more spacing, never less) and it was still wrong,
+        because the clock has to mean one thing.
+
+        Bounded by the budget window, exactly as the old expression was: a
+        shared forward that has already aged out of ``_forwards`` cannot be
+        rewound to, and ``None`` then means "no spacing is being held" — which
+        is what the pre-C4 code answered in the same situation.
+        """
+
+        for at, kind in reversed(self._forwards):
+            if kind not in KIND_MIN_GAP_S:
+                return at
+        return None
 
     def _spent(self, at: float) -> int:
         """Forwards inside the trailing window. Criticals are counted here too.
@@ -1409,7 +1945,7 @@ class Whisperer:
             # Belt and braces: the loader refuses this, and a hand-built
             # WhispererConfig must not be able to divide the cap by nothing.
             window = DEFAULT_WHISPERER_WINDOW_S
-        while self._forwards and (at - self._forwards[0]) >= window:
+        while self._forwards and (at - self._forwards[0][0]) >= window:
             self._forwards.popleft()
         return len(self._forwards)
 
@@ -2437,6 +2973,7 @@ __all__ = [
     "KIND_EMERGENCY_STOP",
     "KIND_FOLLOW_TICK",
     "KIND_GREETING_DUE",
+    "KIND_MIN_GAP_S",
     "KIND_MISSION_ARRIVED",
     "KIND_MISSION_BLOCKED",
     "KIND_MISSION_BLOCK_CLEAR",
@@ -2447,12 +2984,17 @@ __all__ = [
     "KIND_OWNER_RETURNED",
     "KIND_PACE_MISMATCH",
     "KIND_PACE_UNKNOWN",
+    "KIND_PLAN_ACCEPTED",
     "KIND_POSITION",
     "KIND_PROXIMITY_CHURN",
     "KIND_QUESTION_OF_THE_DAY",
     "KIND_REFUSAL",
     "KIND_REROUTE",
     "KIND_VOICE_REJECTED",
+    "LINEAGE_NEW",
+    "LINEAGE_QUEUE",
+    "LINEAGE_REVISE",
+    "MAX_GOAL_LABEL_CHARS",
     "MIDDLE_BAND",
     "MIN_GAP_EXEMPT_KINDS",
     "NEVER_BAND",
@@ -2469,6 +3011,12 @@ __all__ = [
     "PACE_SKIP_SESSION_BASELINE",
     "PACE_SKIP_UNKNOWN_HOLDING",
     "PACE_SKIP_WINDOW_ACCUMULATING",
+    "PLAN_ACCEPTED_FACTS",
+    "PLAN_ACCEPTED_MIN_GAP_S",
+    "PLAN_ADMISSION_MEMORY",
+    "PLAN_LINEAGES",
+    "REROUTE_CAUSE_PHRASES",
+    "REROUTE_PER_MISSION_CAP",
     "RULE_ALWAYS_BAND",
     "RULE_BLOCK_DEBOUNCE_ELAPSED",
     "RULE_BLOCK_DEBOUNCE_HOLDING",
@@ -2485,11 +3033,21 @@ __all__ = [
     "RULE_PACE_KNOWN_RESUMED",
     "RULE_PACE_MISMATCH_SUSTAINED",
     "RULE_PACE_UNKNOWN",
+    "RULE_PLAN_ACCEPTED_NEEDS_RECEIPT",
+    "RULE_PLAN_ADMITTED",
+    "RULE_PLAN_NOT_ADMITTED",
+    "RULE_PLAN_RECEIPT_INVALID",
+    "RULE_PLAN_REISSUE",
+    "RULE_REROUTE_DOOR_WRONG_STATE",
+    "RULE_REROUTE_MISSION_CAP",
     "RULE_UNKNOWN_KIND",
+    "SOCIAL_STATE_REROUTE",
     "STATE_DIGEST_VERSION",
     "WALK_CEILING_MPS",
     "OwnerEventWatcher",
     "OwnerPresence",
+    "PlanAcceptedReceipt",
+    "RerouteReceipt",
     "StateDigest",
     "StateEvent",
     "Whisperer",
@@ -2498,4 +3056,6 @@ __all__ = [
     "band_of",
     "compose",
     "digest_from_mapping",
+    "plan_accepted_event",
+    "reroute_event",
 ]

@@ -34,6 +34,7 @@ from __future__ import annotations
 import contextlib
 import math
 import os
+import re
 import signal
 import subprocess
 import sys
@@ -51,7 +52,7 @@ for _extra in (str(REPO), str(REPO / "tests")):
 
 from commissioned_sim import commissioned_runtime_kwargs
 
-from evals.nav_instruct.generator import _object_goal, _region_goal
+from evals.nav_instruct.generator import _LANDMARKS, _object_goal, _region_goal
 from evals.nav_instruct.scene_truth import derived_landmark_table
 from parcel_robot.instructnav.scoring import (
     ARRIVAL_BOUNDARY_EPSILON_M,
@@ -60,11 +61,19 @@ from parcel_robot.instructnav.scoring import (
     differential_arrival_verdict,
     evaluate_owner_arrival,
     object_near_goal_region,
+    object_towards_goal_region,
     owner_anchored_goal_region,
+    region_inside_goal_region,
 )
 from parcel_robot.web_panel import build_runtime
 
 GENERIC_REFUSAL = "couldn't admit"
+#: The OTHER refusal, and the one a queue-cued directive gets: the intent route
+#: never reaches PlanIR admission at all.  ``refused`` (above) only sees the
+#: admission refusal, so the tier rows recorded before card C7 read
+#: ``refused: false`` on an utterance the product plainly refused; the flag is
+#: ADDED rather than widened so no recorded number changes meaning.
+NOT_UNDERSTOOD = "did not understand"
 TERMINAL_STATES = {"succeeded", "failed", "cancelled"}
 #: Same budget the e2e uses: strictly dominates the 240 s NavigateTo contract.
 CASE_DEADLINE_S = 270.0
@@ -96,6 +105,62 @@ DERIVED_LANDMARKS = derived_landmark_table()
 # ---------------------------------------------------------------------------
 
 
+#: TWO landmark tables are in play and they are NOT interchangeable, so each
+#: goal kind keeps the one the recorded tier scored it with.  The eval
+#: generator's frozen ``_LANDMARKS`` puts the north sidewalk at y in [2.4, 3.6];
+#: ``derived_landmark_table()`` reads the live MJCF and gets [2.2, 4.2] (and a
+#: bench radius of 0.7338 against the frozen 0.7).  Region and ``towards`` goals
+#: were scored off the generator, ``near`` goals off the derived table; card
+#: C7-F1 changes WHICH INSTANCE is scored and nothing else, so the source table
+#: per kind is pinned here rather than unified.  Unifying them would move
+#: recorded numbers for a reason that has nothing to do with this defect.
+_LANDMARK_TABLE_BY_KIND = {
+    "region": _LANDMARKS,
+    "object_towards": _LANDMARKS,
+    "object_near": DERIVED_LANDMARKS,
+}
+
+
+def label_of(entity_id: str | None, *, kind: str = "object_near") -> str | None:
+    """The scene label an instance id carries in THIS kind's table."""
+
+    table = _LANDMARK_TABLE_BY_KIND.get(kind, DERIVED_LANDMARKS)
+    entry = table.get(str(entity_id))
+    return None if entry is None else str(entry.get("label"))
+
+
+#: SAME-LABEL TIE-BREAK — stated once, applied to every non-owner goal.
+#:
+#: The static city carries MORE THAN ONE INSTANCE of some labels: two
+#: ``sidewalk`` polygons (``sidewalk`` to the north and ``sidewalk_south``,
+#: ~4.98 m apart) and two ``lamppost`` objects (``lamp_post_1`` /
+#: ``lamp_post_2``).  "Go to the sidewalk" names a LABEL, so either instance is
+#: a legitimate referent, and which one the robot went to is the executive's
+#: choice, not the scorer's.
+#:
+#:   1. **committed_instance** — the executive committed an instance id the
+#:      scene knows AND that instance carries this goal's label: score THAT
+#:      instance's region.  This is the rule that matters: judging a body that
+#:      stood in the south sidewalk against the north polygon is the harness
+#:      inventing a disagreement (6 of the tier's sidewalk legs, DTG ~4.98 m).
+#:   2. **default_instance** — nothing was committed, or the id is one the
+#:      scene table does not know: score the goal's default instance (the
+#:      generator's tier-A choice), exactly as before.
+#:   3. **default_instance_label_mismatch** — an instance WAS committed and the
+#:      scene knows it, but it carries a DIFFERENT label (a bench for a
+#:      sidewalk goal).  The default instance is scored and the mismatch is
+#:      flagged.  Scoring a wrong-instance commitment against its own choice
+#:      would turn every wrong-instance arrival into a pass, which is the
+#:      opposite of what this authority is for.
+#:
+#: Every verdict records the rule that fired, the RAW committed id, and the
+#: entity id of the polygon actually scored, so no reader has to infer which
+#: geometry a number came from.
+REGION_FROM_COMMITTED = "committed_instance"
+REGION_FROM_DEFAULT = "default_instance"
+REGION_FROM_DEFAULT_LABEL_MISMATCH = "default_instance_label_mismatch"
+
+
 @dataclass(frozen=True)
 class GoalSpec:
     """One scorable goal: its phrasings and its K0 arrival region."""
@@ -105,21 +170,94 @@ class GoalSpec:
     plain: str  # the from-rest phrasing
     entity_id: str | None = None
 
-    def region(self, *, committed: str | None = None) -> GoalRegion:
+    @property
+    def table(self) -> dict:
+        """The landmark table this goal's regions are built from (see above)."""
+
+        return _LANDMARK_TABLE_BY_KIND.get(self.kind, DERIVED_LANDMARKS)
+
+    @property
+    def label(self) -> str | None:
+        """The scene label every legitimate instance of this goal carries."""
+
+        return label_of(self.default_entity_id, kind=self.kind)
+
+    @property
+    def default_entity_id(self) -> str | None:
+        """The instance the generator resolves this goal to on tier A."""
+
         if self.kind == "region":
-            return _region_goal(self.plain, tier="A", absent=False)[1]
+            return _region_goal(self.plain, tier="A", absent=False)[0]
         if self.kind == "object_towards":
-            return _object_goal("walk towards the lamppost", tier="A", absent=False)[1]
+            return _object_goal("walk towards the lamppost", tier="A", absent=False)[0]
+        return self.entity_id
+
+    def _region_for(self, entity_id: str) -> GoalRegion:
+        """This goal's K0 region built around ONE named instance."""
+
+        landmark = self.table[str(entity_id)]
+        if self.kind == "region":
+            return region_inside_goal_region(
+                landmark["polygon"], entity_id=str(entity_id)
+            )
+        if self.kind == "object_towards":
+            return object_towards_goal_region(
+                landmark["position"], entity_id=str(entity_id)
+            )
         if self.kind == "object_near":
-            entity = committed if committed in DERIVED_LANDMARKS else self.entity_id
-            landmark = DERIVED_LANDMARKS[str(entity)]
             return object_near_goal_region(
                 landmark["position"],
                 float(landmark["radius_m"]),
                 label=str(landmark["label"]),
-                entity_id=str(entity),
+                entity_id=str(entity_id),
             )
         raise ValueError(f"{self.key} has no static region (kind={self.kind})")
+
+    def region_with_provenance(
+        self, *, committed: str | None = None
+    ) -> tuple[GoalRegion, dict]:
+        """``(region, provenance)`` under the same-label tie-break above."""
+
+        if self.kind not in {"region", "object_towards", "object_near"}:
+            raise ValueError(f"{self.key} has no static region (kind={self.kind})")
+        default = self.default_entity_id
+        committed_id = str(committed) if committed else ""
+        committed_label = (
+            label_of(committed_id, kind=self.kind) if committed_id else None
+        )
+        if committed_id and committed_label is not None and committed_label == self.label:
+            scored, rule = committed_id, REGION_FROM_COMMITTED
+        elif committed_id and committed_label is not None:
+            scored, rule = str(default), REGION_FROM_DEFAULT_LABEL_MISMATCH
+        else:
+            scored, rule = str(default), REGION_FROM_DEFAULT
+        provenance = {
+            "goal_key": self.key,
+            "goal_label": self.label,
+            "committed_entity_id_raw": committed_id or None,
+            "committed_entity_label": committed_label,
+            "scored_entity_id": scored,
+            "default_entity_id": default,
+            "region_source": rule,
+            "landmark_table": (
+                "evals.nav_instruct.generator._LANDMARKS"
+                if self.table is _LANDMARKS
+                else "evals.nav_instruct.scene_truth.derived_landmark_table()"
+            ),
+            "same_label_instances": sorted(
+                key for key, row in self.table.items()
+                if str(row.get("label")) == self.label
+            ),
+            "tie_break": (
+                "an instance carrying the goal's label is a legitimate referent; "
+                "the committed one decides WHICH, and a committed instance with a "
+                "different label is not scored (see REGION_FROM_* in harness.py)"
+            ),
+        }
+        return self._region_for(scored), provenance
+
+    def region(self, *, committed: str | None = None) -> GoalRegion:
+        return self.region_with_provenance(committed=committed)[0]
 
     @property
     def owner_anchored(self) -> bool:
@@ -219,6 +357,38 @@ class Receipt:
         }
 
 
+#: The queue-cue vocabulary, exactly as DESIGN.md names the family ("after
+#: that / when you're done / then") plus the closed set of paraphrases the tier
+#: generates.  It lives in the harness rather than in ``queue_policy`` because
+#: it is needed at the ISSUE DOOR: the shipped
+#: ``navigation_directive_from_text`` does not strip a queue cue, so a held or
+#: queued goal RE-ISSUED VERBATIM is refused ("I did not understand that
+#: command").  ``queue_policy`` imports it from here, so the classifier and the
+#: door can never disagree about what a cue is.
+QUEUE_CUE_RE = re.compile(
+    r"\b(?:after\s+that|after\s+this|after\s+you(?:'re| are)?\s+done|"
+    r"after\s+you\s+finish(?:ed)?|when\s+you(?:'re| are)?\s+done|"
+    r"when\s+you\s+finish(?:ed)?|once\s+you(?:'re| are)?\s+done|"
+    r"once\s+you\s+finish(?:ed)?|afterwards?|and\s+then|,\s*then\b|^then\b|"
+    r"next\s+(?:go|head)\b)",
+    re.IGNORECASE,
+)
+
+
+def strip_queue_cue(text: str) -> str:
+    """Remove ONE leading queue cue and return the bare directive.
+
+    Idempotent: a text with no cue comes back unchanged, so the door can strip
+    unconditionally on a re-issue without caring which push path queued it.
+    This is a HARNESS WORKAROUND for a product gap, never a fix: the refusal it
+    routes around is recorded as its own finding (RESULTS "two live defects").
+    """
+
+    residual = QUEUE_CUE_RE.sub(" ", str(text), count=1)
+    residual = re.sub(r"^[\s,;:]+", "", residual)
+    return " ".join(residual.split())
+
+
 @dataclass
 class Utterance:
     t_issued: float
@@ -226,12 +396,18 @@ class Utterance:
     text: str
     reply: str
     metrics: dict = field(default_factory=dict)
+    #: What the owner (or the queue) actually held, before the door stripped a
+    #: queue cue off it.  Equal to ``text`` whenever nothing was stripped.
+    raw_text: str = ""
+    cue_stripped: bool = False
 
     def as_dict(self) -> dict:
         return {
             "t_issued": round(self.t_issued, 3),
             "t_returned": round(self.t_returned, 3),
             "text": self.text,
+            "raw_text": self.raw_text or self.text,
+            "cue_stripped": self.cue_stripped,
             "reply": self.reply,
             "metrics": self.metrics,
         }
@@ -514,9 +690,21 @@ class LiveSession:
 
     # -- the product entry point -------------------------------------------
 
-    def issue(self, text: str) -> Utterance:
-        """``runtime.handle_text`` — the one product door this experiment uses."""
+    def issue(self, text: str, *, strip_cue: bool = False) -> Utterance:
+        """``runtime.handle_text`` — the one product door this experiment uses.
 
+        ``strip_cue`` is for a RE-ISSUE only.  The product refuses a queue-cued
+        directive ("after that, go to the owner" -> "I did not understand that
+        command"), so a goal that was held or queued under its cue has to reach
+        ``handle_text`` as the bare directive.  Both forms are recorded on the
+        ``Utterance`` (``raw_text`` and ``text``) and land in ``episodes.jsonl``,
+        so the workaround is visible in the record rather than hidden in the
+        policy.  It is never used on a FIRST utterance: that would work around
+        the admission defect the tier exists to measure.
+        """
+
+        raw = str(text)
+        text = strip_queue_cue(raw) if strip_cue else raw
         t_issued = self.now()
         reply = self.runtime.handle_text(text)
         t_returned = self.now()
@@ -536,10 +724,17 @@ class LiveSession:
                 agent.last_brain_metrics.get("local_plan_skills") or []
             ),
             "refused": GENERIC_REFUSAL in reply,
+            "not_understood": NOT_UNDERSTOOD in reply,
             "amendment_pending": bool(getattr(self.runtime, "_amendment_pending", False)),
         }
         return Utterance(
-            t_issued=t_issued, t_returned=t_returned, text=text, reply=reply, metrics=metrics
+            t_issued=t_issued,
+            t_returned=t_returned,
+            text=text,
+            reply=reply,
+            metrics=metrics,
+            raw_text=raw,
+            cue_stripped=text != raw,
         )
 
     def move_owner(self, dx: float, dy: float) -> None:
@@ -687,14 +882,29 @@ def score_arrival(
                 "authority_category": AuthorityCategory.UNKNOWN.value,
                 "distance_to_goal_m": None,
                 "epsilon_m": ARRIVAL_BOUNDARY_EPSILON_M,
+                "region_provenance": {
+                    "goal_key": spec.key,
+                    "region_source": "owner_anchored_no_anchor",
+                    "committed_entity_id_raw": str(committed) if committed else None,
+                },
             }
         region = owner_anchored_goal_region(anchor_xy)
+        provenance = {
+            "goal_key": spec.key,
+            "region_source": "owner_anchored",
+            "committed_entity_id_raw": str(committed) if committed else None,
+            "scored_entity_id": None,
+            "note": "an owner-anchored goal is scored on the observed owner pose; "
+                    "the committed id is recorded but never selects the region",
+        }
     else:
-        region = spec.region(committed=committed)
+        region, provenance = spec.region_with_provenance(committed=committed)
     verdict = differential_arrival_verdict(
         region, end_xy, system_arrival=system_arrival, anchor_xy=anchor_xy
     )
-    return verdict.as_dict()
+    row = verdict.as_dict()
+    row["region_provenance"] = provenance
+    return row
 
 
 def owner_arrival(

@@ -19,7 +19,12 @@ from parcel_robot.backends.base import (
     SimObservation,
 )
 from parcel_robot.config import ConfigStore
-from parcel_robot.instructnav.scoring import object_near_envelope_m, object_near_goal_region
+from parcel_robot.instructnav.scoring import (
+    GoalRegion,
+    object_near_envelope_m,
+    object_near_goal_region,
+    system_arrival_claim,
+)
 from parcel_robot.models import VelocityCommand
 from parcel_robot.navigation.approach import point_in_polygon_with_clearance
 from parcel_robot.navigation.base import NavObservation
@@ -83,6 +88,34 @@ _STATIC_OBSTACLE_PREFIXES = (
     "signal_",
 )
 
+#: Card C2 (ARRIVAL-SETTLE-1): control frames the harness keeps OBSERVING the
+#: world after the mission's terminal frame. Five at the 10 Hz control tick is
+#: 0.5 s, and it is MA-1's ``ORACLE_SETTLE_FRAMES`` — the gold predicate whose
+#: settle its own loop could never observe (133/133 episodes ended one frame
+#: after ``done()``; NAV-GEN-1 ``VERDICT.md`` §5.1). Observation only: the
+#: window issues NO command, never calls the navigator or the reactive gate,
+#: and therefore cannot touch the A3 latch or the A6 stop path. It watches the
+#: standing command and the pose, which is exactly what "did it hold still
+#: where it said it arrived?" means.
+DEFAULT_SETTLE_FRAMES = 5
+
+
+@dataclass(frozen=True)
+class _WorldSnapshot:
+    """The world-derived result fields, frozen AT the mission's terminal frame.
+
+    Card C2's settle window steps the simulator after the mission ends, so the
+    fields ``HeadlessTaskResult`` already carried have to be taken before it
+    runs or every consumer's numbers would move for a reason that has nothing
+    to do with the robot. With this snapshot the strict one-frame predicate is
+    literally the same number it was, and ``settled`` is a pure addition.
+    """
+
+    final_observation: SimObservation
+    path: tuple[tuple[float, float], ...]
+    collision_count: int
+    minimum_clearance_m: float
+
 
 @dataclass(frozen=True)
 class HeadlessTraceSample:
@@ -109,6 +142,28 @@ class HeadlessTaskResult:
     required_obstacle_clearance_m: float
     semantic_scan_steps: int
     terminal_command: VelocityCommand
+    #: Card C2 (ARRIVAL-SETTLE-1). Everything above is measured AT the terminal
+    #: frame exactly as before; everything below is measured by the settle
+    #: window that now runs after it. The two predicates are reported side by
+    #: side on purpose — :attr:`stopped` is "terminal command zero on ONE
+    #: frame" and :attr:`settled` is "inside the K0 arrival region AND the
+    #: standing command zero for EVERY settle frame" — so the delta between
+    #: them is a number rather than an interpretation (NAV-GEN-1 VERDICT §5.1).
+    settled: bool = False
+    settle_frames_observed: int = 0
+    #: The K0 arrival-region predicate on the terminal pose. ``None`` when the
+    #: mission never committed an arrival region, which is NOT "inside".
+    inside_arrival_region: bool | None = None
+    #: The ONE arrival authority: the system's own terminal claim, confirmed by
+    #: the K0 region and the settle. Never a fourth opinion, and never a claim
+    #: the system did not make — a missing terminal receipt is not an arrival.
+    arrived_verified: bool = False
+    #: ``mission.metadata`` attribution, so a re-scored row can say WHICH oracle
+    #: answered (``known_poi`` is the POI second oracle; card C1 owns it).
+    goal_source: str | None = None
+    poi_refused: str | None = None
+    #: The navigator's own typed reason for refusing to verify an arrival.
+    arrival_not_verified_reason: str | None = None
 
     @property
     def succeeded(self) -> bool:
@@ -612,6 +667,7 @@ class HeadlessCityQualityHarness:
         spatial_config: SpatialBehaviorConfig | None = None,
         robot_config: str | Path = DEFAULT_ROBOT_CONFIG,
         pose_profile: str | None = None,
+        settle_frames: int = DEFAULT_SETTLE_FRAMES,
     ):
         # Stratum-1 pose seam. ``pose_profile`` selects a profile from
         # ``configs/navigation/pose.yaml``; the shipping default is the truth
@@ -641,6 +697,9 @@ class HeadlessCityQualityHarness:
             )
         ):
             raise ValueError("headless settled-speed thresholds must be finite and nonnegative")
+        if settle_frames < 0:
+            raise ValueError("settle_frames must be nonnegative")
+        self.settle_frames = int(settle_frames)
 
     def new_pose_provider(self) -> PoseProvider:
         """One fresh provider per run — drift must never cross episodes.
@@ -734,8 +793,6 @@ class HeadlessCityQualityHarness:
                 reason = "navigation_step_limit"
                 arrival_raw = mission.metadata.get("arrival_goal_region")
                 if trace and arrival_raw:
-                    from parcel_robot.instructnav.scoring import GoalRegion
-
                     try:
                         region = (
                             arrival_raw
@@ -751,6 +808,21 @@ class HeadlessCityQualityHarness:
                         ry = float(robot.y if hasattr(robot, "y") else robot[1])
                         if region.contains(rx, ry):
                             reason = "navigation_step_limit_inside_goal"
+            # Card C2. The terminal frame is FROZEN here, before the settle
+            # window steps the world again, so every field this result already
+            # carried is bit-for-bit what it was: the strict one-frame
+            # predicate stays comparable to its own frozen history.
+            terminal_snapshot = _WorldSnapshot(
+                final_observation=self.world.observe(),
+                path=self.world.path,
+                collision_count=self.world.collision_count,
+                minimum_clearance_m=self.world.minimum_clearance_m,
+            )
+            settled, settle_frames_observed, inside_region = self._observe_settle(
+                mission,
+                terminal_command=terminal_command,
+                terminal_observation=terminal_snapshot.final_observation,
+            )
         finally:
             self.world.stop()
             navigator.close()
@@ -770,7 +842,78 @@ class HeadlessCityQualityHarness:
             semantic_scan_steps=scan_steps,
             terminal_command=terminal_command,
             required_obstacle_clearance_m=required_clearance,
+            snapshot=terminal_snapshot,
+            settled=settled,
+            settle_frames_observed=settle_frames_observed,
+            inside_arrival_region=inside_region,
+            mission_metadata=dict(mission.metadata),
+            system_status=terminal_status,
+            system_reason=reason,
         )
+
+    def _arrival_region(self, mission: Any) -> Any:
+        """The mission's committed K0 arrival region, or ``None``.
+
+        The ONE arrival authority this file is allowed to consult: the region
+        the navigator itself committed (``mission.metadata['arrival_goal_region']``,
+        the K0/N45 seam). The harness does not build a region of its own — a
+        fourth opinion is exactly the defect card C2 exists to remove.
+        """
+
+        raw = mission.metadata.get("arrival_goal_region")
+        if not raw:
+            return None
+        try:
+            return raw if isinstance(raw, GoalRegion) else GoalRegion.from_mapping(raw)
+        except (TypeError, ValueError, KeyError):
+            return None
+
+    def _observe_settle(
+        self,
+        mission: Any,
+        *,
+        terminal_command: VelocityCommand,
+        terminal_observation: SimObservation,
+    ) -> tuple[bool, int, bool | None]:
+        """Watch the world hold still after the terminal frame. Observation ONLY.
+
+        No command is issued, the navigator is not stepped and the reactive
+        gate is not called, so the A3 latch and the A6 stop path cannot be
+        reached from here: the window advances the simulator and reads the pose
+        the STANDING command produces. ``settled`` is MA-1's gold predicate
+        made observable — inside the committed K0 region on every settle frame
+        with the standing command at zero — which its own loop could not watch
+        because it broke one frame after ``done()`` (NAV-GEN-1 §5.1).
+
+        Returns ``(settled, frames_observed, inside_region_at_terminal)``.
+        ``inside_region_at_terminal`` is ``None`` when the mission committed no
+        arrival region, and ``None`` is never read as "inside".
+        """
+
+        region = self._arrival_region(mission)
+        robot = terminal_observation.robot
+        inside_at_terminal = (
+            None
+            if region is None
+            else bool(region.contains(float(robot.x), float(robot.y)))
+        )
+        if self.settle_frames <= 0 or region is None:
+            return False, 0, inside_at_terminal
+        # A standing command that is not zero cannot settle, and stepping the
+        # world under it would be the harness driving the robot after the
+        # mission ended. Report it honestly and step nothing.
+        if not _is_stopped(terminal_command):
+            return False, 0, inside_at_terminal
+        settled = bool(inside_at_terminal)
+        observed = 0
+        for _ in range(self.settle_frames):
+            sample = self.world.step()
+            observed += 1
+            if not self.world.stopped or not region.contains(
+                float(sample.robot.x), float(sample.robot.y)
+            ):
+                settled = False
+        return settled, observed, inside_at_terminal
 
     def _run_follow(self, text: str, *, max_steps: int) -> HeadlessTaskResult:
         """Regression-lane owner follow via FollowOwnerController."""
@@ -908,21 +1051,56 @@ class HeadlessCityQualityHarness:
         semantic_scan_steps: int,
         terminal_command: VelocityCommand,
         required_obstacle_clearance_m: float,
+        snapshot: _WorldSnapshot | None = None,
+        settled: bool = False,
+        settle_frames_observed: int = 0,
+        inside_arrival_region: bool | None = None,
+        mission_metadata: dict[str, Any] | None = None,
+        system_status: str | None = None,
+        system_reason: str | None = None,
     ) -> HeadlessTaskResult:
+        # ``snapshot=None`` is the pre-C2 behaviour, unchanged: read the world
+        # now. The navigation path passes a snapshot because its settle window
+        # has already stepped the world past the terminal frame.
+        world = snapshot or _WorldSnapshot(
+            final_observation=self.world.observe(),
+            path=self.world.path,
+            collision_count=self.world.collision_count,
+            minimum_clearance_m=self.world.minimum_clearance_m,
+        )
+        metadata = mission_metadata or {}
+        # The ONE authority, in the order the card fixes it: the system's own
+        # terminal claim FIRST (a missing or negative receipt is not an
+        # arrival, no matter where the body is), then the committed K0 region,
+        # then the settle. Nothing here can manufacture an arrival.
+        arrived_verified = bool(
+            system_arrival_claim(system_status, system_reason)
+            and inside_arrival_region
+            and settled
+        )
+        poi_refused = metadata.get("poi_refused")
+        not_verified = metadata.get("arrival_not_verified_reason")
         return HeadlessTaskResult(
             directive=directive,
             status=status,
             reason=reason,
             target_id=target_id,
             terminal_relation=terminal_relation,
-            final_observation=self.world.observe(),
+            final_observation=world.final_observation,
             trace=tuple(trace),
-            path=self.world.path,
-            collision_count=self.world.collision_count,
-            minimum_clearance_m=self.world.minimum_clearance_m,
+            path=world.path,
+            collision_count=world.collision_count,
+            minimum_clearance_m=world.minimum_clearance_m,
             required_obstacle_clearance_m=required_obstacle_clearance_m,
             semantic_scan_steps=semantic_scan_steps,
             terminal_command=terminal_command,
+            settled=settled,
+            settle_frames_observed=settle_frames_observed,
+            inside_arrival_region=inside_arrival_region,
+            arrived_verified=arrived_verified,
+            goal_source=(None if metadata.get("goal_source") is None else str(metadata["goal_source"])),
+            poi_refused=(None if poi_refused is None else str(poi_refused)),
+            arrival_not_verified_reason=(None if not_verified is None else str(not_verified)),
         )
 
 

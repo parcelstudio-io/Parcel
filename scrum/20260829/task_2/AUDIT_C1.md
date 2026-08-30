@@ -1,0 +1,59 @@
+# AUDIT · C1 POI-ORACLE-1 — verifier: Fable (parcel-0e), 2026-08-29 23:0x EDT
+
+**Disposition: ACCEPT-WITH-DEFECT-OPEN (wave A) → follow-up F1 (scene-identity admission) in progress; final disposition on its rows.** The fix is correct on every row it moved and touched nothing else; the two frozen bars (`crosswalk_a` 0/90, false arrivals 0/90) were **not met** and the executor proved — from the scene files — that no monotone distance rule reaching them can keep the demo block (E3). The bar is reachable by a different rule (§3); the ruling is the integrator's (parcel-fb lens requested). Second lens: parcel-fb (pending).
+
+## 1. Re-run / re-read by the verifier
+
+| row | executor | verifier |
+|---|---|---|
+| generated crosswalk `target_id` | RED `crosswalk_a` 90/90 → GREEN `crosswalk` 75 / `crosswalk_a` 15 | **read from the executor's scratch rows** (`~/.cache/parcel-0e/c1/ng1/raw/rows_A0{_RED,}.json`): identical counts |
+| crosswalk false arrivals | 42 → 6 (all 6 on the 15 still-admitted rows) | **42 → 6** confirmed; the 15 admitted rows are byte-identical to RED |
+| crosswalk strict | 6/90 → 48/90 (0.533; 0.640 on moved rows) | **6 → 48** confirmed; ≥ 0.60 not met on 90 — measures the semantic ladder per Amendment A1, recorded not tuned |
+| other targets byte-identical | 0/360 changed | **424 non-crosswalk rows: strict 308 in both runs**, 0 collisions in both |
+| frozen block `known_poi` 16/16, 0/80 changed | claimed | frozen crosswalk `target_id` `crosswalk_a` 16/16 in both runs |
+| `pipeline.py` net line count | 7203 → 7200 (−3) | hunks at `parse` (1138–1165) + two import lines; the 4618 hunk is C3's |
+| `config.py` / floors / `semantic_source` / `pois_path` | untouched | confirmed (no config diff; `grounder.py` +11 docstring only) |
+| `noqa` / ruff | 0 / clean | **0 / All checks passed** on the four files |
+| unit tests `tests/test_poi_admission.py` (15) + card subset | 15 / 3 passed | **guarded re-run (dirty tree, 23:3x): `test_poi_admission` + `test_a2_navglue` + `test_k0_arrival_authority` + `test_arrival_settle` = 48 passed; the only reds in the run are the two freshness rows, which are C0's and expected red in the dirty tree (see AUDIT_C0_C2 §1)** |
+
+**Declared OWNS deviation, accepted for wave A:** the scene-instance publication line lives in `perception/city_semantics.py` `visible_city_semantics` (+1 import, +1 call, +6 comment lines) because the navigator cannot see the loaded scene at parse time and both `headless_city.py` (C2) and `runtime.py` (owner) were off-limits. It is a one-line move later; recorded.
+
+**Reds attributed by A/B (a scratch plugin neutralising C1):** freshness 2 reds byte-identical with C1 off → C0's D-15; `test_sit_next_to_the_lamppost…` identical with C1 on/off → on the tree (C3's concurrent `pipeline.py` edit is the other live change — checked at C3's close); DEC-0 ratchet → the owner's diff; one sweep ERROR did not reproduce in isolation.
+
+**Second lens (parcel-fb, recomputed from the raw rows, not the tables):** RED crosswalk_a 90/90, false_arrival 42, strict 6, wrong_instance 90 → GREEN crosswalk 75 / crosswalk_a 15, false_arrival 6 (all on the 15 admitted), strict 48, arrived_verified 46, wrong_instance 15, `semantic_target_unreachable` 10, `navigation_no_progress` 48→28; rows changed 75/530, every one a generated crosswalk row; 0 non-crosswalk, 0 frozen rows changed; collisions 0/0. Every count in C1_STATUS §1/§3 concurs. **Ruling R1: scene identity, not geometry** (reasons in the integrator's message, adopted; dispatched as C1 follow-up F1).
+
+## 2. Why the bars were missed (verified reasoning)
+The demo block's own crosswalk polygon is **0.200 m** from `crosswalk_a` (3.5, −0.6) — the POI point is *outside* it; generated seed 880027 *contains* the point (0.000 m), 880018 is 0.057 m, 880009 0.094 m away. Any monotone distance admission that keeps the demo block's 16/16 (E3) admits those scenes: floor 9/90; the shipped 0.32 m body-footprint band gives 15/90. The 6 residual false arrivals are the POI point-goal's 1.5 m arrive radius landing outside the polygon — C2's arrival authority (`arrived_verified` is 0/90 for crosswalk on C2's instrumented run), not C1's admission.
+
+## 3. Verifier's recommendation (ruling requested from the integrator)
+Replace the geometric band with a **scene-identity rule**: the POI table declares the scene it was authored for (`demo_pois.yaml` → the demo block); `PlaceGrounder` is admissible only when the loaded scene's identity matches. Generated scenes → 0/90 `crosswalk_a`, 0/90 false arrivals; demo block 16/16 `known_poi`; E3 kept; simpler than geometry and it says what is true — the table is a demo artifact, not a map. If the integrator prefers the geometric rule (it is also honest: "the scene has a crosswalk here"), then an admitted POI must **re-target to the scene instance** (`target_id = crosswalk`, region arrival) rather than keep the point goal — which is the C2 arrival-authority route. Either closes the bar; the first is one leaf-module change.
+
+## 4. Not proven
+Off-oracle grounding; the other three POI classes (cafe/bookstore/park — no city scene models them; "no instance at all" was treated as not-a-refutation, which is the right default until the learned map names them).
+
+## 5. E3 check (frozen NAV_INSTRUCT minival) — 00:1x
+- Integrator's hypothesis that C1's 0.32 m band refuses other demo POI classes on the demo block is **REFUTED by their own product-caller probe**: `HeadlessCityWorld()` demo scene + `observe()` + `DirectiveNavigator.from_config().parse()` for "go to the crosswalk / coffee shop / bookstore / park" all return `goal_source=known_poi`, `poi_refused=None` (working tree, C1's shipped band).
+- Verifier's isolated-worktree bisection (`PYTHONPATH` pinned, `MUJOCO_GL=egl`, no owner diff): **HEAD 704ba5c alone** reads report digest `021b67ab…` (SR 0.20) — 5/25 rows already off the committed `c172da37…` (four rows incl. the lost frozen success A-00 = card A2's clearance cost recorded 08-24 in NAV-QUALITY §1.4; the D-15 suffix = a379bf4 — integrator's correction). HEAD + the wave-A snapshot (C1's shipped band + C2 + C3, 23:3x) reads the **same `021b67ab…`** → **C1 as shipped moves the frozen row by zero.**
+- **Mechanism read by the integrator (product caller, working tree):** `DirectiveNavigator.from_config().parse()` with NO scene published — the exact state `scripts/mutation_panel.py`'s runner and `evals.nav_instruct`'s runner execute in — returns `goal_source=semantic_search, poi_refused=no_scene` for "go to the crosswalk" / "go to the coffee shop"; after `HeadlessCityWorld().reset(); observe()` (the venue publishes) both return `known_poi`. The panel survivor in my four-arm run was a MID-EDIT capture of F1 (the integrator's counter-arm on the current F1 files reads {agreement 4, authority_disagreement 1}, no survivor — inside `run_panel` the world observes and the venue publishes); the minival `10251e42…` may be the same capture or `evals.nav_instruct`'s runner genuinely not publishing — the acceptance row (loader publishes for every runner; minival == `021b67ab…`) settles it either way. These two `parse()` lines are F1's RED/GREEN pair; `no_scene` and `scene_mismatch` stay distinct reasons (a real robot under oracle source is legitimately `no_scene`, and that refusal is correct there). Acceptance row added to F1: minival digest == HEAD's `021b67ab…` exactly; preferred mechanism (integrator): the eval runner PUBLISHES the demo scene (it is the demo scene) so the rule stays one rule, rather than a "no venue" vs "venue says no" distinction.
+
+## 6. Follow-up F1 (scene-identity admission) — verifier, 01:4x
+
+| row | executor | verifier |
+|---|---|---|
+| rule | `demo_pois.yaml` declares `scene_id: parcel_city_block` (the MJCF model name); admission = `loaded_scene_id == declared`; no scene ⇒ refused; `poi_refused` = `scene_mismatch:<loaded>/<declared>` or `no_scene`; geometry demoted to `PoiAdmission.geometry_backed` (diagnostic only); identity published in the loader `perception.city_semantics.extract_city_semantics(model)` (reached by `HeadlessCityWorld.__init__`, `sim.py:204`, `web_panel.py:202`) | `demo_pois.yaml:4-18` header + key present; `poi_admission.py` 487 lines, **0 `noqa`**, ruff clean; `pipeline.py` 7211 (C1's own delta still −3) |
+| product-caller RED/GREEN pair | standalone `parse("go to the crosswalk")` → `semantic_search / no_scene`; after a `HeadlessCityWorld()` in the process → `known_poi` | **reproduced by me** (`PARCEL_MEMORY_PATH` → scratch): no world → `semantic_search no_scene`; with world → `known_poi None crosswalk_a` |
+| NAV-GEN-1 A0 generated crosswalk | `crosswalk_a` **0/90**, `crosswalk` 90/90, false arrivals **0/90**, strict **0.6000** (54/90, not tuned), 0 collisions; `goal_source=semantic_search` + `poi_refused=scene_mismatch:parcel_val_unseen_8800NN/parcel_city_block` 90/90 | accepted from the executor's rows (C2's `goal_source` logging now makes this per-episode) |
+| frozen block | 16/16 `known_poi`; exactly 16 of 530 rows `known_poi`, all demo-block crosswalk | accepted |
+| byte-identity where only C1 differs (two HEAD exports) | 0/360 non-crosswalk rows changed, 0/80 frozen rows changed | accepted |
+| minival digest | `021b67ab…` at HEAD and with C1-F1, 25/25 rows byte-identical, D-15 keeps `_inside_goal` | accepted (matches my HEAD arm's digest) |
+| mutation panel (isolated worktree) | passed True, survivors [], {agreement 4, authority_disagreement 1}, byte-identical to the pure-HEAD panel except `generated_at` | accepted; consistent with the integrator's current-tree counter-arm |
+| tests | `test_poi_admission.py` 19 passed; card subset 20 passed | **guarded re-run: 39 passed** (`test_poi_admission` + `test_a2_navglue` + `test_k0_arrival_authority`) |
+| order-dependent foreign tests | `tests/test_c3_cutover.py::test_B3` 1 failed / 53 passed alone; `tests/test_navigation.py` 10 failed / 28 passed alone — they parse a POI directive with no world | **reproduced exactly** (1/53, 10/28). They encode the old contract; **F2 dispatched**: publish the demo scene in a fixture where the subject is POI grounding, assert the refusal where the subject is the no-world path; no deletions/skips |
+
+**Disposition after F1: ACCEPT pending F2 (test contract update) — both frozen bars now MET (0/90, 0/90); frozen evidence unchanged (minival, panel, NAV-GEN-1 frozen block).**
+
+## 7. Follow-up F2 (order-dependent tests) — verifier, 02:0x — **ACCEPT**
+
+All 11 tests fixed by route (a): one fixture per file that loads the demo block the product way (`extract_city_semantics(MjModel.from_xml_path(DEFAULT_CITY_SCENE))`, teardown `clear_scene_instances()`), no global poked, no assertion flipped, no test deleted/skipped (grep of the added lines for skip/xfail: 0). Diff stat `tests/test_c3_cutover.py | 24`, `tests/test_navigation.py | 52` (+66/−10). Verifier's guarded run: `test_navigation.py` + `test_c3_cutover.py` + `test_poi_admission.py` = **111 passed** (38 + 54 + 19). Executor also showed order-independence with `pytest-randomly` on, and the F1 sweep 233 passed / 0 failed; the only reds left in the dirty tree are C0's two D-15 rows.
+
+**Final C1 disposition: ACCEPT.** Both frozen bars met (`crosswalk_a` 0/90, false arrivals 0/90) by the scene-identity rule; frozen evidence unchanged (minival `021b67ab…`, panel {4, 1}, NAV-GEN-1 frozen 16/16 `known_poi`); product-caller RED/GREEN reproduced by the verifier.
